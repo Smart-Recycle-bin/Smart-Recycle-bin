@@ -29,18 +29,19 @@
 
 ## 2. Project Idea
 ### 💡 Executive Summary
-**Smart Recycle bin** is an end-to-end smart waste management ecosystem that bridges Internet of Things (IoT), Computer Vision / Artificial Intelligence (AI/ML), cross-platform mobile apps, and cloud administration dashboards. It transforms traditional waste disposal into an automated, gamified, and ecologically accountable experience.
+**Smart Recycle bin** is an end-to-end smart waste management ecosystem that bridges Internet of Things (IoT), Computer Vision / Artificial Intelligence (AI/ML), a single unified cross-platform mobile application, and a cloud web administration dashboard. It transforms traditional waste disposal into an automated, gamified, and ecologically accountable experience.
 
-The system addresses solid waste accumulation and lack of source-segregation across three integrated tiers:
+The system addresses solid waste accumulation and lack of source-segregation across three core tiers:
 
 1. **AI-Enabled IoT Smart Bins:**
    - Embedded sensors and cameras automatically unlock the bin lid upon scanning a dynamic QR code via the mobile app.
    - High-speed onboard cameras capture images of inserted items.
    - An integrated machine learning engine classifies waste types (`PLASTIC_BOTTLE`, `ALUMINUM_CAN`, `GLASS`, `PAPER`, `ORGANIC`) in real time, calculating reward points within an active 60-second renewed session window.
 
-2. **Unified Dual-Role Mobile Application:**
-   - **For Citizens / Recyclers:** Scan bin QR code to unlock sessions, review real-time classification survey results, earn reward points, track an immutable append-only wallet ledger, redeem points for merchant vouchers in a digital marketplace, and compete on community gamification leaderboards.
-   - **For Municipal Collectors / Operators:** Single unified login with dynamic role-based routing (RBAC). Collectors view assigned bins geographically, inspect real-time fill percentages, monitor predictive fill-time models, receive critical overflow alerts, and record servicing actions ("Mark as Serviced") with zero-fill reset.
+2. **Single Unified Mobile Application (Shared App with Role-Based Routing):**
+   - **Architectural Rule (`FR-RULE-001`):** Recyclers (Citizens) and Collectors operate within the **exact same mobile application build** with a single unified login screen (`AUTH-003`). Dynamic routing and screen rendering are governed strictly by the user's authenticated JWT role claim (`AUTH-005`):
+     - **Citizen Mode (`USER_CITIZEN`):** Scan bin QR code to unlock sessions, review real-time classification survey results, earn reward points, track an immutable append-only wallet ledger, redeem points for merchant vouchers in a digital marketplace, and compete on community leaderboards.
+     - **Collector Mode (`OPS_COLLECTOR`):** Automatically activated upon collector login (accounts provisioned exclusively by administrators). Collectors view assigned bins geographically, inspect real-time fill percentages, monitor predictive fill-time models, receive critical overflow alerts, and record servicing actions ("Mark as Serviced") with zero-fill reset.
 
 3. **Cloud Web Admin Dashboard:**
    - Centralized management of the container fleet, bin geolocation, capacity thresholds, and district assignments.
@@ -49,20 +50,25 @@ The system addresses solid waste accumulation and lack of source-segregation acr
    - Active learning review queue: disputed or flagged classifications are inspected by administrators to continuously retrain the AI models.
 
 ```
-       [ Citizen App ]                         [ Collector App ]
-              │                                        │
-     (Scan QR / Earn Points)                  (Monitor & Service Bins)
-              │                                        │
-              ▼                                        ▼
+    ┌────────────────────────────────────────────────────────┐
+    │     Single Unified Mobile Application (Flutter)        │
+    │  [Unified Login Screen -> Role-Based Routing (RBAC)]   │
+    │                                                        │
+    │   • Citizen Profile: QR Scan, Points, Wallet Ledger    │
+    │   • Collector Profile: Assigned Bins, Telemetry, Empty │
+    └───────────────────────────┬────────────────────────────┘
+                                │ (HTTPS / JWT Auth)
+                                ▼
     ┌────────────────────────────────────────────────────────┐
     │              RESTful APIs / Backend Cloud              │
+    │     (Collaborative Team Backend: ASP.NET Core API)     │
     │         (Auth, Wallet Ledger, Fleet Management)        │
-    └────────────────────────────────────────────────────────┘
-              ▲                    ▲                   ▲
-              │                    │                   │
-    ┌─────────┴─────────┐ ┌────────┴─────────┐ ┌───────┴────────┐
+    └───────────────────────────┬────────────────────────────┘
+              ▲                 │                 ▲
+              │                 ▼                 │
+    ┌─────────┴─────────┐ ┌────────┴─────────┐ ┌──┴─────────────┐
     │  Smart IoT Bin    │ │   ML Classification  │ │ Web Admin Hub  │
-    │  (Cam & Sensors)  │ │   (Image Detection)  │ │ (Analytics)    │
+    │  (Cam & Sensors)  │ │   (Image Detection)  │ │ (Analytics UI) │
     └───────────────────┘ └──────────────────────┘ └────────────────┘
 ```
 
@@ -70,13 +76,15 @@ The system addresses solid waste accumulation and lack of source-segregation acr
 
 ## 3. Team Members
 
-| # | Member Name | Role & Specialization | Key Responsibilities |
-|---|-------------|-----------------------|----------------------|
-| 1 | **Youssef Mohamed Hussein Mostafa** | **Team Leader & Full-Stack .NET Engineer** | • Overall project leadership and system architecture design.<br>• Core backend APIs, cloud integration, and microservices coordination.<br>• End-to-end integration across IoT, mobile, and web modules. |
-| 2 | **Moaz Sayed Abosreea Elsayed** | **Mobile Application Developer** | • Unified mobile app development (Flutter / Cross-Platform).<br>• Dynamic QR code scanning and real-time session loop UX.<br>• Role-based interface switching (Recycler vs. Collector). |
-| 3 | **Ahmed Abo Bakr Abdelmoneim Mokhaimer** | **Backend & Database Engineer** | • Relational database schema design and ACID ledger transactions.<br>• JWT-based IAM authentication, profile, and authorization routes.<br>• RESTful API endpoints implementation and Swagger/OpenAPI documentation. |
-| 4 | **Zeinab Mamdouh Abdallah Hassan** | **Frontend Web & UI/UX Developer** | • Web Admin Dashboard development (fleet management & analytics).<br>• UI/UX wireframing and interactive prototypes on Figma.<br>• Interactive fleet mapping and live telemetry data visualizations. |
-| 5 | **Mohamed Mostafa Mohamed Abdelghani** | **AI & Embedded Systems Engineer / QA** | • Waste image dataset curation and ML classification model training.<br>• Embedded IoT controller logic, camera triggers, and telemetry hooks.<br>• Unit, integration, automated regression testing, and quality assurance. |
+All team members actively collaborate on the **Backend Development** alongside their specialized domain responsibilities:
+
+| # | Member Name | Role & Core Domain | Key Responsibilities |
+|---|-------------|--------------------|----------------------|
+| 1 | **Youssef Mohamed Hussein Mostafa** | **Team Leader, Backend, Mobile & Hardware** | • Overall project direction, backend architecture, and API integration.<br>• Mobile development for Citizen/Recycler user journeys and session flows.<br>• IoT Hardware: microcontroller programming, sensors, and camera triggers. |
+| 2 | **Zeinab Mamdouh Abdallah Hassan** | **Backend & Mobile (Collector Operations)** | • Core backend development and operational API endpoints.<br>• Mobile development for Collector user screens, workflows, and task routing.<br>• Servicing state management ("Mark as Serviced") and fleet telemetry sync. |
+| 3 | **Moaz Sayed Abosreea Elsayed** | **Backend & Mobile UI Specialist** | • Core backend API development and service logic.<br>• Mobile UI design system, styling, layout components, and animations.<br>• Building seamless, responsive user interfaces across Citizen & Collector views. |
+| 4 | **Mohamed Mostafa Mohamed Abdelghani** | **Backend, AI & Web Dashboard UI** | • Core backend development and analytics services.<br>• Machine learning model training and inference for waste image classification.<br>• Web Admin Dashboard user interface, fleet mapping, and telemetry views. |
+| 5 | **Ahmed Abo Bakr Abdelmoneim Mokhaimer** | **Backend & Database Engineer** | • Relational database schema architecture and data modeling.<br>• ACID-compliant append-only financial ledger transactions.<br>• Identity access management (IAM), JWT authentication, and API endpoints. |
 
 ---
 
@@ -91,22 +99,22 @@ gantt
     section Phase 1
     Requirements & Architecture (FRD, DB & API Specs) :done, p1, 2026-09-01, 14d
     section Phase 2
-    UI/UX Design (Figma Wireframes & User Journey)     :done, p2, 2026-09-15, 12d
+    UI/UX Design (Mobile UI & Admin Dashboard Wireframes) :done, p2, 2026-09-15, 12d
     section Phase 3
-    Core Backend APIs & IoT QR Session Flow            :active, p3, 2026-09-27, 18d
+    Backend APIs, IoT Hardware & ML Classification Engine :active, p3, 2026-09-27, 18d
     section Phase 4
-    Mobile App (Recycler & Collector) & Marketplace    :p4, 2026-10-15, 20d
+    Unified Mobile App (Citizen & Collector Screens) :p4, 2026-10-15, 20d
     section Phase 5
-    Admin Dashboard, End-to-End Testing & Deployment   :p5, 2026-11-05, 15d
+    Admin Web Dashboard, End-to-End Testing & Release :p5, 2026-11-05, 15d
 ```
 
 | Phase | Title | Key Deliverables & Scope | Timeline |
 |-------|-------|--------------------------|----------|
 | **Phase 1** | **Requirements Analysis & Architecture** | Functional Requirements Document (FRD v2.0), relational database modeling, and comprehensive RESTful API specifications. | 2 Weeks |
-| **Phase 2** | **UI/UX Design & Prototyping** | User journey maps, wireframes, and interactive design prototypes (Figma) for Mobile and Web Admin views. | 2 Weeks |
-| **Phase 3** | **Core Backend & IoT Engine** | JWT authentication, QR session engine (60s loop), ACID transaction ledger, and ML model inference pipeline. | 3 Weeks |
-| **Phase 4** | **Mobile App & Gamified Marketplace** | Recycler onboarding, collector dashboard, digital voucher marketplace, and dynamic leaderboards. | 3 Weeks |
-| **Phase 5** | **Admin Dashboard, Testing & Release** | Fleet management portal, audit logging, active learning review queue, end-to-end testing, and production deployment. | 2 Weeks |
+| **Phase 2** | **UI/UX Design & Prototyping** | Mobile design system, Citizen & Collector screen prototypes, and Web Admin Dashboard layouts. | 2 Weeks |
+| **Phase 3** | **Core Backend, IoT & AI Inference** | Collaborative backend implementation, IoT microcontroller firmware, and ML model training for waste classification. | 3 Weeks |
+| **Phase 4** | **Unified Mobile App Integration** | Single mobile codebase with dynamic authentication routing: Citizen disposal loop & Collector servicing dashboard. | 3 Weeks |
+| **Phase 5** | **Admin Dashboard, Testing & Release** | Web Admin portal completion, audit logging, active learning review queue, comprehensive QA testing, and deployment. | 2 Weeks |
 
 ---
 
@@ -115,34 +123,40 @@ gantt
 ### A. System Actors Roles
 1. **Recycler / Citizen (`USER_CITIZEN`):**
    - Self-registers via the mobile app using email and password.
-   - Scans bin QR codes to open timed disposal sessions.
+   - Scans bin QR codes to open timed disposal sessions (60-second renewed window).
    - Reviews post-disposal classification survey and confirms/rejects items.
-   - Earns redeemable reward points, tracks ledger history, and claims digital discount vouchers.
+   - Earns reward points, tracks ledger history, and claims digital discount vouchers.
 2. **Collector / Bin Operator (`OPS_COLLECTOR`):**
-   - Logs into the unified mobile app with collector credentials provisioned by administrators.
-   - Views geographically assigned bins, live telemetry, and predictive fill times.
-   - Receives critical fill alerts ($\ge 80\%$ and $\ge 95\%$) and executes "Mark as Serviced" to reset fill levels.
+   - Logs into the **exact same mobile application** with administrator-provisioned credentials.
+   - Automatically routed to the Collector view to monitor geographically assigned bins.
+   - Receives critical fill alerts ($\ge 80\%$ and $\ge 95\%$) and marks bins as serviced to reset fill levels to 0%.
 3. **System Administrator (`SYS_ADMIN`):**
-   - Holds exclusive provisioning authority for creating Collector accounts.
-   - Manages physical bin fleet registration, coordinates, thresholds, and district assignments.
+   - Sole authority for provisioning and managing Collector accounts.
+   - Fleet registration, capacity thresholds, and district assignments.
    - Administers rewards catalog, performs manual ledger adjustments with mandatory audit justification, and inspects disputed surveys for active model retraining.
 
 ### B. Team Member Responsibility Matrix
+- **All Team Members (Cross-Functional Backend Team):**
+  - Implement, test, and document ASP.NET Core Web API endpoints.
+  - Maintain data consistency, Swagger documentation, and automated test coverage.
 - **Youssef Mohamed Hussein Mostafa (Team Leader):**
-  - Architectural blueprint oversight, technology stack governance, and microservice/API standards.
-  - Development of core cloud business services and end-to-end platform orchestration.
-- **Moaz Sayed Abosreea Elsayed (Mobile Engineer):**
-  - Shared mobile codebase in Flutter with role-based routing between Citizen and Collector interfaces.
-  - Device camera QR scanner integration, disposal session countdown timers, and survey verification UX.
-- **Ahmed Abo Bakr Abdelmoneim Mokhaimer (Backend Engineer):**
-  - Database schema implementation with strict ACID guarantees for the append-only ledger.
-  - Security endpoints: JWT issuance, password recovery flows, and user moderation APIs.
-- **Zeinab Mamdouh Abdallah Hassan (Frontend & UI/UX):**
-  - Figma user journey designs and interactive prototypes.
-  - Responsive Web Admin Dashboard building with real-time maps and analytics charts.
-- **Mohamed Mostafa Mohamed Abdelghani (AI & QA Specialist):**
-  - Computer vision waste classification model training, optimization, and inference validation.
-  - Test suites: unit, functional, integration, load testing, and edge-case failure verification.
+  - Project governance, microservices architecture, and system integration.
+  - Mobile app implementation for Citizen workflows (QR session, survey confirmation, wallet).
+  - IoT hardware development: sensor calibration, bin lid servos, and camera trigger logic.
+- **Zeinab Mamdouh Abdallah Hassan:**
+  - Backend API development for fleet operations and servicing records.
+  - Mobile app implementation for Collector workflows (assigned bins list, fill telemetry, "Mark as Serviced").
+- **Moaz Sayed Abosreea Elsayed:**
+  - Backend API development and business logic integration.
+  - Mobile UI engineering: layout architectures, theme system, reusable widget components, and responsive design across all screen densities.
+- **Mohamed Mostafa Mohamed Abdelghani:**
+  - Backend API integration and analytics reporting endpoints.
+  - AI engineering: training Computer Vision models for multi-material waste classification.
+  - Frontend development for Web Admin Dashboard UI (monitoring tables, maps, and KPIs).
+- **Ahmed Abo Bakr Abdelmoneim Mokhaimer:**
+  - Database architect: entity relationships, migration scripts, and indexing.
+  - Financial ledger engineering: ACID transactions for append-only credits, debits, and adjustments.
+  - IAM security: JWT authentication, password hashing, and RBAC authorization filters.
 
 ---
 
@@ -162,7 +176,7 @@ gantt
 
 ## 7. Instructor & Supervision
 - **Instructor / Academic Supervisor:** **[Instructor Name]**
-- **Training Initiative / Track:** Software Development Track (Full-Stack / Mobile / Cloud)
+- **Training Initiative / Track:** Software Development Track (Full-Stack .NET, Mobile & Cloud)
 - **Supervising Institution:** YAT Learning Centers / Information Technology Institute (MCIT / DEPI Initiative)
 
 ---
@@ -177,10 +191,10 @@ Smart-Recycle-bin/
 │   ├── FRD-Smart-Waste-System.md                  # Functional Requirements Document (FRD v2.0)
 │   └── APIs.md                                    # Complete RESTful API Specifications & Contracts
 ├── src/                                           # Project Source Code
-│   ├── backend/                                   # ASP.NET Core Web API & Entity Framework Core
-│   ├── mobile/                                    # Flutter Shared Mobile Application (Citizen & Collector)
+│   ├── backend/                                   # ASP.NET Core Web API & Entity Framework Core (Team)
+│   ├── mobile/                                    # Single Shared Mobile Application (Citizen & Collector)
 │   ├── web-admin/                                 # Web Admin Dashboard (React / Angular / Blazor)
-│   └── iot-ai/                                    # ML.NET Model & Embedded IoT Bin Controller Scripts
+│   └── iot-ai/                                    # ML.NET / AI Models & Embedded IoT Bin Controller Scripts
 ├── .gitignore                                     # Git Ignore Rules
 └── README.md                                      # Primary Project Documentation
 ```
@@ -199,6 +213,7 @@ Smart-Recycle-bin/
 - [x] **Repository Name:** Clear and descriptive (`Smart-Recycle-bin`).
 - [x] **Repository Description:** Concise and informative summary added to GitHub About section.
 - [x] **Visibility:** Repository settings verified as **Public**.
+- [x] **Single Shared Mobile App:** Citizen and Collector operate within the same application build with dynamic RBAC auth.
 - [x] **README Content:** All 8 mandated sections fully completed:
   - [x] Project Name
   - [x] Project Idea
