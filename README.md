@@ -81,10 +81,10 @@ All team members actively collaborate on the **Backend Development** alongside t
 | # | Member Name | Role & Core Domain | Key Responsibilities |
 |---|-------------|--------------------|----------------------|
 | 1 | **Youssef Mohamed Hussein Mostafa** | **Team Leader, Backend, Mobile & Hardware** | • Overall project direction, backend architecture, and API integration.<br>• Mobile development for Citizen/Recycler user journeys and session flows.<br>• IoT Hardware: microcontroller programming, sensors, and camera triggers. |
-| 2 | **Zeinab Mamdouh Abdallah Hassan** | **Backend & Mobile (Collector Operations)** | • Core backend development and operational API endpoints.<br>• Mobile development for Collector user screens, workflows, and task routing.<br>• Servicing state management ("Mark as Serviced") and fleet telemetry sync. |
+| 2 | **Zeinab Mamdouh Abdallah Hassan** | **Backend, Database Architecture & Mobile (Collector)** | • Relational database schema architecture and data modeling.<br>• Mobile development for Collector user screens, workflows, and task routing.<br>• Servicing state management ("Mark as Serviced") and fleet telemetry sync. |
 | 3 | **Moaz Sayed Abosreea Elsayed** | **Backend & Mobile UI Specialist** | • Core backend API development and service logic.<br>• Mobile UI design system, styling, layout components, and animations.<br>• Building seamless, responsive user interfaces across Citizen & Collector views. |
 | 4 | **Mohamed Mostafa Mohamed Abdelghani** | **Backend, AI & Web Dashboard UI** | • Core backend development and analytics services.<br>• Machine learning model training and inference for waste image classification.<br>• Web Admin Dashboard user interface, fleet mapping, and telemetry views. |
-| 5 | **Ahmed Abo Bakr Abdelmoneim Mokhaimer** | **Backend & Database Engineer** | • Relational database schema architecture and data modeling.<br>• ACID-compliant append-only financial ledger transactions.<br>• Identity access management (IAM), JWT authentication, and API endpoints. |
+| 5 | **Ahmed Abo Bakr Abdelmoneim Mokhaimer** | **Backend & Operational APIs Engineer** | • Core backend development and operational RESTful API endpoints.<br>• ACID-compliant append-only financial ledger transactions.<br>• Identity access management (IAM), JWT authentication, and API endpoints. |
 
 ---
 
@@ -144,8 +144,9 @@ gantt
   - Mobile app implementation for Citizen workflows (QR session, survey confirmation, wallet).
   - IoT hardware development: sensor calibration, bin lid servos, and camera trigger logic.
 - **Zeinab Mamdouh Abdallah Hassan:**
-  - Backend API development for fleet operations and servicing records.
+  - Relational database schema architecture and entity relationship data modeling.
   - Mobile app implementation for Collector workflows (assigned bins list, fill telemetry, "Mark as Serviced").
+  - Backend development for database persistence and operational data mapping.
 - **Moaz Sayed Abosreea Elsayed:**
   - Backend API development and business logic integration.
   - Mobile UI engineering: layout architectures, theme system, reusable widget components, and responsive design across all screen densities.
@@ -154,7 +155,7 @@ gantt
   - AI engineering: training Computer Vision models for multi-material waste classification.
   - Frontend development for Web Admin Dashboard UI (monitoring tables, maps, and KPIs).
 - **Ahmed Abo Bakr Abdelmoneim Mokhaimer:**
-  - Database architect: entity relationships, migration scripts, and indexing.
+  - Core backend development: implementing operational RESTful API endpoints and business logic.
   - Financial ledger engineering: ACID transactions for append-only credits, debits, and adjustments.
   - IAM security: JWT authentication, password hashing, and RBAC authorization filters.
 
