@@ -1,47 +1,57 @@
-# ♻️ Smart Waste Bin System (سلة النفايات الذكية)
+# ♻️ Smart Recycle bin
 > **AI-Powered IoT Waste Classification, Gamified Recycling Platform & Fleet Operations**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Repo Status](https://img.shields.io/badge/Repository-Public-brightgreen.svg)](https://github.com/Smart-Recycle-bin/Smart-Recycle-bin)
-[![Architecture](https://img.shields.io/badge/Architecture-Clean%20Architecture%20%2F%20Microservices-blue.svg)](#)
+[![Repository Status](https://img.shields.io/badge/Repository-Public-brightgreen.svg)](https://github.com/Smart-Recycle-bin/Smart-Recycle-bin)
+[![Architecture](https://img.shields.io/badge/Architecture-Clean%20Architecture%20%2F%20Modular-blue.svg)](#)
 [![Stack](https://img.shields.io/badge/Tech-ASP.NET%20Core%20%7C%20Flutter%20%7C%20ML.NET%20%7C%20IoT-purple.svg)](#)
 
 ---
 
-## 📌 الفهرس / Table of Contents
-1. [Project Name (اسم المشروع)](#1-project-name-اسم-المشروع)
-2. [Project Idea (فكرة المشروع)](#2-project-idea-فكرة-المشروع)
-3. [Team Members (أعضاء الفريق)](#3-team-members-أعضاء-الفريق)
-4. [Work Plan (خطة العمل والجدول الزمني)](#4-work-plan-خطة-العمل-والجدول-الزمني)
-5. [Roles & Responsibilities (الأدوار والمسؤوليات)](#5-roles--responsibilities-الأدوار-والمسؤوليات)
-6. [Key Performance Indicators - KPIs (مؤشرات الأداء الرئيسية)](#6-key-performance-indicators---kpis-مؤشرات-الأداء-الرئيسية)
-7. [Instructor & Supervision (المدرب والإشراف)](#7-instructor--supervision-المدرب-والإشراف)
-8. [Project Files & Architecture (ملفات المشروع وروابط التسليم)](#8-project-files--architecture-ملفات-المشروع-وروابط-التسليم)
+## 📌 Table of Contents
+1. [Project Name](#1-project-name)
+2. [Project Idea](#2-project-idea)
+3. [Team Members](#3-team-members)
+4. [Work Plan](#4-work-plan)
+5. [Roles & Responsibilities](#5-roles--responsibilities)
+6. [Key Performance Indicators (KPIs)](#6-key-performance-indicators-kpis)
+7. [Instructor & Supervision](#7-instructor--supervision)
+8. [Project Files & Architecture](#8-project-files--architecture)
 
 ---
 
-## 1. Project Name (اسم المشروع)
-- **English Name:** Smart Waste Bin System (Smart Recycle Bin Platform)
-- **Arabic Name:** نظام سلة النفايات الذكية ومنظومة إدارة المخلفات والتدوير الرقمي
-- **Repository:** [`Smart-Recycle-bin`](https://github.com/Smart-Recycle-bin/Smart-Recycle-bin)
+## 1. Project Name
+- **Project Title:** Smart Recycle bin
+- **System Classification:** IoT & AI-Driven Solid Waste Management & Gamified Recycling Ecosystem
+- **GitHub Repository:** [`Smart-Recycle-bin`](https://github.com/Smart-Recycle-bin/Smart-Recycle-bin)
 
 ---
 
-## 2. Project Idea (فكرة المشروع)
-### 💡 الملخص التنفيذي / Executive Summary
-مشروع **Smart Waste Bin System** هو منظومة رقمية متكاملة تجمع بين إنترنت الأشياء (IoT)، الذكاء الاصطناعي (AI/ML)، وتطبيقات الموبايل والويب لتحويل عملية التخلص من النفايات إلى تجربة تفاعلية ذكية ومحفزة بيئيًا. 
+## 2. Project Idea
+### 💡 Executive Summary
+**Smart Recycle bin** is an end-to-end smart waste management ecosystem that bridges Internet of Things (IoT), Computer Vision / Artificial Intelligence (AI/ML), cross-platform mobile apps, and cloud administration dashboards. It transforms traditional waste disposal into an automated, gamified, and ecologically accountable experience.
 
-يعالج النظام مشكلة تراكم النفايات وعدم فرزها من المصدر عبر تقديم:
-1. **سلات نفايات ذكية (Smart Bins with IoT & Embedded AI):** مزودة بكاميرات وحساسات لفتح الغطاء آليًا عبر مسح QR Code، والتقاط صور المخلفات، وتصنيف نوعها (بلاستيك، زجاج، ورق، كانز/معادن) لحظيًا وتقدير نقاط المكافأة المكتسبة.
-2. **تطبيق موبايل موحد متعدد الأدوار (Unified Mobile App):**
-   - **للمواطن / المدور (Citizen / Recycler):** مسح كود السلة لبدء جلسة الإيداع (Session window: 60s)، فحص نتائج التصنيف الآلي، كسب النقاط، تتبع المحفظة الرقمية المالية (Append-only Ledger)، استبدال النقاط بقسائم شراء (Vouchers Marketplace)، والمنافسة في لوحة الشرف (Gamification Leaderboards).
-   - **لعامل الجمع والتشغيل (Collector / Bin Operator):** مراقبة السلات المسندة إليه جغرافياً، متابعة نسبة الامتلاء الحية والتنبؤ بوقت الامتلاء (Predictive Fill-levels)، استقبال تنبيهات الطوارئ، وتحديث حالة الصيانة والتفريغ ("Mark as Serviced").
-3. **لوحة تحكم إدارية سحابية (Web Admin Dashboard):** تمكّن الإدارة المركزية من مراقبة أسطول الحاويات، إدارة صلاحيات العاملين، فحص السجلات المالية والرقابية (Audit Logs)، تدريب الذكاء الاصطناعي على الحالات المشكوك فيها (Active Learning Pipeline)، واستعراض التحليلات والإحصائيات البيئية.
+The system addresses solid waste accumulation and lack of source-segregation across three integrated tiers:
+
+1. **AI-Enabled IoT Smart Bins:**
+   - Embedded sensors and cameras automatically unlock the bin lid upon scanning a dynamic QR code via the mobile app.
+   - High-speed onboard cameras capture images of inserted items.
+   - An integrated machine learning engine classifies waste types (`PLASTIC_BOTTLE`, `ALUMINUM_CAN`, `GLASS`, `PAPER`, `ORGANIC`) in real time, calculating reward points within an active 60-second renewed session window.
+
+2. **Unified Dual-Role Mobile Application:**
+   - **For Citizens / Recyclers:** Scan bin QR code to unlock sessions, review real-time classification survey results, earn reward points, track an immutable append-only wallet ledger, redeem points for merchant vouchers in a digital marketplace, and compete on community gamification leaderboards.
+   - **For Municipal Collectors / Operators:** Single unified login with dynamic role-based routing (RBAC). Collectors view assigned bins geographically, inspect real-time fill percentages, monitor predictive fill-time models, receive critical overflow alerts, and record servicing actions ("Mark as Serviced") with zero-fill reset.
+
+3. **Cloud Web Admin Dashboard:**
+   - Centralized management of the container fleet, bin geolocation, capacity thresholds, and district assignments.
+   - Exclusive authority for provisioning and managing Collector accounts.
+   - Real-time audit logs of all administrative mutations, ledger adjustments, and voucher redemptions.
+   - Active learning review queue: disputed or flagged classifications are inspected by administrators to continuously retrain the AI models.
 
 ```
        [ Citizen App ]                         [ Collector App ]
               │                                        │
-     (Scan QR / Points)                       (Monitor & Empty Bins)
+     (Scan QR / Earn Points)                  (Monitor & Service Bins)
               │                                        │
               ▼                                        ▼
     ┌────────────────────────────────────────────────────────┐
@@ -58,27 +68,25 @@
 
 ---
 
-## 3. Team Members (أعضاء الفريق)
+## 3. Team Members
 
-| # | Name (الاسم) | Track / Major | GitHub Profile | Email / Contact |
-|---|-------------|---------------|----------------|-----------------|
-| 1 | **[Team Member 1 / Team Leader]** | Full-Stack .NET / Lead | [@username](https://github.com/) | member1@example.com |
-| 2 | **[Team Member 2]** | Mobile Development (Flutter) | [@username](https://github.com/) | member2@example.com |
-| 3 | **[Team Member 3]** | Backend API & Database | [@username](https://github.com/) | member3@example.com |
-| 4 | **[Team Member 4]** | Frontend Web (Dashboard) | [@username](https://github.com/) | member4@example.com |
-| 5 | **[Team Member 5]** | AI & Embedded / Quality Assurance | [@username](https://github.com/) | member5@example.com |
-
-> *(ملاحظة: يرجى تحديث أسماء وبيانات أعضاء الفريق وروابط حساباتهم طبقاً للقائمة المعتمدة لديكم).*
+| # | Member Name | Role & Specialization | Key Responsibilities |
+|---|-------------|-----------------------|----------------------|
+| 1 | **Youssef Mohamed Hussein Mostafa** | **Team Leader & Full-Stack .NET Engineer** | • Overall project leadership and system architecture design.<br>• Core backend APIs, cloud integration, and microservices coordination.<br>• End-to-end integration across IoT, mobile, and web modules. |
+| 2 | **Moaz Sayed Abosreea Elsayed** | **Mobile Application Developer** | • Unified mobile app development (Flutter / Cross-Platform).<br>• Dynamic QR code scanning and real-time session loop UX.<br>• Role-based interface switching (Recycler vs. Collector). |
+| 3 | **Ahmed Abo Bakr Abdelmoneim Mokhaimer** | **Backend & Database Engineer** | • Relational database schema design and ACID ledger transactions.<br>• JWT-based IAM authentication, profile, and authorization routes.<br>• RESTful API endpoints implementation and Swagger/OpenAPI documentation. |
+| 4 | **Zeinab Mamdouh Abdallah Hassan** | **Frontend Web & UI/UX Developer** | • Web Admin Dashboard development (fleet management & analytics).<br>• UI/UX wireframing and interactive prototypes on Figma.<br>• Interactive fleet mapping and live telemetry data visualizations. |
+| 5 | **Mohamed Mostafa Mohamed Abdelghani** | **AI & Embedded Systems Engineer / QA** | • Waste image dataset curation and ML classification model training.<br>• Embedded IoT controller logic, camera triggers, and telemetry hooks.<br>• Unit, integration, automated regression testing, and quality assurance. |
 
 ---
 
-## 4. Work Plan (خطة العمل والجدول الزمني)
+## 4. Work Plan
 
-تم تنظيم العمل وفق منهجية **Agile / Scrum** مقسمة إلى 5 مراحل رئيسية:
+The project execution is organized following the **Agile / Scrum** framework across 5 core phases:
 
 ```mermaid
 gantt
-    title Smart Waste Bin Project Roadmap
+    title Smart Recycle bin - Project Execution Roadmap
     dateFormat  YYYY-MM-DD
     section Phase 1
     Requirements & Architecture (FRD, DB & API Specs) :done, p1, 2026-09-01, 14d
@@ -92,95 +100,106 @@ gantt
     Admin Dashboard, End-to-End Testing & Deployment   :p5, 2026-11-05, 15d
 ```
 
-| المرحلة (Phase) | الأهداف والمخرجات (Deliverables) | المدة الزمنية |
-|-----------------|---------------------------------|--------------|
-| **Phase 1: تحليل المتطلبات والتصميم المعماري** | صياغة وثيقة المتطلبات الوظيفية (FRD)، وتصميم قواعد البيانات، وتوصيف واجهات الـ RESTful APIs. | أسبوعان |
-| **Phase 2: تجربة المستخدم وتصميم الشاشات** | بناء Wireframes وتصميم النموذج التفاعلي (Figma Prototype) لتطبيق الموبايل ولوحة التحكم. | أسبوعان |
-| **Phase 3: تطوير النواة والخدمات السحابية** | بناء خدمات المصادقة (JWT IAM)، إدارة جلسات الـ QR، محرك الذكاء الاصطناعي لتصنيف المخلفات (ML Engine). | 3 أسابيع |
-| **Phase 4: تكامل تطبيق الموبايل ونظام المكافآت** | برمجة شاشات المستخدم والمجمع، المحفظة المالية (Append-only Ledger)، ونظام قسائم الماركت بليس. | 3 أسابيع |
-| **Phase 5: لوحة التحكم والتحليلات والاختبارات** | تطوير Web Admin Dashboard، تقارير الأداء وخرائط الأسطول، وإجراء اختبارات الجودة (Integration & E2E Testing). | أسبوعان |
+| Phase | Title | Key Deliverables & Scope | Timeline |
+|-------|-------|--------------------------|----------|
+| **Phase 1** | **Requirements Analysis & Architecture** | Functional Requirements Document (FRD v2.0), relational database modeling, and comprehensive RESTful API specifications. | 2 Weeks |
+| **Phase 2** | **UI/UX Design & Prototyping** | User journey maps, wireframes, and interactive design prototypes (Figma) for Mobile and Web Admin views. | 2 Weeks |
+| **Phase 3** | **Core Backend & IoT Engine** | JWT authentication, QR session engine (60s loop), ACID transaction ledger, and ML model inference pipeline. | 3 Weeks |
+| **Phase 4** | **Mobile App & Gamified Marketplace** | Recycler onboarding, collector dashboard, digital voucher marketplace, and dynamic leaderboards. | 3 Weeks |
+| **Phase 5** | **Admin Dashboard, Testing & Release** | Fleet management portal, audit logging, active learning review queue, end-to-end testing, and production deployment. | 2 Weeks |
 
 ---
 
-## 5. Roles & Responsibilities (الأدوار والمسؤوليات)
+## 5. Roles & Responsibilities
 
-### أ. أدوار مستخدمي النظام (System Actors Roles)
-1. **المواطن / المستخدم (Recycler - `USER_CITIZEN`):**
-   - التسجيل الذاتي ومسح QR Code لبدء عملية الإيداع.
-   - مراجعة استبيان التدوير وتأكيد نتائج الفرز الآلي لكسب النقاط.
-   - متابعة رصيد النقاط واستبدالها بقسائم خصم من المتاجر.
-2. **عامل الجمع والتفريغ (Collector - `OPS_COLLECTOR`):**
-   - تسجيل الدخول عبر نفس تطبيق الموبايل بتوجيه تلقائي (Role-based Routing).
-   - متابعة السلات المسندة إليه جغرافياً ومعاينة مستوى الامتلاء والتوقعات.
-   - تأكيد تفريغ السلة ("Mark as Serviced") لتصفير العداد إلى 0%.
-3. **مدير النظام (System Administrator - `SYS_ADMIN`):**
-   - الجهة الوحيدة المخولة بإنشاء وتعيين حسابات عمال الجمع (Collectors Provisioning).
-   - إدارة أسطول السلات وتعيين المواقع الجغرافية والأحياء.
-   - إدارة متجر المكافآت، مراجعة سجلات التدقيق (Audit Logs)، والبت في الحالات المعترضة لإعادة تدريب الذكاء الاصطناعي (Active Learning).
+### A. System Actors Roles
+1. **Recycler / Citizen (`USER_CITIZEN`):**
+   - Self-registers via the mobile app using email and password.
+   - Scans bin QR codes to open timed disposal sessions.
+   - Reviews post-disposal classification survey and confirms/rejects items.
+   - Earns redeemable reward points, tracks ledger history, and claims digital discount vouchers.
+2. **Collector / Bin Operator (`OPS_COLLECTOR`):**
+   - Logs into the unified mobile app with collector credentials provisioned by administrators.
+   - Views geographically assigned bins, live telemetry, and predictive fill times.
+   - Receives critical fill alerts ($\ge 80\%$ and $\ge 95\%$) and executes "Mark as Serviced" to reset fill levels.
+3. **System Administrator (`SYS_ADMIN`):**
+   - Holds exclusive provisioning authority for creating Collector accounts.
+   - Manages physical bin fleet registration, coordinates, thresholds, and district assignments.
+   - Administers rewards catalog, performs manual ledger adjustments with mandatory audit justification, and inspects disputed surveys for active model retraining.
 
-### ب. مسؤوليات فريق العمل التقني (Technical Team Responsibilities)
-- **Backend Engineer:** بناء وتأمين واجهات البرمجة (RESTful APIs) بـ ASP.NET Core، وتطبيق المعاملات المالية الذرية (ACID Transactions)، وتوثيق Swagger/OpenAPI.
-- **Mobile App Developer:** بناء تطبيق الموبايل الهجين (Flutter) بنمط واجهة موحد يتكيف تلقائياً مع دور المستخدم (Citizen vs Collector)، وتكامل الماسح الضوئي (QR Scanner).
-- **Frontend Web Developer:** تطوير لوحة تحكم الإدارة (Admin Dashboard) وتصميم الخرائط الحية ومخططات الإحصائيات التفاعلية.
-- **AI & Embedded Systems Specialist:** إعداد وتدريب نموذج تصنيف صور النفايات (Computer Vision)، وبرمجة دوائر الحساسات وكاميرا السلة الذكية.
-- **QA & DevOps Engineer:** اختبار حالات الأمان وسلامة البيانات، ومراقبة كفاءة الأداء، وضبط إعدادات الـ CI/CD والنشر السحابي.
-
----
-
-## 6. Key Performance Indicators - KPIs (مؤشرات الأداء الرئيسية)
-
-| فئة المؤشر | مؤشر الأداء (KPI) | المستهدف (Target Metric) | آلية القياس |
-|-----------|------------------|--------------------------|-------------|
-| **دقة الذكاء الاصطناعي** | Waste Classification Accuracy | $\ge 95\%$ | نسبة التصنيفات الصحيحة المؤكدة من المستخدمين |
-| **سرعة الاستجابة** | API Average Response Time | $< 200 \text{ ms}$ | مراقبة زمن استجابة خوادم الـ Backend |
-| **زمن جلسة الإيداع** | Active Disposal Window | $60 \text{ sec}$ | نافذة إيداع زمنية تتجدد تلقائياً عند إضافة عنصر جديد |
-| **سلامة القيود المالية** | Financial Ledger Integrity | $100\%$ Consistency | سجل محاسبي غير قابل للتعديل (Zero Ledger Discrepancies) |
-| **كفاءة تفريغ الأسطول** | Bin Overflow Prevention | $< 3\%$ | خفض الحالات التي تصل فيها السلة إلى امتلاء حرج قبل التفريغ |
-| **جودة الفرز والتلوث** | Contamination Rate | $< 5\%$ | نسبة العناصر المرفوضة أو المصنفة خطأ داخل السلة |
-| **التفاعل واستبدال المكافآت** | Voucher Redemption Ratio | $> 60\%$ | نسبة استبدال النقاط المكتسبة بقسائم فعلية |
+### B. Team Member Responsibility Matrix
+- **Youssef Mohamed Hussein Mostafa (Team Leader):**
+  - Architectural blueprint oversight, technology stack governance, and microservice/API standards.
+  - Development of core cloud business services and end-to-end platform orchestration.
+- **Moaz Sayed Abosreea Elsayed (Mobile Engineer):**
+  - Shared mobile codebase in Flutter with role-based routing between Citizen and Collector interfaces.
+  - Device camera QR scanner integration, disposal session countdown timers, and survey verification UX.
+- **Ahmed Abo Bakr Abdelmoneim Mokhaimer (Backend Engineer):**
+  - Database schema implementation with strict ACID guarantees for the append-only ledger.
+  - Security endpoints: JWT issuance, password recovery flows, and user moderation APIs.
+- **Zeinab Mamdouh Abdallah Hassan (Frontend & UI/UX):**
+  - Figma user journey designs and interactive prototypes.
+  - Responsive Web Admin Dashboard building with real-time maps and analytics charts.
+- **Mohamed Mostafa Mohamed Abdelghani (AI & QA Specialist):**
+  - Computer vision waste classification model training, optimization, and inference validation.
+  - Test suites: unit, functional, integration, load testing, and edge-case failure verification.
 
 ---
 
-## 7. Instructor & Supervision (المدرب والإشراف)
-- **Instructor / Supervisor:** مهندس / أستاذ المادة المشرف: **[اسم المدرب / Instructor Name]**
-- **Training Initiative / Track:** منحة / برنامج تدريب تطوير البرمجيات (Software Development Track)
-- **Supervising Entity:** مركز التدريب / المعهد (YAT Learning Centers / MCIT / DEPI Initiative)
+## 6. Key Performance Indicators (KPIs)
+
+| Metric Category | Key Performance Indicator (KPI) | Target Metric | Verification Method |
+|-----------------|---------------------------------|---------------|---------------------|
+| **AI Performance** | Waste Classification Accuracy | $\ge 95\%$ | Ratio of user-confirmed vs. disputed AI classifications |
+| **System Latency** | Average API Response Time | $< 200 \text{ ms}$ | APM monitoring under standard and peak concurrency |
+| **Session Operations** | Active Disposal Window | $60 \text{ sec}$ | Automatically renewed upon each consecutive item inserted |
+| **Financial Integrity** | Financial Ledger Consistency | $100\%$ Match | Zero ledger discrepancies across credits, debits, and adjustments |
+| **Operational Efficiency** | Bin Overflow Incidents | $< 3\%$ | Collector alerts dispatched before critical container overflow |
+| **Sorting Quality** | Waste Contamination Rate | $< 5\%$ | Rate of non-recyclables or misclassified items in target containers |
+| **User Engagement** | Voucher Redemption Rate | $> 60\%$ | Ratio of earned reward points exchanged for active marketplace vouchers |
 
 ---
 
-## 8. Project Files & Architecture (ملفات المشروع وروابط التسليم)
+## 7. Instructor & Supervision
+- **Instructor / Academic Supervisor:** **[Instructor Name]**
+- **Training Initiative / Track:** Software Development Track (Full-Stack / Mobile / Cloud)
+- **Supervising Institution:** YAT Learning Centers / Information Technology Institute (MCIT / DEPI Initiative)
 
-### 📁 هيكل المستودع والملفات الفنية (Repository Directory Structure)
+---
+
+## 8. Project Files & Architecture
+
+### 📁 Repository Directory Structure
 ```
 Smart-Recycle-bin/
-├── docs/                                          # التوثيق الشامل والمواصفات الفنية
-│   ├── Smart-Waste-Management-Features.md         # تصنيف الأولويات والخصائص والسيناريوهات
-│   ├── FRD-Smart-Waste-System.md                  # وثيقة المتطلبات الوظيفية الشاملة (FRD v2.0)
-│   └── APIs.md                                    # التوصيف الكامل لجميع واجهات البرمجة (API Endpoints)
-├── src/                                           # الأكواد البرمجية للمشروع (Source Code)
-│   ├── backend/                                   # ASP.NET Core Web API & Database Context
-│   ├── mobile/                                    # Flutter Shared Mobile App (Citizen & Collector)
+├── docs/                                          # Comprehensive Documentation & Specifications
+│   ├── Smart-Waste-Management-Features.md         # Feature Prioritization & Scenarios (Must/Should/Could)
+│   ├── FRD-Smart-Waste-System.md                  # Functional Requirements Document (FRD v2.0)
+│   └── APIs.md                                    # Complete RESTful API Specifications & Contracts
+├── src/                                           # Project Source Code
+│   ├── backend/                                   # ASP.NET Core Web API & Entity Framework Core
+│   ├── mobile/                                    # Flutter Shared Mobile Application (Citizen & Collector)
 │   ├── web-admin/                                 # Web Admin Dashboard (React / Angular / Blazor)
-│   └── iot-ai/                                    # ML.NET Model & IoT Bin Embedded Scripts
-├── .gitignore                                     # استبعاد ملفات البناء المؤقتة
-└── README.md                                      # دليل المشروع والتوثيق المعتمد
+│   └── iot-ai/                                    # ML.NET Model & Embedded IoT Bin Controller Scripts
+├── .gitignore                                     # Git Ignore Rules
+└── README.md                                      # Primary Project Documentation
 ```
 
-### 🔗 روابط المشروع الإضافية (Project Links & External Deliverables)
-- **Interactive UI/UX Prototype (رابط تصميم فيجما):** [عرض التصميم على Figma](https://www.figma.com/) *(يرجى إدراج رابط Figma)*
-- **Project Cloud Drive / Presentation (العرض التقديمي):** [ملفات العرض على Google Drive](https://drive.google.com/) *(يرجى إدراج رابط Drive)*
-- **Documentation Docs Folder:** [تصفح مجلد التوثيق داخل المستودع](./docs/)
-  - [عرض ملف الخصائص والسيناريوهات (Smart-Waste-Management-Features.md)](./docs/Smart-Waste-Management-Features.md)
-  - [عرض المتطلبات الوظيفية (FRD-Smart-Waste-System.md)](./docs/FRD-Smart-Waste-System.md)
-  - [عرض توثيق الـ APIs (APIs.md)](./docs/APIs.md)
+### 🔗 Project Deliverable Links
+- **Interactive UI/UX Prototype:** [Figma Design Prototype](https://www.figma.com/) *(Add Figma Link)*
+- **Project Presentation & Cloud Drive:** [Google Drive Folder](https://drive.google.com/) *(Add Google Drive Link)*
+- **Technical Documentation Directory:** [Browse `docs/` Folder](./docs/)
+  - [Feature Prioritization & Scenarios (Smart-Waste-Management-Features.md)](./docs/Smart-Waste-Management-Features.md)
+  - [Functional Requirements Document (FRD-Smart-Waste-System.md)](./docs/FRD-Smart-Waste-System.md)
+  - [RESTful APIs Specification (APIs.md)](./docs/APIs.md)
 
 ---
 
-### 🛡️ الاشتراطات الفنية للمراجعة والتسليم (Submission Checklist)
-- [x] **اسم الـ Repository واضح ومعبر:** `Smart-Recycle-bin`
-- [x] **وصف المشروع (Description) محدد:** توفير وصف دقيق في إعدادات المستودع على GitHub.
-- [x] **إتاحة المستودع:** ضبط الـ Repository على **Public**.
-- [x] **استكمال ملف README بالبنود الثمانية المطلوبة:**
+### 🛡️ Submission Checklist
+- [x] **Repository Name:** Clear and descriptive (`Smart-Recycle-bin`).
+- [x] **Repository Description:** Concise and informative summary added to GitHub About section.
+- [x] **Visibility:** Repository settings verified as **Public**.
+- [x] **README Content:** All 8 mandated sections fully completed:
   - [x] Project Name
   - [x] Project Idea
   - [x] Team Members
@@ -189,4 +208,4 @@ Smart-Recycle-bin/
   - [x] KPIs
   - [x] Instructor
   - [x] Project Files
-- [x] **رفع ملفات المشروع والتوثيق:** تم تضمين ملفات الـ FRD و الـ APIs في مجلد `docs/`.
+- [x] **Source Files & Architecture:** System documentation files and source tree organized inside the repository.
