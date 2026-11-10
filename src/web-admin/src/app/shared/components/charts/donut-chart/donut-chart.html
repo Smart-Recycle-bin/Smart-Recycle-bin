@@ -46,7 +46,13 @@
             text-anchor="middle"
             class="donut-center-value"
           >
-            {{ activeItem() ? activeItem()!.value : totalValue() }}{{ unit() }}
+            {{
+              activeItem()
+                ? activeItem()!.value + unit()
+                : centerValue() !== null
+                  ? centerValue()
+                  : totalValue() + unit()
+            }}
           </text>
           <text
             x="50"

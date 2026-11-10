@@ -7,17 +7,18 @@
   border: 1px solid var(--line);
   border-radius: 0.75rem;
   padding: 1.25rem;
-  transition: all 0.2s ease-in-out;
+  transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
 }
 
 .stat-card:hover {
-  border-color: rgba(0, 153, 102, 0.3);
+  border-color: color-mix(in srgb, var(--brand) 35%, var(--line));
 }
 
 .stat-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 0.5rem;
   margin-bottom: 0.75rem;
 }
 
@@ -28,21 +29,44 @@
 }
 
 .stat-icon-wrapper {
-  width: 2rem;
-  height: 2rem;
-  border-radius: 0.5rem;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.625rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: rgba(0, 153, 102, 0.1);
-  color: #009966;
+  flex-shrink: 0;
+}
+
+.stat-icon-wrapper.tone-green {
+  background-color: var(--brand-soft);
+  color: var(--brand);
+}
+
+.stat-icon-wrapper.tone-blue {
+  background-color: rgba(14, 165, 233, 0.14);
+  color: var(--info);
+}
+
+.stat-icon-wrapper.tone-purple {
+  background-color: rgba(139, 92, 246, 0.14);
+  color: var(--purple-ink);
+}
+
+.stat-icon-wrapper.tone-amber {
+  background-color: rgba(245, 158, 11, 0.14);
+  color: var(--warning);
+}
+
+.stat-icon-wrapper.tone-red {
+  background-color: rgba(239, 68, 68, 0.14);
+  color: var(--danger);
 }
 
 .stat-body {
   display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 0.75rem;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 .stat-value-group {
@@ -57,6 +81,7 @@
   color: var(--ink);
   letter-spacing: -0.025em;
   line-height: 1.1;
+  font-variant-numeric: tabular-nums;
 }
 
 .stat-unit {
@@ -65,10 +90,22 @@
   color: var(--muted);
 }
 
+.stat-trend-group {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
 .trend-inner {
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
+}
+
+.stat-comparison {
+  font-size: 0.75rem;
+  color: var(--muted);
 }
 
 .stat-description {

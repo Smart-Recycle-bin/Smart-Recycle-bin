@@ -8,6 +8,11 @@
 }
 
 .chart-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
   margin-bottom: 0.75rem;
 }
 
@@ -15,9 +20,38 @@
   font-size: 0.875rem;
   font-weight: 600;
   color: var(--ink);
+  margin: 0;
+}
+
+.chart-legend {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.legend-entry {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.legend-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 9999px;
+  flex-shrink: 0;
+}
+
+.legend-name {
+  font-weight: 500;
+  color: var(--ink);
 }
 
 .chart-svg-box {
+  position: relative;
   width: 100%;
   overflow: visible;
 }
@@ -34,14 +68,23 @@
   stroke-width: 1;
 }
 
+.crosshair-line {
+  stroke: var(--muted);
+  stroke-dasharray: 3 3;
+  stroke-width: 1;
+  opacity: 0.6;
+  pointer-events: none;
+}
+
 .axis-label {
   fill: var(--muted);
-  font-size: 10px;
+  font-size: 10.5px;
   font-family: inherit;
+  font-variant-numeric: tabular-nums;
 }
 
 .hover-trigger {
-  cursor: pointer;
+  cursor: crosshair;
 }
 
 .point-circle {
@@ -49,16 +92,56 @@
   pointer-events: none;
 }
 
-.tooltip-bg {
-  fill: var(--ink);
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+.chart-tooltip-card {
+  position: absolute;
+  top: 0.25rem;
+  transform: translateX(-50%);
+  min-width: 9rem;
+  background-color: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.625rem;
+  box-shadow: 0 8px 20px -4px rgba(15, 23, 42, 0.18);
+  pointer-events: none;
+  z-index: 10;
 }
 
-.tooltip-text {
-  fill: var(--card);
-  font-size: 11px;
+.tooltip-date {
+  font-size: 0.7rem;
   font-weight: 600;
-  font-family: inherit;
+  color: var(--muted);
+  margin-bottom: 0.25rem;
+}
+
+.tooltip-entries {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.tooltip-entry {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.75rem;
+}
+
+.tooltip-dot {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 9999px;
+  flex-shrink: 0;
+}
+
+.tooltip-name {
+  color: var(--muted);
+  flex: 1 1 auto;
+}
+
+.tooltip-val {
+  color: var(--ink);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
 }
 
 .chart-empty {

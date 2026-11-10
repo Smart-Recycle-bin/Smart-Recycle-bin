@@ -1,22 +1,38 @@
 <div class="area-chart-container">
-  @if (title()) {
+  @if (title() || shouldShowLegend()) {
     <div class="chart-header">
-      <h4 class="chart-title">{{ title() }}</h4>
+      @if (title()) {
+        <h4 class="chart-title">{{ title() }}</h4>
+      }
+      @if (shouldShowLegend()) {
+        <div class="chart-legend" role="list">
+          @for (s of computedSeries(); track s.name) {
+            <div class="legend-entry" role="listitem">
+              <span class="legend-dot" [style.background-color]="s.color"></span>
+              <span class="legend-name">{{ s.name }}</span>
+            </div>
+          }
+        </div>
+      }
     </div>
   }
 
   @if (hasData()) {
-    <div class="chart-svg-box">
+    <div class="chart-svg-box" (mouseleave)="onPointHover(null)">
       <svg
         [attr.viewBox]="'0 0 ' + width + ' ' + height()"
         class="chart-svg"
         preserveAspectRatio="xMidYMid meet"
+        role="img"
+        [attr.aria-label]="title() || 'Area chart'"
       >
         <defs>
-          <linearGradient [id]="chartId" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" [attr.stop-color]="color()" stop-opacity="0.3" />
-            <stop offset="100%" [attr.stop-color]="color()" stop-opacity="0.0" />
-          </linearGradient>
+          @for (s of computedSeries(); track s.gradientId) {
+            <linearGradient [id]="s.gradientId" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" [attr.stop-color]="s.color" stop-opacity="0.22" />
+              <stop offset="100%" [attr.stop-color]="s.color" stop-opacity="0.0" />
+            </linearGradient>
+          }
         </defs>
 
         @if (showGrid()) {
@@ -34,88 +50,95 @@
               text-anchor="end"
               class="axis-label"
             >
-              {{ grid.val }}
+              {{ grid.formatted }}
             </text>
           }
         }
 
-        <!-- Filled area -->
-        <path [attr.d]="areaPath()" [attr.fill]="'url(#' + chartId + ')'" />
+        @for (s of computedSeries(); track s.gradientId) {
+          <path [attr.d]="s.areaPath" [attr.fill]="'url(#' + s.gradientId + ')'" />
+          <path
+            [attr.d]="s.linePath"
+            fill="none"
+            [attr.stroke]="s.color"
+            stroke-width="2.25"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="series-line"
+          />
+        }
 
-        <!-- Line stroke -->
-        <path
-          [attr.d]="linePath()"
-          fill="none"
-          [attr.stroke]="color()"
-          stroke-width="2.5"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-        />
+        @if (hoveredData()) {
+          <line
+            [attr.x1]="hoveredData()!.x"
+            [attr.y1]="padTop"
+            [attr.x2]="hoveredData()!.x"
+            [attr.y2]="padTop + plotHeight()"
+            class="crosshair-line"
+          />
+        }
 
-        <!-- X labels and points -->
-        @for (pt of points(); track pt.index) {
-          <!-- X axis label for first, middle, last points -->
-          @if (pt.index === 0 || pt.index === points().length - 1 || pt.index === Math.floor(points().length / 2)) {
+        @for (s of computedSeries(); track s.gradientId) {
+          @for (pt of s.points; track pt.index) {
+            <circle
+              [attr.cx]="pt.x"
+              [attr.cy]="pt.y"
+              [attr.r]="hoveredIndex() === pt.index ? 4.5 : 2.5"
+              [attr.fill]="hoveredIndex() === pt.index ? s.color : 'var(--card)'"
+              [attr.stroke]="s.color"
+              stroke-width="2"
+              class="point-circle"
+              [class.is-hovered]="hoveredIndex() === pt.index"
+            />
+          }
+        }
+
+        @for (xItem of xLabels(); track xItem.index) {
+          @if (xItem.showLabel) {
             <text
-              [attr.x]="pt.x"
-              [attr.y]="height() - 8"
-              [attr.text-anchor]="pt.index === 0 ? 'start' : (pt.index === points().length - 1 ? 'end' : 'middle')"
+              [attr.x]="xItem.x"
+              [attr.y]="height() - 6"
+              [attr.text-anchor]="xItem.anchor"
               class="axis-label"
             >
-              {{ pt.item.label }}
+              {{ xItem.label }}
             </text>
           }
+        }
 
-          <!-- Invisible wider hit area for hover -->
-          <circle
-            [attr.cx]="pt.x"
-            [attr.cy]="pt.y"
-            r="12"
+        @for (slice of hoverSlices(); track slice.index) {
+          <rect
+            [attr.x]="slice.x"
+            [attr.y]="padTop"
+            [attr.width]="slice.width"
+            [attr.height]="plotHeight()"
             fill="transparent"
             class="hover-trigger"
-            (mouseenter)="onPointHover(pt.index)"
-            (mouseleave)="onPointHover(null)"
+            (mouseenter)="onPointHover(slice.index)"
           />
-
-          <!-- Point circle visible on hover -->
-          <circle
-            [attr.cx]="pt.x"
-            [attr.cy]="pt.y"
-            [attr.r]="hoveredIndex() === pt.index ? 5 : 3"
-            [attr.fill]="hoveredIndex() === pt.index ? color() : 'var(--card)'"
-            [attr.stroke]="color()"
-            stroke-width="2"
-            class="point-circle"
-            [class.is-hovered]="hoveredIndex() === pt.index"
-          />
-        }
-
-        <!-- Tooltip overlay -->
-        @if (hoveredPoint()) {
-          <g [attr.transform]="'translate(' + hoveredPoint()!.x + ',' + (hoveredPoint()!.y - 32) + ')'" class="chart-tooltip">
-            <rect
-              x="-40"
-              y="-12"
-              width="80"
-              height="24"
-              rx="4"
-              class="tooltip-bg"
-            />
-            <text
-              x="0"
-              y="4"
-              text-anchor="middle"
-              class="tooltip-text"
-            >
-              {{ hoveredPoint()!.item.value }}{{ unit() }}
-            </text>
-          </g>
         }
       </svg>
+
+      @if (hoveredData()) {
+        <div class="chart-tooltip-card" [style.left.%]="hoveredData()!.leftPercent">
+          <div class="tooltip-date">{{ hoveredData()!.label }}</div>
+          <div class="tooltip-entries">
+            @for (entry of hoveredData()!.entries; track entry.name) {
+              <div class="tooltip-entry">
+                <span class="tooltip-dot" [style.background-color]="entry.color"></span>
+                <span class="tooltip-name">{{ entry.name }}</span>
+                <span class="tooltip-val">
+                  {{ entry.value }}{{ unit() ? ' ' + unit() : '' }}
+                </span>
+              </div>
+            }
+          </div>
+        </div>
+      }
     </div>
   } @else {
     <div class="chart-empty">
-      <span class="chart-empty-text">No chart data available</span>
+      <span class="chart-empty-text">Not enough data to plot</span>
     </div>
   }
 </div>

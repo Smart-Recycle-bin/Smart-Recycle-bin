@@ -2,7 +2,7 @@
   <div class="stat-header">
     <span class="stat-title">{{ title() }}</span>
     @if (icon()) {
-      <div class="stat-icon-wrapper">
+      <div class="stat-icon-wrapper" [class]="'tone-' + iconTone()">
         <app-icon [name]="icon()!" size="sm" />
       </div>
     }
@@ -17,13 +17,16 @@
     </div>
 
     @if (change()) {
-      <div class="stat-trend-badge">
+      <div class="stat-trend-group">
         <app-badge [variant]="badgeVariant()" size="sm">
           <span class="trend-inner">
             <app-icon [name]="trendIcon()" size="xs" />
             <span>{{ change() }}</span>
           </span>
         </app-badge>
+        @if (comparisonLabel()) {
+          <span class="stat-comparison">{{ comparisonLabel() }}</span>
+        }
       </div>
     }
   </div>

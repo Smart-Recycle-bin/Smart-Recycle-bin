@@ -23,6 +23,8 @@
   --muted: #64748B;
   --line: #E2E8F0;
   --soft: #F1F5F9;
+  --brand: #009966;
+  --brand-soft: rgba(0, 153, 102, 0.12);
   --warning: #f59e0b;
   --danger: #ef4444;
   --danger-ink: #dc2626;
@@ -47,6 +49,8 @@
   --muted: #94A3B8;
   --line: #22304A;
   --soft: #18233A;
+  --brand: #10b981;
+  --brand-soft: rgba(16, 185, 129, 0.16);
   --warning: #fbbf24;
   --danger: #f87171;
   --danger-ink: #f87171;
@@ -141,4 +145,69 @@
   white-space: nowrap;
   pointer-events: none;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+}
+
+/* Dark-mode map tiles and custom EcoBin Leaflet markers */
+.dark .ecobin-leaflet-map .leaflet-tile-pane {
+  filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
+}
+
+.ecobin-leaflet-map .leaflet-control-attribution {
+  background: color-mix(in srgb, var(--card) 85%, transparent);
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.ecobin-leaflet-map .leaflet-control-attribution a {
+  color: var(--brand);
+}
+
+.ecobin-cluster-icon {
+  background: transparent;
+  border: none;
+}
+
+.ecobin-cluster-badge {
+  width: 34px;
+  height: 34px;
+  border-radius: 9999px;
+  background-color: var(--brand);
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--card);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.ecobin-marker-wrapper {
+  background: transparent;
+  border: none;
+}
+
+.ecobin-marker-pin {
+  width: 24px;
+  height: 24px;
+  border-radius: 9999px;
+  border: 2.5px solid #ffffff;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  position: relative;
+}
+
+.ecobin-marker-pin.is-selected {
+  transform: scale(1.22);
+  box-shadow: 0 0 0 4px rgba(0, 153, 102, 0.35), 0 4px 12px rgba(0, 0, 0, 0.35);
+}
+
+.ecobin-marker-pin.is-critical::after {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: 9999px;
+  border: 2px solid var(--danger);
+  animation: pulse-ring 1.8s ease-out infinite;
+  pointer-events: none;
 }

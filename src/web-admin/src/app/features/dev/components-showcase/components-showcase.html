@@ -491,6 +491,7 @@
                   change="+12.4%"
                   trend="positive"
                   icon="recycle"
+                  iconTone="green"
                 />
                 <app-stat
                   title="Critical Bins"
@@ -499,6 +500,7 @@
                   change="+3"
                   trend="negative"
                   icon="alert"
+                  iconTone="red"
                 />
                 <app-stat
                   title="Fleet Coverage"
@@ -506,14 +508,14 @@
                   change="+1.2%"
                   trend="positive"
                   icon="truck"
+                  iconTone="blue"
                 />
                 <app-stat
-                  title="Active Mesh Repeaters"
+                  title="Active Repeaters"
                   value="128"
                   unit="nodes"
-                  change="0"
-                  trend="neutral"
                   icon="wifi"
+                  iconTone="purple"
                 />
               </div>
             </app-card>
@@ -932,19 +934,19 @@
 
             <!-- 23. Area Chart & 24. Donut Chart -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <app-card title="23. Area Chart" subtitle="Daily municipal tonnage collection telemetry">
-                <app-area-chart [data]="tonnageData" [height]="260" color="#009966" />
+              <app-card title="23. Multi-Series Area Chart" subtitle="Accepted vs rejected submissions with compact axis and crosshair tooltip">
+                <app-area-chart [series]="tonnageSeries" [height]="250" unit="kg" />
               </app-card>
 
-              <app-card title="24. Donut Chart" subtitle="Recycled materials distribution composition">
-                <app-donut-chart [data]="wasteComposition" />
+              <app-card title="24. Donut Chart" subtitle="Custom center value/label with right-side legend">
+                <app-donut-chart [data]="wasteComposition" centerValue="7.4%" centerLabel="rejected" />
               </app-card>
             </div>
 
             <!-- 25. Bar List & 26. Gauge -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <app-card title="25. Bar List" subtitle="Yield ranking across material streams">
-                <app-bar-list [items]="materialBarData" />
+              <app-card title="25. Bar List" subtitle="Yield ranking with automatic warning/danger thresholds">
+                <app-bar-list [items]="materialBarData" [thresholds]="{ warning: 400, danger: 450 }" />
               </app-card>
 
               <app-card title="26. Gauge" subtitle="Interactive volumetric fullness percentage meter">
@@ -969,11 +971,12 @@
             <h2 class="category-title">6. IoT Schematics &amp; Navigation</h2>
 
             <!-- 27. Map View -->
-            <app-card title="27. Map View" subtitle="Vectorized schematic GPS fleet &amp; smart bin coordinates with status pings">
+            <app-card title="27. Clustered Leaflet Map View" subtitle="OpenStreetMap tiles, marker clustering, status pins, and bin detail popup">
               <app-map-view
                 [markers]="mapMarkers"
                 [height]="420"
                 (markerClicked)="handleMapMarkerClick($event)"
+                (detailsClicked)="handleMapDetailsClick($event)"
               />
             </app-card>
 

@@ -53,7 +53,7 @@ import { FillLevelCell } from '../../../shared/components/table/cells/fill-level
 import { MonoIdCell } from '../../../shared/components/table/cells/mono-id-cell/mono-id-cell';
 import { NumberCell } from '../../../shared/components/table/cells/number-cell/number-cell';
 import { Pagination } from '../../../shared/components/table/pagination/pagination';
-import { AreaChart, AreaChartPoint } from '../../../shared/components/charts/area-chart/area-chart';
+import { AreaChart, AreaChartPoint, AreaChartSeries } from '../../../shared/components/charts/area-chart/area-chart';
 import { BarList, BarListItem } from '../../../shared/components/charts/bar-list/bar-list';
 import { DonutChart, DonutSegment } from '../../../shared/components/charts/donut-chart/donut-chart';
 import { Gauge } from '../../../shared/components/charts/gauge/gauge';
@@ -366,79 +366,121 @@ export class ComponentsShowcase {
     { id: 'alert', icon: 'alert', label: 'Flag Incident', variant: 'danger' },
   ];
 
-  // Sample Data: Schematic Map Markers
+  // Multi-series Area Chart Data
+  readonly tonnageSeries: AreaChartSeries[] = [
+    {
+      name: 'Accepted',
+      color: 'var(--brand)',
+      points: [
+        { label: 'Mon', value: 4200 },
+        { label: 'Tue', value: 5800 },
+        { label: 'Wed', value: 5100 },
+        { label: 'Thu', value: 7400 },
+        { label: 'Fri', value: 9400 },
+        { label: 'Sat', value: 6800 },
+        { label: 'Sun', value: 7900 },
+      ],
+    },
+    {
+      name: 'Rejected',
+      color: 'var(--danger)',
+      points: [
+        { label: 'Mon', value: 320 },
+        { label: 'Tue', value: 410 },
+        { label: 'Wed', value: 380 },
+        { label: 'Thu', value: 510 },
+        { label: 'Fri', value: 640 },
+        { label: 'Sat', value: 490 },
+        { label: 'Sun', value: 520 },
+      ],
+    },
+  ];
+
+  // Sample Data: Clustered Leaflet Map Markers
   readonly mapMarkers: MapMarker[] = [
     {
       id: 'm1',
-      label: 'EcoBin #101',
-      x: 28,
-      y: 32,
+      code: 'BIN-101',
+      label: 'Central Plaza Corridor',
+      lat: 30.0468,
+      lng: 31.2362,
       status: 'critical',
       type: 'bin',
-      capacity: 94,
+      fillLevel: 96,
       battery: 88,
-      lastUpdated: '1m ago',
-      address: 'Central Plaza North Corridor',
+      collector: 'Karim Hassan',
+      lastServiced: '14h ago',
+      address: 'Downtown Transit Plaza',
     },
     {
       id: 'm2',
-      label: 'EcoBin #102',
-      x: 65,
-      y: 22,
+      code: 'BIN-102',
+      label: 'Zamalek North Hub',
+      lat: 30.0609,
+      lng: 31.2197,
       status: 'warning',
       type: 'bin',
-      capacity: 68,
+      fillLevel: 84,
       battery: 95,
-      lastUpdated: '3m ago',
-      address: 'Green Valley Transit Hub',
+      collector: 'Omar Adel',
+      lastServiced: '6h ago',
+      address: '26th of July Corridor',
     },
     {
       id: 'm3',
-      label: 'EcoBin #103',
-      x: 75,
-      y: 65,
-      status: 'online',
+      code: 'BIN-103',
+      label: 'Tech District Bldg 4',
+      lat: 30.0522,
+      lng: 31.2485,
+      status: 'available',
       type: 'bin',
-      capacity: 32,
+      fillLevel: 32,
       battery: 74,
-      lastUpdated: 'Just now',
-      address: 'Tech District Bldg 4',
+      collector: 'Salma Tarek',
+      lastServiced: '1h ago',
+      address: 'Smart Innovation Campus',
     },
     {
       id: 'm4',
-      label: 'Truck #04 (En Route)',
-      x: 48,
-      y: 45,
-      status: 'online',
-      type: 'truck',
-      capacity: 72,
+      code: 'BIN-104',
+      label: 'Maadi Degla Station',
+      lat: 29.9602,
+      lng: 31.2569,
+      status: 'available',
+      type: 'bin',
+      fillLevel: 48,
       battery: 99,
-      lastUpdated: 'Moving 34 km/h',
-      address: 'Emerald Avenue Westbound',
+      collector: 'Karim Hassan',
+      lastServiced: '2h ago',
+      address: 'Degla Square East',
     },
     {
       id: 'm5',
-      label: 'EcoBin #105',
-      x: 82,
-      y: 84,
+      code: 'BIN-105',
+      label: 'Industrial Yard Sensor',
+      lat: 30.0385,
+      lng: 31.2672,
       status: 'offline',
       type: 'bin',
-      capacity: 12,
+      fillLevel: 12,
       battery: 15,
-      lastUpdated: '2h ago (No Signal)',
-      address: 'Industrial Recycling Yard',
+      collector: 'Unassigned',
+      lastServiced: '2d ago',
+      address: 'East Recycling Logistics',
     },
     {
       id: 'm6',
-      label: 'Sorting Depot Central',
-      x: 22,
-      y: 72,
-      status: 'online',
-      type: 'station',
-      capacity: 45,
-      battery: 100,
-      lastUpdated: 'Station Active',
-      address: 'South Waste Logistics Depot',
+      code: 'BIN-106',
+      label: 'Heliopolis Metro Gate',
+      lat: 30.0886,
+      lng: 31.3284,
+      status: 'available',
+      type: 'bin',
+      fillLevel: 45,
+      battery: 92,
+      collector: 'Nour Ibrahim',
+      lastServiced: '45m ago',
+      address: 'Korba Promenade',
     },
   ];
 
@@ -594,15 +636,22 @@ export class ComponentsShowcase {
   }
 
   handleMapMarkerClick(marker: MapMarker): void {
+    const fill = marker.fillLevel ?? marker.capacity ?? 0;
     const msg = `Selected: ${marker.label} (${marker.status.toUpperCase()})`;
     this.lastActionMessage.set(msg);
     if (marker.status === 'critical') {
-      this.toastService.error(`Bin capacity at ${marker.capacity}%. Immediate dispatch required.`, marker.label);
+      this.toastService.error(`Bin capacity at ${fill}%. Immediate dispatch required.`, marker.label);
     } else if (marker.status === 'warning') {
-      this.toastService.warning(`Bin capacity at ${marker.capacity}%. Attention needed.`, marker.label);
+      this.toastService.warning(`Bin capacity at ${fill}%. Attention needed.`, marker.label);
     } else {
-      this.toastService.success(`Status normal. Battery at ${marker.battery}%.`, marker.label);
+      this.toastService.success(`Fill level ${fill}%. Battery at ${marker.battery ?? '--'}%.`, marker.label);
     }
+  }
+
+  handleMapDetailsClick(marker: MapMarker): void {
+    const msg = `Inspect details requested for ${marker.code ?? marker.id} (${marker.label})`;
+    this.lastActionMessage.set(msg);
+    this.toastService.info(msg);
   }
 
   openConfirm(): void {

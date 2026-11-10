@@ -1,4 +1,4 @@
-import { Component, computed, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, signal } from '@angular/core';
 
 export interface DonutSegment {
   label: string;
@@ -11,11 +11,13 @@ export interface DonutSegment {
   imports: [],
   templateUrl: './donut-chart.html',
   styleUrl: './donut-chart.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DonutChart {
   readonly data = input<DonutSegment[]>([]);
   readonly title = input<string>('');
   readonly centerLabel = input<string>('Total');
+  readonly centerValue = input<string | number | null>(null);
   readonly unit = input<string>('');
   readonly showLegend = input<boolean>(true);
 
