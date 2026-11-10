@@ -5,7 +5,9 @@ import {
   TemplateRef,
   computed,
   contentChildren,
+  effect,
   input,
+  isDevMode,
   linkedSignal,
   output,
   signal,
@@ -50,16 +52,6 @@ export interface TableSort {
   dir: SortDirection;
 }
 
-function defaultRowId<T>(row: T, index: number): string | number {
-  if (row && typeof row === 'object' && 'id' in row) {
-    const id = (row as { id?: unknown }).id;
-    if (typeof id === 'string' || typeof id === 'number') {
-      return id;
-    }
-  }
-  return index;
-}
-
 @Component({
   selector: 'app-data-table',
   imports: [
@@ -91,7 +83,7 @@ export class DataTable<T = unknown> {
   readonly total = input<number | null>(null);
   readonly sortColumn = input<string | null>(null);
   readonly sortDir = input<SortDirection>(null);
-  readonly rowId = input<(row: T, index: number) => string | number>(defaultRowId);
+  readonly rowId = input<((row: T) => string | number) | undefined>(undefined);
   readonly rowClickable = input<boolean>(false);
   readonly emptyTitle = input<string>('No records found');
   readonly emptyDescription = input<string>('There are no items to show in this view.');
@@ -107,7 +99,43 @@ export class DataTable<T = unknown> {
   readonly internalSortColumn = linkedSignal(() => this.sortColumn());
   readonly internalSortDir = linkedSignal(() => this.sortDir());
   readonly internalPage = linkedSignal(() => this.page());
-  readonly selectedIds = signal<Set<string | number>>(new Set());
+  readonly selectedRowsMap = signal<Map<string | number, T>>(new Map());
+  readonly selectedIds = computed(() => new Set(this.selectedRowsMap().keys()));
+
+  private readonly fallbackObjectKeys = new WeakMap<object, string>();
+  private fallbackKeyCounter = 0;
+  private prevDataLength: number | null = null;
+  private warnedMissingRowId = false;
+  private warnedMissingServerTotal = false;
+
+  constructor() {
+    effect(() => {
+      const rows = this.data();
+      const len = rows.length;
+      if (this.mode() === 'client' && this.prevDataLength !== null && len !== this.prevDataLength) {
+        this.internalPage.set(1);
+      }
+      this.prevDataLength = len;
+    });
+
+    effect(() => {
+      if (!isDevMode()) return;
+
+      if (this.mode() === 'server' && this.total() === null && !this.warnedMissingServerTotal) {
+        this.warnedMissingServerTotal = true;
+        console.warn('DataTable: mode="server" requires [total] to be provided.');
+      }
+
+      if (this.selectable() && !this.rowId() && !this.warnedMissingRowId) {
+        const rows = this.data();
+        const missingId = rows.some((row) => this.extractRowIdProp(row) === undefined);
+        if (missingId) {
+          this.warnedMissingRowId = true;
+          console.warn('DataTable: [rowId] must be provided when [selectable] is true and rows lack an id property.');
+        }
+      }
+    });
+  }
 
   readonly templateMap = computed(() => {
     const map = new Map<string, TemplateRef<CellTemplateContext<T>>>();
@@ -117,8 +145,11 @@ export class DataTable<T = unknown> {
     return map;
   });
 
-  readonly totalCount = computed(() => {
+  readonly totalCount = computed<number | null>(() => {
     const t = this.total();
+    if (this.mode() === 'server') {
+      return t;
+    }
     return t !== null ? t : this.data().length;
   });
 
@@ -145,7 +176,10 @@ export class DataTable<T = unknown> {
       const comparison =
         typeof valA === 'number' && typeof valB === 'number'
           ? valA - valB
-          : String(valA).localeCompare(String(valB));
+          : String(valA).localeCompare(String(valB), undefined, {
+              numeric: true,
+              sensitivity: 'base',
+            });
 
       return dir === 'asc' ? comparison : -comparison;
     });
@@ -166,17 +200,15 @@ export class DataTable<T = unknown> {
   readonly allSelected = computed(() => {
     const visible = this.displayData();
     if (!visible.length) return false;
-    const selected = this.selectedIds();
-    return visible.every((row, idx) => selected.has(this.getRowKey(row, idx)));
+    const selected = this.selectedRowsMap();
+    return visible.every((row) => selected.has(this.getRowKey(row)));
   });
 
   readonly isIndeterminate = computed(() => {
     const visible = this.displayData();
     if (!visible.length) return false;
-    const selected = this.selectedIds();
-    const selectedVisibleCount = visible.filter((row, idx) =>
-      selected.has(this.getRowKey(row, idx))
-    ).length;
+    const selected = this.selectedRowsMap();
+    const selectedVisibleCount = visible.filter((row) => selected.has(this.getRowKey(row))).length;
     return selectedVisibleCount > 0 && selectedVisibleCount < visible.length;
   });
 
@@ -188,8 +220,27 @@ export class DataTable<T = unknown> {
     );
   });
 
-  getRowKey(row: T, index: number): string | number {
-    return this.rowId()(row, index);
+  getRowKey(row: T): string | number {
+    const customRowId = this.rowId();
+    if (customRowId) {
+      return customRowId(row);
+    }
+
+    const extracted = this.extractRowIdProp(row);
+    if (extracted !== undefined) {
+      return extracted;
+    }
+
+    if (row && typeof row === 'object') {
+      let existing = this.fallbackObjectKeys.get(row);
+      if (!existing) {
+        existing = `__row_${++this.fallbackKeyCounter}`;
+        this.fallbackObjectKeys.set(row, existing);
+      }
+      return existing;
+    }
+
+    return String(row);
   }
 
   getCellValue(row: T, col: TableColumn<T>): unknown {
@@ -261,37 +312,51 @@ export class DataTable<T = unknown> {
   }
 
   toggleSelectAll(checked: boolean): void {
-    const newSet = new Set(this.selectedIds());
-    this.displayData().forEach((item, index) => {
-      const key = this.getRowKey(item, index);
+    const nextMap = new Map(this.selectedRowsMap());
+    for (const item of this.displayData()) {
+      const key = this.getRowKey(item);
       if (checked) {
-        newSet.add(key);
+        nextMap.set(key, item);
       } else {
-        newSet.delete(key);
+        nextMap.delete(key);
       }
-    });
-    this.selectedIds.set(newSet);
-    this.emitSelection();
-  }
-
-  toggleSelectRow(row: T, index: number): void {
-    const key = this.getRowKey(row, index);
-    const newSet = new Set(this.selectedIds());
-    if (newSet.has(key)) {
-      newSet.delete(key);
-    } else {
-      newSet.add(key);
     }
-    this.selectedIds.set(newSet);
+    this.selectedRowsMap.set(nextMap);
     this.emitSelection();
   }
 
-  isRowSelected(row: T, index: number): boolean {
-    return this.selectedIds().has(this.getRowKey(row, index));
+  toggleSelectRow(row: T): void {
+    const key = this.getRowKey(row);
+    const nextMap = new Map(this.selectedRowsMap());
+    if (nextMap.has(key)) {
+      nextMap.delete(key);
+    } else {
+      nextMap.set(key, row);
+    }
+    this.selectedRowsMap.set(nextMap);
+    this.emitSelection();
+  }
+
+  isRowSelected(row: T): boolean {
+    return this.selectedRowsMap().has(this.getRowKey(row));
+  }
+
+  clearSelection(): void {
+    this.selectedRowsMap.set(new Map());
+    this.rowSelected.emit([]);
   }
 
   handleRowClick(row: T): void {
+    if (!this.rowClickable()) return;
     this.rowClick.emit(row);
+  }
+
+  handleRowKeyDown(event: KeyboardEvent, row: T): void {
+    if (!this.rowClickable()) return;
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      this.rowClick.emit(row);
+    }
   }
 
   handleAction(actionId: string, row: T): void {
@@ -306,9 +371,17 @@ export class DataTable<T = unknown> {
     return act.disabled ? act.disabled(row) : false;
   }
 
+  private extractRowIdProp(row: T): string | number | undefined {
+    if (row && typeof row === 'object' && 'id' in row) {
+      const id = (row as { id?: unknown }).id;
+      if (typeof id === 'string' || typeof id === 'number') {
+        return id;
+      }
+    }
+    return undefined;
+  }
+
   private emitSelection(): void {
-    const selected = this.selectedIds();
-    const rows = this.data().filter((item, index) => selected.has(this.getRowKey(item, index)));
-    this.rowSelected.emit(rows);
+    this.rowSelected.emit(Array.from(this.selectedRowsMap().values()));
   }
 }

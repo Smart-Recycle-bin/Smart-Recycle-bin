@@ -58,6 +58,36 @@ describe('Pagination', () => {
     expect((fixture.nativeElement as HTMLElement).textContent).toContain('Showing 0 of 0');
   });
 
+  it('should not pretend there is only 1 page when total is null', async () => {
+    fixture.componentRef.setInput('page', 1);
+    fixture.componentRef.setInput('pageSize', 10);
+    fixture.componentRef.setInput('total', null);
+    fixture.componentRef.setInput('currentCount', 10);
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(component.totalPages()).toBeNull();
+    expect(component.canNext()).toBe(true);
+    const text = (fixture.nativeElement as HTMLElement).textContent;
+    expect(text).toContain('Page 1');
+    expect(text).not.toContain('Page 1 / 1');
+  });
+
+  it('should disable both buttons when disabled is true', async () => {
+    fixture.componentRef.setInput('page', 2);
+    fixture.componentRef.setInput('pageSize', 5);
+    fixture.componentRef.setInput('total', 20);
+    fixture.componentRef.setInput('disabled', true);
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(component.canPrev()).toBe(false);
+    expect(component.canNext()).toBe(false);
+    const buttons = (fixture.nativeElement as HTMLElement).querySelectorAll('button');
+    expect(buttons[0].disabled).toBe(true);
+    expect(buttons[1].disabled).toBe(true);
+  });
+
   it('should emit pageChange on next and prev clicks', async () => {
     const emitted: number[] = [];
     component.pageChange.subscribe((p) => emitted.push(p));
@@ -69,13 +99,13 @@ describe('Pagination', () => {
     fixture.detectChanges();
 
     const buttons = (fixture.nativeElement as HTMLElement).querySelectorAll('button');
-    buttons[1].click(); // Next
+    buttons[1].click();
     expect(emitted).toEqual([2]);
 
     fixture.componentRef.setInput('page', 2);
     await fixture.whenStable();
     fixture.detectChanges();
-    buttons[0].click(); // Prev
+    buttons[0].click();
     expect(emitted).toEqual([2, 1]);
   });
 });

@@ -29,11 +29,11 @@
 }
 
 .fill-bar.tone-warning {
-  background-color: #f59e0b;
+  background-color: var(--warning);
 }
 
 .fill-bar.tone-danger {
-  background-color: #ef4444;
+  background-color: var(--danger);
 }
 
 .fill-pct {

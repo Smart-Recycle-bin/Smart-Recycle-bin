@@ -104,15 +104,20 @@ thead.is-sticky th {
 }
 
 .tr-row:hover {
-  background-color: rgba(0, 153, 102, 0.03);
+  background-color: var(--brand-hover);
 }
 
 .tr-row.is-clickable {
   cursor: pointer;
 }
 
+.tr-row.is-clickable:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: -2px;
+}
+
 .tr-row.is-selected {
-  background-color: rgba(0, 153, 102, 0.08);
+  background-color: var(--brand-selected);
 }
 
 tbody tr:last-child .td-cell,

@@ -1,9 +1,17 @@
 <nav class="pagination-root" aria-label="Table pagination">
   <div class="pagination-summary">
-    @if (total() > 0) {
-      <span>Showing {{ startItem() }}&ndash;{{ endItem() }} of {{ total() }}</span>
+    @if (isTotalKnown()) {
+      @if ((total() ?? 0) > 0) {
+        <span>Showing {{ startItem() }}&ndash;{{ endItem() }} of {{ total() }}</span>
+      } @else {
+        <span>Showing 0 of 0</span>
+      }
     } @else {
-      <span>Showing 0 of 0</span>
+      @if (endItem() > 0) {
+        <span>Showing {{ startItem() }}&ndash;{{ endItem() }}</span>
+      } @else {
+        <span>Page {{ currentPage() }}</span>
+      }
     }
   </div>
 
@@ -20,7 +28,11 @@
     </button>
 
     <span class="page-indicator" aria-current="page">
-      Page {{ currentPage() }} / {{ totalPages() }}
+      @if (totalPages(); as tp) {
+        Page {{ currentPage() }} / {{ tp }}
+      } @else {
+        Page {{ currentPage() }}
+      }
     </span>
 
     <button

@@ -73,18 +73,25 @@
             </td>
           </tr>
         } @else {
-          @for (row of displayData(); track getRowKey(row, $index)) {
+          @for (row of displayData(); track getRowKey(row)) {
             <tr
               class="tr-row"
-              [class.is-selected]="isRowSelected(row, $index)"
+              [class.is-selected]="isRowSelected(row)"
               [class.is-clickable]="rowClickable()"
+              [attr.tabindex]="rowClickable() ? 0 : null"
+              [attr.role]="rowClickable() ? 'button' : null"
               (click)="handleRowClick(row)"
+              (keydown)="handleRowKeyDown($event, row)"
             >
               @if (selectable()) {
-                <td class="td-select" (click)="$event.stopPropagation()">
+                <td
+                  class="td-select"
+                  (click)="$event.stopPropagation()"
+                  (keydown)="$event.stopPropagation()"
+                >
                   <app-checkbox
-                    [checked]="isRowSelected(row, $index)"
-                    (checkedChange)="toggleSelectRow(row, $index)"
+                    [checked]="isRowSelected(row)"
+                    (checkedChange)="toggleSelectRow(row)"
                   />
                 </td>
               }
@@ -116,7 +123,11 @@
               }
 
               @if (actions().length > 0) {
-                <td class="td-actions align-right" (click)="$event.stopPropagation()">
+                <td
+                  class="td-actions align-right"
+                  (click)="$event.stopPropagation()"
+                  (keydown)="$event.stopPropagation()"
+                >
                   <div class="row-actions-group">
                     @for (act of actions(); track act.id) {
                       @if (isActionVisible(act, row)) {
@@ -141,12 +152,14 @@
     </table>
   </div>
 
-  @if (showPagination() && !loading()) {
+  @if (showPagination()) {
     <div class="table-footer">
       <app-pagination
         [page]="internalPage()"
         [pageSize]="pageSize()"
         [total]="totalCount()"
+        [currentCount]="displayData().length"
+        [disabled]="loading()"
         (pageChange)="handlePageChange($event)"
       />
     </div>

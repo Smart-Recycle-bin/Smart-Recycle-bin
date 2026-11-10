@@ -23,6 +23,14 @@
   --muted: #64748B;
   --line: #E2E8F0;
   --soft: #F1F5F9;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --danger-ink: #dc2626;
+  --purple: #8b5cf6;
+  --purple-ink: #7c3aed;
+  --info: #0ea5e9;
+  --brand-hover: rgba(0, 153, 102, 0.04);
+  --brand-selected: rgba(0, 153, 102, 0.1);
 }
 
 .dark {
@@ -32,6 +40,14 @@
   --muted: #94A3B8;
   --line: #22304A;
   --soft: #18233A;
+  --warning: #fbbf24;
+  --danger: #f87171;
+  --danger-ink: #f87171;
+  --purple: #a78bfa;
+  --purple-ink: #a78bfa;
+  --info: #38bdf8;
+  --brand-hover: rgba(0, 153, 102, 0.08);
+  --brand-selected: rgba(0, 153, 102, 0.16);
   color-scheme: dark;
 }
 

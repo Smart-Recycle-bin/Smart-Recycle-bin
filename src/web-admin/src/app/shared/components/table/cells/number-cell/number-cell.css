@@ -17,10 +17,7 @@
 }
 
 .tone-negative {
-  color: #dc2626;
-}
-:host-context(.dark) .tone-negative {
-  color: #f87171;
+  color: var(--danger-ink);
 }
 
 .tone-muted {
