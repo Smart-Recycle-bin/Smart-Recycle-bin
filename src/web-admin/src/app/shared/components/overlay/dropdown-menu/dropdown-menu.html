@@ -1,0 +1,49 @@
+<div class="dropdown-root">
+  <div
+    #triggerWrap
+    class="dropdown-trigger"
+    (click)="toggle()"
+  >
+    <ng-content select="[menu-trigger]" />
+  </div>
+
+  @if (isOpen()) {
+    <div
+      #menuPanel
+      [class]="'dropdown-panel fade-up align-' + align()"
+      role="menu"
+      [attr.aria-label]="ariaLabel()"
+      (keydown)="handleMenuKeyDown($event)"
+    >
+      @if (headerTitle() || headerSubtitle()) {
+        <div class="dropdown-header">
+          @if (headerTitle()) {
+            <span class="dropdown-header-title">{{ headerTitle() }}</span>
+          }
+          @if (headerSubtitle()) {
+            <span class="dropdown-header-sub">{{ headerSubtitle() }}</span>
+          }
+        </div>
+        <div class="dropdown-divider"></div>
+      }
+
+      @for (item of items(); track item.id) {
+        @if (item.dividerBefore) {
+          <div class="dropdown-divider" role="separator"></div>
+        }
+        <button
+          type="button"
+          role="menuitem"
+          [disabled]="item.disabled"
+          [class]="'dropdown-item' + (item.danger ? ' is-danger' : '')"
+          (click)="selectItem(item)"
+        >
+          @if (item.icon) {
+            <app-icon [name]="item.icon" size="xs" />
+          }
+          <span>{{ item.label }}</span>
+        </button>
+      }
+    </div>
+  }
+</div>

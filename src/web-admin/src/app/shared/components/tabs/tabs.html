@@ -1,0 +1,16 @@
+<div class="tabs-list" role="tablist" [attr.aria-label]="ariaLabel()">
+  @for (tab of tabs(); track tab.id; let i = $index) {
+    <button
+      type="button"
+      role="tab"
+      [attr.aria-selected]="currentId() === tab.id"
+      [disabled]="tab.disabled"
+      [class]="'tab-btn' + (currentId() === tab.id ? ' is-active' : '')"
+      [attr.tabindex]="currentId() === tab.id ? 0 : -1"
+      (click)="select(tab)"
+      (keydown)="handleKeyDown($event, i)"
+    >
+      {{ tab.label }}
+    </button>
+  }
+</div>

@@ -21,6 +21,11 @@ import { Notice } from '../../../shared/components/notice/notice';
 import { EmptyState } from '../../../shared/components/empty-state/empty-state';
 import { ErrorState } from '../../../shared/components/error-state/error-state';
 import { PageHeader } from '../../../shared/components/page-header/page-header';
+import { SegmentedControl, SegmentedOption } from '../../../shared/components/segmented-control/segmented-control';
+import { Tabs, TabItem } from '../../../shared/components/tabs/tabs';
+import { DropdownMenu, DropdownMenuItem } from '../../../shared/components/overlay/dropdown-menu/dropdown-menu';
+import { NotificationsPanel, NotificationItem } from '../../../shared/components/notifications-panel/notifications-panel';
+import { TooltipDirective } from '../../../shared/components/tooltip/tooltip.directive';
 
 // 3. Form Controls
 import { Input } from '../../../shared/components/form/input/input';
@@ -91,6 +96,11 @@ interface ShowcaseBinRow {
     EmptyState,
     ErrorState,
     PageHeader,
+    SegmentedControl,
+    Tabs,
+    DropdownMenu,
+    NotificationsPanel,
+    TooltipDirective,
     Input,
     SearchInput,
     Select,
@@ -165,7 +175,65 @@ export class ComponentsShowcase {
   readonly isConfirmOpen = signal<boolean>(false);
   readonly confirmLoading = signal<boolean>(false);
 
-  // Gauge Demo Interactive Slider
+  // Phase 3 Primitives Demo State
+  readonly demoPeriod = signal<string | number>('7d');
+  readonly periodOptions: SegmentedOption[] = [
+    { label: 'Today', value: 'today' },
+    { label: '7d', value: '7d' },
+    { label: '30d', value: '30d' },
+    { label: 'Custom', value: 'custom' },
+  ];
+
+  readonly demoTabId = signal<string>('weekly');
+  readonly leaderboardTabs: TabItem[] = [
+    { id: 'weekly', label: 'Weekly' },
+    { id: 'monthly', label: 'Monthly' },
+    { id: 'all', label: 'All-time' },
+  ];
+
+  readonly demoDropdownItems: DropdownMenuItem[] = [
+    { id: 'edit', label: 'Edit details', icon: 'edit' },
+    { id: 'export', label: 'Export CSV', icon: 'download' },
+    { id: 'ban', label: 'Suspend account', icon: 'alert', danger: true, dividerBefore: true },
+  ];
+
+  readonly demoNotifications = signal<NotificationItem[]>([
+    {
+      id: 'n1',
+      title: 'Overflow alert on BIN-0007',
+      message: 'Fill level reached 97% in Downtown.',
+      time: '2m ago',
+      unread: true,
+      type: 'danger',
+    },
+    {
+      id: 'n2',
+      title: 'AI Review Queue updated',
+      message: '5 new survey rejection reports pending.',
+      time: '18m ago',
+      unread: true,
+      type: 'warning',
+    },
+    {
+      id: 'n3',
+      title: 'Collector provisioned',
+      message: 'Invite link dispatched to new field operator.',
+      time: '1h ago',
+      unread: false,
+      type: 'success',
+    },
+  ]);
+
+  markAllDemoNotificationsRead(): void {
+    this.demoNotifications.update((items) => items.map((i) => ({ ...i, unread: false })));
+    this.toastService.success('Marked all notifications as read');
+  }
+
+  markDemoNotificationRead(id: string): void {
+    this.demoNotifications.update((items) =>
+      items.map((i) => (i.id === id ? { ...i, unread: false } : i))
+    );
+  }
   readonly dynamicGaugeValue = signal<number>(82);
 
   // Select Options

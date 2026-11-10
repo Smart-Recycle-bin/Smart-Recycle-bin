@@ -1,0 +1,49 @@
+<section class="notif-panel" aria-label="Notifications list">
+  <header class="notif-panel-header">
+    <h3 class="notif-panel-title">{{ title() }}</h3>
+    @if (hasUnread()) {
+      <button
+        type="button"
+        class="mark-all-btn"
+        (click)="markAllRead.emit()"
+      >
+        Mark all read
+      </button>
+    }
+  </header>
+
+  @if (items().length === 0) {
+    <div class="notif-empty">
+      <app-icon name="bell" size="md" />
+      <span>{{ emptyText() }}</span>
+    </div>
+  } @else {
+    <ul class="notif-list">
+      @for (item of items(); track item.id) {
+        <li>
+          <button
+            type="button"
+            [class]="'notif-row' + (item.unread ? ' is-unread' : '')"
+            (click)="handleItemClick(item)"
+          >
+            <span [class]="'notif-icon-box tone-' + (item.type || 'info')" aria-hidden="true">
+              <app-icon [name]="getIcon(item.type)" size="xs" />
+            </span>
+
+            <span class="notif-body">
+              <span class="notif-item-title">{{ item.title }}</span>
+              @if (item.message) {
+                <span class="notif-item-msg">{{ item.message }}</span>
+              }
+              <span class="notif-item-time">{{ item.time }}</span>
+            </span>
+
+            @if (item.unread) {
+              <span class="unread-dot" aria-label="Unread"></span>
+            }
+          </button>
+        </li>
+      }
+    </ul>
+  }
+</section>

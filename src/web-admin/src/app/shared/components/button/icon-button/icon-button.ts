@@ -1,18 +1,21 @@
-import { Component, computed, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import { Icon, IconName, IconSize } from '../../icon/icon';
+import { TooltipDirective, TooltipPosition } from '../../tooltip/tooltip.directive';
 import { ButtonSize, ButtonVariant } from '../button';
 
 @Component({
   selector: 'app-icon-button',
-  imports: [Icon],
+  imports: [Icon, TooltipDirective],
   templateUrl: './icon-button.html',
   styleUrl: './icon-button.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class IconButton {
   readonly icon = input.required<IconName | string>();
   readonly variant = input<ButtonVariant>('ghost');
   readonly size = input<ButtonSize>('md');
   readonly title = input<string>('');
+  readonly tooltipPosition = input<TooltipPosition>('top');
   readonly ariaLabel = input<string>('');
   readonly disabled = input<boolean>(false);
   readonly loading = input<boolean>(false);

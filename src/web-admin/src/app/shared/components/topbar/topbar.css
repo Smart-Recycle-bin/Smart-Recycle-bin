@@ -93,6 +93,17 @@
   outline-offset: 2px;
 }
 
+.notif-wrapper {
+  position: relative;
+}
+
+.notif-popover {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  inset-inline-end: 0;
+  z-index: 40;
+}
+
 .notif-badge {
   position: absolute;
   top: 0.125rem;
@@ -110,11 +121,6 @@
   justify-content: center;
   border: 2px solid var(--card);
   font-variant-numeric: tabular-nums;
-}
-
-.user-menu-wrapper {
-  position: relative;
-  margin-inline-start: 0.25rem;
 }
 
 .user-trigger-btn {
@@ -164,69 +170,4 @@
   .user-meta {
     display: none;
   }
-}
-
-.user-dropdown-menu {
-  position: absolute;
-  top: calc(100% + 0.5rem);
-  inset-inline-end: 0;
-  width: 13.5rem;
-  background-color: var(--card);
-  border: 1px solid var(--line);
-  border-radius: 0.625rem;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
-  padding: 0.375rem;
-  z-index: 30;
-}
-
-.dropdown-header {
-  display: flex;
-  flex-direction: column;
-  padding: 0.5rem 0.75rem;
-}
-
-.dropdown-user-name {
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--ink);
-}
-
-.dropdown-user-role {
-  font-size: 0.6875rem;
-  color: var(--muted);
-}
-
-.dropdown-divider {
-  height: 1px;
-  background-color: var(--line);
-  margin: 0.25rem 0;
-}
-
-.dropdown-item {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  width: 100%;
-  padding: 0.5rem 0.75rem;
-  border-radius: 0.375rem;
-  background: none;
-  border: none;
-  font-size: 0.8125rem;
-  font-weight: 500;
-  color: var(--ink);
-  cursor: pointer;
-  text-align: start;
-  transition: background-color 0.15s ease;
-}
-
-.dropdown-item:hover {
-  background-color: var(--soft);
-}
-
-.dropdown-item.is-danger {
-  color: var(--danger-ink);
-}
-
-.dropdown-item.is-danger:hover {
-  background-color: rgba(239, 68, 68, 0.1);
 }

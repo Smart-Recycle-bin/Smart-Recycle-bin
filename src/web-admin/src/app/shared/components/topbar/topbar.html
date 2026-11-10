@@ -27,35 +27,57 @@
     <button
       type="button"
       class="topbar-action-btn theme-toggle"
-      [attr.title]="isDarkMode() ? 'Switch to light mode' : 'Switch to dark mode'"
+      [appTooltip]="isDarkMode() ? 'Switch to light mode' : 'Switch to dark mode'"
+      tooltipPosition="bottom"
       [attr.aria-label]="isDarkMode() ? 'Switch to light mode' : 'Switch to dark mode'"
       (click)="toggleTheme()"
     >
       <app-icon [name]="isDarkMode() ? 'sun' : 'moon'" size="sm" />
     </button>
 
-    <button
-      type="button"
-      class="topbar-action-btn notif-btn"
-      title="Notifications"
-      aria-label="View notifications"
-      (click)="handleNotification()"
-    >
-      <app-icon name="bell" size="sm" />
-      @if (unreadNotifications() > 0) {
-        <span class="notif-badge">
-          {{ unreadNotifications() > 9 ? '9+' : unreadNotifications() }}
-        </span>
-      }
-    </button>
-
-    <div class="user-menu-wrapper">
+    <div #notifWrapper class="notif-wrapper">
       <button
         type="button"
+        class="topbar-action-btn notif-btn"
+        appTooltip="Notifications"
+        tooltipPosition="bottom"
+        aria-label="View notifications"
+        [attr.aria-expanded]="notificationsOpen()"
+        (click)="handleNotification()"
+      >
+        <app-icon name="bell" size="sm" />
+        @if (unreadNotifications() > 0) {
+          <span class="notif-badge">
+            {{ unreadNotifications() > 9 ? '9+' : unreadNotifications() }}
+          </span>
+        }
+      </button>
+
+      @if (notificationsOpen()) {
+        <div class="notif-popover fade-up">
+          <app-notifications-panel
+            [items]="notifications()"
+            (itemClicked)="notificationItemClicked.emit($event); notificationsOpen.set(false)"
+            (markAllRead)="notificationsMarkAllRead.emit()"
+          />
+        </div>
+      }
+    </div>
+
+    <app-dropdown-menu
+      [items]="userMenuItems()"
+      [headerTitle]="userName()"
+      [headerSubtitle]="userRole()"
+      align="end"
+      ariaLabel="User menu"
+      (openedChange)="handleMenuOpened($event)"
+      (itemSelected)="selectMenuItem($event)"
+    >
+      <button
+        menu-trigger
+        type="button"
         class="user-trigger-btn"
-        (click)="toggleUserMenu()"
         aria-label="User menu"
-        [attr.aria-expanded]="userMenuOpen()"
       >
         <app-avatar
           [name]="userName() || 'User'"
@@ -73,34 +95,6 @@
           </span>
         }
       </button>
-
-      @if (userMenuOpen()) {
-        <div class="user-dropdown-menu fade-up" role="menu" (click)="$event.stopPropagation()">
-          @if (userName() || userRole()) {
-            <div class="dropdown-header">
-              <span class="dropdown-user-name">{{ userName() }}</span>
-              <span class="dropdown-user-role">{{ userRole() }}</span>
-            </div>
-            <div class="dropdown-divider"></div>
-          }
-          @for (item of userMenuItems(); track item.id) {
-            @if (item.dividerBefore) {
-              <div class="dropdown-divider"></div>
-            }
-            <button
-              type="button"
-              role="menuitem"
-              [class]="'dropdown-item' + (item.danger ? ' is-danger' : '')"
-              (click)="selectMenuItem(item)"
-            >
-              @if (item.icon) {
-                <app-icon [name]="item.icon" size="xs" />
-              }
-              <span>{{ item.label }}</span>
-            </button>
-          }
-        </div>
-      }
-    </div>
+    </app-dropdown-menu>
   </div>
 </header>

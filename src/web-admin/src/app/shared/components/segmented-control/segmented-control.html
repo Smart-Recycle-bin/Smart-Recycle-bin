@@ -1,0 +1,20 @@
+<div
+  [class]="'segmented-track size-' + size()"
+  role="radiogroup"
+  [attr.aria-label]="ariaLabel()"
+>
+  @for (opt of options(); track opt.value; let i = $index) {
+    <button
+      type="button"
+      role="radio"
+      [attr.aria-checked]="activeValue() === opt.value"
+      [disabled]="opt.disabled"
+      [class]="'segmented-btn' + (activeValue() === opt.value ? ' is-selected' : '')"
+      [attr.tabindex]="activeValue() === opt.value ? 0 : -1"
+      (click)="select(opt)"
+      (keydown)="handleKeyDown($event, i)"
+    >
+      {{ opt.label }}
+    </button>
+  }
+</div>

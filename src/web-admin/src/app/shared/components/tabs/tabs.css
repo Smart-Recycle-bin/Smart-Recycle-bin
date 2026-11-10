@@ -1,0 +1,55 @@
+:host {
+  display: block;
+}
+
+.tabs-list {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  border-bottom: 1px solid var(--line);
+  overflow-x: auto;
+}
+
+.tab-btn {
+  position: relative;
+  padding: 0.625rem 0.125rem;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 0.15s ease;
+}
+
+.tab-btn:hover:not(:disabled):not(.is-active) {
+  color: var(--ink);
+}
+
+.tab-btn.is-active {
+  color: var(--color-brand);
+  font-weight: 600;
+}
+
+.tab-btn.is-active::after {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  bottom: -1px;
+  height: 2px;
+  background-color: var(--color-brand);
+  border-radius: 2px 2px 0 0;
+}
+
+.tab-btn:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: -2px;
+  border-radius: 0.25rem;
+}
+
+.tab-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}

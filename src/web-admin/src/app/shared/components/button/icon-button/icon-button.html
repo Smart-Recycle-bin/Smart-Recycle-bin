@@ -1,7 +1,8 @@
 <button
   type="button"
   [disabled]="isDisabled()"
-  [attr.title]="title() || null"
+  [appTooltip]="title()"
+  [tooltipPosition]="tooltipPosition()"
   [attr.aria-label]="effectiveLabel()"
   [attr.aria-busy]="loading()"
   [class]="'icon-btn-base variant-' + variant() + ' size-' + size() + (isDisabled() ? ' is-disabled' : '')"

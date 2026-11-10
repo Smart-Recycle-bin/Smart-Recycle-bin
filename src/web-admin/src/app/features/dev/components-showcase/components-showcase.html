@@ -593,9 +593,70 @@
               />
             </app-card>
 
-            <!-- PageHeader (Stub) -->
-            <app-card title="PageHeader (Stub — Phase 3)" subtitle="Placeholder component to be implemented in Phase 3">
-              <app-page-header />
+            <!-- PageHeader & Navigation Primitives -->
+            <app-card title="PageHeader, SegmentedControl &amp; Tabs" subtitle="Real PageHeader with back link, status badge, actions slot, SegmentedControl, and Tabs">
+              <div class="demo-col-gap">
+                <app-page-header
+                  title="Operational overview"
+                  subtitle="Network-wide analytics for the Smart Waste Bin System."
+                  backLabel="AI review queue"
+                  backRoute="/review-queue"
+                  statusLabel="Pending"
+                  statusVariant="warning"
+                >
+                  <div page-actions class="flex items-center gap-2">
+                    <app-segmented-control
+                      [options]="periodOptions"
+                      [value]="demoPeriod()"
+                      size="sm"
+                      (valueChange)="demoPeriod.set($event)"
+                    />
+                    <app-button variant="outline" size="sm" leadingIcon="download" (clicked)="incrementClick()">
+                      Export
+                    </app-button>
+                  </div>
+                </app-page-header>
+
+                <app-tabs
+                  [tabs]="leaderboardTabs"
+                  [activeId]="demoTabId()"
+                  (activeChange)="demoTabId.set($event)"
+                />
+              </div>
+            </app-card>
+
+            <!-- DropdownMenu, Tooltip & NotificationsPanel -->
+            <app-card title="DropdownMenu, Tooltip &amp; NotificationsPanel" subtitle="Popover menus, custom tooltips, and notification feed">
+              <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+                <div class="flex flex-wrap items-center gap-4">
+                  <app-dropdown-menu
+                    [items]="demoDropdownItems"
+                    headerTitle="Row Options"
+                    align="start"
+                    (itemSelected)="toastService.info('Selected: ' + $event.label)"
+                  >
+                    <app-button menu-trigger variant="secondary" trailingIcon="chevron-down">
+                      Actions Menu
+                    </app-button>
+                  </app-dropdown-menu>
+
+                  <button
+                    type="button"
+                    class="nav-pill"
+                    appTooltip="Accessible floating tooltip"
+                    tooltipPosition="top"
+                  >
+                    Hover or focus for Tooltip
+                  </button>
+                </div>
+
+                <app-notifications-panel
+                  [items]="demoNotifications()"
+                  (itemClicked)="toastService.info($event.title)"
+                  (markRead)="markDemoNotificationRead($event)"
+                  (markAllRead)="markAllDemoNotificationsRead()"
+                />
+              </div>
             </app-card>
           </div>
         }
@@ -931,8 +992,10 @@
                 <div class="border border-[var(--line)] rounded-lg overflow-hidden">
                   <app-topbar
                     [unreadNotifications]="12"
+                    [notifications]="demoNotifications()"
                     userName="Admin User"
                     userRole="SYS_ADMIN"
+                    (notificationsMarkAllRead)="markAllDemoNotificationsRead()"
                     (search)="lastActionMessage.set('Searched for: ' + $event)"
                   />
                   <div class="bg-[var(--soft)] p-6 text-center text-xs text-muted">

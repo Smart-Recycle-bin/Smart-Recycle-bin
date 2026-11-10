@@ -127,3 +127,18 @@
 .fade-up {
   animation: fade-up 0.25s ease-out;
 }
+
+.app-tooltip {
+  position: fixed;
+  z-index: 9999;
+  padding: 0.375rem 0.625rem;
+  border-radius: 0.375rem;
+  background-color: var(--ink);
+  color: var(--card);
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.2;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+}

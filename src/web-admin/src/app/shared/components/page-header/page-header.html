@@ -1,1 +1,35 @@
-<p>page-header works!</p>
+<header class="page-header-root">
+  @if (backLabel()) {
+    <div class="page-header-back">
+      @if (backRoute()) {
+        <a class="back-link" [routerLink]="backRoute()!">
+          <app-icon name="chevron-left" size="xs" />
+          <span>{{ backLabel() }}</span>
+        </a>
+      } @else {
+        <button type="button" class="back-link" (click)="backClicked.emit()">
+          <app-icon name="chevron-left" size="xs" />
+          <span>{{ backLabel() }}</span>
+        </button>
+      }
+    </div>
+  }
+
+  <div class="page-header-row">
+    <div class="page-header-heading">
+      @if (title()) {
+        <h1 class="page-title">{{ title() }}</h1>
+      }
+      @if (subtitle()) {
+        <p class="page-subtitle">{{ subtitle() }}</p>
+      }
+    </div>
+
+    <div class="page-header-end">
+      @if (statusLabel()) {
+        <app-badge [label]="statusLabel()" [variant]="statusVariant()" [dot]="statusDot()" />
+      }
+      <ng-content select="[page-actions]" />
+    </div>
+  </div>
+</header>

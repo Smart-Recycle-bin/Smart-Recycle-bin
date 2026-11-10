@@ -1,20 +1,30 @@
-import { ChangeDetectionStrategy, Component, inject, input, output, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  ElementRef,
+  HostListener,
+  inject,
+  input,
+  output,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { ThemeService } from '../../../core/services/theme/theme.service';
-import { Icon, IconName } from '../icon/icon';
+import { Icon } from '../icon/icon';
 import { Avatar } from '../avatar/avatar';
 import { SearchInput } from '../form/search-input/search-input';
+import { DropdownMenu, DropdownMenuItem } from '../overlay/dropdown-menu/dropdown-menu';
+import {
+  NotificationItem,
+  NotificationsPanel,
+} from '../notifications-panel/notifications-panel';
+import { TooltipDirective } from '../tooltip/tooltip.directive';
 
-export interface TopbarMenuItem {
-  id: string;
-  label: string;
-  icon?: IconName | string;
-  danger?: boolean;
-  dividerBefore?: boolean;
-}
+export type TopbarMenuItem = DropdownMenuItem;
 
 @Component({
   selector: 'app-topbar',
-  imports: [Icon, Avatar, SearchInput],
+  imports: [Icon, Avatar, SearchInput, DropdownMenu, NotificationsPanel, TooltipDirective],
   templateUrl: './topbar.html',
   styleUrl: './topbar.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -25,6 +35,7 @@ export class Topbar {
   readonly searchPlaceholder = input<string>('Search bins, recyclers, IDs...');
   readonly showSearch = input<boolean>(true);
   readonly unreadNotifications = input<number>(0);
+  readonly notifications = input<NotificationItem[]>([]);
   readonly userName = input<string>('');
   readonly userRole = input<string>('');
   readonly userAvatar = input<string>('');
@@ -38,11 +49,31 @@ export class Topbar {
   readonly search = output<string>();
   readonly searchChange = output<string>();
   readonly notificationClicked = output<void>();
+  readonly notificationItemClicked = output<NotificationItem>();
+  readonly notificationsMarkAllRead = output<void>();
   readonly userMenuClicked = output<void>();
   readonly userMenuAction = output<string>();
 
   readonly isDarkMode = this.themeService.isDark;
-  readonly userMenuOpen = signal<boolean>(false);
+  readonly notificationsOpen = signal<boolean>(false);
+
+  readonly notifWrapper = viewChild<ElementRef<HTMLElement>>('notifWrapper');
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    if (!this.notificationsOpen()) return;
+    const target = event.target as Node | null;
+    if (target && !this.notifWrapper()?.nativeElement.contains(target)) {
+      this.notificationsOpen.set(false);
+    }
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    if (this.notificationsOpen()) {
+      this.notificationsOpen.set(false);
+    }
+  }
 
   toggleTheme(): void {
     this.themeService.toggleTheme();
@@ -61,16 +92,18 @@ export class Topbar {
   }
 
   handleNotification(): void {
+    this.notificationsOpen.update((v) => !v);
     this.notificationClicked.emit();
   }
 
-  toggleUserMenu(): void {
-    this.userMenuOpen.update((v) => !v);
-    this.userMenuClicked.emit();
+  handleMenuOpened(open: boolean): void {
+    if (open) {
+      this.notificationsOpen.set(false);
+      this.userMenuClicked.emit();
+    }
   }
 
   selectMenuItem(item: TopbarMenuItem): void {
-    this.userMenuOpen.set(false);
     this.userMenuAction.emit(item.id);
   }
 }
