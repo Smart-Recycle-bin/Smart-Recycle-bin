@@ -1,26 +1,13 @@
-<aside [class]="'sidebar-root' + (collapsed() ? ' is-collapsed' : '')">
-  <!-- Brand Header -->
+<aside [class]="'sidebar-root' + (collapsed() ? ' is-collapsed' : '')" aria-label="Main navigation">
+  <!-- Brand Logo Slot -->
   <div class="sidebar-brand">
-    <div class="brand-logo">
-      <app-icon name="recycle" size="md" color="#ffffff" />
+    <div class="brand-logo-box">
+      <ng-content select="[sidebar-logo]">
+        @if (logoSrc()) {
+          <img [src]="logoSrc()" [alt]="logoAlt()" class="brand-logo-img" />
+        }
+      </ng-content>
     </div>
-
-    @if (!collapsed()) {
-      <div class="brand-info">
-        <h2 class="brand-name">{{ appName() }}</h2>
-        <span class="brand-subtitle">{{ appSubtitle() }}</span>
-      </div>
-    }
-
-    <button
-      type="button"
-      class="collapse-btn"
-      (click)="handleToggleCollapse()"
-      [attr.title]="collapsed() ? 'Expand sidebar' : 'Collapse sidebar'"
-      [attr.aria-label]="collapsed() ? 'Expand sidebar' : 'Collapse sidebar'"
-    >
-      <app-icon [name]="collapsed() ? 'chevron-right' : 'chevron-left'" size="xs" />
-    </button>
   </div>
 
   <!-- Navigation Sections -->
@@ -34,28 +21,27 @@
         <ul class="nav-list">
           @for (item of sec.items; track item.id) {
             <li class="nav-list-item">
-              <button
-                type="button"
-                [class]="'nav-link' + (activeId() === item.id ? ' is-active' : '')"
+              <a
+                class="nav-link"
+                [routerLink]="item.route"
+                routerLinkActive="is-active"
+                [routerLinkActiveOptions]="{ exact: !!item.exact }"
                 [attr.title]="collapsed() ? item.label : null"
-                (click)="handleItemClick(item)"
+                [attr.aria-label]="collapsed() ? item.label : null"
+                (click)="handleLinkClick(item)"
               >
-                <div class="nav-icon">
+                <span class="nav-icon" aria-hidden="true">
                   <app-icon [name]="item.icon" size="sm" />
-                </div>
+                </span>
 
                 @if (!collapsed()) {
                   <span class="nav-label">{{ item.label }}</span>
 
-                  @if (item.badge) {
-                    <div class="nav-badge">
-                      <app-badge [variant]="item.badgeVariant || 'neutral'" size="sm">
-                        {{ item.badge }}
-                      </app-badge>
-                    </div>
+                  @if (item.badge !== undefined && item.badge !== null && item.badge !== '') {
+                    <span class="nav-count-pill">{{ item.badge }}</span>
                   }
                 }
-              </button>
+              </a>
             </li>
           }
         </ul>
@@ -63,32 +49,20 @@
     }
   </nav>
 
-  <!-- User profile footer -->
+  <!-- Collapse Control at Bottom -->
   <div class="sidebar-footer">
-    <div class="user-profile">
-      <app-avatar
-        [name]="user().name"
-        [imageUrl]="user().avatarUrl"
-        size="sm"
-        status="online"
-      />
-
+    <button
+      type="button"
+      class="collapse-btn"
+      (click)="handleToggleCollapse()"
+      [attr.title]="collapsed() ? 'Expand sidebar' : 'Collapse sidebar'"
+      [attr.aria-label]="collapsed() ? 'Expand sidebar' : 'Collapse sidebar'"
+      [attr.aria-expanded]="!collapsed()"
+    >
+      <app-icon [name]="collapsed() ? 'chevron-right' : 'chevron-left'" size="xs" />
       @if (!collapsed()) {
-        <div class="user-meta">
-          <span class="user-name">{{ user().name }}</span>
-          <span class="user-role">{{ user().role || user().email }}</span>
-        </div>
-
-        <button
-          type="button"
-          class="logout-btn"
-          title="Sign out"
-          aria-label="Sign out"
-          (click)="handleLogout()"
-        >
-          <app-icon name="log-out" size="xs" />
-        </button>
+        <span>Collapse</span>
       }
-    </div>
+    </button>
   </div>
 </aside>

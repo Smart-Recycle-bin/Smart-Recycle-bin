@@ -1,15 +1,14 @@
-import { Component, computed, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
+import { RouterLink, RouterLinkActive } from '@angular/router';
 import { Icon, IconName } from '../icon/icon';
-import { Avatar } from '../avatar/avatar';
-import { Badge } from '../badge/badge';
 
 export interface SidebarNavItem {
   id: string;
   label: string;
   icon: IconName | string;
+  route: string;
+  exact?: boolean;
   badge?: string | number;
-  badgeVariant?: 'success' | 'warning' | 'danger' | 'info' | 'neutral';
-  route?: string;
 }
 
 export interface SidebarSection {
@@ -17,44 +16,27 @@ export interface SidebarSection {
   items: SidebarNavItem[];
 }
 
-export interface SidebarUser {
-  name: string;
-  email: string;
-  avatarUrl?: string;
-  role?: string;
-}
-
 @Component({
   selector: 'app-sidebar',
-  imports: [Icon, Avatar, Badge],
+  imports: [RouterLink, RouterLinkActive, Icon],
   templateUrl: './sidebar.html',
   styleUrl: './sidebar.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Sidebar {
-  readonly appName = input<string>('SmartRecycle');
-  readonly appSubtitle = input<string>('IoT Waste OS');
   readonly sections = input<SidebarSection[]>([]);
-  readonly activeId = input<string>('dashboard');
   readonly collapsed = input<boolean>(false);
-  readonly user = input<SidebarUser>({
-    name: 'Sarah Connor',
-    email: 'sarah@smartrecycle.io',
-    role: 'Operations Director',
-  });
+  readonly logoSrc = input<string>('ecobin-logo.svg');
+  readonly logoAlt = input<string>('EcoBin');
 
-  readonly itemClicked = output<SidebarNavItem>();
   readonly toggleCollapse = output<void>();
-  readonly logoutClicked = output<void>();
-
-  handleItemClick(item: SidebarNavItem): void {
-    this.itemClicked.emit(item);
-  }
+  readonly linkClicked = output<SidebarNavItem>();
 
   handleToggleCollapse(): void {
     this.toggleCollapse.emit();
   }
 
-  handleLogout(): void {
-    this.logoutClicked.emit();
+  handleLinkClick(item: SidebarNavItem): void {
+    this.linkClicked.emit(item);
   }
 }

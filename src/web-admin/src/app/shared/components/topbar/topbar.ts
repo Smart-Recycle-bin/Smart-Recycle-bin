@@ -1,12 +1,15 @@
-import { Component, inject, input, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input, output, signal } from '@angular/core';
 import { ThemeService } from '../../../core/services/theme/theme.service';
-import { Icon } from '../icon/icon';
+import { Icon, IconName } from '../icon/icon';
 import { Avatar } from '../avatar/avatar';
 import { SearchInput } from '../form/search-input/search-input';
 
-export interface BreadcrumbItem {
+export interface TopbarMenuItem {
+  id: string;
   label: string;
-  href?: string;
+  icon?: IconName | string;
+  danger?: boolean;
+  dividerBefore?: boolean;
 }
 
 @Component({
@@ -14,21 +17,29 @@ export interface BreadcrumbItem {
   imports: [Icon, Avatar, SearchInput],
   templateUrl: './topbar.html',
   styleUrl: './topbar.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Topbar {
   readonly themeService = inject(ThemeService);
 
-  readonly title = input<string>('Overview');
-  readonly breadcrumbs = input<BreadcrumbItem[]>([]);
-  readonly unreadNotifications = input<number>(3);
-  readonly userName = input<string>('Sarah Connor');
-  readonly userAvatar = input<string>('');
+  readonly searchPlaceholder = input<string>('Search bins, recyclers, IDs...');
   readonly showSearch = input<boolean>(true);
+  readonly unreadNotifications = input<number>(0);
+  readonly userName = input<string>('');
+  readonly userRole = input<string>('');
+  readonly userAvatar = input<string>('');
+  readonly userMenuItems = input<TopbarMenuItem[]>([
+    { id: 'profile', label: 'Profile settings', icon: 'user' },
+    { id: 'preferences', label: 'Preferences', icon: 'settings' },
+    { id: 'logout', label: 'Sign out', icon: 'log-out', danger: true, dividerBefore: true },
+  ]);
 
   readonly toggleSidebar = output<void>();
   readonly search = output<string>();
+  readonly searchChange = output<string>();
   readonly notificationClicked = output<void>();
   readonly userMenuClicked = output<void>();
+  readonly userMenuAction = output<string>();
 
   readonly isDarkMode = this.themeService.isDark;
   readonly userMenuOpen = signal<boolean>(false);
@@ -45,6 +56,10 @@ export class Topbar {
     this.search.emit(query);
   }
 
+  handleSearchChange(query: string): void {
+    this.searchChange.emit(query);
+  }
+
   handleNotification(): void {
     this.notificationClicked.emit();
   }
@@ -52,5 +67,10 @@ export class Topbar {
   toggleUserMenu(): void {
     this.userMenuOpen.update((v) => !v);
     this.userMenuClicked.emit();
+  }
+
+  selectMenuItem(item: TopbarMenuItem): void {
+    this.userMenuOpen.set(false);
+    this.userMenuAction.emit(item.id);
   }
 }

@@ -8,9 +8,9 @@
   flex-direction: column;
   width: 16rem;
   height: 100%;
-  background-color: #0f172a;
-  color: #e2e8f0;
-  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  background-color: var(--sidebar-bg);
+  color: var(--sidebar-ink);
+  border-inline-end: 1px solid var(--sidebar-border);
   transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
   user-select: none;
@@ -20,74 +20,51 @@
   width: 4.5rem;
 }
 
-/* Brand */
+/* Brand Logo Box */
 .sidebar-brand {
-  display: flex;
-  align-items: center;
-  height: 4rem;
-  padding: 0 1.25rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-  gap: 0.75rem;
-  position: relative;
-}
-
-.brand-logo {
-  width: 2.25rem;
-  height: 2.25rem;
-  border-radius: 0.5rem;
-  background-color: #009966;
+  padding: 1rem;
+  border-bottom: 1px solid var(--sidebar-border);
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
-  box-shadow: 0 2px 8px rgba(0, 153, 102, 0.4);
 }
 
-.brand-info {
+.brand-logo-box {
+  width: 100%;
+  min-height: 3rem;
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.625rem;
+  background-color: #ffffff;
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   overflow: hidden;
-  flex: 1 1 0%;
-}
-
-.brand-name {
-  font-size: 0.9375rem;
-  font-weight: 700;
-  color: #ffffff;
-  letter-spacing: -0.01em;
-  white-space: nowrap;
-}
-
-.brand-subtitle {
-  font-size: 0.6875rem;
-  color: #94a3b8;
-  white-space: nowrap;
-}
-
-.collapse-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.5rem;
-  height: 1.5rem;
-  border-radius: 0.25rem;
-  background-color: rgba(255, 255, 255, 0.05);
-  border: none;
-  color: #94a3b8;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-.collapse-btn:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-  color: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
 .is-collapsed .sidebar-brand {
-  padding: 0;
-  justify-content: center;
+  padding: 0.75rem;
 }
-.is-collapsed .collapse-btn {
-  display: none;
+
+.is-collapsed .brand-logo-box {
+  width: 2.75rem;
+  height: 2.75rem;
+  min-height: 2.75rem;
+  padding: 0.375rem;
+}
+
+.brand-logo-img {
+  max-height: 2.25rem;
+  width: auto;
+  max-width: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.is-collapsed .brand-logo-img {
+  max-height: 1.75rem;
+  object-fit: cover;
+  object-position: left center;
 }
 
 /* Nav */
@@ -97,7 +74,7 @@
   padding: 1rem 0.75rem;
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 1.125rem;
 }
 
 .is-collapsed .sidebar-nav {
@@ -106,11 +83,12 @@
 
 .section-title {
   font-size: 0.6875rem;
-  font-weight: 600;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: #64748b;
-  padding: 0 0.75rem 0.375rem 0.75rem;
+  color: var(--sidebar-muted);
+  padding-inline: 0.75rem;
+  margin: 0 0 0.375rem 0;
 }
 
 .nav-list {
@@ -123,32 +101,47 @@
 }
 
 .nav-link {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 0.75rem;
   width: 100%;
-  padding: 0.625rem 0.75rem;
+  padding: 0.5625rem 0.75rem;
   border-radius: 0.5rem;
-  border: none;
-  background: none;
-  color: #94a3b8;
+  color: var(--sidebar-ink);
+  opacity: 0.9;
   font-size: 0.875rem;
   font-weight: 500;
-  cursor: pointer;
-  transition: all 0.15s ease-in-out;
-  text-align: left;
+  text-decoration: none;
+  transition: background-color 0.15s ease, opacity 0.15s ease;
 }
 
 .nav-link:hover {
-  color: #ffffff;
-  background-color: rgba(255, 255, 255, 0.06);
+  opacity: 1;
+  background-color: var(--sidebar-hover-bg);
+}
+
+.nav-link:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
 }
 
 .nav-link.is-active {
-  background-color: rgba(0, 153, 102, 0.18);
-  color: #34d399;
-  border-left: 3px solid #009966;
+  opacity: 1;
+  background-color: var(--sidebar-active-bg);
   font-weight: 600;
+}
+
+.nav-link.is-active::before {
+  content: '';
+  position: absolute;
+  inset-inline-start: -0.75rem;
+  top: 0.375rem;
+  bottom: 0.375rem;
+  width: 0.25rem;
+  border-start-end-radius: 0.25rem;
+  border-end-end-radius: 0.25rem;
+  background-color: #ffffff;
 }
 
 .is-collapsed .nav-link {
@@ -156,8 +149,8 @@
   padding: 0.625rem;
 }
 
-.is-collapsed .nav-link.is-active {
-  border-left: none;
+.is-collapsed .nav-link.is-active::before {
+  inset-inline-start: -0.5rem;
 }
 
 .nav-icon {
@@ -174,61 +167,52 @@
   white-space: nowrap;
 }
 
-.nav-badge {
+.nav-count-pill {
   flex-shrink: 0;
-}
-
-/* Footer */
-.sidebar-footer {
-  padding: 0.875rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
-  background-color: rgba(0, 0, 0, 0.15);
-}
-
-.user-profile {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.is-collapsed .user-profile {
-  justify-content: center;
-}
-
-.user-meta {
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  flex: 1 1 0%;
-}
-
-.user-name {
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: #f1f5f9;
-  white-space: nowrap;
-}
-
-.user-role {
+  min-width: 1.25rem;
+  height: 1.25rem;
+  padding-inline: 0.375rem;
+  border-radius: 9999px;
+  background-color: #ffffff;
+  color: var(--color-brand);
   font-size: 0.6875rem;
-  color: #64748b;
-  white-space: nowrap;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-variant-numeric: tabular-nums;
 }
 
-.logout-btn {
+/* Bottom Collapse Control */
+.sidebar-footer {
+  padding: 0.75rem;
+  border-top: 1px solid var(--sidebar-border);
+}
+
+.collapse-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 1.75rem;
-  height: 1.75rem;
-  border-radius: 0.375rem;
-  background: none;
+  gap: 0.375rem;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  background: transparent;
   border: none;
-  color: #94a3b8;
+  color: var(--sidebar-ink);
+  opacity: 0.85;
+  font-size: 0.8125rem;
+  font-weight: 500;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: background-color 0.15s ease, opacity 0.15s ease;
 }
-.logout-btn:hover {
-  background-color: rgba(239, 68, 68, 0.15);
-  color: #ef4444;
+
+.collapse-btn:hover {
+  opacity: 1;
+  background-color: var(--sidebar-hover-bg);
+}
+
+.collapse-btn:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
 }

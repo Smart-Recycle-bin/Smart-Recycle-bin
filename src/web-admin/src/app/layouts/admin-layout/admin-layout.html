@@ -4,7 +4,6 @@
     class="sidebar-wrapper"
     [class.is-mobile-open]="mobileSidebarOpen()"
   >
-    <!-- Mobile backdrop -->
     @if (mobileSidebarOpen()) {
       <div class="mobile-backdrop" (click)="closeMobileSidebar()"></div>
     }
@@ -12,11 +11,9 @@
     <div class="sidebar-pane">
       <app-sidebar
         [sections]="navSections()"
-        [activeId]="activeNavId()"
         [collapsed]="sidebarCollapsed()"
-        [user]="currentUser()"
-        (itemClicked)="handleNavItem($event)"
         (toggleCollapse)="toggleCollapse()"
+        (linkClicked)="closeMobileSidebar()"
       />
     </div>
   </div>
@@ -24,11 +21,10 @@
   <!-- Main Area -->
   <div class="admin-main">
     <app-topbar
-      [title]="title()"
-      [breadcrumbs]="breadcrumbs()"
       [unreadNotifications]="unreadNotifications()"
-      [userName]="currentUser().name"
-      [userAvatar]="currentUser().avatarUrl || ''"
+      [userName]="activeUser().name"
+      [userRole]="activeUser().role"
+      [userAvatar]="activeUser().avatarUrl || ''"
       (toggleSidebar)="toggleMobileSidebar()"
       (search)="searchTriggered.emit($event)"
     />

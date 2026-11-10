@@ -1,6 +1,6 @@
 <header class="topbar-root">
-  <!-- Left: Mobile toggle + Breadcrumb / Title -->
-  <div class="topbar-left">
+  <!-- Left: Mobile Sidebar Toggle + Search -->
+  <div class="topbar-start">
     <button
       type="button"
       class="mobile-menu-btn"
@@ -10,42 +10,20 @@
       <app-icon name="menu" size="md" />
     </button>
 
-    <div class="topbar-heading">
-      @if (breadcrumbs().length > 0) {
-        <nav class="topbar-breadcrumbs" aria-label="Breadcrumbs">
-          <ol class="breadcrumbs-list">
-            @for (crumb of breadcrumbs(); track crumb.label; let last = $last) {
-              <li class="breadcrumb-item">
-                @if (last) {
-                  <span class="breadcrumb-current">{{ crumb.label }}</span>
-                } @else {
-                  <span class="breadcrumb-link">{{ crumb.label }}</span>
-                  <span class="breadcrumb-sep">/</span>
-                }
-              </li>
-            }
-          </ol>
-        </nav>
-      }
-
-      <h1 class="topbar-title">{{ title() }}</h1>
-    </div>
+    @if (showSearch()) {
+      <div class="topbar-search">
+        <app-search-input
+          [placeholder]="searchPlaceholder()"
+          size="sm"
+          (search)="handleSearch($event)"
+          (valueChange)="handleSearchChange($event)"
+        />
+      </div>
+    }
   </div>
 
-  <!-- Center: Optional Search Input -->
-  @if (showSearch()) {
-    <div class="topbar-search">
-      <app-search-input
-        placeholder="Search bins, devices, routes..."
-        size="sm"
-        (search)="handleSearch($event)"
-      />
-    </div>
-  }
-
-  <!-- Right: Actions, Theme, Notifications, Avatar -->
-  <div class="topbar-right">
-    <!-- Theme Toggle -->
+  <!-- Right: Theme Toggle, Notifications Bell, User Block -->
+  <div class="topbar-end">
     <button
       type="button"
       class="topbar-action-btn theme-toggle"
@@ -56,7 +34,6 @@
       <app-icon [name]="isDarkMode() ? 'sun' : 'moon'" size="sm" />
     </button>
 
-    <!-- Notification Button with badge -->
     <button
       type="button"
       class="topbar-action-btn notif-btn"
@@ -72,46 +49,56 @@
       }
     </button>
 
-    <div class="topbar-divider"></div>
-
-    <!-- User Profile Dropdown trigger -->
     <div class="user-menu-wrapper">
       <button
         type="button"
         class="user-trigger-btn"
         (click)="toggleUserMenu()"
-        aria-label="User profile options"
+        aria-label="User menu"
+        [attr.aria-expanded]="userMenuOpen()"
       >
         <app-avatar
-          [name]="userName()"
+          [name]="userName() || 'User'"
           [imageUrl]="userAvatar()"
           size="sm"
-          status="online"
         />
-        <span class="user-display-name">{{ userName() }}</span>
-        <app-icon name="chevron-down" size="xs" />
+        @if (userName() || userRole()) {
+          <span class="user-meta">
+            @if (userName()) {
+              <span class="user-display-name">{{ userName() }}</span>
+            }
+            @if (userRole()) {
+              <span class="user-display-role">{{ userRole() }}</span>
+            }
+          </span>
+        }
       </button>
 
       @if (userMenuOpen()) {
-        <div class="user-dropdown-menu fade-up" (click)="$event.stopPropagation()">
-          <div class="dropdown-header">
-            <span class="dropdown-user-name">{{ userName() }}</span>
-            <span class="dropdown-user-role">Administrator</span>
-          </div>
-          <div class="dropdown-divider"></div>
-          <button type="button" class="dropdown-item" (click)="toggleUserMenu()">
-            <app-icon name="user" size="xs" />
-            <span>Profile Settings</span>
-          </button>
-          <button type="button" class="dropdown-item" (click)="toggleUserMenu()">
-            <app-icon name="settings" size="xs" />
-            <span>System Preferences</span>
-          </button>
-          <div class="dropdown-divider"></div>
-          <button type="button" class="dropdown-item is-danger" (click)="toggleUserMenu()">
-            <app-icon name="log-out" size="xs" />
-            <span>Sign out</span>
-          </button>
+        <div class="user-dropdown-menu fade-up" role="menu" (click)="$event.stopPropagation()">
+          @if (userName() || userRole()) {
+            <div class="dropdown-header">
+              <span class="dropdown-user-name">{{ userName() }}</span>
+              <span class="dropdown-user-role">{{ userRole() }}</span>
+            </div>
+            <div class="dropdown-divider"></div>
+          }
+          @for (item of userMenuItems(); track item.id) {
+            @if (item.dividerBefore) {
+              <div class="dropdown-divider"></div>
+            }
+            <button
+              type="button"
+              role="menuitem"
+              [class]="'dropdown-item' + (item.danger ? ' is-danger' : '')"
+              (click)="selectMenuItem(item)"
+            >
+              @if (item.icon) {
+                <app-icon [name]="item.icon" size="xs" />
+              }
+              <span>{{ item.label }}</span>
+            </button>
+          }
         </div>
       }
     </div>

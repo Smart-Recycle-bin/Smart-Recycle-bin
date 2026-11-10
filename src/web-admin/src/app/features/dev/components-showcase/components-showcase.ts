@@ -364,26 +364,15 @@ export class ComponentsShowcase {
   // Sidebar Preview Sections
   readonly previewSidebarSections: SidebarSection[] = [
     {
-      title: 'Operations',
       items: [
-        { id: 'dash', label: 'IoT Dashboard', icon: 'dashboard' },
-        { id: 'map', label: 'Live Device Map', icon: 'map', badge: '12', badgeVariant: 'warning' },
-        { id: 'analytics', label: 'Collection Rates', icon: 'chart' },
+        { id: 'overview', label: 'Overview', icon: 'dashboard', route: '/overview', exact: true },
       ],
     },
     {
-      title: 'Devices & Logistics',
+      title: 'Fleet Management',
       items: [
-        { id: 'bins', label: 'Smart Bins', icon: 'recycle', badge: '148', badgeVariant: 'neutral' },
-        { id: 'fleet', label: 'Vehicle Fleet', icon: 'truck' },
-        { id: 'sensors', label: 'IoT Mesh Health', icon: 'wifi' },
-      ],
-    },
-    {
-      title: 'Settings',
-      items: [
-        { id: 'team', label: 'Field Operators', icon: 'users' },
-        { id: 'config', label: 'System Config', icon: 'settings' },
+        { id: 'bins', label: 'Bins List', icon: 'recycle', route: '/bins', badge: 5 },
+        { id: 'map', label: 'Live Bin Map', icon: 'map', route: '/bins/map' },
       ],
     },
   ];

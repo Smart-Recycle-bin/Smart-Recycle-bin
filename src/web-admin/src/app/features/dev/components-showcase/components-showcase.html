@@ -867,25 +867,21 @@
 
             <!-- 28. Sidebar & 29. Topbar -->
             <div class="demo-grid-2">
-              <app-card title="28. Admin Sidebar Preview" subtitle="Section navigation with active states, collapse toggle, and user meta">
+              <app-card title="28. Admin Sidebar Preview" subtitle="Brand green sidebar with router-linked navigation, logo slot, and bottom collapse">
                 <div class="border border-[var(--line)] rounded-lg overflow-hidden h-[420px] flex">
-                  <app-sidebar
-                    [sections]="previewSidebarSections"
-                    activeId="map"
-                    (itemClicked)="incrementClick()"
-                  />
+                  <app-sidebar [sections]="previewSidebarSections" />
                   <div class="flex-1 bg-[var(--soft)] p-4 flex items-center justify-center text-xs text-muted text-center">
                     Sidebar preview container
                   </div>
                 </div>
               </app-card>
 
-              <app-card title="29. Topbar Preview" subtitle="Breadcrumbs, search bar, notifications indicator, theme switch, and user dropdown">
+              <app-card title="29. Topbar Preview" subtitle="Search bar, theme switch, notifications indicator, and two-line user menu">
                 <div class="border border-[var(--line)] rounded-lg overflow-hidden">
                   <app-topbar
-                    title="Live IoT Monitor"
-                    [breadcrumbs]="[{ label: 'Operations' }, { label: 'Device Map' }]"
-                    [unreadNotifications]="5"
+                    [unreadNotifications]="12"
+                    userName="Admin User"
+                    userRole="SYS_ADMIN"
                     (search)="lastActionMessage.set('Searched for: ' + $event)"
                   />
                   <div class="bg-[var(--soft)] p-6 text-center text-xs text-muted">
@@ -949,7 +945,7 @@
         </app-button>
       </div>
 
-      <app-admin-layout title="IoT Smart Bin Operations" />
+      <app-admin-layout />
     </div>
   }
 

@@ -1,66 +1,46 @@
 <div class="auth-root">
-  <!-- Brand Area -->
-  <aside class="auth-hero-panel">
-    <div class="hero-brand">
-      <div class="hero-logo-box">
-        <app-icon name="recycle" size="lg" color="#ffffff" />
-      </div>
-      <span class="hero-app-name">{{ appName() }}</span>
-    </div>
-
-    <div class="hero-body">
-      <div class="hero-tagline-badge">
-        <span class="badge-dot"></span>
-        <span>Smart Municipal IoT Infrastructure</span>
+  <!-- Left Side: Auth Card -->
+  <main class="auth-card-panel">
+    <div class="auth-card fade-up">
+      <div class="auth-logo-wrap">
+        <ng-content select="[auth-logo]">
+          @if (logoSrc()) {
+            <img [src]="logoSrc()" [alt]="logoAlt()" class="auth-logo-img" />
+          }
+        </ng-content>
       </div>
 
-      <h2 class="hero-headline">
-        Intelligent waste sorting, real-time telemetry, &amp; automated logistics.
-      </h2>
+      @if (title() || subtitle()) {
+        <header class="auth-header">
+          @if (title()) {
+            <h1 class="auth-title">{{ title() }}</h1>
+          }
+          @if (subtitle()) {
+            <p class="auth-subtitle">{{ subtitle() }}</p>
+          }
+        </header>
+      }
 
-      <p class="hero-description">
-        Join cities and organizations worldwide optimizing collection routes, bin fill levels, and recycling efficiency.
-      </p>
-
-      <div class="hero-kpi-row">
-        <div class="hero-kpi-card">
-          <span class="hero-kpi-number">98.4%</span>
-          <span class="hero-kpi-lbl">Sensor Uptime</span>
-        </div>
-        <div class="hero-kpi-card">
-          <span class="hero-kpi-number">340k+</span>
-          <span class="hero-kpi-lbl">Tons Recycled</span>
-        </div>
-        <div class="hero-kpi-card">
-          <span class="hero-kpi-number">-42%</span>
-          <span class="hero-kpi-lbl">Route Fuel Cost</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="hero-footer">
-      <span>Enterprise IoT Platform &bull; SOC2 Type II Certified</span>
-    </div>
-  </aside>
-
-  <!-- Authentication Content Area -->
-  <main class="auth-form-panel">
-    <div class="auth-form-container fade-up">
-      <div class="form-mobile-brand">
-        <div class="mobile-logo">
-          <app-icon name="recycle" size="md" color="#ffffff" />
-        </div>
-        <span class="mobile-app-title">{{ appName() }}</span>
-      </div>
-
-      <div class="form-header">
-        <h3 class="form-title">{{ title() }}</h3>
-        <p class="form-subtitle">{{ subtitle() }}</p>
-      </div>
-
-      <div class="form-content">
+      <div class="auth-content">
         <router-outlet />
       </div>
     </div>
   </main>
+
+  <!-- Right Side: Projected Illustration / Tagline Panel -->
+  <aside class="auth-aside-panel">
+    <ng-content select="[auth-aside]">
+      <div class="auth-aside-default">
+        <div class="aside-illustration-placeholder" aria-hidden="true">
+          <img [src]="logoSrc()" [alt]="logoAlt()" class="aside-logo-mark" />
+        </div>
+        <h2 class="aside-headline">
+          Every bin, every kilo, <span class="aside-accent">accounted for.</span>
+        </h2>
+        <p class="aside-subcopy">
+          Monitor the smart bin fleet, moderate accounts and keep the points ledger honest. Authorised administrators only.
+        </p>
+      </div>
+    </ng-content>
+  </aside>
 </div>
