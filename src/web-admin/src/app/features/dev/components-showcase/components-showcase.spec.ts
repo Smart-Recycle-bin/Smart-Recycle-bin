@@ -37,9 +37,25 @@ describe('ComponentsShowcase', () => {
   });
 
   it('should dispatch toasts via ToastService', () => {
-    component.showToast('success');
+    component.showSuccessToast();
     expect(component.toastService.toasts().length).toBe(1);
-    component.toastService.clearAll();
+    component.clearAllToasts();
     expect(component.toastService.toasts().length).toBe(0);
+  });
+
+  it('should switch between showcase, foundation, admin-layout-preview, and auth-layout-preview tabs', () => {
+    expect(component.activeTab()).toBe('showcase');
+
+    component.activeTab.set('foundation');
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).textContent).toContain('Section A: Theme System');
+
+    component.activeTab.set('admin-layout-preview');
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).querySelector('app-admin-layout')).toBeTruthy();
+
+    component.activeTab.set('auth-layout-preview');
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).querySelector('app-auth-layout')).toBeTruthy();
   });
 });

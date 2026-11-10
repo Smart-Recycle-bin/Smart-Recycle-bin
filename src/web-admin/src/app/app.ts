@@ -11,9 +11,5 @@ import { ToastContainer } from './shared/components/toast/toast-container/toast-
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class App {
-  private readonly themeService = inject(ThemeService);
-
-  constructor() {
-    this.themeService.initializeTheme();
-  }
+  protected readonly themeService = inject(ThemeService);
 }

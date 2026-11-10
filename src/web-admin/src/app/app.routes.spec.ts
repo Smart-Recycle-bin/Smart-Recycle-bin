@@ -31,7 +31,7 @@ describe('App Routes', () => {
   it('should render lazy dev components showcase', async () => {
     await harness.navigateByUrl('/dev/components');
     expect(router.url).toBe('/dev/components');
-    expect(harness.routeNativeElement?.textContent).toContain('EcoBin UI Kit Showcase');
+    expect(harness.routeNativeElement?.textContent).toContain('EcoBin UI Kit & Foundation');
   });
 
   it('should render admin placeholder routes', async () => {
