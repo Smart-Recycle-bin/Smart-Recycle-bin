@@ -7,6 +7,15 @@ describe('App Routes', () => {
   let router: Router;
   let harness: RouterTestingHarness;
 
+  beforeAll(async () => {
+    await Promise.all([
+      import('./layouts/admin-layout/admin-layout'),
+      import('./layouts/auth-layout/auth-layout'),
+      import('./features/placeholders/route-placeholder/route-placeholder'),
+      import('./features/placeholders/not-found/not-found'),
+    ]);
+  }, 30000);
+
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       providers: [provideRouter(routes)],

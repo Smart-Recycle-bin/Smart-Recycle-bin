@@ -534,6 +534,17 @@ export class ComponentsShowcase {
     'check-circle',
     'sparkles',
     'activity',
+    'gift',
+    'trophy',
+    'wallet',
+    'clipboard-check',
+    'file-text',
+    'archive',
+    'ban',
+    'camera',
+    'map-pin',
+    'pencil',
+    'qr-code',
   ];
 
   // --- Section A: ThemeService Test Controls ---
