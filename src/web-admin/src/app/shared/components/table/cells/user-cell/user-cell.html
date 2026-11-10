@@ -1,0 +1,9 @@
+<div class="user-cell">
+  <app-avatar [name]="name()" [imageUrl]="avatarUrl()" size="sm" />
+  <div class="user-meta">
+    <span class="user-name">{{ name() }}</span>
+    @if (subtitle()) {
+      <span class="user-sub">{{ subtitle() }}</span>
+    }
+  </div>
+</div>

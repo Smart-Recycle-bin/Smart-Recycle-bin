@@ -1,6 +1,6 @@
-import { Component, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 
-export type BadgeVariant = 'success' | 'warning' | 'danger' | 'info' | 'neutral';
+export type BadgeVariant = 'success' | 'warning' | 'danger' | 'info' | 'purple' | 'neutral';
 export type BadgeSize = 'sm' | 'md';
 
 @Component({
@@ -8,6 +8,7 @@ export type BadgeSize = 'sm' | 'md';
   imports: [],
   templateUrl: './badge.html',
   styleUrl: './badge.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Badge {
   readonly variant = input<BadgeVariant>('neutral');

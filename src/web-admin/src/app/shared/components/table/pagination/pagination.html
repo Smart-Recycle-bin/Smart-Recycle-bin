@@ -1,0 +1,37 @@
+<nav class="pagination-root" aria-label="Table pagination">
+  <div class="pagination-summary">
+    @if (total() > 0) {
+      <span>Showing {{ startItem() }}&ndash;{{ endItem() }} of {{ total() }}</span>
+    } @else {
+      <span>Showing 0 of 0</span>
+    }
+  </div>
+
+  <div class="pagination-controls">
+    <button
+      type="button"
+      class="page-btn"
+      [disabled]="!canPrev()"
+      aria-label="Previous page"
+      (click)="goToPrev()"
+    >
+      <app-icon name="chevron-left" size="xs" />
+      <span>Prev</span>
+    </button>
+
+    <span class="page-indicator" aria-current="page">
+      Page {{ currentPage() }} / {{ totalPages() }}
+    </span>
+
+    <button
+      type="button"
+      class="page-btn"
+      [disabled]="!canNext()"
+      aria-label="Next page"
+      (click)="goToNext()"
+    >
+      <span>Next</span>
+      <app-icon name="chevron-right" size="xs" />
+    </button>
+  </div>
+</nav>

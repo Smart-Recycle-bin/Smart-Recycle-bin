@@ -1,0 +1,16 @@
+<div
+  class="fill-cell"
+  role="progressbar"
+  [attr.aria-valuenow]="clamped()"
+  aria-valuemin="0"
+  aria-valuemax="100"
+  [attr.aria-label]="clamped() + '% full'"
+>
+  <div class="fill-track">
+    <div
+      [class]="'fill-bar tone-' + tone()"
+      [style.width.%]="clamped()"
+    ></div>
+  </div>
+  <span class="fill-pct">{{ clamped() }}%</span>
+</div>

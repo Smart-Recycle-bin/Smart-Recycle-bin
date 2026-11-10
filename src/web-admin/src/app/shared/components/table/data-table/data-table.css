@@ -16,10 +16,15 @@
   overflow-x: auto;
 }
 
+.has-sticky-header .table-scroll {
+  max-height: 36rem;
+  overflow-y: auto;
+}
+
 .data-table {
   width: 100%;
   border-collapse: collapse;
-  text-align: left;
+  text-align: start;
   font-size: 0.875rem;
 }
 
@@ -28,11 +33,19 @@ thead {
   border-bottom: 1px solid var(--line);
 }
 
+thead.is-sticky th {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: var(--soft);
+  box-shadow: inset 0 -1px 0 var(--line);
+}
+
 .th-cell,
 .th-select,
 .th-actions {
   padding: 0.75rem 1rem;
-  font-size: 0.75rem;
+  font-size: 0.6875rem;
   font-weight: 600;
   color: var(--muted);
   text-transform: uppercase;
@@ -47,6 +60,10 @@ thead {
 .th-cell.is-sortable:hover {
   color: var(--ink);
 }
+.th-cell.is-sortable:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: -2px;
+}
 
 .th-content {
   display: inline-flex;
@@ -60,14 +77,14 @@ thead {
 }
 
 .sort-inactive {
-  opacity: 0.3;
+  opacity: 0.35;
 }
 
 .th-select,
 .td-select {
   width: 3rem;
-  padding-left: 1rem;
-  padding-right: 0.5rem;
+  padding-inline-start: 1rem;
+  padding-inline-end: 0.5rem;
 }
 
 .td-cell,
@@ -78,6 +95,10 @@ thead {
   vertical-align: middle;
 }
 
+.td-cell.is-nowrap {
+  white-space: nowrap;
+}
+
 .tr-row {
   transition: background-color 0.15s ease;
 }
@@ -86,18 +107,27 @@ thead {
   background-color: rgba(0, 153, 102, 0.03);
 }
 
+.tr-row.is-clickable {
+  cursor: pointer;
+}
+
 .tr-row.is-selected {
   background-color: rgba(0, 153, 102, 0.08);
 }
 
+tbody tr:last-child .td-cell,
+tbody tr:last-child .td-actions {
+  border-bottom: none;
+}
+
 .align-left {
-  text-align: left;
+  text-align: start;
 }
 .align-center {
   text-align: center;
 }
 .align-right {
-  text-align: right;
+  text-align: end;
 }
 
 .align-right .th-content {
@@ -117,4 +147,13 @@ thead {
 
 .cell-text {
   font-variant-numeric: tabular-nums;
+}
+
+.cell-text.is-number {
+  font-weight: 600;
+}
+
+.table-footer {
+  border-top: 1px solid var(--line);
+  background-color: var(--card);
 }

@@ -36,7 +36,14 @@ import { Drawer } from '../../../shared/components/overlay/drawer/drawer';
 import { ConfirmDialog } from '../../../shared/components/overlay/confirm-dialog/confirm-dialog';
 
 // 5. Data & Charts
+import { BadgeVariant } from '../../../shared/components/badge/badge';
 import { DataTable, TableAction, TableColumn } from '../../../shared/components/table/data-table/data-table';
+import { CellTemplateDirective } from '../../../shared/components/table/data-table/cell-template.directive';
+import { UserCell } from '../../../shared/components/table/cells/user-cell/user-cell';
+import { FillLevelCell } from '../../../shared/components/table/cells/fill-level-cell/fill-level-cell';
+import { MonoIdCell } from '../../../shared/components/table/cells/mono-id-cell/mono-id-cell';
+import { NumberCell } from '../../../shared/components/table/cells/number-cell/number-cell';
+import { Pagination } from '../../../shared/components/table/pagination/pagination';
 import { AreaChart, AreaChartPoint } from '../../../shared/components/charts/area-chart/area-chart';
 import { BarList, BarListItem } from '../../../shared/components/charts/bar-list/bar-list';
 import { DonutChart, DonutSegment } from '../../../shared/components/charts/donut-chart/donut-chart';
@@ -50,6 +57,18 @@ import { Topbar } from '../../../shared/components/topbar/topbar';
 // 7. Layouts
 import { AdminLayout } from '../../../layouts/admin-layout/admin-layout';
 import { AuthLayout } from '../../../layouts/auth-layout/auth-layout';
+
+interface ShowcaseBinRow {
+  id: string;
+  code: string;
+  location: string;
+  district: string;
+  fill: number;
+  pointsDelta: string;
+  collector: string;
+  collectorId: string;
+  status: 'AVAILABLE' | '≥80% FULL' | '≥95% FULL' | 'Inactive' | 'Sent to Retraining';
+}
 
 @Component({
   selector: 'app-components-showcase',
@@ -78,6 +97,12 @@ import { AuthLayout } from '../../../layouts/auth-layout/auth-layout';
     Drawer,
     ConfirmDialog,
     DataTable,
+    CellTemplateDirective,
+    UserCell,
+    FillLevelCell,
+    MonoIdCell,
+    NumberCell,
+    Pagination,
     AreaChart,
     BarList,
     DonutChart,
@@ -170,64 +195,91 @@ export class ComponentsShowcase {
   ];
 
   // Sample Data: IoT Bins Table
-  readonly tableColumns: TableColumn[] = [
-    { key: 'code', label: 'Device ID', sortable: true, width: '130px' },
-    { key: 'location', label: 'Deployment Zone', sortable: true },
-    { key: 'material', label: 'Category', sortable: true },
-    { key: 'fillLevel', label: 'Fullness', sortable: true, width: '110px' },
-    { key: 'battery', label: 'Battery', sortable: true, width: '100px' },
-    { key: 'status', label: 'Status', type: 'badge', sortable: true, width: '120px' },
+  readonly tableRowId = (row: ShowcaseBinRow) => row.id;
+
+  readonly statusBadgeMap: Record<ShowcaseBinRow['status'], BadgeVariant> = {
+    AVAILABLE: 'success',
+    '≥80% FULL': 'warning',
+    '≥95% FULL': 'danger',
+    Inactive: 'neutral',
+    'Sent to Retraining': 'purple',
+  };
+
+  readonly tableColumns: TableColumn<ShowcaseBinRow>[] = [
+    { key: 'code', label: 'Bin ID', sortable: true, width: '120px', nowrap: true },
+    { key: 'location', label: 'Location', sortable: true },
+    { key: 'collector', label: 'Collector', sortable: true },
+    { key: 'fill', label: 'Fill Level', sortable: true, width: '160px' },
+    { key: 'pointsDelta', label: 'Points', align: 'right', width: '100px' },
+    {
+      key: 'status',
+      label: 'Status',
+      type: 'badge',
+      sortable: true,
+      width: '150px',
+      badgeVariant: (row) => this.statusBadgeMap[row.status],
+    },
   ];
 
-  readonly tableData = signal<Record<string, any>[]>([
+  readonly tableData = signal<ShowcaseBinRow[]>([
     {
-      id: 'BIN-101',
-      code: 'BIN-101',
-      location: 'Central Plaza Mall',
-      material: 'Plastics',
-      fillLevel: '94%',
-      battery: '88%',
-      status: 'Critical / Full',
+      id: 'BIN-0001',
+      code: 'BIN-0001',
+      location: 'Central Plaza',
+      district: 'Cairo',
+      fill: 97,
+      pointsDelta: '+85',
+      collector: 'Mahmoud Fathy',
+      collectorId: 'C-001 · Cairo',
+      status: '≥95% FULL',
     },
     {
-      id: 'BIN-102',
-      code: 'BIN-102',
+      id: 'BIN-0002',
+      code: 'BIN-0002',
       location: 'Green Valley Station',
-      material: 'Paper & Boxes',
-      fillLevel: '68%',
-      battery: '95%',
-      status: 'Warning',
+      district: 'Giza',
+      fill: 85,
+      pointsDelta: '+60',
+      collector: 'Hossam El-Din',
+      collectorId: 'C-002 · Cairo',
+      status: '≥80% FULL',
     },
     {
-      id: 'BIN-103',
-      code: 'BIN-103',
-      location: 'City Tech Park Bldg 4',
-      material: 'Glass Containers',
-      fillLevel: '32%',
-      battery: '74%',
-      status: 'Optimal',
+      id: 'BIN-0003',
+      code: 'BIN-0003',
+      location: 'Tech Park Bldg 4',
+      district: 'Cairo',
+      fill: 34,
+      pointsDelta: '+72',
+      collector: 'Karim Abdelrahman',
+      collectorId: 'C-003 · Giza',
+      status: 'AVAILABLE',
     },
     {
-      id: 'BIN-104',
-      code: 'BIN-104',
+      id: 'BIN-0004',
+      code: 'BIN-0004',
       location: 'North Waterfront Pier',
-      material: 'Aluminium Cans',
-      fillLevel: '45%',
-      battery: '91%',
-      status: 'Optimal',
+      district: 'Alexandria',
+      fill: 45,
+      pointsDelta: '-420',
+      collector: 'Youssef Salama',
+      collectorId: 'C-004 · Qalyubia',
+      status: 'Sent to Retraining',
     },
     {
-      id: 'BIN-105',
-      code: 'BIN-105',
+      id: 'BIN-0005',
+      code: 'BIN-0005',
       location: 'South District Depot',
-      material: 'E-Waste Items',
-      fillLevel: '12%',
-      battery: '22%',
-      status: 'Offline',
+      district: 'Alexandria',
+      fill: 12,
+      pointsDelta: '0',
+      collector: 'Waleed Nagy',
+      collectorId: 'C-006 · Alexandria',
+      status: 'Inactive',
     },
   ]);
 
-  readonly tableActions: TableAction[] = [
+  readonly tableActions: TableAction<ShowcaseBinRow>[] = [
     { id: 'view', icon: 'eye', label: 'View Telemetry' },
     { id: 'empty', icon: 'refresh', label: 'Schedule Empty' },
     { id: 'alert', icon: 'alert', label: 'Flag Incident', variant: 'danger' },
@@ -455,14 +507,20 @@ export class ComponentsShowcase {
     this.toastService.info(msg);
   }
 
-  handleTableAction(event: { action: string; row: Record<string, any> }): void {
-    const msg = `Table Action '${event.action}' triggered for ${event.row['code']}`;
+  handleTableAction(event: { action: string; row: ShowcaseBinRow }): void {
+    const msg = `Table Action '${event.action}' triggered for ${event.row.code}`;
     this.lastActionMessage.set(msg);
     if (event.action === 'alert') {
       this.toastService.error(msg, 'Incident Flagged');
     } else {
       this.toastService.info(msg);
     }
+  }
+
+  handleTableRowClick(row: ShowcaseBinRow): void {
+    const msg = `Row clicked: ${row.code} (${row.location})`;
+    this.lastActionMessage.set(msg);
+    this.toastService.info(msg);
   }
 
   handleMapMarkerClick(marker: MapMarker): void {

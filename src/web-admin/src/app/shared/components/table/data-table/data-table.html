@@ -1,14 +1,14 @@
-<div class="table-container">
+<div class="table-container" [class.has-sticky-header]="stickyHeader()">
   <div class="table-scroll">
     <table class="data-table">
-      <thead>
+      <thead [class.is-sticky]="stickyHeader()">
         <tr>
           @if (selectable()) {
             <th class="th-select" scope="col">
               <app-checkbox
                 [checked]="allSelected()"
                 [indeterminate]="isIndeterminate()"
-                [disabled]="loading() || data().length === 0"
+                [disabled]="loading() || displayData().length === 0"
                 (checkedChange)="toggleSelectAll($event)"
               />
             </th>
@@ -19,15 +19,18 @@
               scope="col"
               [class]="'th-cell align-' + (col.align || 'left') + (col.sortable ? ' is-sortable' : '')"
               [style.width]="col.width || 'auto'"
+              [attr.aria-sort]="getAriaSort(col)"
+              [attr.tabindex]="col.sortable ? 0 : null"
               (click)="handleSort(col)"
+              (keydown)="handleSortKeyDown($event, col)"
             >
               <div class="th-content">
                 <span>{{ col.label }}</span>
                 @if (col.sortable) {
-                  <span class="sort-indicator">
-                    @if (sortColumn() === col.key && sortDir() === 'asc') {
+                  <span class="sort-indicator" aria-hidden="true">
+                    @if (internalSortColumn() === col.key && internalSortDir() === 'asc') {
                       <app-icon name="arrow-up" size="xs" />
-                    } @else if (sortColumn() === col.key && sortDir() === 'desc') {
+                    } @else if (internalSortColumn() === col.key && internalSortDir() === 'desc') {
                       <app-icon name="arrow-down" size="xs" />
                     } @else {
                       <app-icon name="chevron-down" size="xs" class="sort-inactive" />
@@ -39,7 +42,7 @@
           }
 
           @if (actions().length > 0) {
-            <th class="th-actions align-right" scope="col">Actions</th>
+            <th class="th-actions align-right" scope="col">{{ actionsLabel() }}</th>
           }
         </tr>
       </thead>
@@ -59,9 +62,9 @@
               }
             </tr>
           }
-        } @else if (sortedData().length === 0) {
+        } @else if (displayData().length === 0) {
           <tr>
-            <td [attr.colspan]="columns().length + (selectable() ? 1 : 0) + (actions().length > 0 ? 1 : 0)" class="td-empty">
+            <td [attr.colspan]="columnCount()" class="td-empty">
               <app-empty-state
                 icon="search"
                 [title]="emptyTitle()"
@@ -70,10 +73,15 @@
             </td>
           </tr>
         } @else {
-          @for (row of sortedData(); track row['id'] ?? $index) {
-            <tr class="tr-row" [class.is-selected]="isRowSelected(row, $index)">
+          @for (row of displayData(); track getRowKey(row, $index)) {
+            <tr
+              class="tr-row"
+              [class.is-selected]="isRowSelected(row, $index)"
+              [class.is-clickable]="rowClickable()"
+              (click)="handleRowClick(row)"
+            >
               @if (selectable()) {
-                <td class="td-select">
+                <td class="td-select" (click)="$event.stopPropagation()">
                   <app-checkbox
                     [checked]="isRowSelected(row, $index)"
                     (checkedChange)="toggleSelectRow(row, $index)"
@@ -82,29 +90,46 @@
               }
 
               @for (col of columns(); track col.key) {
-                <td [class]="'td-cell align-' + (col.align || 'left')">
-                  @if (col.type === 'badge') {
-                    <app-badge [variant]="getBadgeVariant(row[col.key])" size="sm" [dot]="true">
-                      {{ row[col.key] }}
+                <td
+                  [class]="'td-cell align-' + (col.align || 'left') + (col.nowrap ? ' is-nowrap' : '')"
+                >
+                  @if (templateMap().get(col.key); as customTpl) {
+                    <ng-container
+                      [ngTemplateOutlet]="customTpl"
+                      [ngTemplateOutletContext]="{
+                        $implicit: row,
+                        row: row,
+                        column: col.key,
+                        index: $index
+                      }"
+                    />
+                  } @else if (col.type === 'badge') {
+                    <app-badge [variant]="resolveBadgeVariant(col, row)" size="sm" [dot]="true">
+                      {{ getCellValue(row, col) }}
                     </app-badge>
                   } @else {
-                    <span class="cell-text">{{ row[col.key] }}</span>
+                    <span class="cell-text" [class.is-number]="col.type === 'number'">
+                      {{ getCellValue(row, col) }}
+                    </span>
                   }
                 </td>
               }
 
               @if (actions().length > 0) {
-                <td class="td-actions align-right">
+                <td class="td-actions align-right" (click)="$event.stopPropagation()">
                   <div class="row-actions-group">
                     @for (act of actions(); track act.id) {
-                      <app-icon-button
-                        [icon]="act.icon"
-                        [variant]="act.variant || 'ghost'"
-                        size="sm"
-                        [title]="act.label"
-                        [ariaLabel]="act.label"
-                        (clicked)="handleAction(act.id, row)"
-                      />
+                      @if (isActionVisible(act, row)) {
+                        <app-icon-button
+                          [icon]="act.icon"
+                          [variant]="act.variant || 'ghost'"
+                          size="sm"
+                          [title]="act.label"
+                          [ariaLabel]="act.label"
+                          [disabled]="isActionDisabled(act, row)"
+                          (clicked)="handleAction(act.id, row)"
+                        />
+                      }
                     }
                   </div>
                 </td>
@@ -115,4 +140,15 @@
       </tbody>
     </table>
   </div>
+
+  @if (showPagination() && !loading()) {
+    <div class="table-footer">
+      <app-pagination
+        [page]="internalPage()"
+        [pageSize]="pageSize()"
+        [total]="totalCount()"
+        (pageChange)="handlePageChange($event)"
+      />
+    </div>
+  }
 </div>

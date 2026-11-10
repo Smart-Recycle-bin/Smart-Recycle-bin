@@ -436,6 +436,7 @@
                 <app-badge label="Battery Depleted" variant="danger" [dot]="true" />
                 <app-badge label="Fill Level 85%" variant="warning" [dot]="true" />
                 <app-badge label="Mesh Synchronized" variant="info" />
+                <app-badge label="Sent to Retraining" variant="purple" [dot]="true" />
                 <app-badge label="Offline Gateway" variant="neutral" />
                 <app-badge label="Fleet In-Transit" variant="info" [dot]="true" />
                 <app-badge label="99.4%" variant="success" size="sm" />
@@ -782,14 +783,39 @@
             <h2 class="category-title">5. Data Visualization &amp; Charts</h2>
 
             <!-- 22. Data Table -->
-            <app-card title="22. Data Table" subtitle="Sortable columns, row selection, badges, and contextual action menus">
+            <app-card title="22. Data Table &amp; Cell Templates" subtitle="Generic DataTable&lt;T&gt; with appCell templates, badgeVariant mappers, pagination, and rowId selection">
               <app-data-table
                 [columns]="tableColumns"
                 [data]="tableData()"
+                [rowId]="tableRowId"
                 [selectable]="true"
+                [stickyHeader]="true"
+                [pageSize]="3"
+                [rowClickable]="true"
                 [actions]="tableActions"
+                (rowClick)="handleTableRowClick($event)"
                 (actionClicked)="handleTableAction($event)"
-              />
+              >
+                <ng-template appCell="code" let-row>
+                  <app-mono-id-cell [value]="row.code" />
+                </ng-template>
+                <ng-template appCell="collector" let-row>
+                  <app-user-cell [name]="row.collector" [subtitle]="row.collectorId" />
+                </ng-template>
+                <ng-template appCell="fill" let-row>
+                  <app-fill-level-cell [value]="row.fill" />
+                </ng-template>
+                <ng-template appCell="pointsDelta" let-row>
+                  <app-number-cell
+                    [value]="row.pointsDelta"
+                    [tone]="row.pointsDelta.startsWith('+') ? 'positive' : (row.pointsDelta.startsWith('-') ? 'negative' : 'muted')"
+                  />
+                </ng-template>
+              </app-data-table>
+
+              <div class="mt-4 border border-[var(--line)] rounded-lg bg-[var(--soft)]">
+                <app-pagination [page]="1" [pageSize]="8" [total]="14" />
+              </div>
             </app-card>
 
             <!-- 23. Area Chart & 24. Donut Chart -->
