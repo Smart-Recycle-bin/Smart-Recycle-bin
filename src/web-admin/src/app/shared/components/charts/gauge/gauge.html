@@ -1,0 +1,51 @@
+<div class="gauge-container">
+  <div class="gauge-svg-wrapper">
+    <svg viewBox="0 0 120 75" class="gauge-svg">
+      <!-- Background track arc -->
+      <path
+        d="M 15 60 A 45 45 0 0 1 105 60"
+        fill="none"
+        stroke="var(--soft)"
+        stroke-width="10"
+        stroke-linecap="round"
+      />
+
+      <!-- Value arc -->
+      <path
+        d="M 15 60 A 45 45 0 0 1 105 60"
+        fill="none"
+        [attr.stroke]="statusColor()"
+        stroke-width="10"
+        stroke-linecap="round"
+        [attr.stroke-dasharray]="arcLength"
+        [attr.stroke-dashoffset]="strokeDashoffset()"
+        class="gauge-value-arc"
+      />
+
+      <!-- Center text -->
+      <text
+        x="60"
+        y="50"
+        text-anchor="middle"
+        class="gauge-text-val"
+      >
+        {{ clampedValue() }}{{ unit() }}
+      </text>
+
+      <!-- Min and Max -->
+      <text x="15" y="70" text-anchor="middle" class="gauge-text-bounds">
+        {{ min() }}
+      </text>
+      <text x="105" y="70" text-anchor="middle" class="gauge-text-bounds">
+        {{ max() }}
+      </text>
+    </svg>
+  </div>
+
+  <div class="gauge-info">
+    @if (label()) {
+      <span class="gauge-label">{{ label() }}</span>
+    }
+    <span class="gauge-status" [style.color]="statusColor()">{{ statusLabel() }}</span>
+  </div>
+</div>

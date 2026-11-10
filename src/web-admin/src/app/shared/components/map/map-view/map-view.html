@@ -1,0 +1,159 @@
+<div class="map-root" [style.height.px]="height()">
+  <div class="map-controls-header">
+    <div class="map-info-title">
+      <app-icon name="map" size="sm" color="#009966" />
+      <span class="map-title-text">{{ title() }}</span>
+      <span class="map-device-count">{{ markers().length }} devices</span>
+    </div>
+
+    <!-- Zoom controls -->
+    <div class="map-zoom-tools">
+      <button type="button" class="zoom-btn" (click)="zoomIn()" aria-label="Zoom in">
+        <app-icon name="plus" size="xs" />
+      </button>
+      <button type="button" class="zoom-btn" (click)="resetZoom()" aria-label="Reset zoom">
+        <span class="zoom-level">{{ zoom() }}x</span>
+      </button>
+      <button type="button" class="zoom-btn" (click)="zoomOut()" aria-label="Zoom out">
+        <app-icon name="more-horizontal" size="xs" />
+      </button>
+    </div>
+  </div>
+
+  <div class="map-viewport" (click)="clearSelection()">
+    <div
+      class="map-canvas"
+      [style.transform]="'scale(' + zoom() + ')'"
+    >
+      <!-- Schematic City Vector Map Background -->
+      <svg
+        viewBox="0 0 1000 600"
+        class="map-schematic-svg"
+        preserveAspectRatio="none"
+      >
+        <defs>
+          <pattern id="mapGrid" width="40" height="40" patternUnits="userSpaceOnUse">
+            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="var(--line)" stroke-width="0.75" />
+          </pattern>
+        </defs>
+
+        <!-- Base grid background -->
+        <rect width="1000" height="600" fill="var(--soft)" />
+        <rect width="1000" height="600" fill="url(#mapGrid)" opacity="0.6" />
+
+        <!-- Green Park zone -->
+        <path
+          d="M 120 180 Q 200 130 320 160 T 420 300 Q 300 360 220 320 Z"
+          fill="rgba(0, 153, 102, 0.08)"
+          stroke="rgba(0, 153, 102, 0.2)"
+          stroke-width="1.5"
+        />
+        <text x="240" y="240" fill="rgba(0, 153, 102, 0.5)" font-size="12" font-weight="600">Central Eco Park</text>
+
+        <!-- River water corridor -->
+        <path
+          d="M 0 450 Q 250 480 450 420 T 800 380 Q 920 340 1000 320 L 1000 380 Q 920 400 800 440 T 450 480 Q 250 540 0 510 Z"
+          fill="rgba(14, 165, 233, 0.09)"
+          stroke="rgba(14, 165, 233, 0.25)"
+          stroke-width="1.5"
+        />
+        <text x="560" y="420" fill="rgba(14, 165, 233, 0.5)" font-size="12" font-weight="600">Emerald River</text>
+
+        <!-- Major Arterial Roads -->
+        <path d="M 0 120 L 1000 120" stroke="var(--line)" stroke-width="8" stroke-linecap="round" />
+        <path d="M 0 120 L 1000 120" stroke="var(--card)" stroke-width="6" stroke-linecap="round" />
+
+        <path d="M 0 280 L 1000 280" stroke="var(--line)" stroke-width="8" stroke-linecap="round" />
+        <path d="M 0 280 L 1000 280" stroke="var(--card)" stroke-width="6" stroke-linecap="round" />
+
+        <path d="M 280 0 L 280 600" stroke="var(--line)" stroke-width="8" stroke-linecap="round" />
+        <path d="M 280 0 L 280 600" stroke="var(--card)" stroke-width="6" stroke-linecap="round" />
+
+        <path d="M 680 0 L 680 600" stroke="var(--line)" stroke-width="8" stroke-linecap="round" />
+        <path d="M 680 0 L 680 600" stroke="var(--card)" stroke-width="6" stroke-linecap="round" />
+
+        <!-- Diagonal Avenue -->
+        <path d="M 100 0 L 900 600" stroke="var(--line)" stroke-width="6" />
+        <path d="M 100 0 L 900 600" stroke="var(--card)" stroke-width="4" stroke-dasharray="8 6" />
+
+        <!-- District labels -->
+        <text x="80" y="60" fill="var(--muted)" font-size="11" font-weight="600" opacity="0.7">North Hub</text>
+        <text x="750" y="80" fill="var(--muted)" font-size="11" font-weight="600" opacity="0.7">Commercial District</text>
+        <text x="820" y="520" fill="var(--muted)" font-size="11" font-weight="600" opacity="0.7">Industrial Recycling Center</text>
+      </svg>
+
+      <!-- Interactive Markers overlay -->
+      @for (m of markers(); track m.id) {
+        <div
+          class="map-marker-pin"
+          [class.is-selected]="effectiveSelectedId() === m.id"
+          [style.left.%]="m.x"
+          [style.top.%]="m.y"
+          (click)="selectMarker(m, $event)"
+        >
+          @if (m.status === 'critical') {
+            <span class="marker-pulse-ring" [style.borderColor]="getStatusColor(m.status)"></span>
+          }
+
+          <div
+            class="marker-dot"
+            [style.backgroundColor]="getStatusColor(m.status)"
+            [attr.title]="m.label + ' (' + m.status + ')'"
+          >
+            <app-icon
+              [name]="m.type === 'truck' ? 'truck' : (m.type === 'station' ? 'recycle' : 'battery')"
+              size="xs"
+              color="#ffffff"
+            />
+          </div>
+
+          <span class="marker-label-tag">{{ m.label }}</span>
+        </div>
+      }
+    </div>
+
+    <!-- Selected Marker Detail Popup Card -->
+    @if (activeMarker()) {
+      <div class="marker-popup-card slide-in" (click)="$event.stopPropagation()">
+        <div class="popup-header">
+          <div class="popup-title-box">
+            <h5 class="popup-title">{{ activeMarker()!.label }}</h5>
+            @if (activeMarker()!.address) {
+              <p class="popup-sub">{{ activeMarker()!.address }}</p>
+            }
+          </div>
+          <app-badge [variant]="getStatusBadge(activeMarker()!.status)" size="sm" [dot]="true">
+            {{ activeMarker()!.status }}
+          </app-badge>
+        </div>
+
+        <div class="popup-grid">
+          @if (activeMarker()!.capacity !== undefined) {
+            <div class="popup-metric">
+              <span class="metric-label">Fullness</span>
+              <span class="metric-val" [style.color]="getStatusColor(activeMarker()!.status)">
+                {{ activeMarker()!.capacity }}%
+              </span>
+            </div>
+          }
+          @if (activeMarker()!.battery !== undefined) {
+            <div class="popup-metric">
+              <span class="metric-label">Battery</span>
+              <span class="metric-val">{{ activeMarker()!.battery }}%</span>
+            </div>
+          }
+          @if (activeMarker()!.lastUpdated) {
+            <div class="popup-metric">
+              <span class="metric-label">Last Ping</span>
+              <span class="metric-val">{{ activeMarker()!.lastUpdated }}</span>
+            </div>
+          }
+        </div>
+
+        <button type="button" class="popup-close-btn" (click)="clearSelection()">
+          <app-icon name="x" size="xs" />
+        </button>
+      </div>
+    }
+  </div>
+</div>

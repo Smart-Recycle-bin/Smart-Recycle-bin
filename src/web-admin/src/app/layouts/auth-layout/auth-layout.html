@@ -1,0 +1,66 @@
+<div class="auth-root">
+  <!-- Brand Area -->
+  <aside class="auth-hero-panel">
+    <div class="hero-brand">
+      <div class="hero-logo-box">
+        <app-icon name="recycle" size="lg" color="#ffffff" />
+      </div>
+      <span class="hero-app-name">{{ appName() }}</span>
+    </div>
+
+    <div class="hero-body">
+      <div class="hero-tagline-badge">
+        <span class="badge-dot"></span>
+        <span>Smart Municipal IoT Infrastructure</span>
+      </div>
+
+      <h2 class="hero-headline">
+        Intelligent waste sorting, real-time telemetry, &amp; automated logistics.
+      </h2>
+
+      <p class="hero-description">
+        Join cities and organizations worldwide optimizing collection routes, bin fill levels, and recycling efficiency.
+      </p>
+
+      <div class="hero-kpi-row">
+        <div class="hero-kpi-card">
+          <span class="hero-kpi-number">98.4%</span>
+          <span class="hero-kpi-lbl">Sensor Uptime</span>
+        </div>
+        <div class="hero-kpi-card">
+          <span class="hero-kpi-number">340k+</span>
+          <span class="hero-kpi-lbl">Tons Recycled</span>
+        </div>
+        <div class="hero-kpi-card">
+          <span class="hero-kpi-number">-42%</span>
+          <span class="hero-kpi-lbl">Route Fuel Cost</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="hero-footer">
+      <span>Enterprise IoT Platform &bull; SOC2 Type II Certified</span>
+    </div>
+  </aside>
+
+  <!-- Authentication Content Area -->
+  <main class="auth-form-panel">
+    <div class="auth-form-container fade-up">
+      <div class="form-mobile-brand">
+        <div class="mobile-logo">
+          <app-icon name="recycle" size="md" color="#ffffff" />
+        </div>
+        <span class="mobile-app-title">{{ appName() }}</span>
+      </div>
+
+      <div class="form-header">
+        <h3 class="form-title">{{ title() }}</h3>
+        <p class="form-subtitle">{{ subtitle() }}</p>
+      </div>
+
+      <div class="form-content">
+        <router-outlet />
+      </div>
+    </div>
+  </main>
+</div>

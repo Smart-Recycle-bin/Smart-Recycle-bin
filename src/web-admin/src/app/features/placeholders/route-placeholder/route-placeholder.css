@@ -1,0 +1,24 @@
+:host {
+  display: block;
+}
+
+.placeholder-card {
+  background-color: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 0.75rem;
+  padding: 2rem;
+}
+
+.placeholder-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--ink);
+  margin: 0 0 0.5rem 0;
+  letter-spacing: -0.02em;
+}
+
+.placeholder-description {
+  font-size: 0.875rem;
+  color: var(--muted);
+  margin: 0;
+}

@@ -1,0 +1,8 @@
+@for (item of countArray(); track item) {
+  <div
+    [class]="'skeleton-base variant-' + variant() + ' anim-' + animation()"
+    [style.width]="formattedWidth()"
+    [style.height]="formattedHeight()"
+    aria-hidden="true"
+  ></div>
+}

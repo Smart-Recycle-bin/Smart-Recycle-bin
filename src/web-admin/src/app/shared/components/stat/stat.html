@@ -1,0 +1,34 @@
+<div class="stat-card">
+  <div class="stat-header">
+    <span class="stat-title">{{ title() }}</span>
+    @if (icon()) {
+      <div class="stat-icon-wrapper">
+        <app-icon [name]="icon()!" size="sm" />
+      </div>
+    }
+  </div>
+
+  <div class="stat-body">
+    <div class="stat-value-group">
+      <span class="stat-value">{{ value() }}</span>
+      @if (unit()) {
+        <span class="stat-unit">{{ unit() }}</span>
+      }
+    </div>
+
+    @if (change()) {
+      <div class="stat-trend-badge">
+        <app-badge [variant]="badgeVariant()" size="sm">
+          <span class="trend-inner">
+            <app-icon [name]="trendIcon()" size="xs" />
+            <span>{{ change() }}</span>
+          </span>
+        </app-badge>
+      </div>
+    }
+  </div>
+
+  @if (description()) {
+    <p class="stat-description">{{ description() }}</p>
+  }
+</div>

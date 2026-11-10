@@ -1,0 +1,60 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.skeleton-base {
+  background-color: var(--soft);
+  position: relative;
+  overflow: hidden;
+}
+
+.variant-text {
+  border-radius: 0.25rem;
+  margin-bottom: 0.25rem;
+}
+
+.variant-circular {
+  border-radius: 9999px;
+  flex-shrink: 0;
+}
+
+.variant-rectangular {
+  border-radius: 0.5rem;
+}
+
+/* Animations */
+.anim-pulse {
+  animation: skeleton-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes skeleton-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+
+.anim-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--soft) 0%,
+    var(--line) 50%,
+    var(--soft) 100%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s infinite linear;
+}
+
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}

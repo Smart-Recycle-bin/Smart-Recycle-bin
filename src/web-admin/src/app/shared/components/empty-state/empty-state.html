@@ -1,0 +1,25 @@
+<div class="empty-state-root">
+  <div class="empty-state-icon-box">
+    <app-icon [name]="icon()" size="xl" />
+  </div>
+
+  <h3 class="empty-state-title">{{ title() }}</h3>
+  <p class="empty-state-desc">{{ description() }}</p>
+
+  <div class="empty-state-content">
+    <ng-content />
+  </div>
+
+  @if (actionText()) {
+    <div class="empty-state-action">
+      <app-button
+        variant="primary"
+        size="md"
+        [leadingIcon]="actionIcon()"
+        (clicked)="handleAction()"
+      >
+        {{ actionText() }}
+      </app-button>
+    </div>
+  }
+</div>

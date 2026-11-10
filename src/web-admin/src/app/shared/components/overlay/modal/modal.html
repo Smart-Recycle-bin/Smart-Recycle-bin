@@ -1,0 +1,41 @@
+@if (open()) {
+  <div
+    class="modal-backdrop"
+    (click)="handleBackdropClick($event)"
+    role="dialog"
+    aria-modal="true"
+  >
+    <div [class]="'modal-dialog size-' + size() + ' slide-in'">
+      @if (title() || showCloseButton()) {
+        <div class="modal-header">
+          <div class="modal-titles">
+            @if (title()) {
+              <h3 class="modal-title">{{ title() }}</h3>
+            }
+            @if (description()) {
+              <p class="modal-desc">{{ description() }}</p>
+            }
+          </div>
+
+          @if (showCloseButton()) {
+            <app-icon-button
+              icon="x"
+              size="sm"
+              variant="ghost"
+              ariaLabel="Close modal"
+              (clicked)="close()"
+            />
+          }
+        </div>
+      }
+
+      <div class="modal-body">
+        <ng-content />
+      </div>
+
+      <div class="modal-footer">
+        <ng-content select="[modal-footer]" />
+      </div>
+    </div>
+  </div>
+}

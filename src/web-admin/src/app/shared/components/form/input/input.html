@@ -1,0 +1,52 @@
+<div class="input-group" [class.has-error]="!!error()" [class.is-disabled]="disabled()">
+  @if (label()) {
+    <label [for]="id()" class="input-label">
+      {{ label() }}
+      @if (required()) {
+        <span class="required-star" aria-hidden="true">*</span>
+      }
+    </label>
+  }
+
+  <div class="input-wrapper">
+    @if (leadingIcon()) {
+      <div class="input-icon-leading">
+        <app-icon [name]="leadingIcon()!" size="sm" />
+      </div>
+    }
+
+    <input
+      [id]="id()"
+      [type]="actualType()"
+      [value]="value()"
+      [placeholder]="placeholder()"
+      [disabled]="disabled()"
+      [required]="required()"
+      (input)="handleInput($event)"
+      class="input-field"
+      [class.has-leading-icon]="!!leadingIcon()"
+      [class.has-trailing-icon]="!!trailingIcon() || isPassword()"
+    />
+
+    @if (isPassword()) {
+      <button
+        type="button"
+        class="input-icon-trailing-btn"
+        (click)="togglePasswordVisibility()"
+        [attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'"
+      >
+        <app-icon [name]="showPassword() ? 'eye-off' : 'eye'" size="sm" />
+      </button>
+    } @else if (trailingIcon()) {
+      <div class="input-icon-trailing">
+        <app-icon [name]="trailingIcon()!" size="sm" />
+      </div>
+    }
+  </div>
+
+  @if (error()) {
+    <p class="input-error-msg" role="alert">{{ error() }}</p>
+  } @else if (hint()) {
+    <p class="input-hint-msg">{{ hint() }}</p>
+  }
+</div>

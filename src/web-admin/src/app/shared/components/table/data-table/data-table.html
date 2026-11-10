@@ -1,0 +1,118 @@
+<div class="table-container">
+  <div class="table-scroll">
+    <table class="data-table">
+      <thead>
+        <tr>
+          @if (selectable()) {
+            <th class="th-select" scope="col">
+              <app-checkbox
+                [checked]="allSelected()"
+                [indeterminate]="isIndeterminate()"
+                [disabled]="loading() || data().length === 0"
+                (checkedChange)="toggleSelectAll($event)"
+              />
+            </th>
+          }
+
+          @for (col of columns(); track col.key) {
+            <th
+              scope="col"
+              [class]="'th-cell align-' + (col.align || 'left') + (col.sortable ? ' is-sortable' : '')"
+              [style.width]="col.width || 'auto'"
+              (click)="handleSort(col)"
+            >
+              <div class="th-content">
+                <span>{{ col.label }}</span>
+                @if (col.sortable) {
+                  <span class="sort-indicator">
+                    @if (sortColumn() === col.key && sortDir() === 'asc') {
+                      <app-icon name="arrow-up" size="xs" />
+                    } @else if (sortColumn() === col.key && sortDir() === 'desc') {
+                      <app-icon name="arrow-down" size="xs" />
+                    } @else {
+                      <app-icon name="chevron-down" size="xs" class="sort-inactive" />
+                    }
+                  </span>
+                }
+              </div>
+            </th>
+          }
+
+          @if (actions().length > 0) {
+            <th class="th-actions align-right" scope="col">Actions</th>
+          }
+        </tr>
+      </thead>
+
+      <tbody>
+        @if (loading()) {
+          @for (i of [1, 2, 3, 4]; track i) {
+            <tr class="tr-loading">
+              @if (selectable()) {
+                <td class="td-cell"><app-skeleton variant="rectangular" width="16px" height="16px" /></td>
+              }
+              @for (col of columns(); track col.key) {
+                <td class="td-cell"><app-skeleton variant="text" width="80%" height="1rem" /></td>
+              }
+              @if (actions().length > 0) {
+                <td class="td-cell"><app-skeleton variant="rectangular" width="48px" height="24px" /></td>
+              }
+            </tr>
+          }
+        } @else if (sortedData().length === 0) {
+          <tr>
+            <td [attr.colspan]="columns().length + (selectable() ? 1 : 0) + (actions().length > 0 ? 1 : 0)" class="td-empty">
+              <app-empty-state
+                icon="search"
+                [title]="emptyTitle()"
+                [description]="emptyDescription()"
+              />
+            </td>
+          </tr>
+        } @else {
+          @for (row of sortedData(); track row['id'] ?? $index) {
+            <tr class="tr-row" [class.is-selected]="isRowSelected(row, $index)">
+              @if (selectable()) {
+                <td class="td-select">
+                  <app-checkbox
+                    [checked]="isRowSelected(row, $index)"
+                    (checkedChange)="toggleSelectRow(row, $index)"
+                  />
+                </td>
+              }
+
+              @for (col of columns(); track col.key) {
+                <td [class]="'td-cell align-' + (col.align || 'left')">
+                  @if (col.type === 'badge') {
+                    <app-badge [variant]="getBadgeVariant(row[col.key])" size="sm" [dot]="true">
+                      {{ row[col.key] }}
+                    </app-badge>
+                  } @else {
+                    <span class="cell-text">{{ row[col.key] }}</span>
+                  }
+                </td>
+              }
+
+              @if (actions().length > 0) {
+                <td class="td-actions align-right">
+                  <div class="row-actions-group">
+                    @for (act of actions(); track act.id) {
+                      <app-icon-button
+                        [icon]="act.icon"
+                        [variant]="act.variant || 'ghost'"
+                        size="sm"
+                        [title]="act.label"
+                        [ariaLabel]="act.label"
+                        (clicked)="handleAction(act.id, row)"
+                      />
+                    }
+                  </div>
+                </td>
+              }
+            </tr>
+          }
+        }
+      </tbody>
+    </table>
+  </div>
+</div>

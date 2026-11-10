@@ -1,0 +1,38 @@
+@if (isVisible()) {
+  <div
+    [class]="'notice-base variant-' + variant()"
+    role="alert"
+  >
+    <div class="notice-icon-col">
+      <app-icon [name]="effectiveIcon()" size="md" />
+    </div>
+
+    <div class="notice-content">
+      @if (title()) {
+        <h4 class="notice-title">{{ title() }}</h4>
+      }
+      @if (description()) {
+        <p class="notice-desc">{{ description() }}</p>
+      }
+      <ng-content />
+
+      @if (actionText()) {
+        <button type="button" class="notice-action-btn" (click)="handleAction()">
+          {{ actionText() }}
+        </button>
+      }
+    </div>
+
+    @if (dismissible()) {
+      <div class="notice-dismiss">
+        <app-icon-button
+          icon="x"
+          size="sm"
+          variant="ghost"
+          ariaLabel="Dismiss notice"
+          (clicked)="handleDismiss()"
+        />
+      </div>
+    }
+  </div>
+}

@@ -1,0 +1,272 @@
+<div class="showcase-root">
+  <header class="showcase-topbar">
+    <div class="showcase-brand">
+      <div class="showcase-logo">
+        <app-icon name="recycle" size="md" color="#ffffff" />
+      </div>
+      <div>
+        <h1 class="showcase-title">EcoBin UI Kit Showcase</h1>
+        <p class="showcase-subtitle">Design System &amp; Shared Components &bull; /dev/components</p>
+      </div>
+    </div>
+
+    <div class="showcase-nav-links">
+      <a class="nav-pill" routerLink="/overview">Overview Route</a>
+      <a class="nav-pill" routerLink="/login">Auth Route</a>
+    </div>
+
+    <div class="showcase-actions">
+      <div class="action-status-pill" [attr.title]="lastActionMessage()">
+        <span class="status-indicator-dot"></span>
+        <span class="status-text">{{ lastActionMessage() }}</span>
+      </div>
+
+      <button
+        type="button"
+        class="showcase-theme-btn"
+        (click)="toggleTheme()"
+        [attr.aria-label]="isDark() ? 'Switch to Light Mode' : 'Switch to Dark Mode'"
+        [attr.title]="isDark() ? 'Switch to Light Mode' : 'Switch to Dark Mode'"
+      >
+        <app-icon [name]="isDark() ? 'sun' : 'moon'" size="sm" />
+      </button>
+    </div>
+  </header>
+
+  <div class="catalog-layout">
+    <aside class="catalog-sidebar">
+      <div class="category-list">
+        <span class="category-heading">Categories</span>
+        <button type="button" [class]="'category-btn' + (selectedCategory() === 'all' ? ' is-active' : '')" (click)="filterCategory('all')">All</button>
+        <button type="button" [class]="'category-btn' + (selectedCategory() === 'services' ? ' is-active' : '')" (click)="filterCategory('services')">Theme &amp; Toast</button>
+        <button type="button" [class]="'category-btn' + (selectedCategory() === 'foundational' ? ' is-active' : '')" (click)="filterCategory('foundational')">Foundational</button>
+        <button type="button" [class]="'category-btn' + (selectedCategory() === 'feedback' ? ' is-active' : '')" (click)="filterCategory('feedback')">Feedback &amp; States</button>
+        <button type="button" [class]="'category-btn' + (selectedCategory() === 'form' ? ' is-active' : '')" (click)="filterCategory('form')">Forms</button>
+        <button type="button" [class]="'category-btn' + (selectedCategory() === 'overlay' ? ' is-active' : '')" (click)="filterCategory('overlay')">Overlays</button>
+        <button type="button" [class]="'category-btn' + (selectedCategory() === 'charts' ? ' is-active' : '')" (click)="filterCategory('charts')">Data &amp; Charts</button>
+        <button type="button" [class]="'category-btn' + (selectedCategory() === 'navigation' ? ' is-active' : '')" (click)="filterCategory('navigation')">Map &amp; Shell</button>
+      </div>
+    </aside>
+
+    <main class="catalog-content">
+      @if (isCategoryVisible('services')) {
+        <section class="category-group">
+          <h2 class="category-title">Core Services: Theme &amp; Toast</h2>
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <app-card title="ThemeService" [subtitle]="'Active theme: ' + currentTheme()">
+              <div class="flex-wrap-row">
+                <app-button variant="secondary" leadingIcon="sun" (clicked)="setLightMode()">Light</app-button>
+                <app-button variant="secondary" leadingIcon="moon" (clicked)="setDarkMode()">Dark</app-button>
+                <app-button variant="primary" leadingIcon="refresh" (clicked)="toggleTheme()">Toggle</app-button>
+              </div>
+            </app-card>
+
+            <app-card title="ToastService" [subtitle]="'Active toasts: ' + toastService.count()">
+              <div class="flex-wrap-row">
+                <app-button variant="primary" (clicked)="showToast('success')">Success</app-button>
+                <app-button variant="danger" (clicked)="showToast('error')">Error</app-button>
+                <app-button variant="outline" (clicked)="showToast('warning')">Warning</app-button>
+                <app-button variant="secondary" (clicked)="showToast('info')">Info</app-button>
+                <app-button variant="ghost" (clicked)="toastService.clearAll()">Clear</app-button>
+              </div>
+            </app-card>
+          </div>
+        </section>
+      }
+
+      @if (isCategoryVisible('foundational')) {
+        <section class="category-group">
+          <h2 class="category-title">Foundational Components</h2>
+          <app-card title="Buttons &amp; Icon Buttons">
+            <div class="flex-wrap-row mb-4">
+              <app-button variant="primary" (clicked)="incrementClick()">Primary</app-button>
+              <app-button variant="secondary" (clicked)="incrementClick()">Secondary</app-button>
+              <app-button variant="outline" (clicked)="incrementClick()">Outline</app-button>
+              <app-button variant="ghost" (clicked)="incrementClick()">Ghost</app-button>
+              <app-button variant="danger" (clicked)="incrementClick()">Danger</app-button>
+              <app-button [loading]="true">Loading</app-button>
+              <app-button [disabled]="true">Disabled</app-button>
+            </div>
+            <div class="flex-wrap-row">
+              <app-icon-button icon="plus" variant="primary" title="Add" (clicked)="incrementClick()" />
+              <app-icon-button icon="edit" variant="secondary" title="Edit" (clicked)="incrementClick()" />
+              <app-icon-button icon="trash" variant="danger" title="Delete" (clicked)="incrementClick()" />
+              <app-icon-button icon="refresh" variant="outline" title="Refresh" (clicked)="incrementClick()" />
+            </div>
+          </app-card>
+
+          <app-card title="Avatars &amp; Badges">
+            <div class="flex-wrap-row mb-4">
+              <app-avatar name="Laila Hamdy" size="sm" status="online" />
+              <app-avatar name="Omar Tarek" size="md" status="away" />
+              <app-avatar name="Nour Ali" size="lg" status="busy" shape="rounded" />
+            </div>
+            <div class="flex-wrap-row">
+              <app-badge label="Active" variant="success" [dot]="true" />
+              <app-badge label="Warning" variant="warning" [dot]="true" />
+              <app-badge label="Banned" variant="danger" [dot]="true" />
+              <app-badge label="Info" variant="info" />
+              <app-badge label="Inactive" variant="neutral" />
+            </div>
+          </app-card>
+
+          <app-card title="Icons">
+            <div class="icon-grid">
+              @for (iconName of showcaseIcons; track iconName) {
+                <div class="icon-tile" [attr.title]="iconName">
+                  <app-icon [name]="iconName" size="md" />
+                  <span class="icon-label">{{ iconName }}</span>
+                </div>
+              }
+            </div>
+          </app-card>
+        </section>
+      }
+
+      @if (isCategoryVisible('feedback')) {
+        <section class="category-group">
+          <h2 class="category-title">Feedback &amp; States</h2>
+          <div class="stats-grid">
+            <app-stat title="Total Collected" value="42.8" unit="t" change="+12.4%" trend="positive" icon="recycle" />
+            <app-stat title="Critical Bins" value="14" change="+3" trend="negative" icon="alert" />
+            <app-stat title="Active Repeaters" value="128" trend="neutral" icon="wifi" />
+          </div>
+
+          <app-card title="Progress &amp; Skeleton">
+            <div class="demo-col-gap mb-4">
+              <app-progress [value]="dynamicGaugeValue()" [showValue]="true" label="Fill Level" color="brand" />
+              <app-progress [value]="92" [showValue]="true" label="Critical" color="danger" />
+            </div>
+            <div class="flex items-center gap-4">
+              <app-skeleton variant="circular" width="40px" height="40px" />
+              <div class="flex-1">
+                <app-skeleton variant="text" width="45%" height="14px" />
+                <app-skeleton variant="text" width="75%" height="12px" />
+              </div>
+            </div>
+          </app-card>
+
+          <app-card title="Notices, Empty, Error &amp; PageHeader (stub)">
+            <div class="demo-col-gap">
+              <app-page-header />
+              <app-notice variant="info" title="Info Notice" description="Operational notice sample." />
+              <app-notice variant="warning" title="Warning Notice" description="Threshold warning sample." />
+              <app-empty-state title="No Records" description="No items match filter." actionText="Reset" (actionClicked)="incrementClick()" />
+              <app-error-state title="Connection Lost" description="Retry telemetry stream." (retryClicked)="incrementClick()" />
+            </div>
+          </app-card>
+        </section>
+      }
+
+      @if (isCategoryVisible('form')) {
+        <section class="category-group">
+          <h2 class="category-title">Form Controls</h2>
+          <app-card title="Inputs, Select, Checkbox, Toggle, Textarea">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <app-input label="Identifier" [value]="demoInputValue()" leadingIcon="recycle" (valueChange)="demoInputValue.set($event)" />
+              <app-input label="Password" type="password" [value]="demoPasswordValue()" leadingIcon="lock" (valueChange)="demoPasswordValue.set($event)" />
+              <app-search-input placeholder="Search..." [value]="demoSearchValue()" (valueChange)="demoSearchValue.set($event)" />
+              <app-select label="Material" [options]="materialOptions" [value]="demoSelectValue()" (valueChange)="demoSelectValue.set($event)" />
+              <app-checkbox label="Enable telemetry" [checked]="demoCheckbox1()" (checkedChange)="demoCheckbox1.set($event)" />
+              <app-toggle label="Auto-dispatch" [checked]="demoToggle1()" (checkedChange)="demoToggle1.set($event)" />
+              <div class="md:col-span-2">
+                <app-textarea label="Notes" [value]="demoTextareaValue()" (valueChange)="demoTextareaValue.set($event)" />
+              </div>
+            </div>
+          </app-card>
+        </section>
+      }
+
+      @if (isCategoryVisible('overlay')) {
+        <section class="category-group">
+          <h2 class="category-title">Overlays</h2>
+          <app-card title="Modal, Drawer &amp; Confirm Dialog">
+            <div class="flex-wrap-row">
+              <app-button variant="primary" (clicked)="isModalOpen.set(true)">Open Modal</app-button>
+              <app-button variant="secondary" (clicked)="isDrawerOpen.set(true)">Open Drawer</app-button>
+              <app-button variant="danger" (clicked)="isConfirmOpen.set(true)">Open Confirm</app-button>
+            </div>
+
+            <app-modal [open]="isModalOpen()" title="Sample Modal" (closed)="isModalOpen.set(false)">
+              <p class="text-sm text-muted">Modal body content.</p>
+            </app-modal>
+
+            <app-drawer [open]="isDrawerOpen()" title="Sample Drawer" (closed)="isDrawerOpen.set(false)">
+              <p class="text-sm text-muted">Drawer body content.</p>
+            </app-drawer>
+
+            <app-confirm-dialog
+              [open]="isConfirmOpen()"
+              title="Confirm Action"
+              description="Proceed with sample operation?"
+              [danger]="true"
+              [loading]="confirmLoading()"
+              (confirmed)="onConfirmAction()"
+              (cancelled)="onCancelConfirm()"
+            />
+          </app-card>
+        </section>
+      }
+
+      @if (isCategoryVisible('charts')) {
+        <section class="category-group">
+          <h2 class="category-title">Data Table &amp; Charts</h2>
+          <app-card title="Data Table">
+            <app-data-table
+              [columns]="tableColumns"
+              [data]="tableData()"
+              [selectable]="true"
+              [actions]="tableActions"
+              (actionClicked)="handleTableAction($event)"
+            />
+          </app-card>
+
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <app-card title="Area Chart">
+              <app-area-chart [data]="tonnageData" [height]="240" color="#009966" />
+            </app-card>
+            <app-card title="Donut Chart">
+              <app-donut-chart [data]="wasteComposition" />
+            </app-card>
+            <app-card title="Bar List">
+              <app-bar-list [items]="materialBarData" />
+            </app-card>
+            <app-card title="Gauge">
+              <div class="flex flex-col items-center gap-3">
+                <app-gauge [value]="dynamicGaugeValue()" label="Capacity" />
+                <div class="flex gap-2">
+                  <app-button size="sm" variant="secondary" (clicked)="updateGauge(-10)">-10%</app-button>
+                  <app-button size="sm" variant="secondary" (clicked)="updateGauge(10)">+10%</app-button>
+                </div>
+              </div>
+            </app-card>
+          </div>
+        </section>
+      }
+
+      @if (isCategoryVisible('navigation')) {
+        <section class="category-group">
+          <h2 class="category-title">Map &amp; Navigation</h2>
+          <app-card title="Map View">
+            <app-map-view [markers]="mapMarkers" [height]="320" (markerClicked)="handleMapMarkerClick($event)" />
+          </app-card>
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <app-card title="Sidebar Preview">
+              <div class="h-[340px] flex border border-[var(--line)] rounded-lg overflow-hidden">
+                <app-sidebar [sections]="previewSidebarSections" activeId="overview" />
+                <div class="flex-1 bg-[var(--soft)] p-4 text-xs text-muted flex items-center justify-center">
+                  Sidebar container
+                </div>
+              </div>
+            </app-card>
+            <app-card title="Topbar Preview">
+              <div class="border border-[var(--line)] rounded-lg overflow-hidden">
+                <app-topbar title="Preview" [unreadNotifications]="4" />
+              </div>
+            </app-card>
+          </div>
+        </section>
+      }
+    </main>
+  </div>
+</div>

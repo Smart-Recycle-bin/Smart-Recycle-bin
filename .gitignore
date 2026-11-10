@@ -55,3 +55,9 @@ CodeCoverage/
 *.VisualState.xml
 TestResult.xml
 nunit-*.xml
+
+# Angular / Node (web-admin)
+node_modules/
+dist/
+.angular/
+*.rar

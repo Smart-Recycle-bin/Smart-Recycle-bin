@@ -1,0 +1,34 @@
+<div class="error-state-root">
+  <div class="error-icon-box">
+    <app-icon name="alert-circle" size="xl" />
+  </div>
+
+  <h3 class="error-title">{{ title() }}</h3>
+  <p class="error-desc">{{ description() }}</p>
+
+  @if (technicalDetails()) {
+    <div class="error-details-wrapper">
+      <button type="button" class="error-details-toggle" (click)="toggleDetails()">
+        <span>{{ showDetails() ? 'Hide technical details' : 'Show technical details' }}</span>
+        <app-icon [name]="showDetails() ? 'chevron-up' : 'chevron-down'" size="xs" />
+      </button>
+
+      @if (showDetails()) {
+        <pre class="error-details-code">{{ technicalDetails() }}</pre>
+      }
+    </div>
+  }
+
+  @if (showRetry()) {
+    <div class="error-action">
+      <app-button
+        variant="danger"
+        size="md"
+        leadingIcon="refresh"
+        (clicked)="handleRetry()"
+      >
+        {{ retryText() }}
+      </app-button>
+    </div>
+  }
+</div>

@@ -1,0 +1,38 @@
+<app-modal
+  [open]="open()"
+  size="sm"
+  [closeOnBackdrop]="!loading()"
+  [showCloseButton]="!loading()"
+  (closed)="handleCancel()"
+>
+  <div class="confirm-content">
+    <div class="confirm-icon-box" [class.is-danger]="danger()">
+      <app-icon [name]="danger() ? 'alert-circle' : 'info'" size="lg" />
+    </div>
+
+    <div class="confirm-text">
+      <h3 class="confirm-title">{{ title() }}</h3>
+      <p class="confirm-desc">{{ description() }}</p>
+    </div>
+  </div>
+
+  <div modal-footer class="confirm-footer">
+    <app-button
+      variant="outline"
+      size="md"
+      [disabled]="loading()"
+      (clicked)="handleCancel()"
+    >
+      {{ cancelText() }}
+    </app-button>
+
+    <app-button
+      [variant]="danger() ? 'danger' : 'primary'"
+      size="md"
+      [loading]="loading()"
+      (clicked)="handleConfirm()"
+    >
+      {{ confirmText() }}
+    </app-button>
+  </div>
+</app-modal>

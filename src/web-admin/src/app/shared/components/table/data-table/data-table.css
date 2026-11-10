@@ -1,0 +1,120 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+.table-container {
+  width: 100%;
+  background-color: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 0.75rem;
+  overflow: hidden;
+}
+
+.table-scroll {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.875rem;
+}
+
+thead {
+  background-color: var(--soft);
+  border-bottom: 1px solid var(--line);
+}
+
+.th-cell,
+.th-select,
+.th-actions {
+  padding: 0.75rem 1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.th-cell.is-sortable {
+  cursor: pointer;
+}
+.th-cell.is-sortable:hover {
+  color: var(--ink);
+}
+
+.th-content {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.sort-indicator {
+  display: inline-flex;
+  align-items: center;
+}
+
+.sort-inactive {
+  opacity: 0.3;
+}
+
+.th-select,
+.td-select {
+  width: 3rem;
+  padding-left: 1rem;
+  padding-right: 0.5rem;
+}
+
+.td-cell,
+.td-actions {
+  padding: 0.875rem 1rem;
+  border-bottom: 1px solid var(--line);
+  color: var(--ink);
+  vertical-align: middle;
+}
+
+.tr-row {
+  transition: background-color 0.15s ease;
+}
+
+.tr-row:hover {
+  background-color: rgba(0, 153, 102, 0.03);
+}
+
+.tr-row.is-selected {
+  background-color: rgba(0, 153, 102, 0.08);
+}
+
+.align-left {
+  text-align: left;
+}
+.align-center {
+  text-align: center;
+}
+.align-right {
+  text-align: right;
+}
+
+.align-right .th-content {
+  justify-content: flex-end;
+}
+
+.row-actions-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.td-empty {
+  padding: 2rem;
+  border-bottom: none;
+}
+
+.cell-text {
+  font-variant-numeric: tabular-nums;
+}

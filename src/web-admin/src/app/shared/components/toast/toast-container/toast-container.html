@@ -1,0 +1,44 @@
+<section
+  class="toast-container-root"
+  role="region"
+  aria-label="Notifications"
+>
+  @for (toast of toasts(); track toast.id) {
+    <div
+      class="toast-item slide-in toast-{{ toast.type }}"
+      [attr.role]="getAriaRole(toast.type)"
+      [attr.aria-live]="getAriaLive(toast.type)"
+    >
+      <div class="toast-body">
+        <div class="toast-icon-wrap">
+          <app-icon [name]="getIconName(toast.type)" size="sm" />
+        </div>
+
+        <div class="toast-content">
+          @if (toast.title) {
+            <h4 class="toast-title">{{ toast.title }}</h4>
+          }
+          <p class="toast-message">{{ toast.message }}</p>
+        </div>
+
+        <button
+          type="button"
+          class="toast-close-btn"
+          aria-label="Dismiss notification"
+          (click)="dismiss(toast.id)"
+        >
+          <app-icon name="x" size="xs" />
+        </button>
+      </div>
+
+      @if (toast.duration > 0) {
+        <div class="toast-progress-track">
+          <div
+            class="toast-progress-bar"
+            [style.animationDuration.ms]="toast.duration"
+          ></div>
+        </div>
+      }
+    </div>
+  }
+</section>

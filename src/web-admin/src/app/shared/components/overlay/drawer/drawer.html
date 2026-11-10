@@ -1,0 +1,37 @@
+@if (open()) {
+  <div
+    class="drawer-backdrop"
+    (click)="handleBackdropClick($event)"
+    role="dialog"
+    aria-modal="true"
+  >
+    <div [class]="'drawer-panel position-' + position() + ' size-' + size()">
+      <div class="drawer-header">
+        <div class="drawer-titles">
+          @if (title()) {
+            <h3 class="drawer-title">{{ title() }}</h3>
+          }
+          @if (description()) {
+            <p class="drawer-desc">{{ description() }}</p>
+          }
+        </div>
+
+        <app-icon-button
+          icon="x"
+          size="sm"
+          variant="ghost"
+          ariaLabel="Close drawer"
+          (clicked)="close()"
+        />
+      </div>
+
+      <div class="drawer-body">
+        <ng-content />
+      </div>
+
+      <div class="drawer-footer">
+        <ng-content select="[drawer-footer]" />
+      </div>
+    </div>
+  </div>
+}

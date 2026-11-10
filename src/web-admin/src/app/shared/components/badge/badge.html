@@ -1,0 +1,12 @@
+<span [class]="'badge-base variant-' + variant() + ' size-' + size()">
+  @if (dot()) {
+    <span class="badge-dot" aria-hidden="true"></span>
+  }
+  <span class="badge-text">
+    @if (label()) {
+      {{ label() }}
+    } @else {
+      <ng-content />
+    }
+  </span>
+</span>

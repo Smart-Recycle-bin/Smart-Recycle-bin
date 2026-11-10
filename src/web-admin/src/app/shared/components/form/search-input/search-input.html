@@ -1,0 +1,31 @@
+<div
+  class="search-input-wrapper"
+  [class]="'size-' + size()"
+  [class.is-disabled]="disabled()"
+>
+  <div class="search-icon-box">
+    <app-icon name="search" size="sm" />
+  </div>
+
+  <input
+    type="text"
+    [value]="value()"
+    [placeholder]="placeholder()"
+    [disabled]="disabled()"
+    [attr.aria-label]="ariaLabel()"
+    (input)="handleInput($event)"
+    (keydown)="handleKeyDown($event)"
+    class="search-field"
+  />
+
+  @if (value() && !disabled()) {
+    <button
+      type="button"
+      class="search-clear-btn"
+      (click)="clear()"
+      aria-label="Clear search text"
+    >
+      <app-icon name="x" size="xs" />
+    </button>
+  }
+</div>

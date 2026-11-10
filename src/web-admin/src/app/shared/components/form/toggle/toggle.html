@@ -1,0 +1,28 @@
+<div
+  class="toggle-container"
+  [class.is-disabled]="disabled()"
+  (click)="toggle()"
+>
+  <button
+    type="button"
+    role="switch"
+    [id]="id()"
+    [attr.aria-checked]="checked()"
+    [disabled]="disabled()"
+    [class]="'toggle-switch size-' + size() + (checked() ? ' is-checked' : '')"
+    (keydown)="handleKeyDown($event)"
+  >
+    <span class="toggle-thumb"></span>
+  </button>
+
+  @if (label() || description()) {
+    <div class="toggle-text-group">
+      @if (label()) {
+        <span class="toggle-label">{{ label() }}</span>
+      }
+      @if (description()) {
+        <span class="toggle-desc">{{ description() }}</span>
+      }
+    </div>
+  }
+</div>

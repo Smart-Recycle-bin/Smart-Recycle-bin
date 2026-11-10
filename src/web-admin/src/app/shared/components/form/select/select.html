@@ -1,0 +1,42 @@
+<div class="select-group" [class.has-error]="!!error()" [class.is-disabled]="disabled()">
+  @if (label()) {
+    <label [for]="id()" class="select-label">
+      {{ label() }}
+      @if (required()) {
+        <span class="required-star" aria-hidden="true">*</span>
+      }
+    </label>
+  }
+
+  <div class="select-wrapper">
+    <select
+      [id]="id()"
+      [value]="value()"
+      [disabled]="disabled()"
+      [required]="required()"
+      (change)="handleChange($event)"
+      class="select-field"
+    >
+      @if (placeholder()) {
+        <option value="" disabled [selected]="!value()">
+          {{ placeholder() }}
+        </option>
+      }
+      @for (opt of options(); track opt.value) {
+        <option [value]="opt.value" [disabled]="opt.disabled" [selected]="opt.value === value()">
+          {{ opt.label }}
+        </option>
+      }
+    </select>
+
+    <div class="select-chevron">
+      <app-icon name="chevron-down" size="sm" />
+    </div>
+  </div>
+
+  @if (error()) {
+    <p class="select-error-msg" role="alert">{{ error() }}</p>
+  } @else if (hint()) {
+    <p class="select-hint-msg">{{ hint() }}</p>
+  }
+</div>

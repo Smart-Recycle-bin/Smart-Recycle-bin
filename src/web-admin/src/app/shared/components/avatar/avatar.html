@@ -1,0 +1,22 @@
+<div [class]="'avatar-container size-' + size() + ' shape-' + shape()">
+  @if (showImage()) {
+    <img
+      [src]="imageUrl()!"
+      [alt]="effectiveAlt()"
+      (error)="handleImageError()"
+      class="avatar-img"
+    />
+  } @else {
+    <div class="avatar-placeholder">
+      <span class="avatar-initials">{{ initials() }}</span>
+    </div>
+  }
+
+  @if (status()) {
+    <span
+      [class]="'avatar-status status-' + status()"
+      [attr.title]="status()"
+      [attr.aria-label]="status()"
+    ></span>
+  }
+</div>

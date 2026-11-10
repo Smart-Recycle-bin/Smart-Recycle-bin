@@ -1,0 +1,113 @@
+:host {
+  display: inline-block;
+  line-height: 1;
+}
+
+.avatar-container {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+/* Shapes */
+.shape-circle {
+  border-radius: 9999px;
+}
+.shape-rounded {
+  border-radius: 0.5rem;
+}
+.shape-square {
+  border-radius: 0.25rem;
+}
+
+/* Sizes */
+.size-xs {
+  width: 1.5rem;
+  height: 1.5rem;
+  font-size: 0.625rem;
+}
+.size-sm {
+  width: 2rem;
+  height: 2rem;
+  font-size: 0.75rem;
+}
+.size-md {
+  width: 2.5rem;
+  height: 2.5rem;
+  font-size: 0.875rem;
+}
+.size-lg {
+  width: 3rem;
+  height: 3rem;
+  font-size: 1.125rem;
+}
+.size-xl {
+  width: 4rem;
+  height: 4rem;
+  font-size: 1.375rem;
+}
+
+.avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
+}
+
+.avatar-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: inherit;
+  background-color: rgba(0, 153, 102, 0.12);
+  color: #009966;
+  font-weight: 600;
+  border: 1px solid rgba(0, 153, 102, 0.25);
+}
+
+.avatar-initials {
+  line-height: 1;
+}
+
+/* Status dots */
+.avatar-status {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  display: block;
+  border-radius: 9999px;
+  border: 2px solid var(--card);
+}
+
+.size-xs .avatar-status {
+  width: 0.5rem;
+  height: 0.5rem;
+}
+.size-sm .avatar-status,
+.size-md .avatar-status {
+  width: 0.625rem;
+  height: 0.625rem;
+}
+.size-lg .avatar-status,
+.size-xl .avatar-status {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
+.status-online {
+  background-color: #10b981;
+}
+.status-offline {
+  background-color: #94a3b8;
+}
+.status-busy {
+  background-color: #ef4444;
+}
+.status-away {
+  background-color: #f59e0b;
+}

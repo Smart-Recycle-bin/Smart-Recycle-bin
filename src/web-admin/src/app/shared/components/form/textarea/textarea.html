@@ -1,0 +1,40 @@
+<div class="textarea-group" [class.has-error]="!!error()" [class.is-disabled]="disabled()">
+  @if (label()) {
+    <label [for]="id()" class="textarea-label">
+      {{ label() }}
+      @if (required()) {
+        <span class="required-star" aria-hidden="true">*</span>
+      }
+    </label>
+  }
+
+  <div class="textarea-wrapper">
+    <textarea
+      [id]="id()"
+      [rows]="rows()"
+      [value]="value()"
+      [placeholder]="placeholder()"
+      [disabled]="disabled()"
+      [required]="required()"
+      [attr.maxlength]="maxLength()"
+      (input)="handleInput($event)"
+      class="textarea-field"
+    ></textarea>
+  </div>
+
+  <div class="textarea-footer">
+    <div class="textarea-messages">
+      @if (error()) {
+        <p class="textarea-error-msg" role="alert">{{ error() }}</p>
+      } @else if (hint()) {
+        <p class="textarea-hint-msg">{{ hint() }}</p>
+      }
+    </div>
+
+    @if (maxLength()) {
+      <span class="textarea-counter" [class.is-limit]="charCount() >= maxLength()!">
+        {{ charCount() }} / {{ maxLength() }}
+      </span>
+    }
+  </div>
+</div>

@@ -1,0 +1,29 @@
+<div
+  [class]="'card-root padding-' + padding() + (hoverable() ? ' is-hoverable' : '') + (bordered() ? ' is-bordered' : '')"
+>
+  @if (title() || subtitle()) {
+    <div class="card-header">
+      <div class="card-header-titles">
+        @if (title()) {
+          <h3 class="card-title">{{ title() }}</h3>
+        }
+        @if (subtitle()) {
+          <p class="card-subtitle">{{ subtitle() }}</p>
+        }
+      </div>
+      <div class="card-header-actions">
+        <ng-content select="[card-actions]" />
+      </div>
+    </div>
+  } @else {
+    <ng-content select="[card-header]" />
+  }
+
+  <div class="card-body">
+    <ng-content />
+  </div>
+
+  <div class="card-footer">
+    <ng-content select="[card-footer]" />
+  </div>
+</div>

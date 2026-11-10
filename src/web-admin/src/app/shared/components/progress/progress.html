@@ -1,0 +1,28 @@
+<div class="progress-wrapper">
+  @if (label() || showValue()) {
+    <div class="progress-header">
+      @if (label()) {
+        <span class="progress-label">{{ label() }}</span>
+      }
+      @if (showValue()) {
+        <span class="progress-val">{{ displayValue() }}</span>
+      }
+    </div>
+  }
+
+  <div
+    class="progress-track"
+    [class]="'size-' + size()"
+    role="progressbar"
+    [attr.aria-valuenow]="clampedValue()"
+    aria-valuemin="0"
+    [attr.aria-valuemax]="max()"
+    [attr.aria-label]="label() || 'Progress'"
+  >
+    <div
+      class="progress-bar"
+      [class]="'color-' + color() + (animated() ? ' is-animated' : '')"
+      [style.width.%]="percentage()"
+    ></div>
+  </div>
+</div>
