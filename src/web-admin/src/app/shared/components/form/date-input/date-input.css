@@ -1,0 +1,85 @@
+:host {
+  display: block;
+}
+
+.date-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  height: 2.5rem;
+  padding-inline: 0.875rem;
+  background-color: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.date-wrapper.is-compact {
+  height: 2.125rem;
+  padding-inline: 0.75rem;
+}
+
+.date-wrapper:hover:not(.is-disabled) {
+  border-color: var(--muted);
+}
+
+.date-wrapper:focus-within {
+  border-color: var(--color-brand);
+  box-shadow: 0 0 0 3px rgba(0, 153, 102, 0.15);
+}
+
+.date-display {
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.is-compact .date-display {
+  font-size: 0.8125rem;
+}
+
+.date-display.is-placeholder {
+  color: var(--muted);
+  opacity: 0.85;
+}
+
+.date-native {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.date-icon {
+  display: inline-flex;
+  align-items: center;
+  color: var(--muted);
+  pointer-events: none;
+  margin-inline-start: 0.5rem;
+}
+
+.has-error {
+  border-color: var(--danger);
+}
+
+.has-error:focus-within {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+}
+
+.is-disabled {
+  background-color: var(--soft);
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.is-disabled .date-native {
+  cursor: not-allowed;
+}

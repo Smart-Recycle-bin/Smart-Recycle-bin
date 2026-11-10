@@ -1,31 +1,33 @@
-<div class="textarea-group" [class.has-error]="!!error()" [class.is-disabled]="disabled()">
-  @if (label()) {
-    <label [for]="id()" class="textarea-label">
-      {{ label() }}
-      @if (required()) {
-        <span class="required-star" aria-hidden="true">*</span>
-      }
-    </label>
-  }
-
-  <div class="textarea-wrapper">
+<app-form-field
+  [label]="label()"
+  [forId]="id()"
+  [required]="required()"
+  [disabled]="internalDisabled()"
+>
+  <div
+    class="textarea-wrapper"
+    [class.has-error]="!!effectiveError()"
+    [class.is-disabled]="internalDisabled()"
+  >
     <textarea
       [id]="id()"
       [rows]="rows()"
-      [value]="value()"
+      [value]="internalValue()"
       [placeholder]="placeholder()"
-      [disabled]="disabled()"
+      [disabled]="internalDisabled()"
       [required]="required()"
       [attr.maxlength]="maxLength()"
+      [attr.aria-invalid]="!!effectiveError()"
       (input)="handleInput($event)"
+      (blur)="handleBlur()"
       class="textarea-field"
     ></textarea>
   </div>
 
   <div class="textarea-footer">
     <div class="textarea-messages">
-      @if (error()) {
-        <p class="textarea-error-msg" role="alert">{{ error() }}</p>
+      @if (effectiveError()) {
+        <p class="textarea-error-msg" role="alert">{{ effectiveError() }}</p>
       } @else if (hint()) {
         <p class="textarea-hint-msg">{{ hint() }}</p>
       }
@@ -37,4 +39,4 @@
       </span>
     }
   </div>
-</div>
+</app-form-field>

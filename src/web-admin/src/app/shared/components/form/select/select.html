@@ -1,42 +1,46 @@
-<div class="select-group" [class.has-error]="!!error()" [class.is-disabled]="disabled()">
-  @if (label()) {
-    <label [for]="id()" class="select-label">
-      {{ label() }}
-      @if (required()) {
-        <span class="required-star" aria-hidden="true">*</span>
-      }
-    </label>
-  }
-
-  <div class="select-wrapper">
+<app-form-field
+  [label]="compact() ? '' : label()"
+  [forId]="id()"
+  [required]="required()"
+  [hint]="compact() ? '' : hint()"
+  [error]="effectiveError()"
+  [disabled]="internalDisabled()"
+>
+  <div
+    class="select-wrapper"
+    [class.is-compact]="compact()"
+    [class.has-error]="!!effectiveError()"
+    [class.is-disabled]="internalDisabled()"
+  >
     <select
       [id]="id()"
-      [value]="value()"
-      [disabled]="disabled()"
+      [value]="internalValue()"
+      [disabled]="internalDisabled()"
       [required]="required()"
+      [attr.aria-label]="compact() ? (label() || placeholder()) : null"
+      [attr.aria-invalid]="!!effectiveError()"
       (change)="handleChange($event)"
+      (blur)="handleBlur()"
       class="select-field"
     >
       @if (placeholder()) {
-        <option value="" disabled [selected]="!value()">
+        <option
+          value=""
+          [disabled]="!isEmptyAllowed()"
+          [selected]="internalValue() === '' || internalValue() === null || internalValue() === undefined"
+        >
           {{ placeholder() }}
         </option>
       }
       @for (opt of options(); track opt.value) {
-        <option [value]="opt.value" [disabled]="opt.disabled" [selected]="opt.value === value()">
+        <option [value]="opt.value" [disabled]="opt.disabled" [selected]="opt.value === internalValue()">
           {{ opt.label }}
         </option>
       }
     </select>
 
-    <div class="select-chevron">
+    <div class="select-chevron" aria-hidden="true">
       <app-icon name="chevron-down" size="sm" />
     </div>
   </div>
-
-  @if (error()) {
-    <p class="select-error-msg" role="alert">{{ error() }}</p>
-  } @else if (hint()) {
-    <p class="select-hint-msg">{{ hint() }}</p>
-  }
-</div>
+</app-form-field>

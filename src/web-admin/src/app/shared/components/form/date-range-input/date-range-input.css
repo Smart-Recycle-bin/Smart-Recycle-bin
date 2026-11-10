@@ -1,0 +1,31 @@
+:host {
+  display: block;
+}
+
+.date-range-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.date-range-item {
+  flex: 1 1 0%;
+  min-width: 8.5rem;
+}
+
+.date-range-sep {
+  font-size: 0.75rem;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
+@media (max-width: 640px) {
+  .date-range-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .date-range-sep {
+    text-align: center;
+  }
+}

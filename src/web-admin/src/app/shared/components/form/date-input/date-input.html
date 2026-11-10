@@ -1,0 +1,40 @@
+<app-form-field
+  [label]="compact() ? '' : label()"
+  [forId]="id()"
+  [required]="required()"
+  [hint]="compact() ? '' : hint()"
+  [error]="effectiveError()"
+  [disabled]="internalDisabled()"
+>
+  <div
+    class="date-wrapper"
+    [class.is-compact]="compact()"
+    [class.has-error]="!!effectiveError()"
+    [class.is-disabled]="internalDisabled()"
+    (click)="openPicker()"
+  >
+    <span class="date-display" [class.is-placeholder]="!formattedValue()">
+      {{ formattedValue() || effectivePlaceholder() }}
+    </span>
+
+    <input
+      #nativeInput
+      type="date"
+      [id]="id()"
+      [value]="internalValue() || ''"
+      [attr.min]="min()"
+      [attr.max]="max()"
+      [disabled]="internalDisabled()"
+      [required]="required()"
+      [attr.aria-label]="label() || effectivePlaceholder()"
+      [attr.aria-invalid]="!!effectiveError()"
+      (change)="handleChange($event)"
+      (blur)="handleBlur()"
+      class="date-native"
+    />
+
+    <span class="date-icon" aria-hidden="true">
+      <app-icon name="calendar" size="xs" />
+    </span>
+  </div>
+</app-form-field>

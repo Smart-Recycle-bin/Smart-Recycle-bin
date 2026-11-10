@@ -29,6 +29,10 @@ import { Select, SelectOption } from '../../../shared/components/form/select/sel
 import { Checkbox } from '../../../shared/components/form/checkbox/checkbox';
 import { Toggle } from '../../../shared/components/form/toggle/toggle';
 import { Textarea } from '../../../shared/components/form/textarea/textarea';
+import { NumberInput } from '../../../shared/components/form/number-input/number-input';
+import { DateInput } from '../../../shared/components/form/date-input/date-input';
+import { DateRangeInput, DateRangeValue } from '../../../shared/components/form/date-range-input/date-range-input';
+import { FileUpload } from '../../../shared/components/form/file-upload/file-upload';
 
 // 4. Overlays
 import { Modal } from '../../../shared/components/overlay/modal/modal';
@@ -93,6 +97,10 @@ interface ShowcaseBinRow {
     Checkbox,
     Toggle,
     Textarea,
+    NumberInput,
+    DateInput,
+    DateRangeInput,
+    FileUpload,
     Modal,
     Drawer,
     ConfirmDialog,
@@ -145,6 +153,11 @@ export class ComponentsShowcase {
   readonly demoTextareaValue = signal<string>(
     'Scheduled ultrasonic calibration and battery swap for high-traffic recycling hub.'
   );
+  readonly demoFilterDistrict = signal<string | number>('');
+  readonly demoNumberValue = signal<number | null>(1500);
+  readonly demoDateValue = signal<string | null>('2025-07-01');
+  readonly demoDateRange = signal<DateRangeValue>({ from: '2025-06-01', to: '2025-06-14' });
+  readonly demoUploadedFileName = signal<string>('');
 
   // Overlay Demo State
   readonly isModalOpen = signal<boolean>(false);

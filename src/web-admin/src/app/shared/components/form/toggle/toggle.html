@@ -1,28 +1,43 @@
-<div
-  class="toggle-container"
-  [class.is-disabled]="disabled()"
-  (click)="toggle()"
->
-  <button
-    type="button"
-    role="switch"
-    [id]="id()"
-    [attr.aria-checked]="checked()"
-    [disabled]="disabled()"
-    [class]="'toggle-switch size-' + size() + (checked() ? ' is-checked' : '')"
-    (keydown)="handleKeyDown($event)"
+<div class="toggle-field" [class.has-error]="!!effectiveError()">
+  <div
+    class="toggle-container"
+    [class.is-disabled]="internalDisabled()"
+    (click)="toggle()"
   >
-    <span class="toggle-thumb"></span>
-  </button>
+    <button
+      type="button"
+      role="switch"
+      [id]="id()"
+      [attr.aria-checked]="internalChecked()"
+      [attr.aria-invalid]="!!effectiveError()"
+      [disabled]="internalDisabled()"
+      [class]="'toggle-switch size-' + size() + (internalChecked() ? ' is-checked' : '')"
+      (keydown)="handleKeyDown($event)"
+      (blur)="handleBlur()"
+    >
+      <span class="toggle-thumb"></span>
+    </button>
 
-  @if (label() || description()) {
-    <div class="toggle-text-group">
-      @if (label()) {
-        <span class="toggle-label">{{ label() }}</span>
-      }
-      @if (description()) {
-        <span class="toggle-desc">{{ description() }}</span>
-      }
-    </div>
+    @if (label() || description()) {
+      <div class="toggle-text-group">
+        @if (label()) {
+          <span class="toggle-label">
+            {{ label() }}
+            @if (required()) {
+              <span class="required-star" aria-hidden="true">*</span>
+            }
+          </span>
+        }
+        @if (description()) {
+          <span class="toggle-desc">{{ description() }}</span>
+        }
+      </div>
+    }
+  </div>
+
+  @if (effectiveError()) {
+    <p class="toggle-error-msg" role="alert">{{ effectiveError() }}</p>
+  } @else if (hint()) {
+    <p class="toggle-hint-msg">{{ hint() }}</p>
   }
 </div>

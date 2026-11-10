@@ -1,0 +1,20 @@
+<div class="field-group" [class.has-error]="!!error()" [class.is-disabled]="disabled()">
+  @if (label()) {
+    <label [attr.for]="forId() || null" class="field-label">
+      {{ label() }}
+      @if (required()) {
+        <span class="required-star" aria-hidden="true">*</span>
+      }
+    </label>
+  }
+
+  <div class="field-control">
+    <ng-content />
+  </div>
+
+  @if (error()) {
+    <p class="field-error-msg" role="alert">{{ error() }}</p>
+  } @else if (hint()) {
+    <p class="field-hint-msg">{{ hint() }}</p>
+  }
+</div>

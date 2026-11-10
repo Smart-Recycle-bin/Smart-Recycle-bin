@@ -1,0 +1,33 @@
+<app-form-field
+  [label]="compact() ? '' : label()"
+  [required]="required()"
+  [hint]="compact() ? '' : hint()"
+  [error]="effectiveError()"
+  [disabled]="internalDisabled()"
+>
+  <div class="date-range-row" (focusout)="handleBlur()">
+    <app-date-input
+      class="date-range-item"
+      [value]="internalValue().from"
+      [max]="internalValue().to"
+      [displayFormat]="displayFormat()"
+      [compact]="compact()"
+      [disabled]="internalDisabled()"
+      [error]="effectiveError() ? ' ' : ''"
+      (valueChange)="updateFrom($event)"
+    />
+
+    <span class="date-range-sep">{{ separator() }}</span>
+
+    <app-date-input
+      class="date-range-item"
+      [value]="internalValue().to"
+      [min]="internalValue().from"
+      [displayFormat]="displayFormat()"
+      [compact]="compact()"
+      [disabled]="internalDisabled()"
+      [error]="effectiveError() ? ' ' : ''"
+      (valueChange)="updateTo($event)"
+    />
+  </div>
+</app-form-field>

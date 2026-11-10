@@ -695,6 +695,57 @@
                     (valueChange)="demoTextareaValue.set($event)"
                   />
                 </div>
+
+                <!-- Compact Select & Number Input -->
+                <div class="demo-box">
+                  <span class="demo-subheading">Compact Filter Select &amp; Number Input</span>
+                  <div class="demo-col-gap">
+                    <app-select
+                      placeholder="All materials"
+                      [compact]="true"
+                      [options]="materialOptions"
+                      [value]="demoFilterDistrict()"
+                      (valueChange)="demoFilterDistrict.set($event)"
+                    />
+                    <app-number-input
+                      label="Points Price"
+                      [value]="demoNumberValue()"
+                      [min]="0"
+                      [step]="50"
+                      suffix="pts"
+                      [required]="true"
+                      (valueChange)="demoNumberValue.set($event)"
+                    />
+                  </div>
+                </div>
+
+                <!-- Date & Date Range Inputs -->
+                <div class="demo-box">
+                  <span class="demo-subheading">DateInput &amp; DateRangeInput</span>
+                  <div class="demo-col-gap">
+                    <app-date-input
+                      label="Valid From"
+                      [value]="demoDateValue()"
+                      displayFormat="dd/mm/yyyy"
+                      (valueChange)="demoDateValue.set($event)"
+                    />
+                    <app-date-range-input
+                      label="Audit Window"
+                      [value]="demoDateRange()"
+                      [compact]="true"
+                      (valueChange)="demoDateRange.set($event)"
+                    />
+                  </div>
+                </div>
+
+                <!-- File Upload -->
+                <div class="demo-box md:col-span-2">
+                  <span class="demo-subheading">FileUpload</span>
+                  <app-file-upload
+                    label="Reward Image"
+                    (fileSelected)="demoUploadedFileName.set($event?.name || '')"
+                  />
+                </div>
               </div>
             </app-card>
           </div>

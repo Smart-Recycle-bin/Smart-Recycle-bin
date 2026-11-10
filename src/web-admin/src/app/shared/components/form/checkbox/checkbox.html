@@ -1,36 +1,52 @@
-<label
-  [for]="id()"
-  class="checkbox-container"
-  [class.is-disabled]="disabled()"
-  [class.is-checked]="checked()"
->
-  <span class="checkbox-box-wrapper">
-    <input
-      #nativeInput
-      type="checkbox"
-      [id]="id()"
-      [checked]="checked()"
-      [disabled]="disabled()"
-      (change)="handleChange($event)"
-      class="checkbox-native"
-    />
-    <span class="checkbox-custom" aria-hidden="true">
-      @if (indeterminate()) {
-        <span class="indeterminate-bar"></span>
-      } @else if (checked()) {
-        <app-icon name="check" size="xs" color="#ffffff" [strokeWidth]="3" />
-      }
+<div class="checkbox-field" [class.has-error]="!!effectiveError()">
+  <label
+    [for]="id()"
+    class="checkbox-container"
+    [class.is-disabled]="internalDisabled()"
+    [class.is-checked]="internalChecked()"
+  >
+    <span class="checkbox-box-wrapper">
+      <input
+        #nativeInput
+        type="checkbox"
+        [id]="id()"
+        [checked]="internalChecked()"
+        [disabled]="internalDisabled()"
+        [required]="required()"
+        [attr.aria-invalid]="!!effectiveError()"
+        (change)="handleChange($event)"
+        (blur)="handleBlur()"
+        class="checkbox-native"
+      />
+      <span class="checkbox-custom" aria-hidden="true">
+        @if (indeterminate()) {
+          <span class="indeterminate-bar"></span>
+        } @else if (internalChecked()) {
+          <app-icon name="check" size="xs" color="#ffffff" [strokeWidth]="3" />
+        }
+      </span>
     </span>
-  </span>
 
-  @if (label() || description()) {
-    <span class="checkbox-text-group">
-      @if (label()) {
-        <span class="checkbox-label">{{ label() }}</span>
-      }
-      @if (description()) {
-        <span class="checkbox-desc">{{ description() }}</span>
-      }
-    </span>
+    @if (label() || description()) {
+      <span class="checkbox-text-group">
+        @if (label()) {
+          <span class="checkbox-label">
+            {{ label() }}
+            @if (required()) {
+              <span class="required-star" aria-hidden="true">*</span>
+            }
+          </span>
+        }
+        @if (description()) {
+          <span class="checkbox-desc">{{ description() }}</span>
+        }
+      </span>
+    }
+  </label>
+
+  @if (effectiveError()) {
+    <p class="checkbox-error-msg" role="alert">{{ effectiveError() }}</p>
+  } @else if (hint()) {
+    <p class="checkbox-hint-msg">{{ hint() }}</p>
   }
-</label>
+</div>

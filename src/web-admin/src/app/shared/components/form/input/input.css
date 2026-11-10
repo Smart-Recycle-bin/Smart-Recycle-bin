@@ -2,25 +2,6 @@
   display: block;
 }
 
-.input-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.375rem;
-  width: 100%;
-}
-
-.input-label {
-  font-size: 0.8125rem;
-  font-weight: 500;
-  color: var(--ink);
-  line-height: 1.25;
-}
-
-.required-star {
-  color: #ef4444;
-  margin-left: 0.125rem;
-}
-
 .input-wrapper {
   position: relative;
   display: flex;
@@ -31,14 +12,14 @@
 .input-field {
   width: 100%;
   height: 2.5rem;
-  padding: 0 0.875rem;
+  padding-inline: 0.875rem;
   font-size: 0.875rem;
   font-family: inherit;
   color: var(--ink);
   background-color: var(--card);
   border: 1px solid var(--line);
   border-radius: 0.5rem;
-  transition: all 0.15s ease-in-out;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
   outline: none;
 }
 
@@ -48,28 +29,25 @@
 }
 
 .input-field:hover:not(:disabled) {
-  border-color: #cbd5e1;
-}
-:host-context(.dark) .input-field:hover:not(:disabled) {
-  border-color: #334155;
+  border-color: var(--muted);
 }
 
 .input-field:focus {
-  border-color: #009966;
+  border-color: var(--color-brand);
   box-shadow: 0 0 0 3px rgba(0, 153, 102, 0.15);
 }
 
 .input-field.has-leading-icon {
-  padding-left: 2.375rem;
+  padding-inline-start: 2.375rem;
 }
 
 .input-field.has-trailing-icon {
-  padding-right: 2.375rem;
+  padding-inline-end: 2.375rem;
 }
 
 .input-icon-leading {
   position: absolute;
-  left: 0.75rem;
+  inset-inline-start: 0.75rem;
   display: flex;
   align-items: center;
   pointer-events: none;
@@ -78,7 +56,7 @@
 
 .input-icon-trailing {
   position: absolute;
-  right: 0.75rem;
+  inset-inline-end: 0.75rem;
   display: flex;
   align-items: center;
   pointer-events: none;
@@ -87,7 +65,7 @@
 
 .input-icon-trailing-btn {
   position: absolute;
-  right: 0.5rem;
+  inset-inline-end: 0.5rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -100,37 +78,29 @@
   cursor: pointer;
   transition: color 0.15s;
 }
+
 .input-icon-trailing-btn:hover {
   color: var(--ink);
 }
 
+.input-icon-trailing-btn:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 2px;
+}
+
 /* Error state */
 .has-error .input-field {
-  border-color: #ef4444;
+  border-color: var(--danger);
 }
+
 .has-error .input-field:focus {
-  border-color: #ef4444;
+  border-color: var(--danger);
   box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
-}
-
-.input-error-msg {
-  font-size: 0.75rem;
-  color: #ef4444;
-  margin: 0;
-}
-
-.input-hint-msg {
-  font-size: 0.75rem;
-  color: var(--muted);
-  margin: 0;
 }
 
 /* Disabled */
 .is-disabled .input-field {
   background-color: var(--soft);
   cursor: not-allowed;
-  opacity: 0.65;
-}
-.is-disabled .input-label {
   opacity: 0.65;
 }

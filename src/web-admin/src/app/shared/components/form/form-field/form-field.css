@@ -1,0 +1,39 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  width: 100%;
+}
+
+.field-label {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--ink);
+  line-height: 1.25;
+}
+
+.required-star {
+  color: var(--danger);
+  margin-inline-start: 0.125rem;
+}
+
+.field-error-msg {
+  font-size: 0.75rem;
+  color: var(--danger-ink);
+  margin: 0;
+}
+
+.field-hint-msg {
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin: 0;
+}
+
+.is-disabled .field-label {
+  opacity: 0.65;
+}

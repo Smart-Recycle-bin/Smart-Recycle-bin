@@ -1,0 +1,71 @@
+<app-form-field
+  [label]="label()"
+  [forId]="id()"
+  [required]="required()"
+  [error]="effectiveError()"
+  [disabled]="internalDisabled()"
+>
+  <div
+    class="upload-dropzone"
+    [class.is-dragging]="isDragging()"
+    [class.has-error]="!!effectiveError()"
+    [class.is-disabled]="internalDisabled()"
+    role="button"
+    [attr.tabindex]="internalDisabled() ? -1 : 0"
+    [attr.aria-label]="actionText()"
+    (click)="triggerBrowse()"
+    (keydown)="handleKeyDown($event)"
+    (dragover)="handleDragOver($event)"
+    (dragleave)="handleDragLeave($event)"
+    (drop)="handleDrop($event)"
+  >
+    <input
+      #nativeInput
+      type="file"
+      [id]="id()"
+      [accept]="accept()"
+      [disabled]="internalDisabled()"
+      (change)="handleFileChange($event)"
+      class="upload-native"
+    />
+
+    @if (selectedFile(); as file) {
+      <div class="upload-preview-row">
+        @if (previewUrl(); as url) {
+          <img [src]="url" [alt]="file.name" class="preview-thumb" />
+        } @else {
+          <div class="upload-icon-tile">
+            <app-icon name="upload" size="md" />
+          </div>
+        }
+
+        <div class="preview-meta">
+          <span class="preview-filename">{{ file.name }}</span>
+          <span class="preview-size">{{ formatFileSize(file.size) }}</span>
+        </div>
+
+        <button
+          type="button"
+          class="preview-clear-btn"
+          aria-label="Remove file"
+          [disabled]="internalDisabled()"
+          (click)="clearFile($event)"
+        >
+          <app-icon name="x" size="xs" />
+        </button>
+      </div>
+    } @else {
+      <div class="upload-empty-row">
+        <div class="upload-icon-tile" aria-hidden="true">
+          <app-icon name="camera" size="md" />
+        </div>
+        <div class="upload-text">
+          <span class="upload-action-link">{{ actionText() }}</span>
+          @if (hint()) {
+            <span class="upload-hint">{{ hint() }}</span>
+          }
+        </div>
+      </div>
+    }
+  </div>
+</app-form-field>

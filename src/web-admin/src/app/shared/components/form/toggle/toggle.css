@@ -2,6 +2,12 @@
   display: inline-flex;
 }
 
+.toggle-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
 .toggle-container {
   display: inline-flex;
   align-items: flex-start;
@@ -48,11 +54,15 @@
 }
 
 .toggle-switch:focus-visible {
-  box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px #009966;
+  box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--color-brand);
 }
 
 .toggle-switch.is-checked {
-  background-color: #009966;
+  background-color: var(--color-brand);
+}
+
+.has-error .toggle-switch {
+  border-color: var(--danger);
 }
 
 .toggle-thumb {
@@ -76,11 +86,28 @@
   line-height: 1.25;
 }
 
+.required-star {
+  color: var(--danger);
+  margin-inline-start: 0.125rem;
+}
+
 .toggle-desc {
   font-size: 0.75rem;
   color: var(--muted);
   margin-top: 0.125rem;
   line-height: 1.35;
+}
+
+.toggle-error-msg {
+  font-size: 0.75rem;
+  color: var(--danger-ink);
+  margin: 0;
+}
+
+.toggle-hint-msg {
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin: 0;
 }
 
 .is-disabled {
