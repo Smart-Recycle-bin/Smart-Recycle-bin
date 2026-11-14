@@ -1,7 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, output, signal } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { Router, RouterOutlet } from '@angular/router';
 import { ADMIN_NAV_SECTIONS } from '../../core/navigation/admin-nav';
 import { CurrentUser, CurrentUserService } from '../../core/services/user/current-user.service';
+import { AuthService } from '../../core/services/auth/auth.service';
 import { Sidebar, SidebarSection } from '../../shared/components/sidebar/sidebar';
 import { Topbar } from '../../shared/components/topbar/topbar';
 
@@ -14,6 +15,8 @@ import { Topbar } from '../../shared/components/topbar/topbar';
 })
 export class AdminLayout {
   private readonly currentUserService = inject(CurrentUserService);
+  private readonly authService = inject(AuthService);
+  private readonly router = inject(Router);
 
   readonly navSections = input<SidebarSection[]>(ADMIN_NAV_SECTIONS);
   readonly currentUser = input<CurrentUser | null>(null);
@@ -36,5 +39,18 @@ export class AdminLayout {
 
   closeMobileSidebar(): void {
     this.mobileSidebarOpen.set(false);
+  }
+
+  handleUserMenuAction(actionId: string): void {
+    if (actionId === 'logout') {
+      this.authService.logout().subscribe({
+        next: () => {
+          this.router.navigate(['/login']);
+        },
+        error: () => {
+          this.router.navigate(['/login']);
+        },
+      });
+    }
   }
 }

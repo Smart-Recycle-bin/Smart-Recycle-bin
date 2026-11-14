@@ -27,6 +27,7 @@
       [userAvatar]="activeUser().avatarUrl || ''"
       (toggleSidebar)="toggleMobileSidebar()"
       (search)="searchTriggered.emit($event)"
+      (userMenuAction)="handleUserMenuAction($event)"
     />
 
     <!-- Main Content -->

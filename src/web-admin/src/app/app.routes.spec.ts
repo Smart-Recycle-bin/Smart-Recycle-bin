@@ -1,11 +1,22 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { routes } from './app.routes';
+import { authGuard, guestGuard, roleGuard } from './core/guards';
+import { UserRole } from './core/models/user/user-role.enum';
+import { AuthService } from './core/services/auth/auth.service';
+import { TokenStorageService } from './core/services/auth/token-storage.service';
+import { ToastService } from './core/services/toast/toast.service';
+import { mockBackendInterceptor } from './core/interceptors/mock-backend/engine/mock-backend.interceptor';
+import { resetMockDb } from './core/mock/db/mock-db';
+import { environment } from '../environments/environment';
 
 describe('App Routes', () => {
   let router: Router;
   let harness: RouterTestingHarness;
+  let authService: AuthService;
+  let tokenStorage: TokenStorageService;
 
   beforeAll(async () => {
     await Promise.all([
@@ -17,55 +28,166 @@ describe('App Routes', () => {
   }, 30000);
 
   beforeEach(async () => {
+    localStorage.removeItem(environment.sessionStorageKey);
+    resetMockDb();
+
     await TestBed.configureTestingModule({
-      providers: [provideRouter(routes)],
+      providers: [
+        provideRouter(routes),
+        provideHttpClient(withInterceptors([mockBackendInterceptor])),
+        AuthService,
+        TokenStorageService,
+        ToastService,
+      ],
     }).compileComponents();
 
     router = TestBed.inject(Router);
+    authService = TestBed.inject(AuthService);
+    tokenStorage = TestBed.inject(TokenStorageService);
+
+    // Seed active admin session by default so admin routes are reachable in basic render tests
+    tokenStorage.saveSession({
+      accessToken: 'valid_access_token',
+      expiresAt: new Date(Date.now() + 3600000).toISOString(),
+      refreshToken: 'valid_refresh_token',
+      user: {
+        userId: 'ADM-001',
+        displayName: 'Sarah Connor',
+        role: UserRole.Admin,
+      },
+    });
+    authService.restoreSession();
+
     harness = await RouterTestingHarness.create();
   });
 
-  it('should redirect empty path to /overview', async () => {
-    await harness.navigateByUrl('/');
-    expect(router.url).toBe('/overview');
-    expect(harness.routeNativeElement?.textContent).toContain('Overview');
+  afterEach(() => {
+    localStorage.removeItem(environment.sessionStorageKey);
+    resetMockDb();
   });
 
-  it('should render login placeholder inside AuthLayout', async () => {
-    await harness.navigateByUrl('/login');
-    expect(router.url).toBe('/login');
-    expect(harness.routeNativeElement?.textContent).toContain('Sign in');
+  describe('Route Configuration Declarations', () => {
+    it('configures guestGuard on /login route', () => {
+      const loginRoute = routes.find((r) => r.path === 'login');
+      expect(loginRoute).toBeDefined();
+      expect(loginRoute?.canActivate).toContain(guestGuard);
+    });
+
+    it('configures authGuard, roleGuard, and UserRole.Admin on admin shell route', () => {
+      const adminShellRoute = routes.find((r) => r.path === '' && r.children !== undefined);
+      expect(adminShellRoute).toBeDefined();
+      expect(adminShellRoute?.canActivate).toContain(authGuard);
+      expect(adminShellRoute?.canActivate).toContain(roleGuard);
+      expect(adminShellRoute?.data?.['roles']).toEqual([UserRole.Admin]);
+    });
+
+    it('leaves dev/components and wildcard ** routes unguarded', () => {
+      const devRoute = routes.find((r) => r.path === 'dev/components');
+      expect(devRoute?.canActivate).toBeUndefined();
+
+      const wildcardRoute = routes.find((r) => r.path === '**');
+      expect(wildcardRoute?.canActivate).toBeUndefined();
+    });
   });
 
-  it('should render lazy dev components showcase', async () => {
-    await harness.navigateByUrl('/dev/components');
-    expect(router.url).toBe('/dev/components');
-    expect(harness.routeNativeElement?.textContent).toContain('EcoBin UI Kit & Foundation');
+  describe('Authenticated Admin Navigation', () => {
+    it('should redirect empty path to /overview', async () => {
+      await harness.navigateByUrl('/');
+      expect(router.url).toBe('/overview');
+      expect(harness.routeNativeElement?.textContent).toContain('Overview');
+    });
+
+    it('should render lazy dev components showcase', async () => {
+      await harness.navigateByUrl('/dev/components');
+      expect(router.url).toBe('/dev/components');
+      expect(harness.routeNativeElement?.textContent).toContain('EcoBin UI Kit & Foundation');
+    });
+
+    it('should render admin placeholder routes', async () => {
+      const adminPaths: [string, string][] = [
+        ['/bins', 'Bins List'],
+        ['/bins/map', 'Live Bin Map'],
+        ['/recyclers', 'Recyclers'],
+        ['/collectors', 'Collectors'],
+        ['/wallet', 'Wallet & Ledger'],
+        ['/review-queue', 'AI Review Queue'],
+        ['/survey-qa', 'Survey QA'],
+        ['/rewards', 'Rewards Catalog'],
+        ['/leaderboards', 'Leaderboards & Badges'],
+        ['/audit-logs', 'Audit Logs'],
+      ];
+
+      for (const [url, expectedTitle] of adminPaths) {
+        await harness.navigateByUrl(url);
+        expect(router.url).toBe(url);
+        expect(harness.routeNativeElement?.textContent).toContain(expectedTitle);
+      }
+    });
+
+    it('should render NotFound on unknown routes', async () => {
+      await harness.navigateByUrl('/non-existent-route');
+      expect(harness.routeNativeElement?.textContent).toContain('Page not found');
+    });
   });
 
-  it('should render admin placeholder routes', async () => {
-    const adminPaths: [string, string][] = [
-      ['/bins', 'Bins List'],
-      ['/bins/map', 'Live Bin Map'],
-      ['/recyclers', 'Recyclers'],
-      ['/collectors', 'Collectors'],
-      ['/wallet', 'Wallet & Ledger'],
-      ['/review-queue', 'AI Review Queue'],
-      ['/survey-qa', 'Survey QA'],
-      ['/rewards', 'Rewards Catalog'],
-      ['/leaderboards', 'Leaderboards & Badges'],
-      ['/audit-logs', 'Audit Logs'],
-    ];
+  describe('Guards Integration (with Mock Backend)', () => {
+    it('redirects to /login?returnUrl=%2Fbins when visiting /bins while logged out', async () => {
+      authService.clearSession();
 
-    for (const [url, expectedTitle] of adminPaths) {
-      await harness.navigateByUrl(url);
-      expect(router.url).toBe(url);
-      expect(harness.routeNativeElement?.textContent).toContain(expectedTitle);
-    }
-  });
+      await harness.navigateByUrl('/bins');
+      expect(router.url).toBe('/login?returnUrl=%2Fbins');
+      expect(harness.routeNativeElement?.textContent).toContain('Sign in');
+    });
 
-  it('should render NotFound on unknown routes', async () => {
-    await harness.navigateByUrl('/non-existent-route');
-    expect(harness.routeNativeElement?.textContent).toContain('Page not found');
+    it('redirects authenticated admin away from /login to /overview', async () => {
+      await harness.navigateByUrl('/login');
+      expect(router.url).toBe('/overview');
+      expect(harness.routeNativeElement?.textContent).toContain('Overview');
+    });
+
+    it('renders /login placeholder when visiting /login while logged out', async () => {
+      authService.clearSession();
+
+      await harness.navigateByUrl('/login');
+      expect(router.url).toBe('/login');
+      expect(harness.routeNativeElement?.textContent).toContain('Sign in');
+    });
+
+    it('refreshes token and opens /bins when access token is expired but refresh token is valid', async () => {
+      // 1. Login via mock backend to obtain genuine refresh token recorded in mockDb
+      let loginSuccess = false;
+      await new Promise<void>((resolve, reject) => {
+        authService
+          .login({ email: 'admin@ecobin.eg', password: 'password123' })
+          .subscribe({
+            next: () => {
+              loginSuccess = true;
+              resolve();
+            },
+            error: reject,
+          });
+      });
+      expect(loginSuccess).toBe(true);
+
+      // 2. Expire access token artificially in storage
+      const session = tokenStorage.getSession();
+      expect(session).not.toBeNull();
+      if (session) {
+        tokenStorage.saveSession({
+          ...session,
+          expiresAt: new Date(Date.now() - 60000).toISOString(), // expired 1m ago
+        });
+        authService.restoreSession();
+      }
+
+      expect(authService.isAuthenticated()).toBe(false);
+      expect(authService.hasRefreshToken()).toBe(true);
+
+      // 3. Navigate to /bins — authGuard must refresh and allow access
+      await harness.navigateByUrl('/bins');
+      expect(router.url).toBe('/bins');
+      expect(harness.routeNativeElement?.textContent).toContain('Bins List');
+      expect(authService.isAuthenticated()).toBe(true);
+    });
   });
 });

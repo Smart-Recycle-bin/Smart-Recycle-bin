@@ -1,16 +1,36 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { Router, provideRouter } from '@angular/router';
+import { signal } from '@angular/core';
 import { AdminLayout } from './admin-layout';
+import { AuthService } from '../../core/services/auth/auth.service';
+import { of } from 'rxjs';
+import { vi } from 'vitest';
 
 describe('AdminLayout', () => {
   let component: AdminLayout;
   let fixture: ComponentFixture<AdminLayout>;
+  let authServiceSpy: {
+    session: ReturnType<typeof signal>;
+    logout: ReturnType<typeof vi.fn>;
+  };
+  let router: Router;
 
   beforeEach(async () => {
+    authServiceSpy = {
+      session: signal(null),
+      logout: vi.fn().mockReturnValue(of(undefined)),
+    };
+
     await TestBed.configureTestingModule({
       imports: [AdminLayout],
-      providers: [provideRouter([])],
+      providers: [
+        provideRouter([]),
+        { provide: AuthService, useValue: authServiceSpy },
+      ],
     }).compileComponents();
+
+    router = TestBed.inject(Router);
+    vi.spyOn(router, 'navigate');
 
     fixture = TestBed.createComponent(AdminLayout);
     component = fixture.componentInstance;
@@ -41,5 +61,12 @@ describe('AdminLayout', () => {
     expect(component.mobileSidebarOpen()).toBe(true);
     component.closeMobileSidebar();
     expect(component.mobileSidebarOpen()).toBe(false);
+  });
+
+  it('should call AuthService.logout() and navigate to /login when userMenuAction is logout', () => {
+    component.handleUserMenuAction('logout');
+
+    expect(authServiceSpy.logout).toHaveBeenCalledTimes(1);
+    expect(router.navigate).toHaveBeenCalledWith(['/login']);
   });
 });

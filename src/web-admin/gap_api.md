@@ -820,3 +820,57 @@ All mutating administrative operations executed on the mock backend append an im
 | Create Reward | `POST /admin/rewards` | `CATALOG_CHANGE` | Reward title & points cost |
 | Update Reward | `PUT /admin/rewards/:rewardId` | `CATALOG_CHANGE` | Reward title |
 | Archive Reward | `POST /admin/rewards/:rewardId/archive` | `CATALOG_CHANGE` | Archival status change |
+
+
+---
+
+## 6. Route Guards, Routing Architecture & Sign-Out (Prompt 5)
+
+### 6.1 Route Guard Hierarchy & Protection Matrix
+All route access controls are functional guards implemented in `src/app/core/guards/auth/`:
+- **`authGuard` (`CanActivateFn`):**
+  - Allows immediate access if `AuthService.isAuthenticated()` is `true`.
+  - When the access token is expired but `AuthService.hasRefreshToken()` is `true`, it initiates a single-flight background refresh via `performGuardRefresh(authService)`:
+    - Success: Allows navigation to proceed (`true`).
+    - Failure: Redirects to `/login?returnUrl=<targetUrl>` without loop.
+    - Network Failure: Redirects to `/login` while preserving persistent credentials in `localStorage`.
+  - When no session exists, creates a redirect `UrlTree` to `/login?returnUrl=<targetUrl>`, omitting `returnUrl` when targeting `/` or `/login`.
+- **`guestGuard` (`CanActivateFn`):**
+  - Protects the `/login` route.
+  - Redirects authenticated users directly to the default admin landing route (`/overview`).
+  - Allows unauthenticated guests through to the sign-in page.
+- **`roleGuard` (`CanActivateFn`):**
+  - Reads `route.data['roles']` using bracket index access.
+  - Verifies that the current user's role (`authService.role()`) matches the required `UserRole.Admin`.
+  - Missing roles metadata, missing user role, or non-admin roles automatically clear the session, trigger a toast notification (`Administrators only`), and redirect to `/login`.
+- **`safeReturnUrl(raw: string | null): string | null`:**
+  - Enforces strict open-redirect sanitization. Only internal paths starting with a single `/` are permitted; protocol-relative URLs (`//`), backslashes (`\`), schemes (`javascript:`, `http:`), and control characters are rejected (`null`).
+
+### 6.2 Route Tree & Guard Assignments
+```
+/
+├── (redirect) → /overview
+├── login [guestGuard] → AuthLayout (Placeholder)
+├── dev/components [unguarded] → ComponentsShowcase (Dev-only)
+├── (admin shell) [authGuard, roleGuard: SYS_ADMIN] → AdminLayout
+│   ├── overview → RoutePlaceholder (title: 'Overview')
+│   ├── bins → RoutePlaceholder (title: 'Bins List')
+│   ├── bins/map → RoutePlaceholder (title: 'Live Bin Map')
+│   ├── recyclers → RoutePlaceholder (title: 'Recyclers')
+│   ├── collectors → RoutePlaceholder (title: 'Collectors')
+│   ├── wallet → RoutePlaceholder (title: 'Wallet & Ledger')
+│   ├── review-queue → RoutePlaceholder (title: 'AI Review Queue')
+│   ├── survey-qa → RoutePlaceholder (title: 'Survey QA')
+│   ├── rewards → RoutePlaceholder (title: 'Rewards Catalog')
+│   ├── leaderboards → RoutePlaceholder (title: 'Leaderboards & Badges')
+│   └── audit-logs → RoutePlaceholder (title: 'Audit Logs')
+└── ** [unguarded] → NotFound
+```
+
+### 6.3 UI Navigation Labeling Discrepancies vs PDF Mockups
+Identified label refinements between the preliminary PDF mockups and the production admin navigation specification:
+1. **AI Review Queue (`/review-queue`):** Labeled as "Reports" on PDF screen p9; standardized to "AI Review Queue" in `admin-nav.ts` to clearly denote the AI confidence review queue workflow.
+2. **Rewards Catalog (`/rewards`):** Labeled as "Rewards" on PDF screen p12/p14; standardized to "Rewards Catalog" in `admin-nav.ts`.
+3. **Bins List (`/bins`):** Labeled as "Bins" on PDF screen p3; standardized to "Bins List" in `admin-nav.ts` to distinguish from "Live Bin Map" (`/bins/map`).
+4. **Leaderboards & Badges (`/leaderboards`):** Labeled as "Leaderboards" on PDF screen p15; standardized to "Leaderboards & Badges" in `admin-nav.ts`.
+5. **Profile Settings / Preferences (Topbar Shell):** PDF screen p1 displays "Profile settings" and "Preferences" in the user block dropdown menu. No corresponding screens or APIs exist in backend specifications; these options remain non-navigating placeholders while "Sign out" triggers `AuthService.logout()` and redirects to `/login`.

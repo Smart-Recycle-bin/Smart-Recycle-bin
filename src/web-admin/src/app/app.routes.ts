@@ -1,4 +1,6 @@
 import { Routes } from '@angular/router';
+import { authGuard, guestGuard, roleGuard } from './core/guards';
+import { UserRole } from './core/models/user/user-role.enum';
 
 export const routes: Routes = [
   {
@@ -8,6 +10,7 @@ export const routes: Routes = [
   },
   {
     path: 'login',
+    canActivate: [guestGuard],
     loadComponent: () =>
       import('./layouts/auth-layout/auth-layout').then((m) => m.AuthLayout),
     children: [
@@ -33,6 +36,8 @@ export const routes: Routes = [
   },
   {
     path: '',
+    canActivate: [authGuard, roleGuard],
+    data: { roles: [UserRole.Admin] },
     loadComponent: () =>
       import('./layouts/admin-layout/admin-layout').then((m) => m.AdminLayout),
     children: [
