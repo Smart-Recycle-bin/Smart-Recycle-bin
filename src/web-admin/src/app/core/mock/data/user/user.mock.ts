@@ -1,0 +1,186 @@
+import { UserRole } from '../../../models/user/user-role.enum';
+import { AccountStatus } from '../../../models/user/account-status.enum';
+import { RecyclerListItem } from '../../../models/user/recycler.view-model';
+import { MockAdminAccount } from '../../db/mock-db.types';
+
+export const MOCK_ADMINS: MockAdminAccount[] = [
+  {
+    user: {
+      userId: 'ADM-001',
+      displayName: 'Laila Hamdy',
+      role: UserRole.Admin,
+    },
+    email: 'admin@ecobin.eg',
+    password: 'password123',
+    initials: 'LH',
+  },
+  {
+    user: {
+      userId: 'ADM-002',
+      displayName: 'Amr Shawky',
+      role: UserRole.Admin,
+    },
+    email: 'amr.shawky@ecobin.eg',
+    password: 'password123',
+    initials: 'AS',
+  },
+];
+
+export const MOCK_RECYCLERS: RecyclerListItem[] = [
+  // Visible rows from PDF p5 (Showing 1-8 of 14)
+  {
+    userId: 'U-10021',
+    name: 'Nour El-Sayed',
+    initials: 'NE',
+    email: 'nour.elsayed@gmail.com',
+    availablePoints: 4820,
+    lifetimePoints: 18440,
+    sessions: 214,
+    status: AccountStatus.Active,
+    joined: '2024-02-11',
+  },
+  {
+    userId: 'U-10034',
+    name: 'Omar Hassan',
+    initials: 'OH',
+    email: 'omar.hassan@outlook.com',
+    availablePoints: 2150,
+    lifetimePoints: 15210,
+    sessions: 187,
+    status: AccountStatus.Active,
+    joined: '2024-03-02',
+  },
+  {
+    userId: 'U-10057',
+    name: 'Salma Ibrahim',
+    initials: 'SI',
+    email: 'salma.ibrahim@gmail.com',
+    availablePoints: 980,
+    lifetimePoints: 12930,
+    sessions: 162,
+    status: AccountStatus.Active,
+    joined: '2024-03-19',
+  },
+  {
+    userId: 'U-10063',
+    name: 'Ahmed Mostafa',
+    initials: 'AM',
+    email: 'a.mostafa@yahoo.com',
+    availablePoints: 0,
+    lifetimePoints: 6120,
+    sessions: 91,
+    status: AccountStatus.Suspended,
+    joined: '2024-04-08',
+  },
+  {
+    userId: 'U-10078',
+    name: 'Mariam Adel',
+    initials: 'MA',
+    email: 'mariam.adel@gmail.com',
+    availablePoints: 3340,
+    lifetimePoints: 9870,
+    sessions: 128,
+    status: AccountStatus.Active,
+    joined: '2024-04-27',
+  },
+  {
+    userId: 'U-10082',
+    name: 'Hana Farouk',
+    initials: 'HF',
+    email: 'hana.farouk@gmail.com',
+    availablePoints: 760,
+    lifetimePoints: 8420,
+    sessions: 109,
+    status: AccountStatus.Active,
+    joined: '2024-05-05',
+  },
+  {
+    userId: 'U-10095',
+    name: 'Mostafa Kamel',
+    initials: 'MK',
+    email: 'mostafa.kamel@hotmail.com',
+    availablePoints: 0,
+    lifetimePoints: 3980,
+    sessions: 64,
+    status: AccountStatus.Banned,
+    joined: '2024-05-21',
+  },
+  {
+    userId: 'U-10102',
+    name: 'Yasmin Gamal',
+    initials: 'YG',
+    email: 'yasmin.gamal@gmail.com',
+    availablePoints: 1510,
+    lifetimePoints: 7340,
+    sessions: 98,
+    status: AccountStatus.Active,
+    joined: '2024-06-14',
+  },
+  // Additional rows to complete the 14 total indicated on p5 ("1-8 of 14")
+  {
+    userId: 'U-10139',
+    name: 'Dina Samir',
+    initials: 'DS',
+    email: 'dina.samir@gmail.com',
+    availablePoints: 2890,
+    lifetimePoints: 5420,
+    sessions: 76,
+    status: AccountStatus.Active,
+    joined: '2024-07-01', // synthetic
+  },
+  {
+    userId: 'U-10118',
+    name: 'Ali Reda',
+    initials: 'AR',
+    email: 'ali.reda@outlook.com',
+    availablePoints: 410,
+    lifetimePoints: 4890,
+    sessions: 68,
+    status: AccountStatus.Active,
+    joined: '2024-07-15', // synthetic
+  },
+  {
+    userId: 'U-10147',
+    name: 'Khaled Wahba',
+    initials: 'KW',
+    email: 'khaled.wahba@gmail.com',
+    availablePoints: 120,
+    lifetimePoints: 3250,
+    sessions: 45,
+    status: AccountStatus.Active,
+    joined: '2024-08-03', // synthetic
+  },
+  {
+    userId: 'U-10155',
+    name: 'Tarek Salem',
+    initials: 'TS',
+    email: 'tarek.salem@yahoo.com',
+    availablePoints: 1850,
+    lifetimePoints: 2900,
+    sessions: 38,
+    status: AccountStatus.Active,
+    joined: '2024-08-20', // synthetic
+  },
+  {
+    userId: 'U-10168',
+    name: 'Reem Al-Badry',
+    initials: 'RB',
+    email: 'reem.badry@gmail.com',
+    availablePoints: 640,
+    lifetimePoints: 2150,
+    sessions: 29,
+    status: AccountStatus.Active,
+    joined: '2024-09-05', // synthetic
+  },
+  {
+    userId: 'U-10180',
+    name: 'Kareem Fayed',
+    initials: 'KF',
+    email: 'kareem.fayed@hotmail.com',
+    availablePoints: 350,
+    lifetimePoints: 1600,
+    sessions: 22,
+    status: AccountStatus.Active,
+    joined: '2024-09-18', // synthetic
+  },
+];

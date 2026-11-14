@@ -20,10 +20,12 @@ export interface BinListItem {
   name: string;
   area: string;
   district: string;
+  region?: string;
   latitude: number;
   longitude: number;
   fillLevel: number; // percentage (0 - 100)
   status: BinStatus;
+  collectorId?: Id;
   collectorName?: string;
   lastServicedAt: string; // ISO 8601 string or formatted string
 }

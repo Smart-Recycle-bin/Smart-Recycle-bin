@@ -747,6 +747,22 @@ Errors return:
 ## 4. UI Inconsistencies & Approximated Data
 
 1. **Prototype State Switcher Tabs:** Screens p3, p5, p8 show tabs labeled "Live | Loading | Empty | Error". These are development prototype artifacts and are not modeled as domain state or enums.
-2. **Notification Badge Count:** Every screen in the preliminary PDF mockup shows the red badge count fixed at "9". In implementation, this will be bound to the live unread count.
+2. **Notification Badge Count:** Every screen in the preliminary PDF mockup shows the red badge count fixed at "9". In implementation, this is bound to the mock dataset containing 9 unread notifications.
 3. **Bin Fill Thresholds:** The system uses 80% and 95% full thresholds, but UI color chips and labels vary slightly across screens. Standardized to `AVAILABLE`, `≥80% FULL`, and `≥95% FULL / NEEDS SERVICING`.
 4. **Collector Credential Modes:** S6/p7 introduces `invite_link` and `temporary_password`, which are not documented in `APIs.md`. Handled via `CollectorCredentialsMode` enum.
+5. **Cross-Screen Entity Contradictions (Single Truth Principle):**
+   - **Session `S-88190`:** On p9 (Reports table), `S-88190` represents a pending AI review in `BIN-0007` (Paper, 71% confidence). On p11 (Survey QA table), `S-88190` represents Mariam Adel's rejected survey (`1× Aluminium tray`). Each screen's mock dataset preserves the data as presented on that screen where the entity is the primary subject.
+   - **Session `S-88142`:** On p9, `S-88142` is pending report `AIR-2046` in `BIN-0018` (Metal, 55% confidence). On p11, `S-88142` is Dina Samir's confirmed survey (`4× Glass bottle`). Preserved per screen context.
+6. **Synthetic & Approximated Dataset Extensions:**
+   - **Recyclers (14 total):** 8 rows visible on p5; 6 synthetic recyclers added (`U-10139`, `U-10118`, `U-10147`, `U-10155`, `U-10168`, `U-10180`) to satisfy "1–8 of 14". Exactly one user is Suspended (`U-10063`) and one Banned (`U-10095`).
+   - **Bins Fleet (23 total):** 6 rows visible on p3; 17 additional bins added across 4 districts (Cairo, Giza, Qalyubia, Alexandria) to reach 23 bins. Geo-coordinates approximated using actual landmarks. Breakdown strictly matches p4 & p17:
+     - Greater Cairo (16 bins): 10 Available, 3 ≥80% full, 3 ≥95% full, 0 Offline.
+     - Alexandria (7 bins): 4 Available, 1 ≥80% full, 1 ≥95% full, 1 Offline.
+     - Total Fleet: 14 Available, 4 ≥80% full, 4 ≥95% full (`BIN-0007`, `BIN-0038`, `BIN-0061`, `BIN-0084`), 1 Offline (`BIN-0095`).
+   - **Collectors (6 total):** Transcribed directly from p6 (5 Active, 1 Inactive). Assigned bin counts (5, 3, 5, 4, 5, 0) total 22 bins, with the remaining 1 unassigned bin being Offline.
+   - **Global Ledger (15 total):** 10 rows visible on p8; 5 synthetic rows added to satisfy "1–10 of 15". Truncated UUIDs from p8 completed (`7f3a23a0-4c1e-4c12-92e1-000000000001` ... `015`). Each ledger row's running balance equals the referenced user's available points in the recyclers dataset.
+   - **Inspection Queue (8 total):** 8 rows transcribed from p9 (5 Pending, 2 Reviewed, 1 Sent to Retraining). Full detail view modeled for `AIR-2048` from p10; synthetic frames and inference breakdown provided for the other 7 reports. Retraining dataset metrics: 1,285 labelled images, 1,500 target threshold, 215 remaining.
+   - **Survey QA (9 recent surveys):** 6 rows visible on p11; 3 synthetic rows added to satisfy "1–6 of 9". Aggregated metrics: 18,402 surveys, 92.6% confirm rate, 7.4% reject rate, 1,362 flagged to AI queue.
+   - **Rewards Catalog (8 items):** Exactly matching p12 and p14 (`RWD-001` through `RWD-008`). Defaults set to valid from `2025-07-01` to `2025-12-31`.
+   - **Leaderboards:** Weekly leaderboard contains 10 visible rows from p15 plus 2 synthetic rows to satisfy "1–10 of 12". Monthly and All-Time views synthesized, with All-Time points matching each user's lifetime points from the recyclers table. Milestone badge counts match p15 verbatim.
+   - **Audit Trail (10 total):** 8 rows visible on p16; 2 synthetic rows added to satisfy "1–8 of 10". Admins strictly mapped to Laila Hamdy (`ADM-001`) and Amr Shawky (`ADM-002`).
