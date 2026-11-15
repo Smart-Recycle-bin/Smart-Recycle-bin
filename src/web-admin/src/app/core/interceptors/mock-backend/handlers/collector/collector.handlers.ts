@@ -47,7 +47,7 @@ export function registerCollectorHandlers(router: MockRouter): void {
     return okResponse(list);
   });
 
-  // 2. Create collector
+  // 2. Create collector (APIs.md 2.7)
   router.post<CreateCollectorRequest>('/api/v1/admin/collectors', (ctx) => {
     const auth = requireSysAdmin(ctx.req);
     if (auth instanceof HttpErrorResponse) {
@@ -69,11 +69,13 @@ export function registerCollectorHandlers(router: MockRouter): void {
         .substring(0, 2)
         .toUpperCase() || 'CO';
 
+    const district = body.district || 'Downtown';
+
     const newCollector: CollectorListItem = {
       collectorId,
       name: body.displayName,
       initials,
-      district: body.district || 'Downtown',
+      district,
       email: body.email,
       phone: body.phoneNumber || '+20 100 000 0000',
       assignedBinsCount: 0,
@@ -93,7 +95,7 @@ export function registerCollectorHandlers(router: MockRouter): void {
     return okResponse(newCollector, 201);
   });
 
-  // 3. Update collector
+  // 3. Update collector (PROPOSED, gap_api.md 1.5)
   router.put<UpdateCollectorRequest>('/api/v1/admin/collectors/:collectorId', (ctx) => {
     const auth = requireSysAdmin(ctx.req);
     if (auth instanceof HttpErrorResponse) {
@@ -109,8 +111,8 @@ export function registerCollectorHandlers(router: MockRouter): void {
     }
 
     const body = ctx.req.body as UpdateCollectorRequest | null;
-    if (body?.fullName) {
-      collector.name = body.fullName;
+    if (body?.displayName) {
+      collector.name = body.displayName;
     }
     if (body?.email) {
       collector.email = body.email;
@@ -132,7 +134,7 @@ export function registerCollectorHandlers(router: MockRouter): void {
     return okResponse(collector);
   });
 
-  // 4. View collector assigned bins
+  // 4. View collector assigned bins (PROPOSED, gap_api.md 1.5)
   router.get('/api/v1/admin/collectors/:collectorId/bins', (ctx) => {
     const auth = requireSysAdmin(ctx.req);
     if (auth instanceof HttpErrorResponse) {
@@ -163,7 +165,7 @@ export function registerCollectorHandlers(router: MockRouter): void {
     return okResponse(assignedBins);
   });
 
-  // 5. Deactivate collector
+  // 5. Deactivate collector account (PROPOSED, gap_api.md 1.5)
   router.post('/api/v1/admin/collectors/:collectorId/deactivate', (ctx) => {
     const auth = requireSysAdmin(ctx.req);
     if (auth instanceof HttpErrorResponse) {
@@ -178,7 +180,7 @@ export function registerCollectorHandlers(router: MockRouter): void {
       return errorResponse(404, ApiErrorCode.NotFound, `Collector ${collectorId} not found`);
     }
 
-    collector.status = AccountStatus.Inactive;
+    collector.status = AccountStatus.Suspended;
 
     appendAuditLog(
       AuditActionType.FleetUpdate,
@@ -189,7 +191,7 @@ export function registerCollectorHandlers(router: MockRouter): void {
 
     const response: DeactivateCollectorResponse = {
       collectorId,
-      status: AccountStatus.Inactive,
+      status: AccountStatus.Suspended,
       deactivatedAt: new Date().toISOString(),
     };
 

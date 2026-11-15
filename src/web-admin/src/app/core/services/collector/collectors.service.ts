@@ -30,7 +30,7 @@ export class CollectorsService {
   }
 
   /**
-   * Provisions a new field collector account (APIs.md 2.5 / gap_api.md 1.5).
+   * Provisions a new field collector account (APIs.md 2.7).
    */
   createCollector(req: CreateCollectorRequest): Observable<CreateCollectorResponse> {
     return this.apiClient.post<CreateCollectorResponse>(API_ENDPOINTS.collector.create, req);

@@ -16,7 +16,7 @@ export class CatalogService {
   private readonly apiClient = inject(ApiClientService);
 
   /**
-   * Retrieves rewards catalog items for administrative management (PROPOSED, gap_api.md 1.9).
+   * Retrieves rewards catalog items for administrative management (PROPOSED under documented prefix).
    */
   getRewards(query?: RewardQuery): Observable<AdminRewardItem[]> {
     return this.apiClient.get<AdminRewardItem[]>(API_ENDPOINTS.reward.list, {
@@ -25,21 +25,21 @@ export class CatalogService {
   }
 
   /**
-   * Creates a new reward item in the catalog (APIs.md 2.13 / gap_api.md 1.9).
+   * Creates a new reward item in the catalog (APIs.md 6.2).
    */
   createReward(req: CreateRewardRequest): Observable<AdminRewardItem> {
     return this.apiClient.post<AdminRewardItem>(API_ENDPOINTS.reward.create, req);
   }
 
   /**
-   * Updates an existing reward catalog item (APIs.md 2.14 / gap_api.md 1.9).
+   * Updates an existing reward catalog item (APIs.md 6.3).
    */
   updateReward(rewardId: string, req: UpdateRewardRequest): Observable<AdminRewardItem> {
     return this.apiClient.put<AdminRewardItem>(API_ENDPOINTS.reward.update(rewardId), req);
   }
 
   /**
-   * Archives a reward item, taking it out of circulation (APIs.md 2.15).
+   * Archives a reward item, taking it out of circulation (APIs.md 6.4).
    */
   archiveReward(rewardId: string): Observable<ArchiveRewardResponse> {
     return this.apiClient.post<ArchiveRewardResponse>(API_ENDPOINTS.reward.archive(rewardId), {});

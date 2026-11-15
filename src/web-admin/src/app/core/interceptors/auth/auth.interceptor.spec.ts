@@ -165,40 +165,35 @@ describe('authInterceptor', () => {
     });
     authService.restoreSession();
 
-    const refreshSubject = new Subject<void>();
-    const refreshSpy = vi.spyOn(authService, 'refresh').mockImplementation(() => {
-      return refreshSubject.asObservable();
-    });
-
     http.get(`${environment.apiBaseUrl}/admin/bins`).subscribe();
     http.get(`${environment.apiBaseUrl}/admin/collectors`).subscribe();
-    http.get(`${environment.apiBaseUrl}/admin/rewards`).subscribe();
+    http.get(`${environment.apiBaseUrl}/admin/catalog`).subscribe();
 
     const r1 = httpMock.expectOne(`${environment.apiBaseUrl}/admin/bins`);
     const r2 = httpMock.expectOne(`${environment.apiBaseUrl}/admin/collectors`);
-    const r3 = httpMock.expectOne(`${environment.apiBaseUrl}/admin/rewards`);
+    const r3 = httpMock.expectOne(`${environment.apiBaseUrl}/admin/catalog`);
 
     r1.flush({}, { status: 401, statusText: 'Unauthorized' });
     r2.flush({}, { status: 401, statusText: 'Unauthorized' });
     r3.flush({}, { status: 401, statusText: 'Unauthorized' });
 
-    expect(refreshSpy).toHaveBeenCalledTimes(1);
+    // AuthService coalesces the concurrent 401 calls into exactly one HTTP refresh request
+    const refreshReq = httpMock.expectOne(`${environment.apiBaseUrl}/auth/refresh`);
+    expect(refreshReq.request.body).toEqual({ refreshToken: 'valid_refresh' });
 
-    tokenStorage.saveSession({
-      accessToken: 'new_token',
-      expiresAt: new Date(Date.now() + 3600000).toISOString(),
-      refreshToken: 'new_refresh',
-      user: { userId: 'ADM-001', displayName: 'Admin', role: UserRole.Admin },
+    refreshReq.flush({
+      success: true,
+      data: {
+        accessToken: 'new_token',
+        expiresIn: 900,
+        refreshToken: 'new_refresh',
+      },
     });
-    authService.restoreSession();
 
-    refreshSubject.next();
-    refreshSubject.complete();
-
-    // Retried requests
+    // Retried requests with newly refreshed token
     const r1Retry = httpMock.expectOne(`${environment.apiBaseUrl}/admin/bins`);
     const r2Retry = httpMock.expectOne(`${environment.apiBaseUrl}/admin/collectors`);
-    const r3Retry = httpMock.expectOne(`${environment.apiBaseUrl}/admin/rewards`);
+    const r3Retry = httpMock.expectOne(`${environment.apiBaseUrl}/admin/catalog`);
 
     expect(r1Retry.request.headers.get('Authorization')).toBe('Bearer new_token');
     expect(r2Retry.request.headers.get('Authorization')).toBe('Bearer new_token');

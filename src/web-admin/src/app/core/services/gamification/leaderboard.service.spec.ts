@@ -30,7 +30,7 @@ describe('LeaderboardService', () => {
   it('should fetch leaderboard by scope and milestone badges', () => {
     service.getLeaderboard({ scope: LeaderboardScope.Weekly }).subscribe();
     httpMock
-      .expectOne(`${environment.apiBaseUrl}/admin/leaderboard?scope=weekly`)
+      .expectOne(`${environment.apiBaseUrl}/leaderboard?scope=weekly`)
       .flush({ success: true, data: [] });
 
     service.getMilestoneBadges().subscribe();

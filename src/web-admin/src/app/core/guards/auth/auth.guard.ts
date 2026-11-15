@@ -1,24 +1,7 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router, UrlTree } from '@angular/router';
-import { catchError, finalize, map, Observable, of, shareReplay } from 'rxjs';
+import { catchError, map, Observable, of } from 'rxjs';
 import { AuthService } from '../../services/auth/auth.service';
-
-/**
- * Shared in-flight refresh observable across parallel guard evaluations.
- */
-let refreshInProgress$: Observable<void> | null = null;
-
-function performGuardRefresh(authService: AuthService): Observable<void> {
-  if (!refreshInProgress$) {
-    refreshInProgress$ = authService.refresh().pipe(
-      shareReplay({ bufferSize: 1, refCount: false }),
-      finalize(() => {
-        refreshInProgress$ = null;
-      })
-    );
-  }
-  return refreshInProgress$;
-}
 
 /**
  * Creates a UrlTree redirecting to the login page.
@@ -52,7 +35,7 @@ export const authGuard: CanActivateFn = (
 
   // 2. Access token expired but a refresh token exists
   if (authService.hasRefreshToken()) {
-    return performGuardRefresh(authService).pipe(
+    return authService.refresh().pipe(
       map(() => true),
       catchError(() => {
         // If refresh failed (401/403 or network error), redirect to login.

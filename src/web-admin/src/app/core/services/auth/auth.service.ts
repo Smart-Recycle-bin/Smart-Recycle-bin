@@ -1,5 +1,5 @@
 import { HttpContext, HttpErrorResponse } from '@angular/common/http';
-import { computed, inject, Injectable, signal } from '@angular/core';
+import { computed, inject, Injectable, OnDestroy, signal } from '@angular/core';
 import {
   catchError,
   finalize,
@@ -9,6 +9,7 @@ import {
   Observable,
   of,
   shareReplay,
+  switchMap,
   throwError,
 } from 'rxjs';
 import { ApiClientService } from '../api/api-client.service';
@@ -23,15 +24,22 @@ import {
 } from '../../models/auth/auth.dto';
 import { UserRole } from '../../models/user/user-role.enum';
 import { SKIP_AUTH, SKIP_ERROR_HANDLING } from '../../interceptors/shared/http-context-tokens';
+import { AuthError } from '../../errors/auth-error';
 
 @Injectable({
   providedIn: 'root',
 })
-export class AuthService {
+export class AuthService implements OnDestroy {
   private readonly apiClient = inject(ApiClientService);
   private readonly tokenStorage = inject(TokenStorageService);
 
   private readonly _session = signal<StoredSession | null>(null);
+
+  /**
+   * Reactive signal advanced when a session reaches its expiresAt deadline.
+   */
+  readonly now = signal<number>(Date.now());
+  private expiryTimer: ReturnType<typeof setTimeout> | null = null;
 
   /**
    * Reactive signals for current authentication state.
@@ -43,7 +51,7 @@ export class AuthService {
     if (!s || !s.accessToken || !s.expiresAt) {
       return false;
     }
-    return new Date(s.expiresAt).getTime() > Date.now();
+    return new Date(s.expiresAt).getTime() > this.now();
   });
 
   readonly hasRefreshToken = computed<boolean>(() => {
@@ -62,8 +70,40 @@ export class AuthService {
 
     // Listen to changes across browser tabs
     this.tokenStorage.storageChanges$.subscribe((syncedSession) => {
-      this._session.set(syncedSession);
+      this.setSession(syncedSession);
     });
+  }
+
+  ngOnDestroy(): void {
+    this.clearExpiryTimer();
+  }
+
+  private clearExpiryTimer(): void {
+    if (this.expiryTimer !== null) {
+      clearTimeout(this.expiryTimer);
+      this.expiryTimer = null;
+    }
+  }
+
+  private scheduleExpiryTimer(session: StoredSession | null): void {
+    this.clearExpiryTimer();
+    if (!session || !session.expiresAt) {
+      return;
+    }
+
+    const expiryTime = new Date(session.expiresAt).getTime();
+    const delay = Math.max(0, expiryTime - Date.now());
+
+    this.expiryTimer = setTimeout(() => {
+      this.now.set(Date.now());
+      this.expiryTimer = null;
+    }, delay);
+  }
+
+  private setSession(stored: StoredSession | null): void {
+    this._session.set(stored);
+    this.scheduleExpiryTimer(stored);
+    this.now.set(Date.now());
   }
 
   /**
@@ -71,14 +111,12 @@ export class AuthService {
    */
   restoreSession(): void {
     const stored = this.tokenStorage.getSession();
-    if (stored) {
-      this._session.set(stored);
-    }
+    this.setSession(stored);
   }
 
   /**
    * Authenticates administrator.
-   * If the authenticated role is not SYS_ADMIN, rejects client-side and stores nothing.
+   * If the authenticated role is not SYS_ADMIN, best-effort revokes the refresh token and throws AuthError.
    */
   login(credentials: LoginRequest): Observable<LoginResponse> {
     const context = new HttpContext().set(SKIP_AUTH, true);
@@ -86,9 +124,30 @@ export class AuthService {
     return this.apiClient
       .post<LoginResponse>(API_ENDPOINTS.auth.login, credentials, { context })
       .pipe(
-        map((response) => {
+        switchMap((response) => {
           if (response.user.role !== UserRole.Admin) {
-            throw new Error('Access denied: Only system administrators can access this portal');
+            const revoke$ = response.refreshToken
+              ? this.apiClient
+                  .post<void>(
+                    API_ENDPOINTS.auth.logout,
+                    { refreshToken: response.refreshToken },
+                    { context }
+                  )
+                  .pipe(catchError(() => of(undefined)))
+              : of(undefined);
+
+            return revoke$.pipe(
+              switchMap(() => {
+                this.clearSession();
+                return throwError(
+                  () =>
+                    new AuthError(
+                      'NOT_ADMIN',
+                      'Access denied: Only system administrators can access this portal'
+                    )
+                );
+              })
+            );
           }
 
           const expiresAt = new Date(Date.now() + response.expiresIn * 1000).toISOString();
@@ -100,9 +159,9 @@ export class AuthService {
           };
 
           this.tokenStorage.saveSession(storedSession);
-          this._session.set(storedSession);
+          this.setSession(storedSession);
 
-          return response;
+          return of(response);
         })
       );
   }
@@ -138,15 +197,15 @@ export class AuthService {
    */
   clearSession(): void {
     this.tokenStorage.clearSession();
+    this.clearExpiryTimer();
     this._session.set(null);
+    this.now.set(Date.now());
   }
 
   /**
    * Refreshes the access token using the stored refresh token.
-   * Features:
-   * 1. Single-flight: concurrent callers share ONE in-flight request.
-   * 2. Multi-tab concurrency: utilizes Web Locks API when available.
-   * 3. Error differentiation: 401/403 clears session; network failures preserve it.
+   * Single-flight with reset on the source side to ensure subscriber unsubscription
+   * never resets or duplicates the in-flight request.
    */
   refresh(): Observable<void> {
     if (this.refreshInFlight$) {
@@ -177,7 +236,7 @@ export class AuthService {
               latestSession.refreshToken &&
               latestSession.refreshToken !== tokenToRefresh
             ) {
-              this._session.set(latestSession);
+              this.setSession(latestSession);
               return;
             }
 
@@ -189,11 +248,12 @@ export class AuthService {
       return this.executeRefreshRequest(tokenToRefresh);
     };
 
+    // finalize sits on the source stream before shareReplay so downstream unsubscription does not cancel/reset
     this.refreshInFlight$ = runWithLock().pipe(
-      shareReplay({ bufferSize: 1, refCount: false }),
       finalize(() => {
         this.refreshInFlight$ = null;
-      })
+      }),
+      shareReplay({ bufferSize: 1, refCount: false })
     );
 
     return this.refreshInFlight$;
@@ -227,7 +287,7 @@ export class AuthService {
           };
 
           this.tokenStorage.saveSession(updatedSession);
-          this._session.set(updatedSession);
+          this.setSession(updatedSession);
         }),
         catchError((err: unknown) => {
           // Invalidate session on authorization or token rejection errors

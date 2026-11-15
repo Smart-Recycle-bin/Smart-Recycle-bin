@@ -12,8 +12,8 @@ import {
 } from '../../../../models/user/user.dto';
 
 export function registerUserHandlers(router: MockRouter): void {
-  // 1. Recyclers list with query filters
-  router.get('/api/v1/admin/recyclers', (ctx) => {
+  // 1. User search / Recyclers list with query filters (APIs.md 2.11)
+  router.get('/api/v1/admin/users', (ctx) => {
     const auth = requireSysAdmin(ctx.req);
     if (auth instanceof HttpErrorResponse) {
       return auth;
@@ -21,9 +21,15 @@ export function registerUserHandlers(router: MockRouter): void {
 
     const db = getMockDb();
     const statusFilter = ctx.query.get('status');
-    const searchFilter = ctx.query.get('search')?.toLowerCase();
+    const searchFilter = (ctx.query.get('query') || ctx.query.get('search'))?.toLowerCase();
+    const roleFilter = ctx.query.get('role');
 
     let result = [...db.recyclers];
+
+    if (roleFilter && roleFilter !== 'USER_CITIZEN') {
+      // If someone queried for another role, filter accordingly (mock db has citizens as recyclers)
+      result = [];
+    }
 
     if (statusFilter) {
       result = result.filter((r) => r.status.toLowerCase() === statusFilter.toLowerCase());
@@ -70,7 +76,7 @@ export function registerUserHandlers(router: MockRouter): void {
 
     const response: SuspendUserResponse = {
       userId,
-      accountStatus: AccountStatus.Suspended,
+      status: AccountStatus.Suspended,
       suspendedAt: new Date().toISOString(),
     };
 
@@ -103,7 +109,7 @@ export function registerUserHandlers(router: MockRouter): void {
 
     const response: UnsuspendUserResponse = {
       userId,
-      accountStatus: AccountStatus.Active,
+      status: AccountStatus.Active,
       unsuspendedAt: new Date().toISOString(),
     };
 

@@ -46,9 +46,23 @@ describe('AdminLayout', () => {
     expect(el.querySelector('router-outlet')).toBeTruthy();
   });
 
-  it('should read navigation sections from ADMIN_NAV_SECTIONS and user from CurrentUserService', () => {
+  it('should read navigation sections from ADMIN_NAV_SECTIONS and reflect active user state', () => {
     expect(component.navSections().length).toBeGreaterThan(0);
-    expect(component.activeUser().role).toBe('SYS_ADMIN');
+    expect(component.activeUser()).toBeNull();
+
+    authServiceSpy.session.set({
+      accessToken: 'tok',
+      expiresAt: new Date(Date.now() + 10000).toISOString(),
+      refreshToken: 'ref',
+      user: {
+        userId: 'ADM-001',
+        displayName: 'Sarah Connor',
+        role: 'SYS_ADMIN',
+      },
+    });
+    fixture.detectChanges();
+    expect(component.activeUser()?.role).toBe('SYS_ADMIN');
+    expect(component.activeUser()?.name).toBe('Sarah Connor');
   });
 
   it('should toggle sidebar collapse and mobile drawer', () => {

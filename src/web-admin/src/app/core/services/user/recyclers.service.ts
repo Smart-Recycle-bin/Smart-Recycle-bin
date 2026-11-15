@@ -17,16 +17,26 @@ export class RecyclersService {
   private readonly apiClient = inject(ApiClientService);
 
   /**
-   * Retrieves list of recycler accounts for admin moderation (PROPOSED, gap_api.md 1.4).
+   * Retrieves list of recycler accounts for admin moderation (APIs.md 2.11 / gap_api.md 1.4).
    */
   getRecyclers(query?: RecyclerQuery): Observable<RecyclerListItem[]> {
+    const params: Record<string, string> = {
+      role: 'USER_CITIZEN',
+    };
+    if (query?.search) {
+      params['query'] = query.search;
+    }
+    if (query?.status) {
+      params['status'] = query.status;
+    }
+
     return this.apiClient.get<RecyclerListItem[]>(API_ENDPOINTS.user.recyclers, {
-      params: query as Record<string, unknown>,
+      params,
     });
   }
 
   /**
-   * Suspends a recycler account with justification (APIs.md 2.7).
+   * Suspends a recycler account with justification (APIs.md 2.13).
    */
   suspendRecycler(userId: string, reason: string): Observable<SuspendUserResponse> {
     const payload: SuspendUserRequest = { reason };
@@ -34,7 +44,7 @@ export class RecyclersService {
   }
 
   /**
-   * Restores a previously suspended recycler account (APIs.md 2.8).
+   * Restores a previously suspended recycler account (APIs.md 2.14).
    */
   unsuspendRecycler(userId: string): Observable<UnsuspendUserResponse> {
     const payload: UnsuspendUserRequest = {};

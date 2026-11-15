@@ -15,8 +15,8 @@ import {
 import { AdminRewardItem } from '../../../../models/reward/reward.view-model';
 
 export function registerRewardHandlers(router: MockRouter): void {
-  // 1. List rewards with filters
-  router.get('/api/v1/admin/rewards', (ctx) => {
+  // 1. List catalog items with filters
+  router.get('/api/v1/admin/catalog', (ctx) => {
     const auth = requireSysAdmin(ctx.req);
     if (auth instanceof HttpErrorResponse) {
       return auth;
@@ -49,8 +49,8 @@ export function registerRewardHandlers(router: MockRouter): void {
     return okResponse(list);
   });
 
-  // 2. Create reward
-  router.post<CreateRewardRequest>('/api/v1/admin/rewards', (ctx) => {
+  // 2. Create catalog item (APIs.md 6.2)
+  router.post<CreateRewardRequest>('/api/v1/admin/catalog', (ctx) => {
     const auth = requireSysAdmin(ctx.req);
     if (auth instanceof HttpErrorResponse) {
       return auth;
@@ -92,19 +92,19 @@ export function registerRewardHandlers(router: MockRouter): void {
     return okResponse(newReward, 201);
   });
 
-  // 3. Update reward
-  router.put<UpdateRewardRequest>('/api/v1/admin/rewards/:rewardId', (ctx) => {
+  // 3. Update catalog item (APIs.md 6.3)
+  router.put<UpdateRewardRequest>('/api/v1/admin/catalog/:itemId', (ctx) => {
     const auth = requireSysAdmin(ctx.req);
     if (auth instanceof HttpErrorResponse) {
       return auth;
     }
 
-    const rewardId = ctx.params['rewardId'] ?? '';
+    const itemId = ctx.params['itemId'] ?? '';
     const db = getMockDb();
-    const reward = db.rewards.find((r) => r.itemId === rewardId || r.code === rewardId);
+    const reward = db.rewards.find((r) => r.itemId === itemId || r.code === itemId);
 
     if (!reward) {
-      return errorResponse(404, ApiErrorCode.NotFound, `Reward ${rewardId} not found`);
+      return errorResponse(404, ApiErrorCode.NotFound, `Reward ${itemId} not found`);
     }
 
     const body = ctx.req.body as UpdateRewardRequest | null;
@@ -146,19 +146,19 @@ export function registerRewardHandlers(router: MockRouter): void {
     return okResponse(reward);
   });
 
-  // 4. Archive reward
-  router.post('/api/v1/admin/rewards/:rewardId/archive', (ctx) => {
+  // 4. Archive catalog item (APIs.md 6.4)
+  router.post('/api/v1/admin/catalog/:itemId/archive', (ctx) => {
     const auth = requireSysAdmin(ctx.req);
     if (auth instanceof HttpErrorResponse) {
       return auth;
     }
 
-    const rewardId = ctx.params['rewardId'] ?? '';
+    const itemId = ctx.params['itemId'] ?? '';
     const db = getMockDb();
-    const reward = db.rewards.find((r) => r.itemId === rewardId || r.code === rewardId);
+    const reward = db.rewards.find((r) => r.itemId === itemId || r.code === itemId);
 
     if (!reward) {
-      return errorResponse(404, ApiErrorCode.NotFound, `Reward ${rewardId} not found`);
+      return errorResponse(404, ApiErrorCode.NotFound, `Reward ${itemId} not found`);
     }
 
     reward.status = RewardStatus.Archived;
@@ -180,7 +180,7 @@ export function registerRewardHandlers(router: MockRouter): void {
   });
 
   // 5. Upload image
-  router.post('/api/v1/admin/rewards/upload-image', (ctx) => {
+  router.post('/api/v1/admin/catalog/upload-image', (ctx) => {
     const auth = requireSysAdmin(ctx.req);
     if (auth instanceof HttpErrorResponse) {
       return auth;

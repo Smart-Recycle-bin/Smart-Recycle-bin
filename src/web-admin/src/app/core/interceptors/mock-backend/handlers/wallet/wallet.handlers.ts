@@ -47,8 +47,8 @@ export function registerWalletHandlers(router: MockRouter): void {
     return okResponse(list);
   });
 
-  // 2. Manual points adjustment
-  router.post<ManualAdjustmentRequest>('/api/v1/admin/ledger/adjust', (ctx) => {
+  // 2. Manual points adjustment (APIs.md 5.4)
+  router.post<ManualAdjustmentRequest>('/api/v1/admin/ledger/adjustments', (ctx) => {
     const auth = requireSysAdmin(ctx.req);
     if (auth instanceof HttpErrorResponse) {
       return auth;
@@ -102,10 +102,9 @@ export function registerWalletHandlers(router: MockRouter): void {
       transactionId,
       userId: body.userId,
       pointsDelta,
-      newAvailablePoints: newBalance,
-      adjustedAt: new Date().toISOString(),
+      balanceAfter: newBalance,
     };
 
-    return okResponse(response);
+    return okResponse(response, 201);
   });
 }

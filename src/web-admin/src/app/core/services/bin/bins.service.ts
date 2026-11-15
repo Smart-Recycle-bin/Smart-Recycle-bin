@@ -26,14 +26,14 @@ export class BinsService {
   }
 
   /**
-   * Registers a new smart bin hardware node (APIs.md 2.11).
+   * Registers a new smart bin hardware node (APIs.md 7.1).
    */
   registerBin(req: RegisterBinRequest): Observable<RegisterBinResponse> {
     return this.apiClient.post<RegisterBinResponse>(API_ENDPOINTS.bin.register, req);
   }
 
   /**
-   * Assigns a field collector to an existing smart bin (APIs.md 2.12).
+   * Assigns a field collector to an existing smart bin (APIs.md 7.3).
    */
   assignCollector(binId: string, req: AssignBinRequest): Observable<AssignBinResponse> {
     return this.apiClient.post<AssignBinResponse>(API_ENDPOINTS.bin.assign(binId), req);

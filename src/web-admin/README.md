@@ -1,59 +1,54 @@
-# MyApp
+# EcoBin System Admin Dashboard (`web-admin`)
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 22.1.5.
+Central management portal for the EcoBin smart waste collection and recycling ecosystem. Built with Angular 22 standalone components, Signals, OnPush change detection, Tailwind CSS v4, and Vitest.
 
-## Development server
+---
 
-To start a local development server, run:
+## Run & Development Guide
+
+### 1. Development with In-Memory Mock Backend (Default)
+Runs locally with zero external backend dependencies. The in-memory mock engine intercepts all `/api/v1` traffic with realistic seeds, simulated 400ms latency, and JWT refresh token rotation:
 
 ```bash
+npm start
+# or
 ng serve
 ```
+Navigate your browser to `http://localhost:4200/`. Seeded admin credentials:
+- `admin@ecobin.eg` / `password123` (Laila Hamdy, System Admin)
+- `amr.shawky@ecobin.eg` / `password123` (Amr Shawky, System Admin)
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+*Note: The mock backend validates email format (returning `400 VALIDATION_ERROR` for malformed emails) and authenticates against seeded admins (returning `401 INVALID_CREDENTIALS` for unknown accounts or incorrect passwords).*
 
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+### 2. Development against Real Backend API
+To develop against a live backend service running locally (e.g. at `http://localhost:5000`), update `proxy.conf.json` if needed with your backend host, set `useMockBackend: false` in `src/environments/environment.development.ts`, and run:
 
 ```bash
-ng generate component component-name
+ng serve --proxy-config proxy.conf.json
 ```
+All calls to `/api` are automatically proxied to the configured backend target.
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
-
-```bash
-ng generate --help
-```
-
-## Building
-
-To build the project run:
+### 3. Production Build
+Generates optimized, AOT-compiled production artifacts under `dist/ecobin-admin/browser`. Gated by `ngDevMode`, the mock backend engine and all mock data seeds are completely tree-shaken from production bundles:
 
 ```bash
+npm run build
+# or
 ng build
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
+### 4. Verify Production Bundle (Zero Mock Leaks)
+Runs a production build and strictly verifies that no mock credentials (`wrongpass`, `mock_jwt`), mock handlers, or sample identities (`Laila Hamdy`) leak into production JavaScript chunks:
 
 ```bash
+npm run check:prod-bundle
+```
+
+### 5. Running Unit Tests
+Executes the comprehensive Vitest test suite covering domain models, services, interceptors, guards, and components:
+
+```bash
+npm test
+# or
 ng test
 ```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.

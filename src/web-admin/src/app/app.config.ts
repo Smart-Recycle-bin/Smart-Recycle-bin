@@ -3,8 +3,11 @@ import { provideRouter } from '@angular/router';
 import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
 import { routes } from './app.routes';
 import { AuthService } from './core/services/auth/auth.service';
-import { authInterceptor, errorInterceptor, mockBackendInterceptor } from './core/interceptors';
+import { authInterceptor, errorInterceptor } from './core/interceptors';
+import { mockBackendInterceptor } from './core/interceptors/mock-backend/engine/mock-backend.interceptor';
 import { environment } from '../environments/environment';
+
+declare const ngDevMode: boolean | undefined;
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -15,7 +18,9 @@ export const appConfig: ApplicationConfig = {
       withInterceptors([
         errorInterceptor,
         authInterceptor,
-        ...(environment.useMockBackend ? [mockBackendInterceptor] : []),
+        ...((typeof ngDevMode === 'undefined' || ngDevMode) && environment.useMockBackend
+          ? [mockBackendInterceptor]
+          : []),
       ])
     ),
     provideAppInitializer(() => {

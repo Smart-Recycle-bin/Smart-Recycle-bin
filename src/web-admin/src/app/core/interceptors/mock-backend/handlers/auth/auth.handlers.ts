@@ -6,12 +6,18 @@ import { LoginRequest, LoginResponse, RefreshTokenRequest } from '../../../../mo
 import { ApiErrorCode } from '../../../../models/common/api-error-code.enum';
 import { okResponse, errorResponse } from '../handler-utils';
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export function registerAuthHandlers(router: MockRouter): void {
   // 1. Login
   router.post<LoginRequest>('/api/v1/auth/login', (ctx) => {
     const { email, password } = (ctx.req.body as LoginRequest) || {};
     if (!email || !password) {
       return errorResponse(400, ApiErrorCode.ValidationError, 'Email and password are required');
+    }
+
+    if (!EMAIL_REGEX.test(email)) {
+      return errorResponse(400, ApiErrorCode.ValidationError, 'Invalid email format');
     }
 
     const db = getMockDb();
@@ -28,10 +34,11 @@ export function registerAuthHandlers(router: MockRouter): void {
     }
 
     const ttlSeconds = environment.mockAccessTokenTtlSeconds || 900;
+    const refreshTtlDays = environment.mockRefreshTokenTtlDays || 7;
     const accessToken = generateMockAccessToken(adminAccount.user, ttlSeconds);
     const refreshToken = generateMockRefreshToken();
     const familyId = `fam_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
-    const expiresAt = new Date(Date.now() + 7 * 24 * 3600 * 1000).toISOString();
+    const expiresAt = new Date(Date.now() + refreshTtlDays * 24 * 3600 * 1000).toISOString();
 
     db.refreshTokens.push({
       token: refreshToken,
@@ -117,9 +124,10 @@ export function registerAuthHandlers(router: MockRouter): void {
     }
 
     const ttlSeconds = environment.mockAccessTokenTtlSeconds || 900;
+    const refreshTtlDays = environment.mockRefreshTokenTtlDays || 7;
     const newAccessToken = generateMockAccessToken(adminAccount.user, ttlSeconds);
     const newRefreshToken = generateMockRefreshToken();
-    const newExpiresAt = new Date(Date.now() + 7 * 24 * 3600 * 1000).toISOString();
+    const newExpiresAt = new Date(Date.now() + refreshTtlDays * 24 * 3600 * 1000).toISOString();
 
     db.refreshTokens.push({
       token: newRefreshToken,

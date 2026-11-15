@@ -1,0 +1,22 @@
+@if (loading()) {
+  <div class="resource-state-loading">
+    <app-skeleton
+      [count]="skeletonCount()"
+      [height]="skeletonHeight()"
+      [variant]="skeletonVariant()"
+    />
+  </div>
+} @else if (hasError()) {
+  <app-error-state
+    [technicalDetails]="technicalDetails()"
+    (retryClicked)="handleRetry()"
+  />
+} @else if (empty()) {
+  <app-empty-state
+    [title]="emptyTitle()"
+    [description]="emptyDescription()"
+    [icon]="emptyIcon()"
+  />
+} @else {
+  <ng-content />
+}

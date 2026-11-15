@@ -1,10 +1,11 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { AuthService } from '../auth/auth.service';
+import { initials } from '../../../shared/utils/format';
 
 export interface CurrentUser {
   id: string;
   name: string;
-  email: string;
+  email?: string;
   role: string;
   avatarUrl?: string;
   initials?: string;
@@ -18,9 +19,9 @@ export class CurrentUserService {
   private readonly manualOverride = signal<CurrentUser | null>(null);
 
   /**
-   * Derived current user signal reflecting the authenticated session, with support for manual overrides.
+   * Derived current user signal reflecting the authenticated session, returning null when no session exists.
    */
-  readonly user = computed<CurrentUser>(() => {
+  readonly user = computed<CurrentUser | null>(() => {
     const override = this.manualOverride();
     if (override) {
       return override;
@@ -29,32 +30,18 @@ export class CurrentUserService {
     const session = this.authService.session();
     if (session?.user) {
       const name = session.user.displayName;
-      const initials = name
-        .split(' ')
-        .map((part) => part[0])
-        .join('')
-        .toUpperCase()
-        .slice(0, 2);
-
       return {
         id: session.user.userId,
-        name: session.user.displayName,
-        email: 'admin@ecobin.eg',
+        name,
         role: session.user.role,
-        initials,
+        initials: initials(name),
       };
     }
 
-    return {
-      id: 'ADM-001',
-      name: 'Laila Hamdy',
-      email: 'admin@ecobin.eg',
-      role: 'SYS_ADMIN',
-      initials: 'LH',
-    };
+    return null;
   });
 
-  setUser(user: CurrentUser): void {
+  setUser(user: CurrentUser | null): void {
     this.manualOverride.set(user);
   }
 }

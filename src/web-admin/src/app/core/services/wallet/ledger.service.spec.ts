@@ -40,9 +40,9 @@ describe('LedgerService', () => {
     };
     service.adjustPoints(payload).subscribe();
 
-    const req = httpMock.expectOne(`${environment.apiBaseUrl}/admin/ledger/adjust`);
+    const req = httpMock.expectOne(`${environment.apiBaseUrl}/admin/ledger/adjustments`);
     expect(req.request.method).toBe('POST');
     expect(req.request.body).toEqual(payload);
-    req.flush({ success: true, data: { transactionId: 'tx_01', newBalance: 0 } });
+    req.flush({ success: true, data: { transactionId: 'tx_01', userId: 'U-10063', pointsDelta: -420, balanceAfter: 580 } });
   });
 });

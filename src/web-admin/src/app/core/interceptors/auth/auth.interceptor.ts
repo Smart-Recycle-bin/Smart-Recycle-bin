@@ -1,27 +1,10 @@
 import { HttpErrorResponse, HttpInterceptorFn, HttpRequest } from '@angular/common/http';
 import { inject } from '@angular/core';
-import { catchError, finalize, Observable, shareReplay, switchMap, throwError } from 'rxjs';
+import { catchError, switchMap, throwError } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { AuthService } from '../../services/auth/auth.service';
 import { API_ENDPOINTS } from '../../services/api/api-endpoints';
 import { RETRIED, SKIP_AUTH } from '../shared/http-context-tokens';
-
-/**
- * Shared in-flight refresh observable to coalesce concurrent 401 handling across requests.
- */
-let refreshInProgress$: Observable<void> | null = null;
-
-function performRefresh(authService: AuthService): Observable<void> {
-  if (!refreshInProgress$) {
-    refreshInProgress$ = authService.refresh().pipe(
-      shareReplay({ bufferSize: 1, refCount: false }),
-      finalize(() => {
-        refreshInProgress$ = null;
-      })
-    );
-  }
-  return refreshInProgress$;
-}
 
 /**
  * Checks whether a request targets the backend API base URL.
@@ -79,8 +62,8 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
         !req.context.get(SKIP_AUTH) &&
         authService.hasRefreshToken()
       ) {
-        // Trigger single-flight refresh and retry original request once
-        return performRefresh(authService).pipe(
+        // Trigger single-flight refresh directly from AuthService and retry original request once
+        return authService.refresh().pipe(
           switchMap(() => {
             const newAccessToken = authService.accessToken();
             const retriedReq = req.clone({

@@ -2,6 +2,8 @@ import { Routes } from '@angular/router';
 import { authGuard, guestGuard, roleGuard } from './core/guards';
 import { UserRole } from './core/models/user/user-role.enum';
 
+declare const ngDevMode: boolean | undefined;
+
 export const routes: Routes = [
   {
     path: '',
@@ -27,13 +29,17 @@ export const routes: Routes = [
       },
     ],
   },
-  {
-    path: 'dev/components',
-    loadComponent: () =>
-      import('./features/dev/components-showcase/components-showcase').then(
-        (m) => m.ComponentsShowcase
-      ),
-  },
+  ...((typeof ngDevMode === 'undefined' || ngDevMode)
+    ? [
+        {
+          path: 'dev/components',
+          loadComponent: () =>
+            import('./features/dev/components-showcase/components-showcase').then(
+              (m) => m.ComponentsShowcase
+            ),
+        },
+      ]
+    : []),
   {
     path: '',
     canActivate: [authGuard, roleGuard],

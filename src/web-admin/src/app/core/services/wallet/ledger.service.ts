@@ -15,7 +15,7 @@ export class LedgerService {
   private readonly apiClient = inject(ApiClientService);
 
   /**
-   * Retrieves global immutable ledger transactions with filtering (PROPOSED, gap_api.md 1.8).
+   * Retrieves global immutable ledger transactions with filtering (APIs.md 5.3).
    */
   getLedger(query?: LedgerQuery): Observable<LedgerRow[]>{
     return this.apiClient.get<LedgerRow[]>(API_ENDPOINTS.wallet.ledger, {
@@ -24,7 +24,7 @@ export class LedgerService {
   }
 
   /**
-   * Applies manual administrative points adjustment to user balance (APIs.md 2.9).
+   * Applies manual administrative points adjustment to user balance (APIs.md 5.4).
    */
   adjustPoints(req: ManualAdjustmentRequest): Observable<ManualAdjustmentResponse> {
     return this.apiClient.post<ManualAdjustmentResponse>(API_ENDPOINTS.wallet.adjust, req);

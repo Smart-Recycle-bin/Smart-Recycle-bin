@@ -25,7 +25,7 @@ describe('AnalyticsService', () => {
   it('should query overview data with period parameter', () => {
     service.getOverview({ period: AnalyticsPeriod.SevenDays }).subscribe();
 
-    const req = httpMock.expectOne(`${environment.apiBaseUrl}/admin/analytics/overview?period=7d`);
+    const req = httpMock.expectOne(`${environment.apiBaseUrl}/admin/analytics?period=7d`);
     expect(req.request.method).toBe('GET');
     req.flush({ success: true, data: {} });
   });

@@ -1,12 +1,14 @@
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { vi } from 'vitest';
 import { AuthService } from './auth.service';
 import { TokenStorageService } from './token-storage.service';
 import { ApiClientService } from '../api/api-client.service';
 import { UserRole } from '../../models/user/user-role.enum';
 import { LoginResponse, StoredSession } from '../../models/auth/auth.dto';
 import { environment } from '../../../../environments/environment';
+import { AuthError } from '../../errors/auth-error';
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -43,6 +45,7 @@ describe('AuthService', () => {
   });
 
   afterEach(() => {
+    vi.useRealTimers();
     httpMock.verify();
     localStorage.removeItem(environment.sessionStorageKey);
   });
@@ -64,25 +67,33 @@ describe('AuthService', () => {
     expect(stored?.accessToken).toBe('access_adm_1');
   });
 
-  it('should reject non-admin role and store nothing', () => {
-    let errorCaught: Error | null = null;
+  it('should reject non-admin login, revoke refresh token via logout, and throw typed AuthError', () => {
+    let errorCaught: unknown = null;
     service.login({ email: 'citizen@ecobin.eg', password: 'password123' }).subscribe({
       next: () => expect.unreachable('Should have rejected non-admin'),
-      error: (err: Error) => {
+      error: (err: unknown) => {
         errorCaught = err;
       },
     });
 
-    const req = httpMock.expectOne(`${environment.apiBaseUrl}/auth/login`);
-    req.flush({
+    const loginReq = httpMock.expectOne(`${environment.apiBaseUrl}/auth/login`);
+    loginReq.flush({
       success: true,
       data: {
         ...validAdminLoginResponse,
+        refreshToken: 'leaked_refresh_token',
         user: { ...validAdminLoginResponse.user, role: UserRole.Citizen },
       },
     });
 
-    expect(errorCaught).toBeTruthy();
+    // Must best-effort revoke the issued refresh token
+    const logoutReq = httpMock.expectOne(`${environment.apiBaseUrl}/auth/logout`);
+    expect(logoutReq.request.body).toEqual({ refreshToken: 'leaked_refresh_token' });
+    logoutReq.flush({ success: true, data: { message: 'Logged out successfully' } });
+
+    expect(errorCaught).toBeInstanceOf(AuthError);
+    const authErr = errorCaught as AuthError;
+    expect(authErr.code).toBe('NOT_ADMIN');
     expect(service.isAuthenticated()).toBe(false);
     expect(tokenStorage.getSession()).toBeNull();
   });
@@ -104,6 +115,36 @@ describe('AuthService', () => {
 
     expect(service.accessToken()).toBe('expired_token');
     expect(service.isAuthenticated()).toBe(false);
+  });
+
+  it('should reactively transition isAuthenticated to false when session expiresAt is reached', () => {
+    vi.useFakeTimers();
+    try {
+      const futureSession: StoredSession = {
+        accessToken: 'valid_access_token',
+        expiresAt: new Date(Date.now() + 2000).toISOString(),
+        refreshToken: 'valid_refresh',
+        user: {
+          userId: 'ADM-001',
+          displayName: 'Laila Hamdy',
+          role: UserRole.Admin,
+        },
+      };
+      tokenStorage.saveSession(futureSession);
+      service.restoreSession();
+
+      expect(service.isAuthenticated()).toBe(true);
+
+      // Advance time by 1000ms (still valid)
+      vi.advanceTimersByTime(1000);
+      expect(service.isAuthenticated()).toBe(true);
+
+      // Advance time past expiresAt
+      vi.advanceTimersByTime(1500);
+      expect(service.isAuthenticated()).toBe(false);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('should send refreshToken on logout and clear session locally even when request errors', () => {
@@ -193,6 +234,44 @@ describe('AuthService', () => {
         refreshToken: 'refresh_shared',
       },
     });
+  });
+
+  it('should maintain single-flight refresh when first subscriber unsubscribes mid-flight', () => {
+    tokenStorage.saveSession({
+      accessToken: 'old_tok',
+      expiresAt: new Date(Date.now() - 1000).toISOString(),
+      refreshToken: 'single_use_refresh_token',
+      user: { userId: 'ADM-001', displayName: 'Admin', role: UserRole.Admin },
+    });
+    service.restoreSession();
+
+    // Subscriber 1 starts refresh then unsubscribes mid-flight
+    const sub1 = service.refresh().subscribe();
+    sub1.unsubscribe();
+
+    // Subscriber 2 joins while request is in flight
+    let sub2Completed = false;
+    service.refresh().subscribe({
+      next: () => {
+        sub2Completed = true;
+      },
+    });
+
+    // Exactly ONE HTTP request should have been dispatched
+    const reqs = httpMock.match(`${environment.apiBaseUrl}/auth/refresh`);
+    expect(reqs.length).toBe(1);
+
+    reqs[0]!.flush({
+      success: true,
+      data: {
+        accessToken: 'refreshed_access',
+        expiresIn: 900,
+        refreshToken: 'refreshed_refresh',
+      },
+    });
+
+    expect(sub2Completed).toBe(true);
+    expect(service.accessToken()).toBe('refreshed_access');
   });
 
   it('should clear session on 401/403 refresh failure', () => {

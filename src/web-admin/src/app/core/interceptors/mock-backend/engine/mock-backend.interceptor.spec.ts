@@ -11,8 +11,8 @@ import { AuditActionType } from '../../../models/audit/audit-action-type.enum';
 import { ApiResponse } from '../../../models/common/api-response.dto';
 import { LoginResponse } from '../../../models/auth/auth.dto';
 import { BinListItem } from '../../../models/bin/bin.view-model';
-
 import { SuspendUserResponse } from '../../../models/user/user.dto';
+import { environment } from '../../../../../environments/environment';
 
 describe('mockBackendInterceptor', () => {
   let http: HttpClient;
@@ -35,7 +35,7 @@ describe('mockBackendInterceptor', () => {
     resetSharedMockRouter();
   });
 
-  it('authenticates valid admin login and issues tokens', async () => {
+  it('authenticates valid admin login and issues tokens with environment TTL', async () => {
     const res = await new Promise<ApiResponse<LoginResponse>>((resolve, reject) => {
       http
         .post<ApiResponse<LoginResponse>>('/api/v1/auth/login', {
@@ -53,6 +53,31 @@ describe('mockBackendInterceptor', () => {
     const db = getMockDb();
     expect(db.refreshTokens.length).toBe(1);
     expect(db.refreshTokens[0]?.token).toBe(res.data.refreshToken);
+
+    const expectedExpiryMs = Date.now() + environment.mockRefreshTokenTtlDays * 24 * 3600 * 1000;
+    const actualExpiryMs = new Date(db.refreshTokens[0]?.expiresAt ?? '').getTime();
+    expect(Math.abs(actualExpiryMs - expectedExpiryMs)).toBeLessThan(5000);
+  });
+
+  it('rejects malformed email with 400 VALIDATION_ERROR', async () => {
+    try {
+      await new Promise((resolve, reject) => {
+        http
+          .post('/api/v1/auth/login', {
+            email: 'not-an-email',
+            password: 'password123',
+          })
+          .subscribe({ next: resolve, error: reject });
+      });
+      expect.unreachable('Should fail with 400');
+    } catch (err: unknown) {
+      expect(err).toBeInstanceOf(HttpErrorResponse);
+      const httpErr = err as HttpErrorResponse;
+      expect(httpErr.status).toBe(400);
+      expect((httpErr.error as { error: { code: string } }).error.code).toBe(
+        ApiErrorCode.ValidationError
+      );
+    }
   });
 
   it('rejects invalid login credentials with 401 INVALID_CREDENTIALS', async () => {
@@ -108,7 +133,7 @@ describe('mockBackendInterceptor', () => {
     expect(res.data.length).toBe(23);
   });
 
-  it('rotates refresh token and detects reuse to revoke family', async () => {
+  it('rotates refresh token and detects reuse to revoke family using environment TTL', async () => {
     // 1. Initial Login
     const loginRes = await new Promise<ApiResponse<LoginResponse>>((resolve, reject) => {
       http
@@ -132,6 +157,13 @@ describe('mockBackendInterceptor', () => {
     const rt2 = refreshRes1.data.refreshToken;
     expect(rt2).not.toBe(rt1);
 
+    const db = getMockDb();
+    const rt2Record = db.refreshTokens.find((r) => r.token === rt2);
+    expect(rt2Record).toBeDefined();
+    const expectedExpiryMs = Date.now() + environment.mockRefreshTokenTtlDays * 24 * 3600 * 1000;
+    const actualExpiryMs = new Date(rt2Record?.expiresAt ?? '').getTime();
+    expect(Math.abs(actualExpiryMs - expectedExpiryMs)).toBeLessThan(5000);
+
     // 3. Attacker attempts to reuse rt1
     try {
       await new Promise((resolve, reject) => {
@@ -150,8 +182,6 @@ describe('mockBackendInterceptor', () => {
     }
 
     // 4. Verify rt2 has also been revoked as part of the family
-    const db = getMockDb();
-    const rt2Record = db.refreshTokens.find((r) => r.token === rt2);
     expect(rt2Record?.revokedAt).not.toBeNull();
   });
 
@@ -176,7 +206,7 @@ describe('mockBackendInterceptor', () => {
     );
 
     expect(res.success).toBe(true);
-    expect(res.data.accountStatus).toBe(AccountStatus.Suspended);
+    expect(res.data.status).toBe(AccountStatus.Suspended);
 
     const db = getMockDb();
     expect(db.auditLogs.length).toBe(initialAuditCount + 1);

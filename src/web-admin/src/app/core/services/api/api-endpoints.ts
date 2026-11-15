@@ -5,27 +5,27 @@
  */
 export const API_ENDPOINTS = {
   auth: {
-    // APIs.md 2.2 / gap_api.md 1.1: Sys Admin login support
+    // APIs.md 2.1: Sys Admin login
     login: '/auth/login',
-    // APIs.md 2.3 / gap_api.md 1.1: Sys Admin logout & token revocation
+    // APIs.md 2.3: Sys Admin logout & token revocation
     logout: '/auth/logout',
-    // PROPOSED (gap_api.md 1.1): Token refresh with single-use rotation
+    // APIs.md 2.2: Token refresh with single-use rotation
     refresh: '/auth/refresh',
     // APIs.md 2.4: Password reset trigger
     forgotPassword: '/auth/forgot-password',
   },
   user: {
-    // PROPOSED (gap_api.md 1.4): Recycler moderation list
-    recyclers: '/admin/recyclers',
-    // APIs.md 2.7: Suspend user account
+    // APIs.md 2.11 / gap_api.md 1.4: User search filtered for recyclers
+    recyclers: '/admin/users',
+    // APIs.md 2.13: Suspend user account
     suspend: (userId: string) => `/admin/users/${userId}/suspend`,
-    // APIs.md 2.8: Unsuspend user account
+    // APIs.md 2.14: Unsuspend user account
     unsuspend: (userId: string) => `/admin/users/${userId}/unsuspend`,
   },
   collector: {
     // PROPOSED (gap_api.md 1.5): Collectors list
     list: '/admin/collectors',
-    // APIs.md 2.5 / gap_api.md 1.5: Provision collector
+    // APIs.md 2.7: Provision collector
     create: '/admin/collectors',
     // PROPOSED (gap_api.md 1.5): Update collector
     update: (collectorId: string) => `/admin/collectors/${collectorId}`,
@@ -37,14 +37,14 @@ export const API_ENDPOINTS = {
   bin: {
     // PROPOSED (gap_api.md 1.3): Admin smart bins fleet list and map data
     list: '/admin/bins',
-    // APIs.md 2.11: Register new smart bin
+    // APIs.md 7.1: Register new smart bin
     register: '/admin/bins',
-    // APIs.md 2.12: Assign collector to smart bin
-    assign: (binId: string) => `/admin/bins/${binId}/assign`,
+    // APIs.md 7.3: Assign collector to smart bin
+    assign: (binId: string) => `/admin/bins/${binId}/assignment`,
   },
   analytics: {
-    // PROPOSED (gap_api.md 1.2): Operational overview dashboard KPIs & series
-    overview: '/admin/analytics/overview',
+    // APIs.md 7.9: Operational analytics overview KPIs
+    overview: '/admin/analytics',
   },
   inspection: {
     // PROPOSED (gap_api.md 1.6): Retraining dataset metrics & queue counters
@@ -69,31 +69,31 @@ export const API_ENDPOINTS = {
     recent: '/admin/survey-qa/recent',
   },
   wallet: {
-    // PROPOSED (gap_api.md 1.8): Global immutable financial ledger
+    // APIs.md 5.3: Global immutable financial ledger
     ledger: '/admin/ledger',
-    // APIs.md 2.9: Manual points adjustment
-    adjust: '/admin/ledger/adjust',
+    // APIs.md 5.4: Manual points adjustment
+    adjust: '/admin/ledger/adjustments',
   },
   reward: {
     // PROPOSED (gap_api.md 1.9): Admin rewards catalog list
-    list: '/admin/rewards',
-    // APIs.md 2.13 / gap_api.md 1.9: Create reward item
-    create: '/admin/rewards',
-    // APIs.md 2.14 / gap_api.md 1.9: Update reward item
-    update: (rewardId: string) => `/admin/rewards/${rewardId}`,
-    // APIs.md 2.15: Archive reward item
-    archive: (rewardId: string) => `/admin/rewards/${rewardId}/archive`,
+    list: '/admin/catalog',
+    // APIs.md 6.2: Create reward item
+    create: '/admin/catalog',
+    // APIs.md 6.3: Update reward item
+    update: (itemId: string) => `/admin/catalog/${itemId}`,
+    // APIs.md 6.4: Archive reward item
+    archive: (itemId: string) => `/admin/catalog/${itemId}/archive`,
     // PROPOSED (gap_api.md 1.9): Upload reward image asset
-    uploadImage: '/admin/rewards/upload-image',
+    uploadImage: '/admin/catalog/upload-image',
   },
   gamification: {
-    // PROPOSED (gap_api.md 1.10): Leaderboard ranking by scope
-    leaderboard: '/admin/leaderboard',
+    // APIs.md 5.5: Leaderboard ranking by scope
+    leaderboard: '/leaderboard',
     // PROPOSED (gap_api.md 1.10): Milestone badges catalog
     badges: '/admin/badges',
   },
   audit: {
-    // PROPOSED (gap_api.md 1.11): Administrative audit trail
+    // APIs.md 7.8: Administrative audit trail
     list: '/admin/audit-logs',
   },
   notification: {

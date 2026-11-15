@@ -15,7 +15,7 @@ export class LeaderboardService {
   private readonly apiClient = inject(ApiClientService);
 
   /**
-   * Retrieves user leaderboard rankings for the specified scope (PROPOSED, gap_api.md 1.10).
+   * Retrieves user leaderboard rankings for the specified scope (APIs.md 5.5).
    */
   getLeaderboard(query?: LeaderboardQuery): Observable<LeaderboardRow[]> {
     return this.apiClient.get<LeaderboardRow[]>(API_ENDPOINTS.gamification.leaderboard, {

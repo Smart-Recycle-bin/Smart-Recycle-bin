@@ -26,7 +26,7 @@ describe('RecyclersService', () => {
     service.getRecyclers({ search: 'Nour', status: AccountStatus.Active }).subscribe();
 
     const req = httpMock.expectOne(
-      `${environment.apiBaseUrl}/admin/recyclers?search=Nour&status=active`
+      `${environment.apiBaseUrl}/admin/users?role=USER_CITIZEN&query=Nour&status=active`
     );
     expect(req.request.method).toBe('GET');
     req.flush({ success: true, data: [] });

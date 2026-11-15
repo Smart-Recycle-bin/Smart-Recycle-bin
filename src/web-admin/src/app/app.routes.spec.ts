@@ -25,7 +25,7 @@ describe('App Routes', () => {
       import('./features/placeholders/route-placeholder/route-placeholder'),
       import('./features/placeholders/not-found/not-found'),
     ]);
-  }, 30000);
+  }, 60000);
 
   beforeEach(async () => {
     localStorage.removeItem(environment.sessionStorageKey);

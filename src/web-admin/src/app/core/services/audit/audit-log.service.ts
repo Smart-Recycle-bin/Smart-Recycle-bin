@@ -11,7 +11,7 @@ export class AuditLogService {
   private readonly apiClient = inject(ApiClientService);
 
   /**
-   * Retrieves administrative audit log records with filtering (PROPOSED, gap_api.md 1.11).
+   * Retrieves administrative audit log records with filtering (APIs.md 7.8).
    */
   getAuditLogs(query?: AuditLogQuery): Observable<AuditLogRow[]> {
     return this.apiClient.get<AuditLogRow[]>(API_ENDPOINTS.audit.list, {

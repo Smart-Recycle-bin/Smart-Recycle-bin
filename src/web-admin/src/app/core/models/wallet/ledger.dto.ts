@@ -19,6 +19,5 @@ export interface ManualAdjustmentResponse {
   transactionId: Id;
   userId: Id;
   pointsDelta: number;
-  newAvailablePoints: number;
-  adjustedAt: string; // ISO 8601 string
+  balanceAfter: number;
 }

@@ -26,7 +26,7 @@ describe('CatalogService', () => {
   it('should query rewards with filters', () => {
     service.getRewards({ category: RewardCategory.Groceries }).subscribe();
 
-    const req = httpMock.expectOne(`${environment.apiBaseUrl}/admin/rewards?category=groceries`);
+    const req = httpMock.expectOne(`${environment.apiBaseUrl}/admin/catalog?category=groceries`);
     expect(req.request.method).toBe('GET');
     req.flush({ success: true, data: [] });
   });
@@ -41,17 +41,17 @@ describe('CatalogService', () => {
     };
     service.createReward(newReward).subscribe();
     httpMock
-      .expectOne(`${environment.apiBaseUrl}/admin/rewards`)
+      .expectOne(`${environment.apiBaseUrl}/admin/catalog`)
       .flush({ success: true, data: { itemId: 'RWD-009' } });
 
     service.updateReward('RWD-001', { pointsCost: 1600 }).subscribe();
     httpMock
-      .expectOne(`${environment.apiBaseUrl}/admin/rewards/RWD-001`)
+      .expectOne(`${environment.apiBaseUrl}/admin/catalog/RWD-001`)
       .flush({ success: true, data: { itemId: 'RWD-001' } });
 
     service.archiveReward('RWD-001').subscribe();
     httpMock
-      .expectOne(`${environment.apiBaseUrl}/admin/rewards/RWD-001/archive`)
+      .expectOne(`${environment.apiBaseUrl}/admin/catalog/RWD-001/archive`)
       .flush({ success: true, data: { rewardId: 'RWD-001', status: RewardStatus.Archived } });
   });
 
@@ -59,7 +59,7 @@ describe('CatalogService', () => {
     const file = new File(['content'], 'test.png', { type: 'image/png' });
     service.uploadImage(file).subscribe();
 
-    const req = httpMock.expectOne(`${environment.apiBaseUrl}/admin/rewards/upload-image`);
+    const req = httpMock.expectOne(`${environment.apiBaseUrl}/admin/catalog/upload-image`);
     expect(req.request.method).toBe('POST');
     req.flush({ success: true, data: { imageUrl: 'https://example.com/test.png' } });
   });

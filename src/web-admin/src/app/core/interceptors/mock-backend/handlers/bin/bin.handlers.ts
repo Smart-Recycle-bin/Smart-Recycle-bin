@@ -54,7 +54,7 @@ export function registerBinHandlers(router: MockRouter): void {
     return okResponse(list);
   });
 
-  // 2. Register smart bin
+  // 2. Register smart bin (APIs.md 7.1)
   router.post<RegisterBinRequest>('/api/v1/admin/bins', (ctx) => {
     const auth = requireSysAdmin(ctx.req);
     if (auth instanceof HttpErrorResponse) {
@@ -62,8 +62,8 @@ export function registerBinHandlers(router: MockRouter): void {
     }
 
     const body = ctx.req.body as RegisterBinRequest | null;
-    if (!body?.serialNumber || body.latitude === undefined || body.longitude === undefined) {
-      return errorResponse(400, ApiErrorCode.ValidationError, 'Serial number and coordinates are required');
+    if (!body?.deviceSerial || body?.latitude === undefined || body?.longitude === undefined) {
+      return errorResponse(400, ApiErrorCode.ValidationError, 'Device serial and coordinates are required');
     }
 
     const db = getMockDb();
@@ -71,7 +71,7 @@ export function registerBinHandlers(router: MockRouter): void {
 
     const newBin: BinListItem = {
       binId,
-      name: `Smart Bin ${body.serialNumber}`,
+      name: `Smart Bin ${body.deviceSerial}`,
       area: body.district || 'Downtown',
       district: body.district || 'Cairo',
       region: 'Greater Cairo',
@@ -87,23 +87,22 @@ export function registerBinHandlers(router: MockRouter): void {
     appendAuditLog(
       AuditActionType.FleetUpdate,
       binId,
-      `New bin registered: ${body.serialNumber} in ${body.district || 'Downtown'}`,
+      `New bin registered: ${body.deviceSerial} in ${body.district || 'Downtown'}`,
       auth.user
     );
 
     const response: RegisterBinResponse = {
       binId,
-      serialNumber: body.serialNumber,
-      qrCode: `https://ecobin.local/qr/${binId}`,
+      deviceSerial: body.deviceSerial,
       status: BinStatus.Available,
-      createdAt: new Date().toISOString(),
+      fillLevel: 0,
     };
 
     return okResponse(response, 201);
   });
 
-  // 3. Assign collector to bin
-  router.post<AssignBinRequest>('/api/v1/admin/bins/:binId/assign', (ctx) => {
+  // 3. Assign collector to bin (APIs.md 7.3)
+  router.post<AssignBinRequest>('/api/v1/admin/bins/:binId/assignment', (ctx) => {
     const auth = requireSysAdmin(ctx.req);
     if (auth instanceof HttpErrorResponse) {
       return auth;
@@ -142,7 +141,7 @@ export function registerBinHandlers(router: MockRouter): void {
 
     const response: AssignBinResponse = {
       binId,
-      collectorId: collector.collectorId,
+      assignedCollectorId: collector.collectorId,
       assignedAt: new Date().toISOString(),
     };
 

@@ -74,7 +74,8 @@
               "buildTarget": "ecobin-admin:build:production"
             },
             "development": {
-              "buildTarget": "ecobin-admin:build:development"
+              "buildTarget": "ecobin-admin:build:development",
+              "proxyConfig": "proxy.conf.json"
             }
           },
           "defaultConfiguration": "development"

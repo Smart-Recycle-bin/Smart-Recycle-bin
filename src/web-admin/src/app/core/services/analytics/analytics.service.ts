@@ -11,7 +11,7 @@ export class AnalyticsService {
   private readonly apiClient = inject(ApiClientService);
 
   /**
-   * Retrieves operational overview dashboard metrics, trends, and attention queues (PROPOSED, gap_api.md 1.2).
+   * Retrieves operational overview dashboard metrics, trends, and attention queues (APIs.md 7.9).
    */
   getOverview(query?: OverviewQuery): Observable<DashboardOverview> {
     return this.apiClient.get<DashboardOverview>(API_ENDPOINTS.analytics.overview, {

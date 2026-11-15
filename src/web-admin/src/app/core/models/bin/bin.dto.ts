@@ -5,7 +5,7 @@ import { BinStatus } from './bin-status.enum';
  * Request payload for POST /api/v1/admin/bins (APIs.md 7.1).
  */
 export interface RegisterBinRequest {
-  serialNumber: string;
+  deviceSerial: string;
   latitude: number;
   longitude: number;
   district: string;
@@ -17,10 +17,9 @@ export interface RegisterBinRequest {
  */
 export interface RegisterBinResponse {
   binId: Id;
-  serialNumber: string;
-  qrCode: string;
+  deviceSerial: string;
   status: BinStatus;
-  createdAt: string; // ISO 8601 string
+  fillLevel: number;
 }
 
 /**
@@ -35,6 +34,6 @@ export interface AssignBinRequest {
  */
 export interface AssignBinResponse {
   binId: Id;
-  collectorId: Id;
+  assignedCollectorId: Id;
   assignedAt: string; // ISO 8601 string
 }

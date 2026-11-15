@@ -32,7 +32,7 @@ describe('BinsService', () => {
 
   it('should register a new smart bin', () => {
     const payload = {
-      serialNumber: 'SN-1002',
+      deviceSerial: 'SN-1002',
       latitude: 30.05,
       longitude: 31.25,
       district: 'Cairo',
@@ -43,14 +43,14 @@ describe('BinsService', () => {
     const req = httpMock.expectOne(`${environment.apiBaseUrl}/admin/bins`);
     expect(req.request.method).toBe('POST');
     expect(req.request.body).toEqual(payload);
-    req.flush({ success: true, data: { binId: 'bin_100', qrCode: 'qr_bin_100', status: 'AVAILABLE' } });
+    req.flush({ success: true, data: { binId: 'bin_100', deviceSerial: 'SN-1002', fillLevel: 0, status: 'AVAILABLE' } });
   });
 
   it('should assign a collector to a bin', () => {
     const payload = { collectorId: 'C-002' };
     service.assignCollector('BIN-0007', payload).subscribe();
 
-    const req = httpMock.expectOne(`${environment.apiBaseUrl}/admin/bins/BIN-0007/assign`);
+    const req = httpMock.expectOne(`${environment.apiBaseUrl}/admin/bins/BIN-0007/assignment`);
     expect(req.request.method).toBe('POST');
     expect(req.request.body).toEqual(payload);
     req.flush({ success: true, data: { binId: 'BIN-0007', assignedCollectorId: 'C-002' } });

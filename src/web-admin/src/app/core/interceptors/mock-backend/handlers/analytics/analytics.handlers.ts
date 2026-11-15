@@ -4,7 +4,7 @@ import { getMockDb } from '../../../../mock/db/mock-db';
 import { okResponse, requireSysAdmin } from '../handler-utils';
 
 export function registerAnalyticsHandlers(router: MockRouter): void {
-  router.get('/api/v1/admin/analytics/overview', (ctx) => {
+  router.get('/api/v1/admin/analytics', (ctx) => {
     const auth = requireSysAdmin(ctx.req);
     if (auth instanceof HttpErrorResponse) {
       return auth;

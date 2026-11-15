@@ -4,8 +4,8 @@ import { getMockDb } from '../../../../mock/db/mock-db';
 import { okResponse, requireSysAdmin } from '../handler-utils';
 
 export function registerGamificationHandlers(router: MockRouter): void {
-  // 1. Leaderboard rankings by scope
-  router.get('/api/v1/admin/leaderboard', (ctx) => {
+  // 1. Leaderboard rankings by scope (APIs.md 5.5)
+  router.get('/api/v1/leaderboard', (ctx) => {
     const auth = requireSysAdmin(ctx.req);
     if (auth instanceof HttpErrorResponse) {
       return auth;

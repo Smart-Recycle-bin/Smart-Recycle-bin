@@ -1,5 +1,6 @@
 import { Id } from '../common/id.model';
 import { AccountStatus } from './account-status.enum';
+import { UserRole } from './user-role.enum';
 
 /**
  * Request payload for POST /api/v1/admin/users/{userId}/suspend (APIs.md 2.13).
@@ -13,7 +14,8 @@ export interface SuspendUserRequest {
  */
 export interface SuspendUserResponse {
   userId: Id;
-  accountStatus: AccountStatus;
+  status: AccountStatus | string;
+  reason?: string;
   suspendedAt: string; // ISO 8601 string
 }
 
@@ -29,6 +31,19 @@ export interface UnsuspendUserRequest {
  */
 export interface UnsuspendUserResponse {
   userId: Id;
-  accountStatus: AccountStatus;
+  status: AccountStatus | string;
+  reason?: string;
   unsuspendedAt: string; // ISO 8601 string
+}
+
+/**
+ * Documented response item for GET /api/v1/admin/users (APIs.md 2.11).
+ */
+export interface SearchUsersItem {
+  userId: Id;
+  email: string;
+  displayName: string;
+  role: UserRole;
+  status: AccountStatus;
+  createdAt: string; // ISO 8601 string
 }

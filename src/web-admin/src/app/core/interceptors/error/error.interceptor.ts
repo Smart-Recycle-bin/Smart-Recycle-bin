@@ -33,22 +33,6 @@ function showDedupedToast(
   }
 }
 
-/**
- * Known business-level domain error codes handled directly by individual UI components / forms.
- * These should NOT trigger generic global toast popups.
- */
-const SILENT_BUSINESS_ERROR_CODES = new Set<string>([
-  ApiErrorCode.ValidationError,
-  ApiErrorCode.InvalidCredentials,
-  ApiErrorCode.AccountSuspended,
-  ApiErrorCode.InsufficientBalance,
-  ApiErrorCode.DeviceAlreadyRegistered,
-  ApiErrorCode.EmailAlreadyExists,
-  ApiErrorCode.Conflict,
-  ApiErrorCode.NotFound,
-  ApiErrorCode.BinNotFound,
-]);
-
 export const errorInterceptor: HttpInterceptorFn = (req, next) => {
   const router = inject(Router);
   const toastService = inject(ToastService);
@@ -68,7 +52,6 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
       }
 
       const isLoginRequest = req.url.includes(API_ENDPOINTS.auth.login);
-      const isRefreshRequest = req.url.includes(API_ENDPOINTS.auth.refresh);
       const isLogoutRequest = req.url.includes(API_ENDPOINTS.auth.logout);
 
       // 1. HTTP 401 Unauthorized
@@ -126,12 +109,7 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
         return throwError(() => apiError);
       }
 
-      // 5. Status 400 and other 4xx business errors
-      if (SILENT_BUSINESS_ERROR_CODES.has(apiError.code)) {
-        // Handled by calling component or form
-        return throwError(() => apiError);
-      }
-
+      // 5. Remaining 4xx domain errors are propagated to callers/forms
       return throwError(() => apiError);
     })
   );

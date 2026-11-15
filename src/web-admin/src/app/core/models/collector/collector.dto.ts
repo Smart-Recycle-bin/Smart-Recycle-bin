@@ -8,11 +8,11 @@ import { CollectorCredentialsMode } from './collector-credentials-mode.enum';
  */
 export interface CreateCollectorRequest {
   email: string;
-  password?: string;
   displayName: string;
   phoneNumber: string;
-  credentialsMode?: CollectorCredentialsMode;
+  temporaryPassword?: string;
   district?: string;
+  credentialsMode?: CollectorCredentialsMode;
 }
 
 /**
@@ -23,6 +23,8 @@ export interface CreateCollectorResponse {
   email: string;
   displayName: string;
   role: UserRole;
+  status?: AccountStatus;
+  mustChangePassword?: boolean;
   createdAt: string; // ISO 8601 string
 }
 
@@ -30,7 +32,7 @@ export interface CreateCollectorResponse {
  * Request payload for editing an existing collector (PROPOSED, gap_api.md Section 1.5).
  */
 export interface UpdateCollectorRequest {
-  fullName?: string;
+  displayName?: string;
   email?: string;
   phoneNumber?: string;
   district?: string;
