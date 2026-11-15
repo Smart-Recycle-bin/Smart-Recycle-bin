@@ -1,0 +1,189 @@
+<div class="review-queue-page">
+  <!-- Page Header -->
+  <app-page-header
+    title="Reports"
+    subtitle="Inspection reports flagged when a recycler rejects a post-disposal survey."
+  >
+    <div page-actions>
+      <span class="sr-only">AI Review Queue</span>
+    </div>
+  </app-page-header>
+
+  <!-- Summary Cards Row -->
+  <div class="summary-cards-grid">
+    <!-- Dark Retraining Card -->
+    <div class="summary-card retraining-card">
+      <div class="card-top">
+        <span class="card-badge">Model Retraining</span>
+        <app-icon name="cpu" size="sm" />
+      </div>
+      <div class="metric-block">
+        <span class="metric-value">{{ summary()?.labelledImagesCount | number }}</span>
+        <span class="metric-label">labelled images</span>
+      </div>
+      <div class="progress-wrapper">
+        <app-progress
+          [value]="summary()?.labelledImagesCount || 0"
+          [max]="summary()?.targetImagesThreshold || 1500"
+          color="brand"
+          size="sm"
+        />
+      </div>
+      <p class="retrain-note">
+        {{ summary()?.remainingUntilRetrain }} more until the next scheduled model retrain ({{ summary()?.targetImagesThreshold | number }})
+      </p>
+    </div>
+
+    <!-- Pending Reviews Card -->
+    <div class="summary-card standard-card">
+      <div class="card-top">
+        <span class="card-title">Pending review</span>
+        <app-icon name="clock" size="sm" />
+      </div>
+      <div class="metric-block">
+        <span class="metric-value count-warning">{{ summary()?.pendingReviewCount ?? 0 }}</span>
+        <span class="metric-label">reports awaiting admin decision</span>
+      </div>
+      <button
+        type="button"
+        class="filter-action-link"
+        (click)="filterByStatus('pending')"
+      >
+        Show pending →
+      </button>
+    </div>
+
+    <!-- Reviewed Card -->
+    <div class="summary-card standard-card">
+      <div class="card-top">
+        <span class="card-title">Reviewed</span>
+        <app-icon name="check-circle" size="sm" />
+      </div>
+      <div class="metric-block">
+        <span class="metric-value count-success">{{ summary()?.reviewedCount ?? 0 }}</span>
+        <span class="metric-label">reports resolved or sent to retrain</span>
+      </div>
+      <button
+        type="button"
+        class="filter-action-link"
+        (click)="filterByStatus('reviewed')"
+      >
+        Show reviewed →
+      </button>
+    </div>
+  </div>
+
+  <!-- Filters Toolbar Card -->
+  <div class="filters-card">
+    <div class="filters-grid">
+      <div class="filter-item search-filter">
+        <app-search-input
+          placeholder="Search by AIR ID, bin, waste category..."
+          [value]="searchTerm()"
+          (valueChange)="handleSearch($event)"
+          (search)="handleSearch($event)"
+        />
+      </div>
+
+      <div class="filter-item status-filter">
+        <app-select
+          [options]="statusOptions"
+          [value]="selectedStatus()"
+          placeholder="All statuses"
+          (valueChange)="handleStatusChange($event)"
+        />
+      </div>
+    </div>
+  </div>
+
+  <!-- Table or Error State -->
+  @if (error()) {
+    <div class="error-container">
+      <app-resource-state
+        [error]="error()"
+        (retry)="loadReports()"
+      />
+    </div>
+  } @else {
+    <div class="table-container">
+      <app-data-table
+        [columns]="tableColumns"
+        [data]="reports()"
+        [loading]="isLoadingReports()"
+        mode="client"
+        [showPagination]="true"
+        [pageSize]="10"
+        [rowClickable]="true"
+        (rowClick)="navigateToDetail($event)"
+        emptyTitle="No inspection reports found"
+        emptyDescription="There are no flagged inspection reports matching the selected filters."
+      >
+        <!-- Custom Thumbnail Cell -->
+        <ng-template appCell="imageThumbnailUrl" let-row>
+          <div class="thumbnail-cell">
+            <div class="thumb-container">
+              <img
+                [src]="row.imageThumbnailUrl"
+                alt="Frame"
+                class="report-thumb"
+                loading="lazy"
+                (error)="$any($event.target).style.display='none'"
+              />
+              <div class="thumb-fallback">
+                <app-icon name="camera" size="sm" />
+              </div>
+            </div>
+          </div>
+        </ng-template>
+
+        <!-- Custom Session & Report ID Cell -->
+        <ng-template appCell="sessionId" let-row>
+          <div class="session-report-cell">
+            <span class="session-id">{{ row.sessionId }}</span>
+            <span class="air-id">{{ row.airId }}</span>
+          </div>
+        </ng-template>
+
+        <!-- Custom Bin Cell -->
+        <ng-template appCell="binId" let-row>
+          <app-mono-id-cell [value]="row.binId" />
+        </ng-template>
+
+        <!-- Custom ML Prediction & Confidence Bar Cell -->
+        <ng-template appCell="mlPredictedWasteType" let-row>
+          <div class="ml-prediction-cell">
+            <div class="prediction-header">
+              <span class="prediction-name">{{ row.mlPredictedWasteType }}</span>
+              <span class="prediction-pct">{{ formatConfidencePercent(row.mlConfidence) }}%</span>
+            </div>
+            <app-progress
+              [value]="formatConfidencePercent(row.mlConfidence)"
+              [max]="100"
+              [color]="getConfidenceColor(row.mlConfidence)"
+              size="sm"
+            />
+          </div>
+        </ng-template>
+
+        <!-- Custom User Feedback Cell -->
+        <ng-template appCell="userFeedback" let-row>
+          <p class="feedback-text" [title]="row.userFeedback">“{{ row.userFeedback }}”</p>
+        </ng-template>
+
+        <!-- Custom Date Cell -->
+        <ng-template appCell="date" let-row>
+          <span class="timestamp-text">{{ row.date }}</span>
+        </ng-template>
+
+        <!-- Custom Status Badge Cell -->
+        <ng-template appCell="status" let-row>
+          <app-badge
+            [label]="getStatusLabel(row.status)"
+            [variant]="getStatusBadgeVariant(row.status)"
+            [dot]="true"
+          />
+        </ng-template>
+      </app-data-table>
+    </div>
+  }
+</div>

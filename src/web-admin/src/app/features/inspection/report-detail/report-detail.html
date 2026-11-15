@@ -1,0 +1,238 @@
+<div class="report-detail-page">
+  <!-- Page Header with Back Link & Title -->
+  <app-page-header
+    [title]="headerTitle()"
+    [subtitle]="headerSubtitle()"
+    backLink="/review-queue"
+    backText="AI review queue"
+  >
+    <div page-actions>
+      @if (report(); as d) {
+        <app-badge
+          [label]="getStatusLabel(d.status)"
+          [variant]="getStatusBadgeVariant(d.status)"
+          [dot]="true"
+        />
+      }
+    </div>
+  </app-page-header>
+
+  @if (error()) {
+    <div class="error-container">
+      <app-resource-state
+        [error]="error()"
+        (retry)="loadDetail()"
+      />
+    </div>
+  } @else if (isLoading()) {
+    <div class="loading-container">
+      <p>Loading inspection report detail...</p>
+    </div>
+  } @else if (report(); as d) {
+    <div class="detail-layout">
+      <!-- Left Column: Captured Frames & User Feedback -->
+      <div class="left-column">
+        <!-- Captured Frames Card -->
+        <div class="detail-card">
+          <div class="card-header">
+            <div class="header-with-icon">
+              <app-icon name="camera" size="sm" />
+              <h3 class="card-title">Captured frames</h3>
+            </div>
+            <span class="card-helper-tag">{{ d.capturedFrames.length }} frames · click to enlarge</span>
+          </div>
+
+          <div class="frames-grid">
+            @for (frame of d.capturedFrames; track $index) {
+              <div
+                class="frame-card"
+                (click)="openZoomModal(frame)"
+                role="button"
+                tabindex="0"
+                (keydown.enter)="openZoomModal(frame)"
+                (keydown.space)="openZoomModal(frame)"
+              >
+                <img
+                  [src]="frame"
+                  alt="Inspection frame {{$index + 1}}"
+                  class="frame-image"
+                  (error)="$any($event.target).style.display='none'"
+                />
+                <div class="frame-fallback">
+                  <app-icon name="camera" size="md" />
+                  <span>Frame {{ $index + 1 }}</span>
+                </div>
+                <div class="frame-hover-overlay">
+                  <app-icon name="eye" size="sm" />
+                  <span>Enlarge</span>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- User Rejection Feedback Card -->
+        <div class="detail-card">
+          <div class="card-header">
+            <div class="header-with-icon">
+              <app-icon name="alert-circle" size="sm" />
+              <h3 class="card-title">User rejection feedback</h3>
+            </div>
+            <span class="rejection-badge">Survey disputed</span>
+          </div>
+
+          <div class="feedback-meta">
+            <span class="user-name">{{ d.userName }}</span>
+            <span class="bullet-separator">·</span>
+            <span class="feedback-date">{{ d.date }}</span>
+          </div>
+
+          <blockquote class="feedback-quote">
+            “{{ d.userFeedback }}”
+          </blockquote>
+        </div>
+      </div>
+
+      <!-- Right Column: ML Inference Output & Admin Actions -->
+      <div class="right-column">
+        <!-- ML Inference Output Card -->
+        <div class="detail-card">
+          <div class="card-header">
+            <div class="header-with-icon">
+              <app-icon name="cpu" size="sm" />
+              <h3 class="card-title">ML inference output</h3>
+            </div>
+            <span class="model-tag">{{ d.mlModelVersion }}</span>
+          </div>
+
+          <div class="ml-meta-grid">
+            <div class="meta-item">
+              <span class="meta-label">Predicted waste type</span>
+              <span class="meta-value highlight-value">{{ d.predictedWasteType }}</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Estimated points</span>
+              <span class="meta-value">{{ d.estimatedPoints }} pts</span>
+            </div>
+          </div>
+
+          <div class="confidence-section">
+            <h4 class="confidence-title">Classification confidence</h4>
+            <div class="confidence-list">
+              @for (entry of confidenceEntries(); track entry.className) {
+                <div class="confidence-row">
+                  <div class="confidence-row-header">
+                    <span class="class-name">{{ entry.className }}</span>
+                    <span class="class-pct">{{ entry.percent }}%</span>
+                  </div>
+                  <app-progress
+                    [value]="entry.percent"
+                    [max]="100"
+                    [color]="entry.color"
+                    size="sm"
+                  />
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+
+        <!-- Admin Actions Card -->
+        <div class="detail-card actions-card">
+          <div class="card-header">
+            <div class="header-with-icon">
+              <app-icon name="shield" size="sm" />
+              <h3 class="card-title">Admin actions</h3>
+            </div>
+            @if (!isPending()) {
+              <span class="resolved-note">Resolved</span>
+            }
+          </div>
+
+          @if (!isPending()) {
+            <p class="resolved-alert">
+              This report has already been reviewed. Actions are locked.
+            </p>
+          }
+
+          <div class="actions-body">
+            <!-- Action 1: Correct Category -->
+            <div class="action-section">
+              <label class="action-label">Set correct category</label>
+              <div class="correct-category-row">
+                <app-select
+                  [options]="wasteTypeOptions()"
+                  [value]="selectedWasteType()"
+                  placeholder="Select waste category..."
+                  [disabled]="!isPending() || isSubmittingAction()"
+                  (valueChange)="handleWasteTypeChange($event)"
+                />
+                <app-button
+                  variant="primary"
+                  [disabled]="!isPending() || isSubmittingAction() || !selectedWasteType()"
+                  [loading]="isSubmittingAction()"
+                  (clicked)="applyCorrectCategory()"
+                >
+                  Apply
+                </app-button>
+              </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <!-- Action 2 & 3: Dismiss & Retrain -->
+            <div class="secondary-actions-row">
+              <app-button
+                variant="ghost"
+                [disabled]="!isPending() || isSubmittingAction()"
+                (clicked)="applyDismiss()"
+              >
+                ML was correct / dismiss
+              </app-button>
+
+              <app-button
+                variant="secondary"
+                [disabled]="!isPending() || isSubmittingAction()"
+                (clicked)="applyRetrain()"
+              >
+                Send to retraining
+              </app-button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Image Zoom Modal -->
+  <app-modal
+    [open]="isZoomModalOpen()"
+    title="Captured Frame Inspection"
+    size="lg"
+    (closed)="closeZoomModal()"
+  >
+    <div class="zoomed-frame-container">
+      @if (zoomedFrameUrl(); as url) {
+        <img
+          [src]="url"
+          alt="Enlarged captured frame"
+          class="zoomed-image"
+          (error)="$any($event.target).style.display='none'"
+        />
+        <div class="zoom-fallback">
+          <app-icon name="camera" size="lg" />
+          <p>Frame Preview Unavailable</p>
+        </div>
+      }
+    </div>
+
+    <div modal-footer class="modal-footer-actions">
+      <app-button
+        variant="ghost"
+        (clicked)="closeZoomModal()"
+      >
+        Close
+      </app-button>
+    </div>
+  </app-modal>
+</div>

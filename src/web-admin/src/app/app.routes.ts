@@ -86,9 +86,13 @@ export const routes: Routes = [
       {
         path: 'review-queue',
         loadComponent: () =>
-          import('./features/placeholders/route-placeholder/route-placeholder').then(
-            (m) => m.RoutePlaceholder
-          ),
+          import('./features/inspection/review-queue/review-queue').then((m) => m.ReviewQueue),
+        data: { title: 'AI Review Queue' },
+      },
+      {
+        path: 'review-queue/:reportId',
+        loadComponent: () =>
+          import('./features/inspection/report-detail/report-detail').then((m) => m.ReportDetail),
         data: { title: 'AI Review Queue' },
       },
       {
