@@ -1,0 +1,119 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+.bins-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.filters-card {
+  background-color: var(--card, #ffffff);
+  border: 1px solid var(--line, #e2e8f0);
+  border-radius: 0.75rem;
+  padding: 1rem 1.25rem;
+}
+
+.filters-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  align-items: center;
+}
+
+@media (min-width: 640px) {
+  .filters-grid {
+    grid-template-columns: 1.5fr 1fr;
+  }
+}
+
+@media (min-width: 1024px) {
+  .filters-grid {
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+  }
+}
+
+.filter-item {
+  width: 100%;
+}
+
+.table-container {
+  background-color: var(--card, #ffffff);
+  border: 1px solid var(--line, #e2e8f0);
+  border-radius: 0.75rem;
+  overflow: hidden;
+}
+
+.error-container {
+  padding: 2rem 0;
+}
+
+/* Custom Table Cell Styling */
+.bin-name-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.bin-primary-name {
+  font-weight: 600;
+  color: var(--ink, #0f172a);
+}
+
+.bin-sub-area {
+  font-size: 0.75rem;
+  color: var(--muted, #64748b);
+}
+
+.timestamp-text {
+  font-size: 0.8125rem;
+  color: var(--muted, #64748b);
+  white-space: nowrap;
+}
+
+/* Register Bin Drawer Form */
+.register-bin-form {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.drawer-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 0.5rem 0;
+}
+
+.coords-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.drawer-footer-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
+}
+
+.audit-note {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.75rem;
+  color: var(--muted, #64748b);
+}
+
+.drawer-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  width: 100%;
+}

@@ -1,0 +1,208 @@
+<div class="bins-page">
+  <!-- Page Header -->
+  <app-page-header
+    title="Bins list"
+    [subtitle]="headerSubtitle()"
+  >
+    <div page-actions>
+      <app-button
+        variant="primary"
+        (clicked)="openRegisterDrawer()"
+        leadingIcon="plus"
+      >
+        Register bin
+      </app-button>
+    </div>
+  </app-page-header>
+
+  <!-- Filters Toolbar Card -->
+  <div class="filters-card">
+    <div class="filters-grid">
+      <div class="filter-item search-filter">
+        <app-search-input
+          placeholder="Search by ID, name, area, or collector..."
+          [value]="searchTerm()"
+          (valueChange)="handleSearch($event)"
+          (search)="handleSearch($event)"
+        />
+      </div>
+
+      <div class="filter-item">
+        <app-select
+          [options]="districtOptions()"
+          [value]="selectedDistrict()"
+          placeholder="All districts"
+          (valueChange)="handleDistrictChange($event)"
+        />
+      </div>
+
+      <div class="filter-item">
+        <app-select
+          [options]="statusOptions()"
+          [value]="selectedStatus()"
+          placeholder="All statuses"
+          (valueChange)="handleStatusChange($event)"
+        />
+      </div>
+
+      <div class="filter-item">
+        <app-select
+          [options]="collectorOptions()"
+          [value]="selectedCollector()"
+          placeholder="All collectors"
+          (valueChange)="handleCollectorChange($event)"
+        />
+      </div>
+    </div>
+  </div>
+
+  <!-- Table or Error State -->
+  @if (error()) {
+    <div class="error-container">
+      <app-resource-state
+        [error]="error()"
+        (retry)="loadBins()"
+      />
+    </div>
+  } @else {
+    <div class="table-container">
+      <app-data-table
+        [columns]="tableColumns"
+        [data]="bins()"
+        [loading]="isLoading()"
+        mode="client"
+        [showPagination]="true"
+        [pageSize]="10"
+        emptyTitle="No smart bins found"
+        emptyDescription="No bins match the selected filter criteria."
+      >
+        <!-- Custom Bin ID Cell Template -->
+        <ng-template appCell="binId" let-row>
+          <app-mono-id-cell [value]="row.binId" />
+        </ng-template>
+
+        <!-- Custom Name & Area Cell Template -->
+        <ng-template appCell="name" let-row>
+          <div class="bin-name-cell">
+            <span class="bin-primary-name">{{ row.name }}</span>
+            <span class="bin-sub-area">{{ row.area }}</span>
+          </div>
+        </ng-template>
+
+        <!-- Custom Fill Level Cell Template -->
+        <ng-template appCell="fillLevel" let-row>
+          <app-fill-level-cell
+            [value]="row.fillLevel"
+            [warningThreshold]="80"
+            [dangerThreshold]="95"
+          />
+        </ng-template>
+
+        <!-- Custom Status Badge Cell Template -->
+        <ng-template appCell="status" let-row>
+          <app-badge
+            [label]="getStatusLabel(row.status)"
+            [variant]="getStatusBadgeVariant(row.status)"
+            [dot]="true"
+          />
+        </ng-template>
+
+        <!-- Custom Collector Cell Template -->
+        <ng-template appCell="collectorName" let-row>
+          <app-user-cell
+            [name]="row.collectorName || 'Unassigned'"
+            [subtitle]="row.collectorId || 'No collector assigned'"
+          />
+        </ng-template>
+
+        <!-- Custom Last Serviced Cell Template -->
+        <ng-template appCell="lastServicedAt" let-row>
+          <span class="timestamp-text">{{ row.lastServicedAt }}</span>
+        </ng-template>
+      </app-data-table>
+    </div>
+  }
+
+  <!-- Register Bin Drawer -->
+  <app-drawer
+    [open]="isDrawerOpen()"
+    title="Register Smart Bin"
+    description="Provision a new telemetry sensor node into the fleet."
+    size="md"
+    (closed)="closeRegisterDrawer()"
+  >
+    <form [formGroup]="registerForm" (ngSubmit)="submitRegisterBin()" class="register-bin-form">
+      <div class="drawer-fields">
+        <app-input
+          label="Device Serial Number"
+          placeholder="e.g. SN-98214"
+          formControlName="deviceSerial"
+          [required]="true"
+          [error]="serialServerError()"
+          hint="Hardware serial identifier engraved on the node module."
+        />
+
+        <app-input
+          label="District"
+          placeholder="e.g. Cairo, Giza, Alexandria"
+          formControlName="district"
+          [required]="true"
+          hint="Operational district where the bin is deployed."
+        />
+
+        <div class="coords-row">
+          <app-input
+            label="Latitude"
+            type="number"
+            placeholder="30.0444"
+            formControlName="latitude"
+            [required]="true"
+          />
+
+          <app-input
+            label="Longitude"
+            type="number"
+            placeholder="31.2357"
+            formControlName="longitude"
+            [required]="true"
+          />
+        </div>
+
+        <app-input
+          label="Capacity Threshold (kg)"
+          type="number"
+          placeholder="120"
+          formControlName="capacityThresholdKg"
+          [required]="true"
+          hint="Maximum payload weight before triggering a servicing alert."
+        />
+      </div>
+
+      <div drawer-footer class="drawer-footer-wrapper">
+        <div class="audit-note">
+          <app-icon name="shield" size="xs" />
+          <span>This action will be recorded in the audit log.</span>
+        </div>
+
+        <div class="drawer-actions">
+          <app-button
+            variant="secondary"
+            (clicked)="closeRegisterDrawer()"
+            [disabled]="isSubmitting()"
+          >
+            Cancel
+          </app-button>
+
+          <app-button
+            type="submit"
+            variant="primary"
+            [loading]="isSubmitting()"
+            [disabled]="isSubmitting()"
+          >
+            Register bin
+          </app-button>
+        </div>
+      </div>
+    </form>
+  </app-drawer>
+</div>

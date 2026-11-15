@@ -67,6 +67,12 @@ export function registerBinHandlers(router: MockRouter): void {
     }
 
     const db = getMockDb();
+
+    // Check for duplicate device serial
+    if (db.bins.some((b) => b.name.includes(body.deviceSerial) || b.binId === body.deviceSerial)) {
+      return errorResponse(409, ApiErrorCode.DeviceAlreadyRegistered, 'Device serial is already registered');
+    }
+
     const binId = `BIN-${Math.floor(1000 + Math.random() * 9000)}`;
 
     const newBin: BinListItem = {

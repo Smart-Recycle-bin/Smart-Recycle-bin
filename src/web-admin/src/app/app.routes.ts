@@ -54,9 +54,7 @@ export const routes: Routes = [
       {
         path: 'bins',
         loadComponent: () =>
-          import('./features/placeholders/route-placeholder/route-placeholder').then(
-            (m) => m.RoutePlaceholder
-          ),
+          import('./features/bin/bins-list/bins-list').then((m) => m.BinsList),
         data: { title: 'Bins List' },
       },
       {
