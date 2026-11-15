@@ -15,6 +15,8 @@ export function registerAuditHandlers(router: MockRouter): void {
     const actionType = ctx.query.get('actionType')?.toLowerCase();
     const adminId = ctx.query.get('adminId');
     const resourceId = ctx.query.get('resourceId');
+    const from = ctx.query.get('from');
+    const to = ctx.query.get('to');
     const search = ctx.query.get('search')?.toLowerCase();
 
     let list = [...db.auditLogs];
@@ -28,7 +30,15 @@ export function registerAuditHandlers(router: MockRouter): void {
     }
 
     if (resourceId) {
-      list = list.filter((a) => a.resourceId === resourceId);
+      list = list.filter((a) => a.resourceId.toLowerCase().includes(resourceId.toLowerCase()));
+    }
+
+    if (from) {
+      list = list.filter((a) => a.timestamp >= from);
+    }
+
+    if (to) {
+      list = list.filter((a) => a.timestamp <= to);
     }
 
     if (search) {

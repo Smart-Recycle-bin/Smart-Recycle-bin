@@ -118,9 +118,7 @@ export const routes: Routes = [
       {
         path: 'audit-logs',
         loadComponent: () =>
-          import('./features/placeholders/route-placeholder/route-placeholder').then(
-            (m) => m.RoutePlaceholder
-          ),
+          import('./features/audit/audit-logs/audit-logs').then((m) => m.AuditLogs),
         data: { title: 'Audit Logs' },
       },
     ],

@@ -1,0 +1,160 @@
+<div class="audit-logs-page">
+  <!-- Page Header (p16: Header, Subtitle, Export CSV disabled Coming Soon) -->
+  <app-page-header
+    title="Audit logs"
+    subtitle="A tamper-proof trail of every administrative action."
+  >
+    <div page-actions class="header-actions">
+      <app-button
+        variant="outline"
+        size="sm"
+        [disabled]="true"
+        appTooltip="Coming soon"
+        leadingIcon="download"
+      >
+        Export CSV
+      </app-button>
+    </div>
+  </app-page-header>
+
+  <!-- Immutable Audit Trail Notice -->
+  <app-notice
+    variant="info"
+    description="Read-only. Audit entries are immutable and cannot be edited or deleted by any administrator."
+  />
+
+  <!-- Filters Toolbar Card -->
+  <div class="filters-card">
+    <div class="filters-grid">
+      <!-- Admin Select (Derived from unfiltered load so options don't shrink) -->
+      <div class="filter-item">
+        <app-select
+          [options]="adminOptions()"
+          [value]="selectedAdminId()"
+          placeholder="All admins"
+          ariaLabel="Filter by administrator"
+          (valueChange)="handleAdminChange($event)"
+        />
+      </div>
+
+      <!-- Action Type Select -->
+      <div class="filter-item">
+        <app-select
+          [options]="actionTypeFilterOptions"
+          [value]="selectedActionType()"
+          placeholder="All action types"
+          ariaLabel="Filter by action type"
+          (valueChange)="handleActionChange($event)"
+        />
+      </div>
+
+      <!-- Resource ID Input -->
+      <div class="filter-item">
+        <app-input
+          placeholder="Filter by resource ID..."
+          [value]="resourceIdFilter()"
+          leadingIcon="search"
+          ariaLabel="Filter by resource ID"
+          (valueChange)="handleResourceIdChange($event)"
+        />
+      </div>
+
+      <!-- Date Range Filter -->
+      <div class="filter-item date-filter">
+        <app-date-range-input
+          [value]="dateRange()"
+          (valueChange)="handleDateRangeChange($event)"
+        />
+      </div>
+    </div>
+  </div>
+
+  <!-- Audit Logs Table Section -->
+  <div class="table-container">
+    @if (error()) {
+      <div class="p-8">
+        <app-resource-state
+          [error]="error()"
+          (retry)="loadAuditLogs()"
+        />
+      </div>
+    } @else if (isLoading()) {
+      <div class="p-6 space-y-4">
+        <app-skeleton height="42px" variant="rectangular" />
+        @for (i of [1, 2, 3, 4, 5, 6, 7, 8]; track i) {
+          <div class="flex items-center gap-4 py-2 border-b border-subtle">
+            <app-skeleton width="130px" height="18px" />
+            <app-skeleton width="180px" height="32px" variant="rectangular" />
+            <app-skeleton width="120px" height="24px" variant="rectangular" />
+            <app-skeleton width="90px" height="18px" />
+            <app-skeleton width="240px" height="18px" />
+            <app-skeleton width="100px" height="18px" />
+          </div>
+        }
+      </div>
+    } @else {
+      @if (auditLogs().length === 0) {
+        <app-resource-state
+          [empty]="true"
+          emptyTitle="No audit records found"
+          emptyDescription="No administrative actions match the configured filters."
+          emptyIcon="shield"
+        />
+      } @else {
+        <!-- Data Table (p16: Page size 8 -> "Showing 1–8 of 10") -->
+        <app-data-table
+          [columns]="columns"
+          [data]="auditLogs()"
+          [pageSize]="8"
+          mode="client"
+          [showPagination]="true"
+          [rowId]="getRowId"
+        >
+          <!-- Timestamp Column -->
+          <ng-template appCell="timestamp" let-row>
+            <span class="font-mono text-sm text-text-secondary whitespace-nowrap">
+              {{ row.timestamp }}
+            </span>
+          </ng-template>
+
+          <!-- Admin Column (Initials + ADM-001 · name) -->
+          <ng-template appCell="adminName" let-row>
+            <app-user-cell
+              [name]="row.adminId + ' · ' + row.adminName"
+            />
+          </ng-template>
+
+          <!-- Action Badge with distinct tone per action type -->
+          <ng-template appCell="actionType" let-row>
+            <app-badge
+              [variant]="getActionBadgeVariant(row.actionType)"
+              size="sm"
+              [dot]="true"
+            >
+              {{ getActionLabel(row.actionType) }}
+            </app-badge>
+          </ng-template>
+
+          <!-- Resource ID Column (Monospace) -->
+          <ng-template appCell="resourceId" let-row>
+            <app-mono-id-cell [value]="row.resourceId" />
+          </ng-template>
+
+          <!-- Justification Column -->
+          <ng-template appCell="justification" let-row>
+            <span class="text-sm text-text-primary" [title]="row.justification">
+              {{ row.justification }}
+            </span>
+          </ng-template>
+
+          <!-- IP Address Column (Monospace) -->
+          <ng-template appCell="ipAddress" let-row>
+            <span class="font-mono text-xs text-text-secondary">
+              {{ row.ipAddress }}
+            </span>
+          </ng-template>
+        </app-data-table>
+      }
+    }
+  </div>
+</div>
