@@ -110,8 +110,8 @@ export const routes: Routes = [
       {
         path: 'leaderboards',
         loadComponent: () =>
-          import('./features/placeholders/route-placeholder/route-placeholder').then(
-            (m) => m.RoutePlaceholder
+          import('./features/gamification/leaderboards/leaderboards').then(
+            (m) => m.Leaderboards
           ),
         data: { title: 'Leaderboards & Badges' },
       },

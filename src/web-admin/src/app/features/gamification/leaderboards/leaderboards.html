@@ -1,0 +1,150 @@
+<div class="leaderboards-page">
+  <!-- Page Header (p15: Read-only badge, header, subtitle) -->
+  <app-page-header
+    title="Leaderboards & badges"
+    subtitle="Read-only view of gamification. Administrators cannot participate or edit rankings."
+  >
+    <div page-actions class="header-actions">
+      <app-badge variant="neutral" [dot]="false" data-testid="read-only-badge">
+        Read-only
+      </app-badge>
+    </div>
+  </app-page-header>
+
+  <!-- Two-Column Main Layout: Leaderboard Table on Left, Milestone Badges on Right -->
+  <div class="gamification-layout">
+    <!-- Left Column: Scope Tabs + Leaderboard Rankings -->
+    <div class="leaderboard-column" data-testid="leaderboard-section">
+      <!-- Scope Tabs (Weekly / Monthly / All-time) -->
+      <div class="scope-tabs-wrapper">
+        <app-tabs
+          [tabs]="tabs"
+          [activeId]="activeScope()"
+          ariaLabel="Leaderboard timeframe"
+          (activeChange)="handleTabChange($event)"
+        />
+      </div>
+
+      <!-- Leaderboard Card Container -->
+      <app-card>
+        @if (leaderboardError()) {
+          <div class="p-6">
+            <app-resource-state
+              [error]="leaderboardError()"
+              (retry)="loadLeaderboard()"
+            />
+          </div>
+        } @else if (isLoadingLeaderboard()) {
+          <div class="p-6 space-y-4">
+            <app-skeleton height="40px" variant="rectangular" />
+            @for (i of [1, 2, 3, 4, 5]; track i) {
+              <div class="flex items-center gap-4 py-2">
+                <app-skeleton width="32px" height="32px" variant="circular" />
+                <div class="flex-1 space-y-2">
+                  <app-skeleton width="40%" height="16px" />
+                  <app-skeleton width="20%" height="12px" />
+                </div>
+                <app-skeleton width="80px" height="20px" />
+                <app-skeleton width="60px" height="20px" />
+              </div>
+            }
+          </div>
+        } @else {
+          <div class="table-wrapper">
+            <app-data-table
+              [columns]="columns"
+              [data]="leaderboardRows()"
+              [pageSize]="10"
+              mode="client"
+              [showPagination]="true"
+              [rowId]="getRowId"
+            >
+              <!-- Rank Cell Template with Gold/Silver/Bronze circles for 1-3 -->
+              <ng-template appCell="rank" let-row>
+                <div class="rank-cell">
+                  <span
+                    class="rank-circle"
+                    [ngClass]="getRankClass(row.rank)"
+                    [attr.data-testid]="'rank-' + row.rank"
+                  >
+                    {{ row.rank }}
+                  </span>
+                </div>
+              </ng-template>
+
+              <!-- User Cell Template with Avatar/Initials and Subtitle ID -->
+              <ng-template appCell="displayName" let-row>
+                <app-user-cell
+                  [name]="row.displayName"
+                  [subtitle]="row.userId"
+                />
+              </ng-template>
+
+              <!-- Lifetime Points Cell Template -->
+              <ng-template appCell="lifetimePoints" let-row>
+                <span class="font-semibold text-text-primary text-sm">
+                  {{ row.lifetimePoints | number }} pts
+                </span>
+              </ng-template>
+
+              <!-- Recycling Volume Cell Template -->
+              <ng-template appCell="recyclingVolumeKg" let-row>
+                <span class="font-medium text-text-secondary text-sm">
+                  {{ row.recyclingVolumeKg }} kg
+                </span>
+              </ng-template>
+            </app-data-table>
+          </div>
+        }
+      </app-card>
+    </div>
+
+    <!-- Right Column: Milestone Badges Card -->
+    <div class="badges-column" data-testid="badges-section">
+      <app-card
+        title="Milestone badges"
+        subtitle="Awarded automatically at lifetime-point thresholds"
+      >
+        @if (badgesError()) {
+          <div class="p-4">
+            <app-resource-state
+              [error]="badgesError()"
+              (retry)="loadBadges()"
+            />
+          </div>
+        } @else if (isLoadingBadges()) {
+          <div class="p-4 space-y-4">
+            @for (i of [1, 2, 3, 4, 5]; track i) {
+              <div class="flex items-center gap-3">
+                <app-skeleton width="40px" height="40px" variant="rectangular" />
+                <div class="flex-1 space-y-2">
+                  <app-skeleton width="50%" height="16px" />
+                  <app-skeleton width="70%" height="12px" />
+                </div>
+              </div>
+            }
+          </div>
+        } @else {
+          <div class="badges-list" data-testid="milestone-badges-list">
+            @for (badge of milestoneBadges(); track badge.badgeId) {
+              <div class="badge-item" [attr.data-testid]="'milestone-badge-' + badge.badgeId">
+                <div class="badge-icon-box">
+                  <app-icon name="trophy" size="md" />
+                </div>
+                <div class="badge-info">
+                  <div class="badge-header-row">
+                    <h4 class="badge-title">{{ badge.name }}</h4>
+                    <span class="badge-earned-tag">
+                      {{ badge.earnedCount | number }} earned
+                    </span>
+                  </div>
+                  <p class="badge-description">{{ badge.description }}</p>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </app-card>
+    </div>
+  </div>
+</div>
