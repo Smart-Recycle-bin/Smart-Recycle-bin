@@ -48,9 +48,7 @@ export const routes: Routes = [
       {
         path: 'overview',
         loadComponent: () =>
-          import('./features/placeholders/route-placeholder/route-placeholder').then(
-            (m) => m.RoutePlaceholder
-          ),
+          import('./features/analytics/overview/overview').then((m) => m.Overview),
         data: { title: 'Overview' },
       },
       {

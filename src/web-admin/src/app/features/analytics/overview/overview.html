@@ -1,0 +1,384 @@
+<div class="overview-page">
+  <!-- Page Header -->
+  <app-page-header
+    title="Operational overview"
+    subtitle="Real-time telemetry, fleet health, and material recovery metrics."
+  >
+    <div page-actions class="header-actions">
+      <div class="period-controls">
+        <app-segmented-control
+          [options]="periodOptions"
+          [value]="selectedPeriod()"
+          size="sm"
+          (valueChange)="handlePeriodChange($event)"
+        />
+
+        @if (isCustomPeriod()) {
+          <div class="custom-range-picker">
+            <app-date-range-input
+              [compact]="true"
+              [value]="customRange()"
+              (valueChange)="handleCustomRangeChange($event)"
+            />
+          </div>
+        }
+      </div>
+
+      <app-button
+        variant="outline"
+        size="sm"
+        [disabled]="true"
+        appTooltip="Coming soon"
+        leadingIcon="download"
+      >
+        Export
+      </app-button>
+    </div>
+  </app-page-header>
+
+  <!-- Error State with Retry -->
+  @if (error()) {
+    <div class="error-container">
+      <app-resource-state
+        [error]="error()"
+        (retry)="loadOverview()"
+      />
+    </div>
+  } @else if (isLoading()) {
+    <!-- Skeletons Loading View -->
+    <div class="overview-loading-grid">
+      <!-- KPI Skeletons -->
+      <div class="stats-grid">
+        @for (i of [1, 2, 3, 4, 5, 6]; track i) {
+          <div class="stat-skeleton-card">
+            <app-skeleton variant="text" width="60%" height="1rem" />
+            <app-skeleton variant="text" width="40%" height="2rem" />
+            <app-skeleton variant="text" width="50%" height="0.875rem" />
+          </div>
+        }
+      </div>
+
+      <!-- Main Chart Skeleton -->
+      <div class="chart-skeleton-card">
+        <app-skeleton variant="text" width="30%" height="1.25rem" />
+        <app-skeleton variant="rectangular" height="240px" />
+      </div>
+
+      <!-- Middle Grid Skeletons -->
+      <div class="middle-grid">
+        <div class="panel-skeleton-card">
+          <app-skeleton variant="text" width="40%" height="1.25rem" />
+          <app-skeleton variant="rectangular" height="200px" />
+        </div>
+        <div class="panel-skeleton-card">
+          <app-skeleton variant="text" width="40%" height="1.25rem" />
+          <app-skeleton variant="circular" width="160px" height="160px" />
+        </div>
+        <div class="panel-skeleton-card">
+          <app-skeleton variant="text" width="40%" height="1.25rem" />
+          <app-skeleton variant="rectangular" height="200px" />
+        </div>
+      </div>
+
+      <!-- Bottom Grid Skeletons -->
+      <div class="bottom-grid">
+        <div class="panel-skeleton-card">
+          <app-skeleton variant="text" width="35%" height="1.25rem" />
+          <app-skeleton variant="rectangular" height="180px" />
+        </div>
+        <div class="panel-skeleton-card">
+          <app-skeleton variant="text" width="35%" height="1.25rem" />
+          <app-skeleton variant="rectangular" height="180px" />
+        </div>
+      </div>
+    </div>
+  } @else if (overviewData(); as data) {
+    <!-- Main Dashboard View -->
+    <div class="overview-content">
+      <!-- 1. Six Top KPI Stat Cards -->
+      <section class="stats-grid" aria-label="Key Performance Indicators">
+        <app-stat
+          title="Daily Active Users"
+          [value]="(data.dailyActiveUsers.value | number) || '0'"
+          [change]="data.dailyActiveUsers.deltaPercent !== undefined ? ((data.dailyActiveUsers.deltaPercent >= 0 ? '+' : '') + data.dailyActiveUsers.deltaPercent + '%') : ''"
+          [trend]="resolveTrend(data.dailyActiveUsers.trendPositive)"
+          icon="users"
+          iconTone="blue"
+        />
+
+        <app-stat
+          title="Points Issued"
+          [value]="(data.pointsIssued.value | number) || '0'"
+          [change]="data.pointsIssued.deltaPercent !== undefined ? ((data.pointsIssued.deltaPercent >= 0 ? '+' : '') + data.pointsIssued.deltaPercent + '%') : ''"
+          [trend]="resolveTrend(data.pointsIssued.trendPositive)"
+          icon="award"
+          iconTone="green"
+        />
+
+        <app-stat
+          title="Points Redeemed"
+          [value]="(data.pointsRedeemed.value | number) || '0'"
+          [change]="data.pointsRedeemed.deltaPercent !== undefined ? ((data.pointsRedeemed.deltaPercent >= 0 ? '+' : '') + data.pointsRedeemed.deltaPercent + '%') : ''"
+          [trend]="resolveTrend(data.pointsRedeemed.trendPositive)"
+          icon="gift"
+          iconTone="purple"
+        />
+
+        <app-stat
+          title="Contamination Rate"
+          [value]="data.contaminationRate.value + '%'"
+          [change]="data.contaminationRate.deltaPp !== undefined ? ((data.contaminationRate.deltaPp >= 0 ? '+' : '') + data.contaminationRate.deltaPp + ' pp') : ''"
+          [trend]="resolveTrend(data.contaminationRate.trendPositive)"
+          icon="alert-triangle"
+          iconTone="amber"
+        />
+
+        <app-stat
+          title="Bins Needing Service"
+          [value]="data.binsNeedingServiceCount"
+          description="≥95% capacity threshold"
+          icon="trash-2"
+          iconTone="red"
+        />
+
+        <app-stat
+          title="Pending AI Reviews"
+          [value]="data.pendingAiReviewsCount"
+          description="Flagged for verification"
+          icon="clipboard-check"
+          iconTone="amber"
+        />
+      </section>
+
+      <!-- 2. Points Activity Main Area Chart -->
+      <section class="main-chart-section">
+        <app-card title="Points Activity" subtitle="Points issued vs redeemed over the selected period">
+          <app-area-chart
+            [series]="pointsComparisonSeries()"
+            [height]="250"
+            [showGrid]="true"
+            [showLegend]="true"
+          />
+        </app-card>
+      </section>
+
+      <!-- 3. Fleet Health, Material Volume Donut, and Trend Sparklines -->
+      <section class="middle-grid">
+        <!-- Fleet Health Card per p17 -->
+        <app-card
+          title="Fleet Health"
+          [subtitle]="'Real-time status across ' + data.fleetHealth.totalBins + ' smart bins'"
+          class="fleet-health-card"
+        >
+          <div card-actions>
+            <a routerLink="/bins/map" class="card-action-link">
+              <span>Open map</span>
+              <app-icon name="arrow-up-right" size="xs" />
+            </a>
+          </div>
+
+          <div class="fleet-health-body">
+            <!-- Stacked Summary Bar -->
+            <div class="stacked-bar" role="progressbar" aria-label="Fleet status distribution">
+              <span
+                class="stacked-segment is-available"
+                [style.width.%]="fleetPercentages().availablePct"
+                [title]="'Available: ' + data.fleetHealth.available"
+              ></span>
+              <span
+                class="stacked-segment is-eighty"
+                [style.width.%]="fleetPercentages().eightyPct"
+                [title]="'≥80% Full: ' + data.fleetHealth.eightyPercentFull"
+              ></span>
+              <span
+                class="stacked-segment is-needs-service"
+                [style.width.%]="fleetPercentages().needsServicingPct"
+                [title]="'Needs Servicing: ' + data.fleetHealth.needsServicing"
+              ></span>
+              <span
+                class="stacked-segment is-offline"
+                [style.width.%]="fleetPercentages().offlinePct"
+                [title]="'Offline: ' + data.fleetHealth.offline"
+              ></span>
+            </div>
+
+            <!-- Four Status Breakdown Rows -->
+            <div class="fleet-status-list">
+              <div class="status-row">
+                <div class="status-info">
+                  <span class="status-dot dot-available"></span>
+                  <span class="status-name">Available (&lt;80%)</span>
+                </div>
+                <div class="status-metrics">
+                  <span class="status-count">{{ data.fleetHealth.available }}</span>
+                  <span class="status-pct">{{ fleetPercentages().availablePct }}%</span>
+                </div>
+                <app-progress [value]="fleetPercentages().availablePct" color="success" size="sm" />
+              </div>
+
+              <div class="status-row">
+                <div class="status-info">
+                  <span class="status-dot dot-eighty"></span>
+                  <span class="status-name">High fill (≥80%)</span>
+                </div>
+                <div class="status-metrics">
+                  <span class="status-count">{{ data.fleetHealth.eightyPercentFull }}</span>
+                  <span class="status-pct">{{ fleetPercentages().eightyPct }}%</span>
+                </div>
+                <app-progress [value]="fleetPercentages().eightyPct" color="warning" size="sm" />
+              </div>
+
+              <div class="status-row">
+                <div class="status-info">
+                  <span class="status-dot dot-needs-service"></span>
+                  <span class="status-name">Needs servicing (≥95%)</span>
+                </div>
+                <div class="status-metrics">
+                  <span class="status-count">{{ data.fleetHealth.needsServicing }}</span>
+                  <span class="status-pct">{{ fleetPercentages().needsServicingPct }}%</span>
+                </div>
+                <app-progress [value]="fleetPercentages().needsServicingPct" color="danger" size="sm" />
+              </div>
+
+              <div class="status-row">
+                <div class="status-info">
+                  <span class="status-dot dot-offline"></span>
+                  <span class="status-name">Offline</span>
+                </div>
+                <div class="status-metrics">
+                  <span class="status-count">{{ data.fleetHealth.offline }}</span>
+                  <span class="status-pct">{{ fleetPercentages().offlinePct }}%</span>
+                </div>
+                <app-progress [value]="fleetPercentages().offlinePct" color="info" size="sm" />
+              </div>
+            </div>
+          </div>
+        </app-card>
+
+        <!-- Recycling Volume by Material Donut -->
+        <app-card
+          title="Material Recovery"
+          subtitle="Tonnage breakdown by material category"
+          class="material-recovery-card"
+        >
+          <div class="donut-container">
+            <app-donut-chart
+              [data]="materialDonutSegments()"
+              centerLabel="Total"
+              [centerValue]="data.totalRecycledTonnage"
+              unit="t"
+              [showLegend]="true"
+            />
+          </div>
+        </app-card>
+
+        <!-- Trends Panel (Contamination & DAU) -->
+        <div class="trends-panel">
+          <app-card title="Contamination Rate Trend" subtitle="Rejection percentage trend">
+            <app-area-chart
+              [data]="contaminationTrendPoints()"
+              [height]="115"
+              color="var(--warning, #f59e0b)"
+              unit="%"
+              [showLegend]="false"
+            />
+          </app-card>
+
+          <app-card title="Daily Active Users Trend" subtitle="Telemetry user sessions velocity">
+            <app-area-chart
+              [data]="dauTrendPoints()"
+              [height]="115"
+              color="var(--info, #2563eb)"
+              unit="users"
+              [showLegend]="false"
+            />
+          </app-card>
+        </div>
+      </section>
+
+      <!-- 4. Needs Attention & Top Contamination Hotspots -->
+      <section class="bottom-grid">
+        <!-- Needs Attention Section -->
+        <app-card
+          title="Needs Attention"
+          subtitle="Critical bins and flagged AI verification reports"
+          class="needs-attention-card"
+        >
+          <div card-actions>
+            <a routerLink="/bins" class="card-action-link">
+              <span>View all bins</span>
+              <app-icon name="arrow-up-right" size="xs" />
+            </a>
+          </div>
+
+          <div class="attention-columns">
+            <!-- Urgent Bins List -->
+            <div class="attention-subcol">
+              <h4 class="attention-subheading">
+                <app-icon name="trash-2" size="sm" />
+                <span>Critical Bins (≥95% Full)</span>
+              </h4>
+
+              <div class="attention-items-list">
+                @for (bin of data.urgentBins; track bin.binId) {
+                  <a routerLink="/bins" class="attention-item-row">
+                    <div class="item-meta">
+                      <span class="item-id">{{ bin.binId }}</span>
+                      <span class="item-title">{{ bin.name }}</span>
+                      <span class="item-sub">{{ bin.area }}</span>
+                    </div>
+                    <div class="item-badges">
+                      <app-badge [label]="bin.fillLevel + '%'" variant="danger" />
+                      <app-badge label="Needs servicing" variant="danger" />
+                    </div>
+                  </a>
+                }
+              </div>
+            </div>
+
+            <!-- Urgent Reviews List -->
+            <div class="attention-subcol">
+              <h4 class="attention-subheading">
+                <app-icon name="shield-alert" size="sm" />
+                <span>Pending AI Verification</span>
+              </h4>
+
+              <div class="attention-items-list">
+                @for (rev of data.urgentReviews; track rev.reportId) {
+                  <a [routerLink]="['/review-queue', rev.reportId]" class="attention-item-row">
+                    <div class="item-meta">
+                      <div class="review-title-row">
+                        <span class="item-id">{{ rev.reportId }}</span>
+                        <span class="item-predicted">{{ rev.predictedType }}</span>
+                      </div>
+                      <span class="item-feedback">{{ rev.feedback }}</span>
+                    </div>
+                    <div class="item-badges">
+                      <app-badge [label]="(rev.confidence * 100 | number: '1.0-0') + '% conf.'" variant="warning" />
+                    </div>
+                  </a>
+                }
+              </div>
+            </div>
+          </div>
+        </app-card>
+
+        <!-- Top Contamination Hotspots -->
+        <app-card
+          title="Top Contamination Hotspots"
+          subtitle="Highest rejection rate by waste category"
+          class="hotspots-card"
+        >
+          <div class="hotspots-body">
+            <app-bar-list
+              [items]="hotspotItems()"
+              [thresholds]="hotspotThresholds"
+              unit="%"
+              [showPercentage]="true"
+            />
+          </div>
+        </app-card>
+      </section>
+    </div>
+  }
+</div>
