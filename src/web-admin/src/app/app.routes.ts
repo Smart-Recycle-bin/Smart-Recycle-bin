@@ -80,9 +80,7 @@ export const routes: Routes = [
       {
         path: 'wallet',
         loadComponent: () =>
-          import('./features/placeholders/route-placeholder/route-placeholder').then(
-            (m) => m.RoutePlaceholder
-          ),
+          import('./features/wallet/ledger/ledger').then((m) => m.Ledger),
         data: { title: 'Wallet & Ledger' },
       },
       {

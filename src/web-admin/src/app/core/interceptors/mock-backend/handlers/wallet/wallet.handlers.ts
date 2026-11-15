@@ -22,8 +22,11 @@ export function registerWalletHandlers(router: MockRouter): void {
 
     const db = getMockDb();
     const type = ctx.query.get('type')?.toLowerCase();
+    const source = ctx.query.get('source')?.toLowerCase();
     const search = ctx.query.get('search')?.toLowerCase();
     const userId = ctx.query.get('userId');
+    const from = ctx.query.get('from');
+    const to = ctx.query.get('to');
 
     let list = [...db.ledger];
 
@@ -31,8 +34,10 @@ export function registerWalletHandlers(router: MockRouter): void {
       list = list.filter((r) => r.userId === userId);
     }
 
-    if (type) {
-      list = list.filter((r) => r.entryType.toLowerCase() === type);
+    if (source) {
+      list = list.filter((r) => r.source.toLowerCase() === source);
+    } else if (type) {
+      list = list.filter((r) => r.entryType.toLowerCase() === type || r.source.toLowerCase() === type);
     }
 
     if (search) {
@@ -40,8 +45,20 @@ export function registerWalletHandlers(router: MockRouter): void {
         (r) =>
           r.transactionId.toLowerCase().includes(search) ||
           r.userName.toLowerCase().includes(search) ||
+          r.userId.toLowerCase().includes(search) ||
+          (r.binId && r.binId.toLowerCase().includes(search)) ||
           r.detailText.toLowerCase().includes(search)
       );
+    }
+
+    if (from) {
+      const fromDate = new Date(from);
+      list = list.filter((r) => new Date(r.timestamp) >= fromDate);
+    }
+
+    if (to) {
+      const toDate = new Date(to);
+      list = list.filter((r) => new Date(r.timestamp) <= toDate);
     }
 
     return okResponse(list);
@@ -59,19 +76,28 @@ export function registerWalletHandlers(router: MockRouter): void {
       return errorResponse(400, ApiErrorCode.ValidationError, 'User ID, amount, and type are required');
     }
 
+    if (body.amount <= 0) {
+      return errorResponse(400, ApiErrorCode.ValidationError, 'Amount must be greater than zero');
+    }
+
     const db = getMockDb();
     const recycler = db.recyclers.find((r) => r.userId === body.userId);
-    const userName = recycler ? recycler.name : `User ${body.userId}`;
+    if (!recycler) {
+      return errorResponse(404, ApiErrorCode.NotFound, `User ${body.userId} not found`);
+    }
 
+    if (body.type === LedgerEntryType.Debit && body.amount > recycler.availablePoints) {
+      return errorResponse(400, ApiErrorCode.InsufficientBalance, 'Insufficient user points balance');
+    }
+
+    const userName = recycler.name;
     const pointsDelta = body.type === LedgerEntryType.Debit ? -Math.abs(body.amount) : Math.abs(body.amount);
-    const previousBalance = recycler?.availablePoints ?? 1000;
+    const previousBalance = recycler.availablePoints;
     const newBalance = Math.max(0, previousBalance + pointsDelta);
 
-    if (recycler) {
-      recycler.availablePoints = newBalance;
-      if (pointsDelta > 0) {
-        recycler.lifetimePoints += pointsDelta;
-      }
+    recycler.availablePoints = newBalance;
+    if (pointsDelta > 0) {
+      recycler.lifetimePoints += pointsDelta;
     }
 
     const transactionId = `tx_${Date.now().toString(36)}`;

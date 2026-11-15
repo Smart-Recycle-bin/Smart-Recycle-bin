@@ -11,6 +11,7 @@ export interface LedgerQuery {
   from?: string; // ISO date string
   to?: string;   // ISO date string
   type?: LedgerEntryType;
+  source?: LedgerSource;
   search?: string;
 }
 

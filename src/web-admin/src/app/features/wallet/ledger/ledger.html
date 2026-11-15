@@ -1,0 +1,226 @@
+<div class="ledger-page">
+  <!-- Page Header -->
+  <app-page-header
+    title="Wallet & global ledger"
+    subtitle="Every points movement across the platform."
+  >
+    <div page-actions>
+      <app-button
+        variant="primary"
+        leadingIcon="plus"
+        (clicked)="openAdjustmentDrawer()"
+      >
+        Manual adjustment
+      </app-button>
+    </div>
+  </app-page-header>
+
+  <!-- Immutable Ledger Notice -->
+  <app-notice
+    variant="info"
+    description="Immutable ledger — entries cannot be edited or deleted. Corrections are made by appending a new manual adjustment."
+  />
+
+  <!-- Filters Toolbar Card -->
+  <div class="filters-card">
+    <div class="filters-grid">
+      <div class="filter-item search-filter">
+        <app-search-input
+          placeholder="Search user, bin, transaction ID..."
+          [value]="searchTerm()"
+          (valueChange)="handleSearch($event)"
+          (search)="handleSearch($event)"
+        />
+      </div>
+
+      <div class="filter-item type-filter">
+        <app-select
+          [options]="typeOptions"
+          [value]="selectedSource()"
+          placeholder="All types"
+          (valueChange)="handleTypeChange($event)"
+        />
+      </div>
+
+      <div class="filter-item date-filter">
+        <app-date-range-input
+          [value]="dateRange()"
+          (valueChange)="handleDateRangeChange($event)"
+          [compact]="true"
+        />
+      </div>
+    </div>
+  </div>
+
+  <!-- Table or Error State -->
+  @if (error()) {
+    <div class="error-container">
+      <app-resource-state
+        [error]="error()"
+        (retry)="loadLedger()"
+      />
+    </div>
+  } @else {
+    <div class="table-container">
+      <app-data-table
+        [columns]="tableColumns"
+        [data]="ledgerRows()"
+        [loading]="isLoading()"
+        mode="client"
+        [showPagination]="true"
+        [pageSize]="10"
+        emptyTitle="No ledger transactions found"
+        emptyDescription="No transaction records match the specified query filters."
+      >
+        <!-- Custom Transaction ID Cell -->
+        <ng-template appCell="transactionId" let-row>
+          <app-mono-id-cell
+            [value]="truncateId(row.transactionId)"
+            [title]="row.transactionId"
+          />
+        </ng-template>
+
+        <!-- Custom Timestamp Cell -->
+        <ng-template appCell="timestamp" let-row>
+          <span class="timestamp-text">{{ row.timestamp }}</span>
+        </ng-template>
+
+        <!-- Custom User Cell -->
+        <ng-template appCell="userName" let-row>
+          <app-user-cell
+            [name]="row.userName"
+            [subtitle]="row.userId"
+          />
+        </ng-template>
+
+        <!-- Custom Bin Cell -->
+        <ng-template appCell="binId" let-row>
+          <span class="bin-text">{{ row.binId || '—' }}</span>
+        </ng-template>
+
+        <!-- Custom Items / Detail Cell -->
+        <ng-template appCell="detailText" let-row>
+          <div class="detail-cell">
+            <span class="detail-text">{{ row.detailText }}</span>
+            @if (row.isManualAdjustment || row.source === 'manual_adjustment') {
+              <div class="manual-badge-wrapper">
+                <app-badge
+                  label="Manual adjustment by Admin"
+                  variant="warning"
+                  size="sm"
+                />
+              </div>
+            }
+          </div>
+        </ng-template>
+
+        <!-- Custom Points Delta Cell -->
+        <ng-template appCell="pointsDelta" let-row>
+          <app-number-cell
+            [value]="formatPoints(row.pointsDelta)"
+            [tone]="getPointsTone(row.pointsDelta)"
+          />
+        </ng-template>
+
+        <!-- Custom Balance Cell -->
+        <ng-template appCell="runningBalance" let-row>
+          <span class="balance-text">{{ row.runningBalance | number:'1.0-0' }}</span>
+        </ng-template>
+
+        <!-- Custom Type Badge Cell -->
+        <ng-template appCell="source" let-row>
+          <app-badge
+            [label]="getSourceLabel(row.source)"
+            [variant]="getSourceBadgeVariant(row.source)"
+            [dot]="true"
+          />
+        </ng-template>
+      </app-data-table>
+    </div>
+  }
+
+  <!-- Manual Points Adjustment Drawer -->
+  <app-drawer
+    [open]="isAdjustmentDrawerOpen()"
+    title="Manual Points Adjustment"
+    description="Manually adjust points on a recycler's account by appending an adjustment record to the immutable ledger."
+    size="md"
+    (closed)="closeAdjustmentDrawer()"
+  >
+    <div class="drawer-content">
+      <form [formGroup]="adjustmentForm" (ngSubmit)="submitAdjustment()" class="adjustment-form">
+        <div class="form-fields">
+          <div class="form-field-group">
+            <label class="field-label">Recycler Account</label>
+            <app-select
+              formControlName="userId"
+              [options]="userOptions()"
+              placeholder="Select target recycler account..."
+              [error]="userFieldError()"
+            />
+          </div>
+
+          <div class="form-field-group">
+            <label class="field-label">Adjustment Type</label>
+            <app-segmented-control
+              [options]="adjustmentTypeOptions"
+              [value]="adjustmentType()"
+              (valueChange)="handleAdjustmentTypeChange($event)"
+              size="sm"
+            />
+          </div>
+
+          <div class="form-field-group">
+            <app-number-input
+              formControlName="amount"
+              label="Points amount"
+              [min]="1"
+              [required]="true"
+              placeholder="e.g. 150"
+              [error]="amountFieldError()"
+            />
+          </div>
+
+          <div class="form-field-group">
+            <app-input
+              formControlName="reasonCode"
+              label="Reason code"
+              placeholder="e.g. CORRECTION_CLAWBACK, PROMOTION_BONUS"
+            />
+          </div>
+
+          <div class="form-field-group">
+            <app-textarea
+              formControlName="reasonNote"
+              label="Reason note"
+              placeholder="Mandatory administrative justification explaining the adjustment..."
+              [required]="true"
+              [rows]="3"
+            />
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <div drawer-footer class="drawer-footer-wrapper">
+      <p class="audit-note">This action will be recorded in the audit log.</p>
+      <div class="drawer-footer-actions">
+        <app-button
+          variant="ghost"
+          (clicked)="closeAdjustmentDrawer()"
+          [disabled]="isSubmitting()"
+        >
+          Cancel
+        </app-button>
+        <app-button
+          variant="primary"
+          (clicked)="submitAdjustment()"
+          [loading]="isSubmitting()"
+          [disabled]="adjustmentForm.invalid || isSubmitting()"
+        >
+          Apply adjustment
+        </app-button>
+      </div>
+    </div>
+  </app-drawer>
+</div>
