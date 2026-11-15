@@ -98,9 +98,7 @@ export const routes: Routes = [
       {
         path: 'survey-qa',
         loadComponent: () =>
-          import('./features/placeholders/route-placeholder/route-placeholder').then(
-            (m) => m.RoutePlaceholder
-          ),
+          import('./features/survey/survey-qa/survey-qa').then((m) => m.SurveyQa),
         data: { title: 'Survey QA' },
       },
       {

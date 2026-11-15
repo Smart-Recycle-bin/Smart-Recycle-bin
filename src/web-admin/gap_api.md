@@ -721,6 +721,7 @@ Errors return:
 | **Audit Action Types** | Few raw actions in APIs.md. | `audit_logs.action` VARCHAR. | p16 shows 7 distinct labels (Bin Assignment, Fleet Update, etc.). | Modeled as `AuditActionType` enum with snake_case wire values and exact UI labels. |
 | **Inspection Actions** | No admin inspection endpoints in APIs.md. | `inspection_reports` table exists. | p9/p10 shows Review Queue, Dismiss, Correct Category, Send to Retraining. | Modeled full set of admin inspection review endpoints and actions. |
 | **Survey QA Data** | No QA aggregation endpoint in APIs.md. | `disposal_surveys` table exists. | p11 shows rich metrics, trends, breakdown by bin and category. | Modeled `SurveyQaSummary` view-model and proposed `GET /api/v1/admin/survey-qa`. |
+| **Survey QA Recent Surveys Duplication** | Absent in APIs.md. | `disposal_surveys` table. | p11 displays aggregate stats/charts alongside a recent surveys table. | `SurveyQaSummary.recentSurveys` duplicates dedicated `GET /api/v1/admin/survey-qa/recent`. To adhere to clean data separation, the recent surveys table is loaded directly from `getRecentSurveys()` and does not use `summary.recentSurveys`. |
 
 ---
 

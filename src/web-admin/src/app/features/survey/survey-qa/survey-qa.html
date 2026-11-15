@@ -1,0 +1,208 @@
+<div class="survey-qa-page">
+  <!-- Page Header (p11: No period selector) -->
+  <app-page-header
+    title="Survey QA"
+    subtitle="Post-disposal survey outcomes as a quality signal for the AI classifier."
+  />
+
+  @if (error()) {
+    <div class="error-container">
+      <app-resource-state
+        [error]="error()"
+        (retry)="loadData()"
+      />
+    </div>
+  } @else if (isLoading()) {
+    <!-- Skeletons Loading View -->
+    <div class="stats-grid">
+      @for (i of [1, 2, 3, 4]; track i) {
+        <app-card>
+          <div class="skeleton-stat-card">
+            <app-skeleton width="45%" height="16px" />
+            <app-skeleton width="65%" height="32px" />
+            <app-skeleton width="35%" height="14px" />
+          </div>
+        </app-card>
+      }
+    </div>
+
+    <div class="charts-grid">
+      <app-card title="Confirm vs. reject">
+        <div class="skeleton-chart-card">
+          <app-skeleton height="240px" variant="rectangular" />
+        </div>
+      </app-card>
+      <app-card title="Rejection rate trend">
+        <div class="skeleton-chart-card">
+          <app-skeleton height="240px" variant="rectangular" />
+        </div>
+      </app-card>
+    </div>
+
+    <div class="breakdowns-grid">
+      <app-card title="Rejection rate by bin">
+        <div class="skeleton-chart-card">
+          <app-skeleton height="240px" variant="rectangular" />
+        </div>
+      </app-card>
+      <app-card title="Rejection rate by waste category">
+        <div class="skeleton-chart-card">
+          <app-skeleton height="240px" variant="rectangular" />
+        </div>
+      </app-card>
+    </div>
+
+    <div class="table-section">
+      <app-card title="Recent surveys">
+        <div class="skeleton-table-card">
+          <app-skeleton height="280px" variant="rectangular" />
+        </div>
+      </app-card>
+    </div>
+  } @else {
+    <!-- 1. Stats Row (p11: 4 KPI Cards) -->
+    @if (kpis(); as k) {
+      <div class="stats-grid" data-testid="survey-qa-stats">
+        <app-stat
+          title="Surveys (14d)"
+          [value]="(k.totalSurveys | number) ?? ''"
+          icon="clipboard-check"
+          iconTone="blue"
+        />
+        <app-stat
+          title="Confirm rate"
+          [value]="k.confirmRate"
+          unit="%"
+          [change]="confirmDeltaText()"
+          [trend]="confirmTrend()"
+          icon="check-circle"
+          iconTone="green"
+        />
+        <app-stat
+          title="Reject rate"
+          [value]="k.rejectRate"
+          unit="%"
+          [change]="rejectDeltaText()"
+          [trend]="rejectTrend()"
+          icon="x-circle"
+          iconTone="amber"
+        />
+        <app-stat
+          title="Flagged to AI queue"
+          [value]="(k.flaggedToAiQueue | number) ?? ''"
+          icon="sparkles"
+          iconTone="purple"
+        />
+      </div>
+    }
+
+    <!-- 2. Charts Row: Confirm vs Reject Donut & Rejection Trend Area Chart -->
+    <div class="charts-grid">
+      <app-card
+        title="Confirm vs. reject"
+        subtitle="14-day outcome split across post-disposal surveys"
+        data-testid="donut-card"
+      >
+        <app-donut-chart
+          [data]="donutData()"
+          centerLabel="Reject rate"
+          [centerValue]="donutCenterValue()"
+          [showLegend]="true"
+        />
+      </app-card>
+
+      <app-card
+        title="Rejection rate trend"
+        subtitle="Daily post-disposal survey rejection percentage"
+        data-testid="trend-card"
+      >
+        <app-area-chart
+          [data]="trendPoints()"
+          seriesLabel="Rejection rate"
+          unit="%"
+          color="var(--danger, #ef4444)"
+          [height]="240"
+          [showLegend]="false"
+        />
+      </app-card>
+    </div>
+
+    <!-- 3. Breakdowns Row: By Bin (Highest 6) & By Waste Category -->
+    <div class="breakdowns-grid">
+      <app-card
+        title="Rejection rate by bin"
+        subtitle="Top 6 bins ranked by dispute frequency"
+        data-testid="bins-breakdown-card"
+      >
+        <app-bar-list
+          [items]="highestRejectionBins()"
+          [thresholds]="binThresholds"
+          [showPercentage]="false"
+          unit="%"
+        />
+      </app-card>
+
+      <app-card
+        title="Rejection rate by waste category"
+        subtitle="Dispute distribution across material classifications"
+        data-testid="categories-breakdown-card"
+      >
+        <app-bar-list
+          [items]="rejectionByCategory()"
+          [showPercentage]="false"
+          unit="%"
+        />
+      </app-card>
+    </div>
+
+    <!-- 4. Recent Surveys Table -->
+    <div class="table-section">
+      <app-card
+        title="Recent surveys"
+        subtitle="Latest post-disposal survey evaluations submitted by recyclers"
+        data-testid="recent-surveys-card"
+      >
+        <app-data-table
+          [columns]="columns"
+          [data]="recentSurveys()"
+          [pageSize]="6"
+          mode="client"
+          [showPagination]="true"
+          [rowId]="getRowId"
+        >
+          <ng-template appCell="sessionId" let-row>
+            <app-mono-id-cell [value]="row.sessionId" />
+          </ng-template>
+
+          <ng-template appCell="userName" let-row>
+            <span class="font-medium text-text-primary">
+              {{ row.userName }}
+            </span>
+          </ng-template>
+
+          <ng-template appCell="itemsSummary" let-row>
+            <span class="text-text-secondary text-sm">
+              {{ row.itemsSummary }}
+            </span>
+          </ng-template>
+
+          <ng-template appCell="points" let-row>
+            <span class="font-semibold text-text-primary text-sm">
+              +{{ row.points }} pts
+            </span>
+          </ng-template>
+
+          <ng-template appCell="result" let-row>
+            <app-badge
+              [variant]="getResultBadgeVariant(row.result)"
+              size="sm"
+              [dot]="true"
+            >
+              {{ getOutcomeLabel(row.result) }}
+            </app-badge>
+          </ng-template>
+        </app-data-table>
+      </app-card>
+    </div>
+  }
+</div>
