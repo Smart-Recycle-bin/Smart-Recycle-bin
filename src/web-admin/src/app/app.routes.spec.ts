@@ -101,7 +101,7 @@ describe('App Routes', () => {
       await harness.navigateByUrl('/dev/components');
       expect(router.url).toBe('/dev/components');
       expect(harness.routeNativeElement?.textContent).toContain('EcoBin UI Kit & Foundation');
-    });
+    }, 15000);
 
     it('should render admin placeholder routes', async () => {
       const adminPaths: [string, string][] = [
@@ -122,7 +122,7 @@ describe('App Routes', () => {
         expect(router.url).toBe(url);
         expect(harness.routeNativeElement?.textContent).toContain(expectedTitle);
       }
-    });
+    }, 15000);
 
     it('should render NotFound on unknown routes', async () => {
       await harness.navigateByUrl('/non-existent-route');

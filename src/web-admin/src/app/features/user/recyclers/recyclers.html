@@ -1,0 +1,162 @@
+<div class="recyclers-page">
+  <!-- Page Header -->
+  <app-page-header
+    title="Recyclers"
+    subtitle="Moderate recycler accounts. Identity is masked for deleted users."
+  />
+
+  <!-- Filters Toolbar Card -->
+  <div class="filters-card">
+    <div class="filters-grid">
+      <div class="filter-item search-filter">
+        <app-search-input
+          placeholder="Search by name, email, phone, or ID..."
+          [value]="searchTerm()"
+          (valueChange)="handleSearch($event)"
+          (search)="handleSearch($event)"
+        />
+      </div>
+
+      <div class="filter-item status-filter">
+        <app-select
+          [options]="statusOptions"
+          [value]="selectedStatus()"
+          placeholder="All statuses"
+          (valueChange)="handleStatusChange($event)"
+        />
+      </div>
+    </div>
+  </div>
+
+  <!-- Table or Error State -->
+  @if (error()) {
+    <div class="error-container">
+      <app-resource-state
+        [error]="error()"
+        (retry)="loadRecyclers()"
+      />
+    </div>
+  } @else {
+    <div class="table-container">
+      <app-data-table
+        [columns]="tableColumns"
+        [data]="recyclers()"
+        [loading]="isLoading()"
+        [actions]="tableActions"
+        (actionClicked)="handleTableAction($event)"
+        mode="client"
+        [showPagination]="true"
+        [pageSize]="10"
+        emptyTitle="No recyclers found"
+        emptyDescription="No recycler accounts match the search and status criteria."
+      >
+        <!-- Custom User Cell Template -->
+        <ng-template appCell="name" let-row>
+          <app-user-cell
+            [name]="row.name"
+            [subtitle]="row.userId"
+          />
+        </ng-template>
+
+        <!-- Custom Available Points Cell Template -->
+        <ng-template appCell="availablePoints" let-row>
+          <app-number-cell
+            [value]="(row.availablePoints | number:'1.0-0') ?? '0'"
+          />
+        </ng-template>
+
+        <!-- Custom Lifetime Points Cell Template -->
+        <ng-template appCell="lifetimePoints" let-row>
+          <app-number-cell
+            [value]="(row.lifetimePoints | number:'1.0-0') ?? '0'"
+          />
+        </ng-template>
+
+        <!-- Custom Sessions Cell Template -->
+        <ng-template appCell="sessions" let-row>
+          <app-number-cell
+            [value]="(row.sessions | number:'1.0-0') ?? '0'"
+          />
+        </ng-template>
+
+        <!-- Custom Status Badge Cell Template -->
+        <ng-template appCell="status" let-row>
+          <app-badge
+            [label]="getStatusLabel(row.status)"
+            [variant]="getStatusBadgeVariant(row.status)"
+            [dot]="true"
+          />
+        </ng-template>
+
+        <!-- Custom Joined Date Cell Template -->
+        <ng-template appCell="joined" let-row>
+          <span class="timestamp-text">{{ row.joined | date:'yyyy-MM-dd' }}</span>
+        </ng-template>
+      </app-data-table>
+    </div>
+  }
+
+  <!-- Suspend Account Modal -->
+  <app-modal
+    [open]="isSuspendModalOpen()"
+    title="Suspend Recycler Account"
+    description="Suspend a citizen account to prevent points accumulation and redemptions."
+    size="md"
+    (closed)="closeSuspendModal()"
+  >
+    @if (selectedRecycler(); as user) {
+      <div class="suspend-modal-content">
+        <div class="target-user-card">
+          <app-user-cell
+            [name]="user.name"
+            [subtitle]="user.userId"
+          />
+          <span class="target-user-email">{{ user.email }}</span>
+        </div>
+
+        <form [formGroup]="suspendForm" (ngSubmit)="confirmSuspend()" class="suspend-form">
+          <app-textarea
+            formControlName="reason"
+            label="Reason for suspension"
+            placeholder="Explain the reason for this action (e.g. repeated contamination, fraudulent activity)..."
+            [required]="true"
+            [rows]="3"
+            [error]="suspendReasonError()"
+          />
+          <p class="audit-note">This action will be recorded in the audit log.</p>
+        </form>
+      </div>
+    }
+
+    <div modal-footer class="modal-footer-actions">
+      <app-button
+        variant="ghost"
+        (clicked)="closeSuspendModal()"
+        [disabled]="isSubmitting()"
+      >
+        Cancel
+      </app-button>
+      <app-button
+        variant="danger"
+        (clicked)="confirmSuspend()"
+        [loading]="isSubmitting()"
+        [disabled]="suspendForm.invalid || isSubmitting()"
+      >
+        Suspend account
+      </app-button>
+    </div>
+  </app-modal>
+
+  <!-- Unsuspend Account Confirmation Dialog -->
+  <app-confirm-dialog
+    [open]="isUnsuspendDialogOpen()"
+    title="Unsuspend Recycler Account"
+    [description]="unsuspendDescription()"
+    confirmText="Unsuspend account"
+    cancelText="Cancel"
+    [danger]="false"
+    [loading]="isSubmitting()"
+    (confirmed)="confirmUnsuspend()"
+    (cancelled)="closeUnsuspendDialog()"
+  />
+</div>

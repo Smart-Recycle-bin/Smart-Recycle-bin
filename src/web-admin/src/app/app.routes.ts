@@ -68,9 +68,7 @@ export const routes: Routes = [
       {
         path: 'recyclers',
         loadComponent: () =>
-          import('./features/placeholders/route-placeholder/route-placeholder').then(
-            (m) => m.RoutePlaceholder
-          ),
+          import('./features/user/recyclers/recyclers').then((m) => m.Recyclers),
         data: { title: 'Recyclers' },
       },
       {
