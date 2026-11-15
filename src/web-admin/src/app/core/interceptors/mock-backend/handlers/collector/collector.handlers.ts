@@ -60,6 +60,10 @@ export function registerCollectorHandlers(router: MockRouter): void {
     }
 
     const db = getMockDb();
+    if (db.collectors.some((c) => c.email.toLowerCase() === body.email.toLowerCase())) {
+      return errorResponse(409, ApiErrorCode.EmailAlreadyExists, 'Email already exists');
+    }
+
     const collectorId = `col_${Date.now().toString(36)}`;
     const initials =
       body.displayName

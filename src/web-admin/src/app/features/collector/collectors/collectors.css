@@ -1,0 +1,282 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+.collectors-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.header-action-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.375rem;
+}
+
+.header-helper-text {
+  font-size: 0.75rem;
+  color: var(--muted, #64748b);
+  max-width: 320px;
+  text-align: right;
+}
+
+.filters-card {
+  background-color: var(--card, #ffffff);
+  border: 1px solid var(--line, #e2e8f0);
+  border-radius: 0.75rem;
+  padding: 1rem 1.25rem;
+}
+
+.filters-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  align-items: center;
+}
+
+@media (min-width: 640px) {
+  .filters-grid {
+    grid-template-columns: 2fr;
+  }
+}
+
+.filter-item {
+  width: 100%;
+}
+
+.table-container {
+  background-color: var(--card, #ffffff);
+  border: 1px solid var(--line, #e2e8f0);
+  border-radius: 0.75rem;
+  overflow: hidden;
+}
+
+.error-container {
+  padding: 2rem 0;
+}
+
+.assigned-bins-cell {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.bins-count {
+  font-weight: 600;
+  color: var(--ink, #0f172a);
+}
+
+.timestamp-text {
+  font-size: 0.8125rem;
+  color: var(--muted, #64748b);
+  white-space: nowrap;
+}
+
+/* Drawers & Forms */
+.drawer-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.drawer-info-notice {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background-color: var(--surface-muted, #f8fafc);
+  border: 1px solid var(--line, #e2e8f0);
+  border-radius: 0.5rem;
+  font-size: 0.8125rem;
+  color: var(--muted, #64748b);
+}
+
+.collector-form {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.form-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.form-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.field-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--ink, #0f172a);
+}
+
+.credentials-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.credentials-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--ink, #0f172a);
+}
+
+.credentials-help-text {
+  font-size: 0.75rem;
+  color: var(--muted, #64748b);
+  margin: 0.25rem 0 0 0;
+}
+
+.temporary-password-field {
+  margin-top: 0.5rem;
+}
+
+.drawer-footer-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.drawer-footer-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+.audit-note {
+  font-size: 0.75rem;
+  color: var(--muted, #64748b);
+  font-style: italic;
+  margin: 0;
+}
+
+/* Assigned Bins Drawer Styling */
+.assigned-bins-drawer-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.loading-bins-state {
+  padding: 2rem 0;
+  text-align: center;
+  color: var(--muted, #64748b);
+}
+
+.empty-assigned-bins {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  text-align: center;
+  gap: 0.5rem;
+  color: var(--muted, #64748b);
+}
+
+.empty-title {
+  font-weight: 600;
+  color: var(--ink, #0f172a);
+  margin: 0;
+}
+
+.empty-desc {
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.assigned-bins-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.assigned-bin-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem;
+  background-color: var(--card, #ffffff);
+  border: 1px solid var(--line, #e2e8f0);
+  border-radius: 0.5rem;
+}
+
+.bin-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.bin-card-title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--ink, #0f172a);
+  margin: 0;
+}
+
+.bin-card-subtitle {
+  font-size: 0.75rem;
+  color: var(--muted, #64748b);
+}
+
+.bin-card-body {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  align-items: center;
+}
+
+.bin-fill-metric,
+.bin-service-metric {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.metric-label {
+  font-size: 0.75rem;
+  color: var(--muted, #64748b);
+  font-weight: 500;
+}
+
+.metric-value {
+  font-size: 0.8125rem;
+  color: var(--ink, #0f172a);
+}
+
+/* Assign Modal Styling */
+.assign-modal-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.assign-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.modal-footer-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  width: 100%;
+}

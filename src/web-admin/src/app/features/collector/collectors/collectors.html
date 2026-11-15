@@ -1,0 +1,384 @@
+<div class="collectors-page">
+  <!-- Page Header -->
+  <app-page-header
+    title="Collectors"
+    subtitle="Provision and manage field collector accounts."
+  >
+    <div page-actions class="header-action-container">
+      <app-button
+        variant="primary"
+        leadingIcon="plus"
+        (clicked)="openCreateDrawer()"
+      >
+        Create Collector Account
+      </app-button>
+      <span class="header-helper-text">
+        Collectors cannot self-register. Only System Admins can provision accounts.
+      </span>
+    </div>
+  </app-page-header>
+
+  <!-- Filters Toolbar Card -->
+  <div class="filters-card">
+    <div class="filters-grid">
+      <div class="filter-item search-filter">
+        <app-search-input
+          placeholder="Search by name, email, or phone..."
+          [value]="searchTerm()"
+          (valueChange)="handleSearch($event)"
+          (search)="handleSearch($event)"
+        />
+      </div>
+    </div>
+  </div>
+
+  <!-- Table or Error State -->
+  @if (error()) {
+    <div class="error-container">
+      <app-resource-state
+        [error]="error()"
+        (retry)="loadCollectors()"
+      />
+    </div>
+  } @else {
+    <div class="table-container">
+      <app-data-table
+        [columns]="tableColumns"
+        [data]="collectors()"
+        [loading]="isLoading()"
+        [actions]="tableActions"
+        (actionClicked)="handleTableAction($event)"
+        mode="client"
+        [showPagination]="true"
+        [pageSize]="10"
+        emptyTitle="No collectors found"
+        emptyDescription="No field collector accounts match the search criteria."
+      >
+        <!-- Custom Collector Cell Template -->
+        <ng-template appCell="name" let-row>
+          <app-user-cell
+            [name]="row.name"
+            [subtitle]="row.collectorId + ' · ' + row.district"
+          />
+        </ng-template>
+
+        <!-- Custom Assigned Bins Cell Template (Count + Eye Action) -->
+        <ng-template appCell="assignedBinsCount" let-row>
+          <div class="assigned-bins-cell">
+            <span class="bins-count">{{ row.assignedBinsCount }}</span>
+            <app-icon-button
+              icon="eye"
+              size="sm"
+              variant="ghost"
+              title="View assigned bins"
+              ariaLabel="View assigned bins"
+              (clicked)="openAssignedBinsDrawer(row)"
+            />
+          </div>
+        </ng-template>
+
+        <!-- Custom Status Badge Cell Template -->
+        <ng-template appCell="status" let-row>
+          <app-badge
+            [label]="getStatusLabel(row.status)"
+            [variant]="getStatusBadgeVariant(row.status)"
+            [dot]="true"
+          />
+        </ng-template>
+
+        <!-- Custom Last Active Date Cell Template -->
+        <ng-template appCell="lastActiveAt" let-row>
+          <span class="timestamp-text">{{ row.lastActiveAt }}</span>
+        </ng-template>
+      </app-data-table>
+    </div>
+  }
+
+  <!-- Create Collector Drawer (UI p7) -->
+  <app-drawer
+    [open]="isCreateDrawerOpen()"
+    title="Create Collector Account"
+    description="Provision new field collector accounts. Credential details are sent to the collector."
+    size="md"
+    (closed)="closeCreateDrawer()"
+  >
+    <div class="drawer-content">
+      <div class="drawer-info-notice">
+        <app-icon name="info" size="sm" />
+        <span>Collectors cannot self-register. Only System Admins can provision accounts.</span>
+      </div>
+
+      <form [formGroup]="createForm" (ngSubmit)="submitCreate()" class="collector-form">
+        <div class="form-fields">
+          <app-input
+            formControlName="displayName"
+            label="Full name"
+            placeholder="e.g. Mahmoud Fathy"
+            [required]="true"
+          />
+
+          <app-input
+            formControlName="email"
+            label="Email address"
+            type="email"
+            placeholder="e.g. m.fathy@ecobin.eg"
+            [required]="true"
+            [error]="createEmailError()"
+          />
+
+          <app-input
+            formControlName="phoneNumber"
+            label="Phone number"
+            placeholder="e.g. +20 100 234 5521"
+            [required]="true"
+          />
+
+          <div class="credentials-group">
+            <label class="credentials-label">Credentials</label>
+            <app-segmented-control
+              [options]="credentialsModeOptions"
+              [value]="createCredentialsMode()"
+              (valueChange)="handleCredentialsModeChange($event)"
+              size="sm"
+            />
+
+            @if (createCredentialsMode() === 'invite_link') {
+              <p class="credentials-help-text">
+                A single-use invite link (valid 48h) will be emailed to the collector.
+              </p>
+            } @else {
+              <div class="temporary-password-field">
+                <app-input
+                  formControlName="temporaryPassword"
+                  label="Temporary password"
+                  type="password"
+                  placeholder="Enter temporary password"
+                  [required]="true"
+                />
+              </div>
+            }
+          </div>
+
+          <div class="form-field-group">
+            <label class="field-label">District</label>
+            <app-select
+              formControlName="district"
+              [options]="districtOptions()"
+              placeholder="Select assigned district"
+            />
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <div drawer-footer class="drawer-footer-wrapper">
+      <p class="audit-note">This action will be recorded in the audit log.</p>
+      <div class="drawer-footer-actions">
+        <app-button
+          variant="ghost"
+          (clicked)="closeCreateDrawer()"
+          [disabled]="isSubmitting()"
+        >
+          Cancel
+        </app-button>
+        <app-button
+          variant="primary"
+          (clicked)="submitCreate()"
+          [loading]="isSubmitting()"
+          [disabled]="createForm.invalid || isSubmitting()"
+        >
+          Create account
+        </app-button>
+      </div>
+    </div>
+  </app-drawer>
+
+  <!-- Edit Collector Drawer -->
+  <app-drawer
+    [open]="isEditDrawerOpen()"
+    title="Edit Collector Account"
+    description="Update collector profile and district assignment."
+    size="md"
+    (closed)="closeEditDrawer()"
+  >
+    <div class="drawer-content">
+      <form [formGroup]="editForm" (ngSubmit)="submitEdit()" class="collector-form">
+        <div class="form-fields">
+          <app-input
+            formControlName="displayName"
+            label="Full name"
+            [required]="true"
+          />
+
+          <app-input
+            formControlName="email"
+            label="Email address"
+            type="email"
+            [required]="true"
+          />
+
+          <app-input
+            formControlName="phoneNumber"
+            label="Phone number"
+            [required]="true"
+          />
+
+          <div class="form-field-group">
+            <label class="field-label">District</label>
+            <app-select
+              formControlName="district"
+              [options]="districtOptions()"
+              placeholder="Select assigned district"
+            />
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <div drawer-footer class="drawer-footer-wrapper">
+      <p class="audit-note">This action will be recorded in the audit log.</p>
+      <div class="drawer-footer-actions">
+        <app-button
+          variant="ghost"
+          (clicked)="closeEditDrawer()"
+          [disabled]="isSubmitting()"
+        >
+          Cancel
+        </app-button>
+        <app-button
+          variant="primary"
+          (clicked)="submitEdit()"
+          [loading]="isSubmitting()"
+          [disabled]="editForm.invalid || isSubmitting()"
+        >
+          Save changes
+        </app-button>
+      </div>
+    </div>
+  </app-drawer>
+
+  <!-- Assigned Bins Drawer -->
+  <app-drawer
+    [open]="isAssignedBinsDrawerOpen()"
+    [title]="'Assigned Smart Bins - ' + (selectedCollector()?.name || '')"
+    [description]="(selectedCollector()?.collectorId || '') + ' · ' + (selectedCollector()?.district || '')"
+    size="lg"
+    (closed)="closeAssignedBinsDrawer()"
+  >
+    <div class="assigned-bins-drawer-content">
+      @if (isLoadingAssignedBins()) {
+        <div class="loading-bins-state">
+          <p>Loading assigned smart bins...</p>
+        </div>
+      } @else if (assignedBins().length === 0) {
+        <div class="empty-assigned-bins">
+          <app-icon name="trash" size="lg" />
+          <p class="empty-title">No smart bins assigned</p>
+          <p class="empty-desc">This collector currently has no smart bins assigned to their route.</p>
+        </div>
+      } @else {
+        <div class="assigned-bins-list">
+          @for (bin of assignedBins(); track bin.binId) {
+            <div class="assigned-bin-card">
+              <div class="bin-card-header">
+                <div>
+                  <h4 class="bin-card-title">{{ bin.name }}</h4>
+                  <span class="bin-card-subtitle">{{ bin.binId }} · {{ bin.area }} ({{ bin.district }})</span>
+                </div>
+                <app-badge
+                  [label]="getBinLabel(bin.status)"
+                  [variant]="getBinBadgeVariant(bin.status)"
+                  [dot]="true"
+                />
+              </div>
+
+              <div class="bin-card-body">
+                <div class="bin-fill-metric">
+                  <span class="metric-label">Fill Level</span>
+                  <app-fill-level-cell
+                    [value]="bin.fillLevel"
+                    [warningThreshold]="80"
+                    [dangerThreshold]="95"
+                  />
+                </div>
+                <div class="bin-service-metric">
+                  <span class="metric-label">Last Serviced</span>
+                  <span class="metric-value">{{ bin.lastServicedAt }}</span>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <div drawer-footer class="drawer-footer-wrapper">
+      <div class="drawer-footer-actions">
+        <app-button
+          variant="ghost"
+          (clicked)="closeAssignedBinsDrawer()"
+        >
+          Close
+        </app-button>
+      </div>
+    </div>
+  </app-drawer>
+
+  <!-- Assign Smart Bin Modal -->
+  <app-modal
+    [open]="isAssignModalOpen()"
+    title="Assign Smart Bin"
+    [description]="'Assign a smart bin hardware node to collector ' + (selectedCollector()?.name || '')"
+    size="md"
+    (closed)="closeAssignModal()"
+  >
+    <div class="assign-modal-content">
+      @if (isLoadingAvailableBins()) {
+        <p>Loading smart bins...</p>
+      } @else {
+        <form [formGroup]="assignBinForm" (ngSubmit)="submitAssign()" class="assign-form">
+          <div class="form-field-group">
+            <label class="field-label">Select Smart Bin</label>
+            <app-select
+              formControlName="binId"
+              [options]="availableBinOptions()"
+              placeholder="Select a bin to assign..."
+            />
+          </div>
+          <p class="audit-note">This bin assignment will be recorded in the audit log.</p>
+        </form>
+      }
+    </div>
+
+    <div modal-footer class="modal-footer-actions">
+      <app-button
+        variant="ghost"
+        (clicked)="closeAssignModal()"
+        [disabled]="isSubmitting()"
+      >
+        Cancel
+      </app-button>
+      <app-button
+        variant="primary"
+        (clicked)="submitAssign()"
+        [loading]="isSubmitting()"
+        [disabled]="assignBinForm.invalid || isSubmitting()"
+      >
+        Assign bin
+      </app-button>
+    </div>
+  </app-modal>
+
+  <!-- Deactivate Confirmation Dialog -->
+  <app-confirm-dialog
+    [open]="isDeactivateDialogOpen()"
+    title="Deactivate Collector Account"
+    [description]="deactivateDescription()"
+    confirmText="Deactivate collector"
+    cancelText="Cancel"
+    [danger]="true"
+    [loading]="isSubmitting()"
+    (confirmed)="confirmDeactivate()"
+    (cancelled)="closeDeactivateDialog()"
+  />
+</div>

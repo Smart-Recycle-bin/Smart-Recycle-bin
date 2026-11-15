@@ -74,9 +74,7 @@ export const routes: Routes = [
       {
         path: 'collectors',
         loadComponent: () =>
-          import('./features/placeholders/route-placeholder/route-placeholder').then(
-            (m) => m.RoutePlaceholder
-          ),
+          import('./features/collector/collectors/collectors').then((m) => m.Collectors),
         data: { title: 'Collectors' },
       },
       {
