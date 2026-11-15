@@ -1,10 +1,21 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, output, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  input,
+  OnInit,
+  signal,
+} from '@angular/core';
 import { Router, RouterOutlet } from '@angular/router';
 import { ADMIN_NAV_SECTIONS } from '../../core/navigation/admin-nav';
 import { CurrentUser, CurrentUserService } from '../../core/services/user/current-user.service';
 import { AuthService } from '../../core/services/auth/auth.service';
+import { NotificationsService } from '../../core/services/notification/notifications.service';
+import { ReviewQueueStateService } from '../../core/services/inspection/review-queue-state.service';
+import { NotificationItem } from '../../core/models/notification/notification.view-model';
 import { Sidebar, SidebarSection } from '../../shared/components/sidebar/sidebar';
-import { Topbar } from '../../shared/components/topbar/topbar';
+import { Topbar, TopbarMenuItem } from '../../shared/components/topbar/topbar';
 
 @Component({
   selector: 'app-admin-layout',
@@ -13,21 +24,89 @@ import { Topbar } from '../../shared/components/topbar/topbar';
   styleUrl: './admin-layout.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class AdminLayout {
+export class AdminLayout implements OnInit {
   private readonly currentUserService = inject(CurrentUserService);
   private readonly authService = inject(AuthService);
+  private readonly notificationsService = inject(NotificationsService);
+  private readonly reviewQueueState = inject(ReviewQueueStateService);
   private readonly router = inject(Router);
 
-  readonly navSections = input<SidebarSection[]>(ADMIN_NAV_SECTIONS);
   readonly currentUser = input<CurrentUser | null>(null);
-  readonly unreadNotifications = input<number>(0);
 
-  readonly searchTriggered = output<string>();
+  readonly notifications = signal<NotificationItem[]>([]);
+  readonly unreadNotifications = signal<number>(0);
 
   readonly sidebarCollapsed = signal<boolean>(false);
   readonly mobileSidebarOpen = signal<boolean>(false);
 
   readonly activeUser = computed(() => this.currentUser() ?? this.currentUserService.user());
+
+  readonly navSections = computed<SidebarSection[]>(() => {
+    const pendingCount = this.reviewQueueState.pendingCount();
+    return ADMIN_NAV_SECTIONS.map((section) => ({
+      ...section,
+      items: section.items.map((item) => {
+        if (item.route === '/review-queue' || item.id === 'review-queue') {
+          return {
+            ...item,
+            badge: pendingCount > 0 ? pendingCount : undefined,
+          };
+        }
+        return item;
+      }),
+    }));
+  });
+
+  readonly userMenuItems: TopbarMenuItem[] = [
+    { id: 'logout', label: 'Sign out', icon: 'log-out', danger: true },
+  ];
+
+  ngOnInit(): void {
+    this.loadNotifications();
+    this.reviewQueueState.refresh().subscribe({
+      error: () => {
+        // Silently handle error or retain existing pending count
+      },
+    });
+  }
+
+  loadNotifications(): void {
+    this.notificationsService.getNotifications().subscribe({
+      next: (res) => {
+        this.notifications.set(res.items);
+        this.unreadNotifications.set(res.unreadCount);
+      },
+      error: () => {
+        // Silently handle
+      },
+    });
+  }
+
+  handleNotificationItemClick(item: NotificationItem): void {
+    if (item.unread) {
+      this.notificationsService.markAsRead(item.id).subscribe({
+        next: (res) => {
+          this.notifications.update((items) =>
+            items.map((it) => (it.id === res.id ? { ...it, unread: res.unread } : it))
+          );
+          this.unreadNotifications.update((count) => Math.max(0, count - 1));
+        },
+        error: () => {},
+      });
+    }
+  }
+
+  handleNotificationsMarkAllRead(): void {
+    this.notificationsService.markAllAsRead().subscribe({
+      next: (res) => {
+        this.notifications.update((items) =>
+          items.map((it) => ({ ...it, unread: false }))
+        );
+        this.unreadNotifications.set(res.unreadCount ?? 0);
+      },
+      error: () => {},
+    });
+  }
 
   toggleCollapse(): void {
     this.sidebarCollapsed.update((v) => !v);

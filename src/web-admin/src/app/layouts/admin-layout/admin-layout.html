@@ -21,12 +21,16 @@
   <!-- Main Area -->
   <div class="admin-main">
     <app-topbar
+      [notifications]="notifications()"
       [unreadNotifications]="unreadNotifications()"
+      [userMenuItems]="userMenuItems"
       [userName]="activeUser()?.name ?? ''"
       [userRole]="activeUser()?.role ?? ''"
       [userAvatar]="activeUser()?.avatarUrl || ''"
       (toggleSidebar)="toggleMobileSidebar()"
-      (search)="searchTriggered.emit($event)"
+      (notificationClicked)="loadNotifications()"
+      (notificationItemClicked)="handleNotificationItemClick($event)"
+      (notificationsMarkAllRead)="handleNotificationsMarkAllRead()"
       (userMenuAction)="handleUserMenuAction($event)"
     />
 
