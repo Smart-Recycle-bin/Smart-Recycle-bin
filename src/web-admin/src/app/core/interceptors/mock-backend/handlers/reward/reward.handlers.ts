@@ -78,6 +78,7 @@ export function registerRewardHandlers(router: MockRouter): void {
       status: body.stock > 0 ? RewardStatus.InStock : RewardStatus.OutOfStock,
       validFrom: body.validFrom,
       validUntil: body.validUntil,
+      imageUrl: body.imageUrl,
     };
 
     db.rewards.unshift(newReward);
@@ -134,6 +135,9 @@ export function registerRewardHandlers(router: MockRouter): void {
     }
     if (body?.validUntil !== undefined) {
       reward.validUntil = body.validUntil;
+    }
+    if (body?.imageUrl !== undefined) {
+      reward.imageUrl = body.imageUrl;
     }
 
     appendAuditLog(

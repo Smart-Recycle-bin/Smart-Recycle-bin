@@ -104,9 +104,7 @@ export const routes: Routes = [
       {
         path: 'rewards',
         loadComponent: () =>
-          import('./features/placeholders/route-placeholder/route-placeholder').then(
-            (m) => m.RoutePlaceholder
-          ),
+          import('./features/reward/catalog/catalog').then((m) => m.Catalog),
         data: { title: 'Rewards Catalog' },
       },
       {

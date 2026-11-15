@@ -1,0 +1,341 @@
+<div class="catalog-page">
+  <!-- Page Header (p12: Subtitle with dynamic count, Grid|Table toggle, Status select, New item) -->
+  <app-page-header
+    title="Rewards catalog"
+    [subtitle]="subtitle()"
+  >
+    <div page-actions class="header-actions">
+      <!-- Grid | Table Segmented Control -->
+      <app-segmented-control
+        [options]="viewModeOptions"
+        [value]="viewMode()"
+        size="sm"
+        ariaLabel="View mode"
+        (valueChange)="handleViewModeChange($event)"
+      />
+
+      <!-- Status Filter Select -->
+      <div class="status-filter-wrapper">
+        <app-select
+          [options]="statusFilterOptions"
+          [value]="selectedStatus()"
+          placeholder="All statuses"
+          (valueChange)="handleStatusChange($event)"
+        />
+      </div>
+
+      <!-- New Item Primary Button -->
+      <app-button
+        variant="primary"
+        leadingIcon="plus"
+        (clicked)="openNewItemDrawer()"
+      >
+        New item
+      </app-button>
+    </div>
+  </app-page-header>
+
+  <!-- Error State with Retry -->
+  @if (error()) {
+    <div class="error-container">
+      <app-resource-state
+        [error]="error()"
+        (retry)="loadRewards()"
+      />
+    </div>
+  } @else if (isLoading()) {
+    <!-- Skeletons Loading View -->
+    <div class="catalog-skeleton-grid">
+      @for (i of [1, 2, 3, 4, 5, 6]; track i) {
+        <div class="skeleton-reward-card">
+          <app-skeleton height="140px" variant="rectangular" />
+          <div class="skeleton-card-body">
+            <app-skeleton width="40%" height="14px" />
+            <app-skeleton width="75%" height="20px" />
+            <app-skeleton width="30%" height="24px" />
+            <app-skeleton width="60%" height="16px" />
+          </div>
+        </div>
+      }
+    </div>
+  } @else {
+    @if (rewards().length === 0) {
+      <app-resource-state
+        [empty]="true"
+        emptyTitle="No rewards found"
+        emptyDescription="No catalog items match the selected status filter."
+        emptyIcon="gift"
+      />
+    } @else {
+      <!-- 1. Grid View (p12) -->
+      @if (viewMode() === 'grid') {
+        <div class="rewards-grid" data-testid="rewards-grid">
+          @for (item of rewards(); track item.itemId) {
+            <div class="reward-card" [attr.data-testid]="'reward-card-' + item.itemId">
+              <!-- Card Banner Header with Image / Gradient and Status Badge -->
+              <div class="card-banner" [class.has-image]="!!item.imageUrl">
+                @if (item.imageUrl) {
+                  <img
+                    [src]="item.imageUrl"
+                    [alt]="item.title"
+                    class="banner-image"
+                    loading="lazy"
+                  />
+                } @else {
+                  <div class="banner-gradient"></div>
+                }
+                <div class="banner-badge-overlay">
+                  <app-badge
+                    [variant]="getStatusBadgeVariant(item.status)"
+                    size="sm"
+                    [dot]="true"
+                  >
+                    {{ getStatusLabel(item.status) }}
+                  </app-badge>
+                </div>
+              </div>
+
+              <!-- Card Body Content -->
+              <div class="card-body-content">
+                <div class="category-code-line">
+                  {{ getCategoryLabel(item.category) }} · {{ getCodeTypeLabel(item.voucherCodeType) }}
+                </div>
+
+                <h3 class="reward-title" [title]="item.title">
+                  {{ item.title }}
+                </h3>
+
+                <div class="reward-price">
+                  {{ item.pointsCost | number }} pts
+                </div>
+
+                <div class="reward-metrics">
+                  <span class="redemptions-text">{{ item.redemptionsCount }} redeemed</span>
+                  @if (item.stock === 0) {
+                    <span class="stock-out-danger" data-testid="out-of-stock-label">No stock</span>
+                  } @else {
+                    <span class="stock-count-text">{{ item.stock }} in stock</span>
+                  }
+                </div>
+              </div>
+
+              <!-- Card Footer Actions: Edit and Archive (no archive for archived) -->
+              <div class="card-footer-actions">
+                <app-icon-button
+                  icon="pencil"
+                  size="sm"
+                  variant="ghost"
+                  ariaLabel="Edit reward"
+                  title="Edit reward"
+                  (clicked)="openEditDrawer(item)"
+                />
+                @if (item.status !== RewardStatus.Archived) {
+                  <app-icon-button
+                    icon="archive"
+                    size="sm"
+                    variant="ghost"
+                    ariaLabel="Archive reward"
+                    title="Archive reward"
+                    (clicked)="openArchiveDialog(item)"
+                  />
+                }
+              </div>
+            </div>
+          }
+        </div>
+      } @else {
+        <!-- 2. Table View (p14) -->
+        <div class="rewards-table-wrapper" data-testid="rewards-table">
+          <app-data-table
+            [columns]="tableColumns"
+            [data]="rewards()"
+            [actions]="tableActions"
+            mode="client"
+            [showPagination]="true"
+            [pageSize]="10"
+            [rowId]="getRowId"
+            (actionClicked)="handleTableAction($event)"
+          >
+            <!-- Custom Item Cell: Title + Code -->
+            <ng-template appCell="title" let-row>
+              <div class="table-item-cell">
+                <span class="font-medium text-text-primary">{{ row.title }}</span>
+                <span class="font-mono text-xs text-text-muted">{{ row.code }}</span>
+              </div>
+            </ng-template>
+
+            <!-- Custom Category Cell -->
+            <ng-template appCell="category" let-row>
+              <span class="text-sm text-text-secondary">{{ getCategoryLabel(row.category) }}</span>
+            </ng-template>
+
+            <!-- Custom Price Cell -->
+            <ng-template appCell="pointsCost" let-row>
+              <span class="font-semibold text-brand text-sm">{{ row.pointsCost | number }} pts</span>
+            </ng-template>
+
+            <!-- Custom Stock Cell (p14: Red 'No stock' at 0) -->
+            <ng-template appCell="stock" let-row>
+              @if (row.stock === 0) {
+                <span class="stock-out-danger text-sm font-semibold" data-testid="table-out-of-stock">No stock</span>
+              } @else {
+                <span class="text-sm text-text-primary font-medium">{{ row.stock }}</span>
+              }
+            </ng-template>
+
+            <!-- Custom Redemptions Cell -->
+            <ng-template appCell="redemptionsCount" let-row>
+              <span class="text-sm text-text-secondary">{{ row.redemptionsCount | number }}</span>
+            </ng-template>
+
+            <!-- Custom Status Badge Cell -->
+            <ng-template appCell="status" let-row>
+              <app-badge
+                [variant]="getStatusBadgeVariant(row.status)"
+                size="sm"
+                [dot]="true"
+              >
+                {{ getStatusLabel(row.status) }}
+              </app-badge>
+            </ng-template>
+          </app-data-table>
+        </div>
+      }
+    }
+  }
+
+  <!-- New / Edit Reward Drawer (p13) -->
+  <app-drawer
+    [open]="isDrawerOpen()"
+    [title]="editingReward() ? 'Edit Catalog Item' : 'New Catalog Item'"
+    description="Configure reward vouchers redeemable by citizens using accumulated EcoBin points."
+    size="md"
+    (closed)="closeDrawer()"
+  >
+    <div class="drawer-content">
+      <form [formGroup]="rewardForm" (ngSubmit)="submitDrawerForm()" class="reward-form">
+        <div class="form-grid">
+          <!-- Title* -->
+          <app-input
+            formControlName="title"
+            label="Title"
+            placeholder="e.g. Carrefour Voucher EGP 50"
+            [required]="true"
+          />
+
+          <!-- Description -->
+          <app-textarea
+            formControlName="description"
+            label="Description"
+            placeholder="Voucher terms, eligibility, and redemption guidelines..."
+            [rows]="3"
+          />
+
+          <!-- Category* -->
+          <app-select
+            formControlName="category"
+            label="Category"
+            [options]="categoryOptions"
+            [required]="true"
+          />
+
+          <!-- Voucher Code Type* -->
+          <app-select
+            formControlName="voucherCodeType"
+            label="Voucher code type"
+            [options]="voucherCodeTypeOptions"
+            [required]="true"
+          />
+
+          <div class="two-col-grid">
+            <!-- Points Price* -->
+            <app-number-input
+              formControlName="pointsCost"
+              label="Points price"
+              placeholder="1000"
+              suffix="pts"
+              [min]="1"
+              [required]="true"
+              hint="Points required to redeem this reward item"
+            />
+
+            <!-- Inventory Stock Limit* -->
+            <app-number-input
+              formControlName="stock"
+              label="Inventory stock limit"
+              placeholder="50"
+              [min]="0"
+              [required]="true"
+              hint="0 automatically marks the item Out of Stock."
+            />
+          </div>
+
+          <div class="two-col-grid">
+            <!-- Valid From -->
+            <app-date-input
+              formControlName="validFrom"
+              label="Valid from"
+            />
+
+            <!-- Valid Until -->
+            <app-date-input
+              formControlName="validUntil"
+              label="Valid until"
+            />
+          </div>
+
+          <!-- Image Upload (PNG/JPG, min 800x600) -->
+          <div class="image-upload-wrapper">
+            <app-file-upload
+              label="Reward voucher image"
+              hint="PNG or JPG, min 800×600"
+              accept="image/png,image/jpeg"
+              (fileSelected)="onFileSelected($event)"
+            />
+
+            @if (uploadedImageUrl()) {
+              <div class="current-image-preview">
+                <span class="preview-label">Current image asset:</span>
+                <img [src]="uploadedImageUrl()!" alt="Uploaded preview" class="preview-thumbnail" />
+              </div>
+            }
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <!-- Drawer Footer -->
+    <div drawer-footer class="drawer-footer-wrapper">
+      <p class="audit-note">This action will be recorded in the audit log.</p>
+      <div class="drawer-footer-actions">
+        <app-button
+          variant="ghost"
+          (clicked)="closeDrawer()"
+          [disabled]="isSubmitting()"
+        >
+          Cancel
+        </app-button>
+        <app-button
+          variant="primary"
+          (clicked)="submitDrawerForm()"
+          [loading]="isSubmitting()"
+        >
+          {{ editingReward() ? 'Save Changes' : 'Create Item' }}
+        </app-button>
+      </div>
+    </div>
+  </app-drawer>
+
+  <!-- Archive Confirm Dialog -->
+  <app-confirm-dialog
+    [open]="isConfirmArchiveOpen()"
+    title="Archive Reward Item"
+    [description]="'Are you sure you want to archive \'' + (rewardToArchive()?.title || '') + '\'? This item will be removed from circulation and citizens will no longer be able to redeem it.'"
+    confirmText="Archive Item"
+    cancelText="Cancel"
+    [danger]="true"
+    [loading]="isArchiving()"
+    (confirmed)="confirmArchive()"
+    (cancelled)="closeArchiveDialog()"
+  />
+</div>

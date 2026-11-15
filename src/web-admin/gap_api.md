@@ -581,6 +581,12 @@ Errors return:
   }
   ```
 
+#### `POST /api/v1/admin/catalog` & `PUT /api/v1/admin/catalog/:itemId` (Enriched)
+- **Screen(s):** S10 New-reward drawer & edit drawer (p13)
+- **Actor:** `SYS_ADMIN`
+- **Purpose:** Enriched request payloads for reward creation and update to accept uploaded `imageUrl` and `voucherCodeType`.
+- **Fields Added:** `imageUrl` (optional string), `voucherCodeType` (`code` | `qr` | `barcode`).
+
 ---
 
 ### 1.10 Leaderboards & Badges
@@ -722,6 +728,7 @@ Errors return:
 | **Inspection Actions** | No admin inspection endpoints in APIs.md. | `inspection_reports` table exists. | p9/p10 shows Review Queue, Dismiss, Correct Category, Send to Retraining. | Modeled full set of admin inspection review endpoints and actions. |
 | **Survey QA Data** | No QA aggregation endpoint in APIs.md. | `disposal_surveys` table exists. | p11 shows rich metrics, trends, breakdown by bin and category. | Modeled `SurveyQaSummary` view-model and proposed `GET /api/v1/admin/survey-qa`. |
 | **Survey QA Recent Surveys Duplication** | Absent in APIs.md. | `disposal_surveys` table. | p11 displays aggregate stats/charts alongside a recent surveys table. | `SurveyQaSummary.recentSurveys` duplicates dedicated `GET /api/v1/admin/survey-qa/recent`. To adhere to clean data separation, the recent surveys table is loaded directly from `getRecentSurveys()` and does not use `summary.recentSurveys`. |
+| **Reward Image & Voucher Code Type** | `CreateRewardRequest` / `UpdateRewardRequest` in APIs.md omit `imageUrl` and `voucherCodeType`. | `vouchers` table has `voucher_code`. | p12–p14 display voucher images and code types. | Added optional `imageUrl` and `voucherCodeType` to reward DTOs, mock handlers, and UI drawer. |
 
 ---
 

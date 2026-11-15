@@ -14,6 +14,7 @@ export interface CreateRewardRequest {
   voucherCodeType?: VoucherCodeType;
   validFrom?: string; // ISO date string
   validUntil?: string; // ISO date string
+  imageUrl?: string; // PROPOSED: see gap_api.md -> Enriched endpoint
 }
 
 /**
@@ -28,6 +29,7 @@ export interface UpdateRewardRequest {
   voucherCodeType?: VoucherCodeType;
   validFrom?: string; // ISO date string
   validUntil?: string; // ISO date string
+  imageUrl?: string; // PROPOSED: see gap_api.md -> Enriched endpoint
 }
 
 /**
