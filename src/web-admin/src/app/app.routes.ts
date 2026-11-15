@@ -19,12 +19,10 @@ export const routes: Routes = [
       {
         path: '',
         loadComponent: () =>
-          import('./features/placeholders/route-placeholder/route-placeholder').then(
-            (m) => m.RoutePlaceholder
-          ),
+          import('./features/auth/login/login').then((m) => m.Login),
         data: {
           title: 'Sign in',
-          description: 'Authentication page placeholder.',
+          description: 'Sign in to the System Admin dashboard.',
         },
       },
     ],
