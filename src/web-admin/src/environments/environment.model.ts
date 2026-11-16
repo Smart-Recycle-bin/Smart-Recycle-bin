@@ -6,4 +6,5 @@ export interface Environment {
   mockAccessTokenTtlSeconds: number;
   mockRefreshTokenTtlDays: number;
   sessionStorageKey: string;
+  displayTimeZone: string;
 }

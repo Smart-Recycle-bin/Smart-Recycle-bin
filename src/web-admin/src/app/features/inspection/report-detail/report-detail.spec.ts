@@ -7,6 +7,7 @@ import { InspectionReportsService } from '../../../core/services/inspection/insp
 import { ReviewQueueStateService } from '../../../core/services/inspection/review-queue-state.service';
 import { ToastService } from '../../../core/services/toast/toast.service';
 import { InspectionReportStatus } from '../../../core/models/inspection/inspection-report-status.enum';
+import { formatDateTime } from '../../../shared/utils/datetime';
 import {
   MOCK_INSPECTION_DETAILS,
   MOCK_INSPECTION_SUMMARY,
@@ -112,7 +113,7 @@ describe('ReportDetail Component', () => {
     expect(component.isPending()).toBe(true);
     expect(component.headerTitle()).toBe(`${samplePendingDetail.airId} · Session ${samplePendingDetail.sessionId}`);
     expect(component.headerSubtitle()).toBe(
-      `${samplePendingDetail.binId} · ${samplePendingDetail.userName} · ${samplePendingDetail.date}`
+      `${samplePendingDetail.binId} · ${samplePendingDetail.userName} · ${formatDateTime(samplePendingDetail.date)}`
     );
   });
 

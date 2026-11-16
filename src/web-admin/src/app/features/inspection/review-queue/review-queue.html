@@ -172,7 +172,7 @@
 
         <!-- Custom Date Cell -->
         <ng-template appCell="date" let-row>
-          <span class="timestamp-text">{{ row.date }}</span>
+          <span class="timestamp-text">{{ row.date | dateTime }}</span>
         </ng-template>
 
         <!-- Custom Status Badge Cell -->

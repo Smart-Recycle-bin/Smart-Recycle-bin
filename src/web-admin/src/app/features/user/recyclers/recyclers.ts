@@ -6,7 +6,8 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { CommonModule, DatePipe, DecimalPipe } from '@angular/common';
+import { CommonModule, DecimalPipe } from '@angular/common';
+import { DateOnlyPipe } from '../../../shared/pipes';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AccountStatus } from '../../../core/models/user/account-status.enum';
 import { RecyclerListItem, RecyclerQuery } from '../../../core/models/user/recycler.view-model';
@@ -39,7 +40,7 @@ import { Button } from '../../../shared/components/button/button';
   standalone: true,
   imports: [
     CommonModule,
-    DatePipe,
+    DateOnlyPipe,
     DecimalPipe,
     ReactiveFormsModule,
     PageHeader,

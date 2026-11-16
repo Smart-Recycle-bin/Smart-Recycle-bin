@@ -93,9 +93,15 @@ export function getRejectRateTrend(delta: number): StatTrend {
   return 'neutral';
 }
 
+import { environment } from '../../../../environments/environment';
+
 export function formatShortDate(dateStr: string): string {
   if (!dateStr) return '';
   const d = new Date(dateStr);
   if (isNaN(d.getTime())) return dateStr;
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  return d.toLocaleDateString('en-US', {
+    timeZone: environment.displayTimeZone,
+    month: 'short',
+    day: 'numeric',
+  });
 }

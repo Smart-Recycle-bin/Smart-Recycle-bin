@@ -1,11 +1,12 @@
 import { AuditActionType } from '../../../models/audit/audit-action-type.enum';
 import { AuditLogRow } from '../../../models/audit/audit.view-model';
+import { cairoLocalToIso } from '../_dates';
 
 export const MOCK_AUDIT_LOGS: AuditLogRow[] = [
   // 8 visible rows from PDF p16 (Showing 1-8 of 10)
   {
     auditId: 'AUD-1001',
-    timestamp: '2025-06-14 09:58',
+    timestamp: cairoLocalToIso('2025-06-14 09:58'),
     adminId: 'ADM-001',
     adminName: 'Laila Hamdy',
     adminInitials: 'LH',
@@ -16,7 +17,7 @@ export const MOCK_AUDIT_LOGS: AuditLogRow[] = [
   },
   {
     auditId: 'AUD-1002',
-    timestamp: '2025-06-14 09:21',
+    timestamp: cairoLocalToIso('2025-06-14 09:21'),
     adminId: 'ADM-001',
     adminName: 'Laila Hamdy',
     adminInitials: 'LH',
@@ -27,7 +28,7 @@ export const MOCK_AUDIT_LOGS: AuditLogRow[] = [
   },
   {
     auditId: 'AUD-1003',
-    timestamp: '2025-06-14 08:47',
+    timestamp: cairoLocalToIso('2025-06-14 08:47'),
     adminId: 'ADM-002',
     adminName: 'Amr Shawky',
     adminInitials: 'AS',
@@ -38,7 +39,7 @@ export const MOCK_AUDIT_LOGS: AuditLogRow[] = [
   },
   {
     auditId: 'AUD-1004',
-    timestamp: '2025-06-13 16:30',
+    timestamp: cairoLocalToIso('2025-06-13 16:30'),
     adminId: 'ADM-001',
     adminName: 'Laila Hamdy',
     adminInitials: 'LH',
@@ -49,7 +50,7 @@ export const MOCK_AUDIT_LOGS: AuditLogRow[] = [
   },
   {
     auditId: 'AUD-1005',
-    timestamp: '2025-06-13 14:12',
+    timestamp: cairoLocalToIso('2025-06-13 14:12'),
     adminId: 'ADM-002',
     adminName: 'Amr Shawky',
     adminInitials: 'AS',
@@ -60,7 +61,7 @@ export const MOCK_AUDIT_LOGS: AuditLogRow[] = [
   },
   {
     auditId: 'AUD-1006',
-    timestamp: '2025-06-13 11:05',
+    timestamp: cairoLocalToIso('2025-06-13 11:05'),
     adminId: 'ADM-001',
     adminName: 'Laila Hamdy',
     adminInitials: 'LH',
@@ -71,7 +72,7 @@ export const MOCK_AUDIT_LOGS: AuditLogRow[] = [
   },
   {
     auditId: 'AUD-1007',
-    timestamp: '2025-06-12 17:40',
+    timestamp: cairoLocalToIso('2025-06-12 17:40'),
     adminId: 'ADM-001',
     adminName: 'Laila Hamdy',
     adminInitials: 'LH',
@@ -82,7 +83,7 @@ export const MOCK_AUDIT_LOGS: AuditLogRow[] = [
   },
   {
     auditId: 'AUD-1008',
-    timestamp: '2025-06-12 10:15',
+    timestamp: cairoLocalToIso('2025-06-12 10:15'),
     adminId: 'ADM-002',
     adminName: 'Amr Shawky',
     adminInitials: 'AS',
@@ -94,7 +95,7 @@ export const MOCK_AUDIT_LOGS: AuditLogRow[] = [
   // Additional rows to complete the 10 total indicated on p16 ("1-8 of 10")
   {
     auditId: 'AUD-1009',
-    timestamp: '2025-06-11 15:00',
+    timestamp: cairoLocalToIso('2025-06-11 15:00'),
     adminId: 'ADM-001',
     adminName: 'Laila Hamdy',
     adminInitials: 'LH',
@@ -105,7 +106,7 @@ export const MOCK_AUDIT_LOGS: AuditLogRow[] = [
   },
   {
     auditId: 'AUD-1010',
-    timestamp: '2025-06-11 09:30',
+    timestamp: cairoLocalToIso('2025-06-11 09:30'),
     adminId: 'ADM-002',
     adminName: 'Amr Shawky',
     adminInitials: 'AS',

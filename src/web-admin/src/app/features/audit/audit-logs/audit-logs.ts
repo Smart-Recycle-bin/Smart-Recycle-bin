@@ -33,6 +33,7 @@ import { MonoIdCell } from '../../../shared/components/table/cells/mono-id-cell/
 import { ResourceState } from '../../../shared/components/resource-state/resource-state';
 import { Skeleton } from '../../../shared/components/skeleton/skeleton';
 import { TooltipDirective } from '../../../shared/components/tooltip/tooltip.directive';
+import { DateTimePipe } from '../../../shared/pipes';
 import {
   ACTION_TYPE_FILTER_OPTIONS,
   AUDIT_ACTION_BADGE_VARIANTS,
@@ -56,6 +57,7 @@ import {
     ResourceState,
     Skeleton,
     TooltipDirective,
+    DateTimePipe,
   ],
   templateUrl: './audit-logs.html',
   styleUrl: './audit-logs.css',

@@ -43,6 +43,7 @@ import { Input } from '../../../shared/components/form/input/input';
 import { Button } from '../../../shared/components/button/button';
 import { IconButton } from '../../../shared/components/button/icon-button/icon-button';
 import { Icon } from '../../../shared/components/icon/icon';
+import { DateTimePipe } from '../../../shared/pipes';
 
 @Component({
   selector: 'app-collectors',
@@ -67,6 +68,7 @@ import { Icon } from '../../../shared/components/icon/icon';
     Button,
     IconButton,
     Icon,
+    DateTimePipe,
   ],
   templateUrl: './collectors.html',
   styleUrl: './collectors.css',
@@ -156,7 +158,7 @@ export class Collectors implements OnInit {
     email: ['', [Validators.required, Validators.email]],
     phoneNumber: ['', [Validators.required]],
     temporaryPassword: [''],
-    district: ['Cairo'],
+    district: [''],
   });
 
   /**
@@ -166,7 +168,7 @@ export class Collectors implements OnInit {
     displayName: ['', [Validators.required]],
     email: ['', [Validators.required, Validators.email]],
     phoneNumber: ['', [Validators.required]],
-    district: ['Cairo'],
+    district: [''],
   });
 
   /**
@@ -245,13 +247,12 @@ export class Collectors implements OnInit {
   openCreateDrawer(): void {
     this.emailServerError.set('');
     this.createCredentialsMode.set(CollectorCredentialsMode.InviteLink);
-    const defaultDistrict = String(this.districtOptions()[0]?.value || 'Cairo');
     this.createForm.reset({
       displayName: '',
       email: '',
       phoneNumber: '',
       temporaryPassword: '',
-      district: defaultDistrict,
+      district: '',
     });
     this.createForm.controls.temporaryPassword.clearValidators();
     this.createForm.controls.temporaryPassword.updateValueAndValidity();
@@ -298,8 +299,8 @@ export class Collectors implements OnInit {
 
     this.isSubmitting.set(true);
     this.collectorsService.createCollector(req).subscribe({
-      next: (res) => {
-        this.toastService.success(`Collector account for ${res.displayName} provisioned successfully`);
+      next: () => {
+        this.toastService.success(`Collector account for ${val.displayName.trim()} provisioned successfully`);
         this.isSubmitting.set(false);
         this.closeCreateDrawer();
         this.loadCollectors();

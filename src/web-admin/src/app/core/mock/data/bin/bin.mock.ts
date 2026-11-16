@@ -1,3 +1,4 @@
+import { cairoLocalToIso } from '../_dates';
 import { BinStatus } from '../../../models/bin/bin-status.enum';
 import { BinListItem } from '../../../models/bin/bin.view-model';
 
@@ -16,7 +17,7 @@ export const MOCK_BINS: BinListItem[] = [
     status: BinStatus.Available,
     collectorId: 'C-001',
     collectorName: 'Mahmoud Fathy',
-    lastServicedAt: '2025-06-14 14:20',
+    lastServicedAt: cairoLocalToIso('2025-06-14 14:20'),
   },
   {
     binId: 'BIN-0007',
@@ -30,7 +31,7 @@ export const MOCK_BINS: BinListItem[] = [
     status: BinStatus.NeedsServicing,
     collectorId: 'C-002',
     collectorName: 'Hossam El-Din',
-    lastServicedAt: '2025-06-11 09:05',
+    lastServicedAt: cairoLocalToIso('2025-06-11 09:05'),
   },
   {
     binId: 'BIN-0012',
@@ -44,7 +45,7 @@ export const MOCK_BINS: BinListItem[] = [
     status: BinStatus.Available,
     collectorId: 'C-002',
     collectorName: 'Hossam El-Din',
-    lastServicedAt: '2025-06-14 08:40',
+    lastServicedAt: cairoLocalToIso('2025-06-14 08:40'),
   },
   {
     binId: 'BIN-0018',
@@ -58,7 +59,7 @@ export const MOCK_BINS: BinListItem[] = [
     status: BinStatus.EightyPercentFull,
     collectorId: 'C-001',
     collectorName: 'Mahmoud Fathy',
-    lastServicedAt: '2025-06-13 16:10',
+    lastServicedAt: cairoLocalToIso('2025-06-13 16:10'),
   },
   {
     binId: 'BIN-0023',
@@ -72,7 +73,7 @@ export const MOCK_BINS: BinListItem[] = [
     status: BinStatus.Available,
     collectorId: 'C-002',
     collectorName: 'Hossam El-Din',
-    lastServicedAt: '2025-06-14 07:50',
+    lastServicedAt: cairoLocalToIso('2025-06-14 07:50'),
   },
   {
     binId: 'BIN-0029',
@@ -86,7 +87,7 @@ export const MOCK_BINS: BinListItem[] = [
     status: BinStatus.Available,
     collectorId: 'C-001',
     collectorName: 'Mahmoud Fathy',
-    lastServicedAt: '2025-06-14 11:30',
+    lastServicedAt: cairoLocalToIso('2025-06-14 11:30'),
   },
   {
     binId: 'BIN-0033',
@@ -100,7 +101,7 @@ export const MOCK_BINS: BinListItem[] = [
     status: BinStatus.Available,
     collectorId: 'C-001',
     collectorName: 'Mahmoud Fathy',
-    lastServicedAt: '2025-06-13 18:00',
+    lastServicedAt: cairoLocalToIso('2025-06-13 18:00'),
   },
   {
     binId: 'BIN-0038',
@@ -114,7 +115,7 @@ export const MOCK_BINS: BinListItem[] = [
     status: BinStatus.NeedsServicing,
     collectorId: 'C-001',
     collectorName: 'Mahmoud Fathy',
-    lastServicedAt: '2025-06-12 11:20',
+    lastServicedAt: cairoLocalToIso('2025-06-12 11:20'),
   },
 
   // Giza District (5 bins: assigned to C-003)
@@ -130,7 +131,7 @@ export const MOCK_BINS: BinListItem[] = [
     status: BinStatus.EightyPercentFull,
     collectorId: 'C-003',
     collectorName: 'Karim Abdelrahman',
-    lastServicedAt: '2025-06-13 15:30',
+    lastServicedAt: cairoLocalToIso('2025-06-13 15:30'),
   },
   {
     binId: 'BIN-0045',
@@ -144,7 +145,7 @@ export const MOCK_BINS: BinListItem[] = [
     status: BinStatus.Available,
     collectorId: 'C-003',
     collectorName: 'Karim Abdelrahman',
-    lastServicedAt: '2025-06-14 06:30',
+    lastServicedAt: cairoLocalToIso('2025-06-14 06:30'),
   },
   {
     binId: 'BIN-0049',
@@ -158,7 +159,7 @@ export const MOCK_BINS: BinListItem[] = [
     status: BinStatus.Available,
     collectorId: 'C-003',
     collectorName: 'Karim Abdelrahman',
-    lastServicedAt: '2025-06-14 12:15',
+    lastServicedAt: cairoLocalToIso('2025-06-14 12:15'),
   },
   {
     binId: 'BIN-0053',
@@ -172,7 +173,7 @@ export const MOCK_BINS: BinListItem[] = [
     status: BinStatus.Available,
     collectorId: 'C-003',
     collectorName: 'Karim Abdelrahman',
-    lastServicedAt: '2025-06-12 14:03',
+    lastServicedAt: cairoLocalToIso('2025-06-12 14:03'),
   },
   {
     binId: 'BIN-0056',
@@ -186,7 +187,7 @@ export const MOCK_BINS: BinListItem[] = [
     status: BinStatus.EightyPercentFull,
     collectorId: 'C-003',
     collectorName: 'Karim Abdelrahman',
-    lastServicedAt: '2025-06-13 10:45',
+    lastServicedAt: cairoLocalToIso('2025-06-13 10:45'),
   },
 
   // Qalyubia District (3 bins: assigned to C-004)
@@ -202,7 +203,7 @@ export const MOCK_BINS: BinListItem[] = [
     status: BinStatus.NeedsServicing,
     collectorId: 'C-004',
     collectorName: 'Youssef Salama',
-    lastServicedAt: '2025-06-10 14:15',
+    lastServicedAt: cairoLocalToIso('2025-06-10 14:15'),
   },
   {
     binId: 'BIN-0065',
@@ -216,7 +217,7 @@ export const MOCK_BINS: BinListItem[] = [
     status: BinStatus.Available,
     collectorId: 'C-004',
     collectorName: 'Youssef Salama',
-    lastServicedAt: '2025-06-13 18:45',
+    lastServicedAt: cairoLocalToIso('2025-06-13 18:45'),
   },
   {
     binId: 'BIN-0068',
@@ -230,7 +231,7 @@ export const MOCK_BINS: BinListItem[] = [
     status: BinStatus.Available,
     collectorId: 'C-004',
     collectorName: 'Youssef Salama',
-    lastServicedAt: '2025-06-13 11:20',
+    lastServicedAt: cairoLocalToIso('2025-06-13 11:20'),
   },
 
   // --- Alexandria Region (7 bins: 4 Available, 1 ≥80%, 1 ≥95%, 1 Offline) ---
@@ -246,7 +247,7 @@ export const MOCK_BINS: BinListItem[] = [
     status: BinStatus.Available,
     collectorId: 'C-005',
     collectorName: 'Tarek Mansour',
-    lastServicedAt: '2025-06-13 19:12',
+    lastServicedAt: cairoLocalToIso('2025-06-13 19:12'),
   },
   {
     binId: 'BIN-0077',
@@ -260,7 +261,7 @@ export const MOCK_BINS: BinListItem[] = [
     status: BinStatus.Available,
     collectorId: 'C-005',
     collectorName: 'Tarek Mansour',
-    lastServicedAt: '2025-06-14 07:10',
+    lastServicedAt: cairoLocalToIso('2025-06-14 07:10'),
   },
   {
     binId: 'BIN-0080',
@@ -274,7 +275,7 @@ export const MOCK_BINS: BinListItem[] = [
     status: BinStatus.Available,
     collectorId: 'C-005',
     collectorName: 'Tarek Mansour',
-    lastServicedAt: '2025-06-13 08:30',
+    lastServicedAt: cairoLocalToIso('2025-06-13 08:30'),
   },
   {
     binId: 'BIN-0084',
@@ -288,7 +289,7 @@ export const MOCK_BINS: BinListItem[] = [
     status: BinStatus.NeedsServicing,
     collectorId: 'C-005',
     collectorName: 'Tarek Mansour',
-    lastServicedAt: '2025-06-11 16:40',
+    lastServicedAt: cairoLocalToIso('2025-06-11 16:40'),
   },
   {
     binId: 'BIN-0088',
@@ -302,7 +303,7 @@ export const MOCK_BINS: BinListItem[] = [
     status: BinStatus.EightyPercentFull,
     collectorId: 'C-005',
     collectorName: 'Tarek Mansour',
-    lastServicedAt: '2025-06-13 14:10',
+    lastServicedAt: cairoLocalToIso('2025-06-13 14:10'),
   },
   {
     binId: 'BIN-0091',
@@ -316,7 +317,7 @@ export const MOCK_BINS: BinListItem[] = [
     status: BinStatus.Available,
     collectorId: 'C-004',
     collectorName: 'Youssef Salama',
-    lastServicedAt: '2025-06-12 18:20',
+    lastServicedAt: cairoLocalToIso('2025-06-12 18:20'),
   },
   {
     binId: 'BIN-0095',
@@ -330,6 +331,6 @@ export const MOCK_BINS: BinListItem[] = [
     status: BinStatus.Offline,
     collectorId: undefined,
     collectorName: undefined,
-    lastServicedAt: '2025-05-20 10:00',
+    lastServicedAt: cairoLocalToIso('2025-05-20 10:00'),
   },
 ];

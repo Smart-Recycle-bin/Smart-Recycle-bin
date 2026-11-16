@@ -30,6 +30,7 @@ export const AUDIT_TABLE_COLUMNS: TableColumn<AuditLogRow>[] = [
     key: 'timestamp',
     label: 'Timestamp',
     sortable: true,
+    value: (row) => (row.timestamp ? new Date(row.timestamp).getTime() : 0),
     width: '150px',
     nowrap: true,
   },

@@ -27,6 +27,7 @@ import { Badge } from '../../../shared/components/badge/badge';
 import { Progress, ProgressColor } from '../../../shared/components/progress/progress';
 import { ResourceState } from '../../../shared/components/resource-state/resource-state';
 import { Icon } from '../../../shared/components/icon/icon';
+import { DateTimePipe } from '../../../shared/pipes';
 
 @Component({
   selector: 'app-review-queue',
@@ -44,6 +45,7 @@ import { Icon } from '../../../shared/components/icon/icon';
     Progress,
     ResourceState,
     Icon,
+    DateTimePipe,
   ],
   templateUrl: './review-queue.html',
   styleUrl: './review-queue.css',

@@ -45,6 +45,7 @@ import { Input } from '../../../shared/components/form/input/input';
 import { NumberInput } from '../../../shared/components/form/number-input/number-input';
 import { Textarea } from '../../../shared/components/form/textarea/textarea';
 import { Button } from '../../../shared/components/button/button';
+import { DateTimePipe } from '../../../shared/pipes';
 
 @Component({
   selector: 'app-ledger',
@@ -71,6 +72,7 @@ import { Button } from '../../../shared/components/button/button';
     NumberInput,
     Textarea,
     Button,
+    DateTimePipe,
   ],
   templateUrl: './ledger.html',
   styleUrl: './ledger.css',
@@ -120,11 +122,11 @@ export class Ledger implements OnInit {
   /**
    * Form for manual points adjustment
    */
-  readonly adjustmentForm = this.fb.nonNullable.group({
-    userId: ['', [Validators.required]],
-    amount: [100, [Validators.required, Validators.min(1)]],
-    reasonCode: ['ADMIN_CORRECTION'],
-    reasonNote: ['', [Validators.required]],
+  readonly adjustmentForm = this.fb.group({
+    userId: this.fb.nonNullable.control('', [Validators.required]),
+    amount: this.fb.control<number | null>(null, [Validators.required, Validators.min(1)]),
+    reasonCode: this.fb.nonNullable.control('ADMIN_CORRECTION'),
+    reasonNote: this.fb.nonNullable.control('', [Validators.required]),
   });
 
   readonly userOptions = computed<SelectOption[]>(() => {
@@ -225,7 +227,7 @@ export class Ledger implements OnInit {
     this.adjustmentType.set(LedgerEntryType.Credit);
     this.adjustmentForm.reset({
       userId: '',
-      amount: 100,
+      amount: null,
       reasonCode: 'ADMIN_CORRECTION',
       reasonNote: '',
     });

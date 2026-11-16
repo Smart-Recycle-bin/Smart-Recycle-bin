@@ -90,7 +90,7 @@
 
         <!-- Custom Joined Date Cell Template -->
         <ng-template appCell="joined" let-row>
-          <span class="timestamp-text">{{ row.joined | date:'yyyy-MM-dd' }}</span>
+          <span class="timestamp-text">{{ row.joined | dateOnly }}</span>
         </ng-template>
       </app-data-table>
     </div>

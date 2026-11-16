@@ -43,6 +43,7 @@ export const BIN_TABLE_COLUMNS: TableColumn<BinListItem>[] = [
     key: 'lastServicedAt',
     label: 'Last Serviced',
     sortable: true,
+    value: (row) => (row.lastServicedAt ? new Date(row.lastServicedAt).getTime() : 0),
     width: '160px',
   },
 ];

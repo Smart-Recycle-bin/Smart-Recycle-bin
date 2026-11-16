@@ -40,6 +40,7 @@ import { Drawer } from '../../../shared/components/overlay/drawer/drawer';
 import { Input } from '../../../shared/components/form/input/input';
 import { ResourceState } from '../../../shared/components/resource-state/resource-state';
 import { Icon } from '../../../shared/components/icon/icon';
+import { DateTimePipe } from '../../../shared/pipes';
 
 @Component({
   selector: 'app-bins-list',
@@ -59,6 +60,7 @@ import { Icon } from '../../../shared/components/icon/icon';
     Input,
     ResourceState,
     Icon,
+    DateTimePipe,
   ],
   templateUrl: './bins-list.html',
   styleUrl: './bins-list.css',

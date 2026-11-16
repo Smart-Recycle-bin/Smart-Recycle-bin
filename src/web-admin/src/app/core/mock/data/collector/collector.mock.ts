@@ -1,3 +1,4 @@
+import { cairoLocalToIso } from '../_dates';
 import { AccountStatus } from '../../../models/user/account-status.enum';
 import { CollectorListItem } from '../../../models/collector/collector.view-model';
 
@@ -11,7 +12,7 @@ export const MOCK_COLLECTORS: CollectorListItem[] = [
     phone: '+20 100 234 5521',
     assignedBinsCount: 5,
     status: AccountStatus.Active,
-    lastActiveAt: '2025-06-14 10:12',
+    lastActiveAt: cairoLocalToIso('2025-06-14 10:12'),
   },
   {
     collectorId: 'C-002',
@@ -22,7 +23,7 @@ export const MOCK_COLLECTORS: CollectorListItem[] = [
     phone: '+20 111 872 3340',
     assignedBinsCount: 3,
     status: AccountStatus.Active,
-    lastActiveAt: '2025-06-14 09:48',
+    lastActiveAt: cairoLocalToIso('2025-06-14 09:48'),
   },
   {
     collectorId: 'C-003',
@@ -33,7 +34,7 @@ export const MOCK_COLLECTORS: CollectorListItem[] = [
     phone: '+20 122 410 9987',
     assignedBinsCount: 5,
     status: AccountStatus.Active,
-    lastActiveAt: '2025-06-14 08:30',
+    lastActiveAt: cairoLocalToIso('2025-06-14 08:30'),
   },
   {
     collectorId: 'C-004',
@@ -44,7 +45,7 @@ export const MOCK_COLLECTORS: CollectorListItem[] = [
     phone: '+20 109 665 1204',
     assignedBinsCount: 4,
     status: AccountStatus.Active,
-    lastActiveAt: '2025-06-13 17:55',
+    lastActiveAt: cairoLocalToIso('2025-06-13 17:55'),
   },
   {
     collectorId: 'C-005',
@@ -55,7 +56,7 @@ export const MOCK_COLLECTORS: CollectorListItem[] = [
     phone: '+20 155 301 7712',
     assignedBinsCount: 5,
     status: AccountStatus.Active,
-    lastActiveAt: '2025-06-14 07:21',
+    lastActiveAt: cairoLocalToIso('2025-06-14 07:21'),
   },
   {
     collectorId: 'C-006',
@@ -66,6 +67,6 @@ export const MOCK_COLLECTORS: CollectorListItem[] = [
     phone: '+20 127 998 4451',
     assignedBinsCount: 0,
     status: AccountStatus.Inactive,
-    lastActiveAt: '2025-05-29 15:02',
+    lastActiveAt: cairoLocalToIso('2025-05-29 15:02'),
   },
 ];

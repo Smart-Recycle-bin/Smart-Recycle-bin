@@ -36,6 +36,7 @@ export const REVIEW_QUEUE_TABLE_COLUMNS: TableColumn<InspectionReportListItem>[]
     key: 'date',
     label: 'Date',
     sortable: true,
+    value: (row) => (row.date ? new Date(row.date).getTime() : 0),
     width: '160px',
   },
   {

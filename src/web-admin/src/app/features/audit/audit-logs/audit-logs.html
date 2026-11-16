@@ -113,7 +113,7 @@
           <!-- Timestamp Column -->
           <ng-template appCell="timestamp" let-row>
             <span class="font-mono text-sm text-text-secondary whitespace-nowrap">
-              {{ row.timestamp }}
+              {{ row.timestamp | dateTime }}
             </span>
           </ng-template>
 

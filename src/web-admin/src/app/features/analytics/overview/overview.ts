@@ -50,11 +50,17 @@ import { Skeleton } from '../../../shared/components/skeleton/skeleton';
 import { ResourceState } from '../../../shared/components/resource-state/resource-state';
 import { TooltipDirective } from '../../../shared/components/tooltip/tooltip.directive';
 
+import { environment } from '../../../../environments/environment';
+
 function formatShortDate(dateStr: string): string {
   if (!dateStr) return '';
   const d = new Date(dateStr);
   if (isNaN(d.getTime())) return dateStr;
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  return d.toLocaleDateString('en-US', {
+    timeZone: environment.displayTimeZone,
+    month: 'short',
+    day: 'numeric',
+  });
 }
 
 @Component({

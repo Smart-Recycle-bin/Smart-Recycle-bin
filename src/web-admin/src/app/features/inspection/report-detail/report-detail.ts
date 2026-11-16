@@ -26,6 +26,8 @@ import { Progress, ProgressColor } from '../../../shared/components/progress/pro
 import { Modal } from '../../../shared/components/overlay/modal/modal';
 import { ResourceState } from '../../../shared/components/resource-state/resource-state';
 import { Icon } from '../../../shared/components/icon/icon';
+import { formatDateTime } from '../../../shared/utils/datetime';
+import { DateTimePipe } from '../../../shared/pipes';
 
 @Component({
   selector: 'app-report-detail',
@@ -40,6 +42,7 @@ import { Icon } from '../../../shared/components/icon/icon';
     Modal,
     ResourceState,
     Icon,
+    DateTimePipe,
   ],
   templateUrl: './report-detail.html',
   styleUrl: './report-detail.css',
@@ -84,7 +87,7 @@ export class ReportDetail implements OnInit {
   readonly headerSubtitle = computed(() => {
     const d = this.report();
     if (!d) return '';
-    return `${d.binId} · ${d.userName} · ${d.date}`;
+    return `${d.binId} · ${d.userName} · ${formatDateTime(d.date)}`;
   });
 
   readonly wasteTypeOptions = computed<SelectOption[]>(() => {

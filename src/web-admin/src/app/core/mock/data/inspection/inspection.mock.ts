@@ -1,3 +1,4 @@
+import { cairoLocalToIso } from '../_dates';
 import { InspectionReportStatus } from '../../../models/inspection/inspection-report-status.enum';
 import {
   InspectionReportListItem,
@@ -17,7 +18,7 @@ export const MOCK_INSPECTION_REPORTS: InspectionReportListItem[] = [
     mlPredictedWasteType: 'Plastic (PET)',
     mlConfidence: 0.62,
     userFeedback: 'The item was a glass bottle, not plastic. Label was misleading.',
-    date: '2025-06-14 09:20',
+    date: cairoLocalToIso('2025-06-14 09:20'),
     status: InspectionReportStatus.Pending,
   },
   {
@@ -29,7 +30,7 @@ export const MOCK_INSPECTION_REPORTS: InspectionReportListItem[] = [
     mlPredictedWasteType: 'Paper',
     mlConfidence: 0.71,
     userFeedback: 'It was a waxed carton - should be mixed packaging.',
-    date: '2025-06-14 08:44',
+    date: cairoLocalToIso('2025-06-14 08:44'),
     status: InspectionReportStatus.Pending,
   },
   {
@@ -41,7 +42,7 @@ export const MOCK_INSPECTION_REPORTS: InspectionReportListItem[] = [
     mlPredictedWasteType: 'Metal',
     mlConfidence: 0.55,
     userFeedback: 'Aluminium foil tray recognised as steel can.',
-    date: '2025-06-14 07:30',
+    date: cairoLocalToIso('2025-06-14 07:30'),
     status: InspectionReportStatus.Pending,
   },
   {
@@ -53,7 +54,7 @@ export const MOCK_INSPECTION_REPORTS: InspectionReportListItem[] = [
     mlPredictedWasteType: 'Glass',
     mlConfidence: 0.88,
     userFeedback: 'Points seemed too low for 4 bottles.',
-    date: '2025-06-13 19:12',
+    date: cairoLocalToIso('2025-06-13 19:12'),
     status: InspectionReportStatus.Reviewed,
   },
   {
@@ -65,7 +66,7 @@ export const MOCK_INSPECTION_REPORTS: InspectionReportListItem[] = [
     mlPredictedWasteType: 'Plastic (HDPE)',
     mlConfidence: 0.49,
     userFeedback: 'Detected the wrong item, it was a paper cup.',
-    date: '2025-06-13 16:55',
+    date: cairoLocalToIso('2025-06-13 16:55'),
     status: InspectionReportStatus.SentToRetraining,
   },
   {
@@ -77,7 +78,7 @@ export const MOCK_INSPECTION_REPORTS: InspectionReportListItem[] = [
     mlPredictedWasteType: 'Metal',
     mlConfidence: 0.93,
     userFeedback: 'No problem with the bottle, tapped reject by mistake.',
-    date: '2025-06-13 12:08',
+    date: cairoLocalToIso('2025-06-13 12:08'),
     status: InspectionReportStatus.Reviewed,
   },
   {
@@ -89,7 +90,7 @@ export const MOCK_INSPECTION_REPORTS: InspectionReportListItem[] = [
     mlPredictedWasteType: 'Paper',
     mlConfidence: 0.66,
     userFeedback: 'Receipt thermal paper is not recyclable.',
-    date: '2025-06-12 18:21',
+    date: cairoLocalToIso('2025-06-12 18:21'),
     status: InspectionReportStatus.Pending,
   },
   {
@@ -101,7 +102,7 @@ export const MOCK_INSPECTION_REPORTS: InspectionReportListItem[] = [
     mlPredictedWasteType: 'Plastic (PET)',
     mlConfidence: 0.79,
     userFeedback: 'Item was a tinted glass jar.',
-    date: '2025-06-12 14:03',
+    date: cairoLocalToIso('2025-06-12 14:03'),
     status: InspectionReportStatus.Pending,
   },
 ];
@@ -113,7 +114,7 @@ export const MOCK_INSPECTION_DETAILS: Record<string, InspectionReportDetail> = {
     sessionId: 'S-88213',
     binId: 'BIN-0042',
     userName: 'Omar Hassan',
-    date: '2025-06-14 09:20',
+    date: cairoLocalToIso('2025-06-14 09:20'),
     status: InspectionReportStatus.Pending,
     capturedFrames: [
       'assets/images/frames/air_2048_frame1.jpg',
@@ -137,7 +138,7 @@ export const MOCK_INSPECTION_DETAILS: Record<string, InspectionReportDetail> = {
     sessionId: 'S-88190',
     binId: 'BIN-0007',
     userName: 'Nour El-Sayed',
-    date: '2025-06-14 08:44',
+    date: cairoLocalToIso('2025-06-14 08:44'),
     status: InspectionReportStatus.Pending,
     capturedFrames: [
       'assets/images/frames/air_2047_frame1.jpg',
@@ -161,7 +162,7 @@ export const MOCK_INSPECTION_DETAILS: Record<string, InspectionReportDetail> = {
     sessionId: 'S-88142',
     binId: 'BIN-0018',
     userName: 'Mariam Adel',
-    date: '2025-06-14 07:30',
+    date: cairoLocalToIso('2025-06-14 07:30'),
     status: InspectionReportStatus.Pending,
     capturedFrames: [
       'assets/images/frames/air_2046_frame1.jpg',
@@ -185,7 +186,7 @@ export const MOCK_INSPECTION_DETAILS: Record<string, InspectionReportDetail> = {
     sessionId: 'S-88101',
     binId: 'BIN-0074',
     userName: 'Hana Farouk',
-    date: '2025-06-13 19:12',
+    date: cairoLocalToIso('2025-06-13 19:12'),
     status: InspectionReportStatus.Reviewed,
     capturedFrames: [
       'assets/images/frames/air_2045_frame1.jpg',
@@ -208,7 +209,7 @@ export const MOCK_INSPECTION_DETAILS: Record<string, InspectionReportDetail> = {
     sessionId: 'S-88057',
     binId: 'BIN-0029',
     userName: 'Yasmin Gamal',
-    date: '2025-06-13 16:55',
+    date: cairoLocalToIso('2025-06-13 16:55'),
     status: InspectionReportStatus.SentToRetraining,
     capturedFrames: [
       'assets/images/frames/air_2044_frame1.jpg',
@@ -231,7 +232,7 @@ export const MOCK_INSPECTION_DETAILS: Record<string, InspectionReportDetail> = {
     sessionId: 'S-87998',
     binId: 'BIN-0061',
     userName: 'Dina Samir',
-    date: '2025-06-13 12:08',
+    date: cairoLocalToIso('2025-06-13 12:08'),
     status: InspectionReportStatus.Reviewed,
     capturedFrames: [
       'assets/images/frames/air_2043_frame1.jpg',
@@ -254,7 +255,7 @@ export const MOCK_INSPECTION_DETAILS: Record<string, InspectionReportDetail> = {
     sessionId: 'S-87940',
     binId: 'BIN-0084',
     userName: 'Ali Reda',
-    date: '2025-06-12 18:21',
+    date: cairoLocalToIso('2025-06-12 18:21'),
     status: InspectionReportStatus.Pending,
     capturedFrames: [
       'assets/images/frames/air_2042_frame1.jpg',
@@ -277,7 +278,7 @@ export const MOCK_INSPECTION_DETAILS: Record<string, InspectionReportDetail> = {
     sessionId: 'S-87911',
     binId: 'BIN-0053',
     userName: 'Khaled Wahba',
-    date: '2025-06-12 14:03',
+    date: cairoLocalToIso('2025-06-12 14:03'),
     status: InspectionReportStatus.Pending,
     capturedFrames: [
       'assets/images/frames/air_2041_frame1.jpg',

@@ -82,7 +82,7 @@
 
         <!-- Custom Timestamp Cell -->
         <ng-template appCell="timestamp" let-row>
-          <span class="timestamp-text">{{ row.timestamp }}</span>
+          <span class="timestamp-text">{{ row.timestamp | dateTime }}</span>
         </ng-template>
 
         <!-- Custom User Cell -->
@@ -176,7 +176,7 @@
               label="Points amount"
               [min]="1"
               [required]="true"
-              placeholder="e.g. 150"
+              placeholder="e.g. 100"
               [error]="amountFieldError()"
             />
           </div>

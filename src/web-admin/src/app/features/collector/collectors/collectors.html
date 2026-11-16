@@ -88,7 +88,7 @@
 
         <!-- Custom Last Active Date Cell Template -->
         <ng-template appCell="lastActiveAt" let-row>
-          <span class="timestamp-text">{{ row.lastActiveAt }}</span>
+          <span class="timestamp-text">{{ row.lastActiveAt | dateTime }}</span>
         </ng-template>
       </app-data-table>
     </div>
@@ -164,7 +164,7 @@
             <app-select
               formControlName="district"
               [options]="districtOptions()"
-              placeholder="Select assigned district"
+              placeholder="Select district"
             />
           </div>
         </div>
@@ -228,7 +228,7 @@
             <app-select
               formControlName="district"
               [options]="districtOptions()"
-              placeholder="Select assigned district"
+              placeholder="Select district"
             />
           </div>
         </div>

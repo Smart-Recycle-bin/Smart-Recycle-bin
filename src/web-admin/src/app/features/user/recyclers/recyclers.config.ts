@@ -43,6 +43,7 @@ export const RECYCLER_TABLE_COLUMNS: TableColumn<RecyclerListItem>[] = [
     key: 'joined',
     label: 'Joined',
     sortable: true,
+    value: (row) => (row.joined ? new Date(row.joined).getTime() : 0),
     width: '140px',
   },
 ];

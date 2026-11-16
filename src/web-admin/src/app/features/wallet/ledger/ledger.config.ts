@@ -17,6 +17,7 @@ export const LEDGER_TABLE_COLUMNS: TableColumn<LedgerRow>[] = [
     key: 'timestamp',
     label: 'Timestamp',
     sortable: true,
+    value: (row) => (row.timestamp ? new Date(row.timestamp).getTime() : 0),
     width: '160px',
   },
   {

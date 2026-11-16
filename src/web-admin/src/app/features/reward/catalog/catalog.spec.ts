@@ -5,6 +5,7 @@ import { Catalog } from './catalog';
 import { CatalogService } from '../../../core/services/reward/catalog.service';
 import { ToastService } from '../../../core/services/toast/toast.service';
 import { MOCK_REWARDS } from '../../../core/mock/data/reward/reward.mock';
+import { formatDate } from '../../../shared/utils/datetime';
 import { RewardStatus } from '../../../core/models/reward/reward-status.enum';
 import { RewardCategory } from '../../../core/models/reward/reward-category.enum';
 import { VoucherCodeType } from '../../../core/models/reward/voucher-code-type.enum';
@@ -77,6 +78,23 @@ describe('Catalog', () => {
     fixture = TestBed.createComponent(Catalog);
     component = fixture.componentInstance;
     fixture.detectChanges();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('should compute default dates and empty price/stock at drawer open time with fake timers', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-03-15T12:00:00Z'));
+
+    component.openNewItemDrawer();
+
+    const formVal = component.rewardForm.value;
+    expect(formVal.validFrom).toBe('2026-03-15');
+    expect(formVal.validUntil).toBe('2027-03-15');
+    expect(formVal.pointsCost).toBeNull();
+    expect(formVal.stock).toBeNull();
   });
 
   it('should create and load catalog items with dynamic subtitle', () => {
@@ -184,8 +202,8 @@ describe('Catalog', () => {
       expect(formVal.voucherCodeType).toBe(itemToEdit.voucherCodeType);
       expect(formVal.pointsCost).toBe(itemToEdit.pointsCost);
       expect(formVal.stock).toBe(itemToEdit.stock);
-      expect(formVal.validFrom).toBe(itemToEdit.validFrom);
-      expect(formVal.validUntil).toBe(itemToEdit.validUntil);
+      expect(formVal.validFrom).toBe(formatDate(itemToEdit.validFrom));
+      expect(formVal.validUntil).toBe(formatDate(itemToEdit.validUntil));
     });
   });
 

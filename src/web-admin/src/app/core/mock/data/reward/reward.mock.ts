@@ -1,3 +1,4 @@
+import { cairoLocalToIso } from '../_dates';
 import { RewardCategory } from '../../../models/reward/reward-category.enum';
 import { RewardStatus } from '../../../models/reward/reward-status.enum';
 import { VoucherCodeType } from '../../../models/reward/voucher-code-type.enum';
@@ -17,8 +18,8 @@ export const MOCK_REWARDS: AdminRewardItem[] = [
     redemptionsCount: 342,
     status: RewardStatus.InStock,
     imageUrl: 'assets/images/rewards/carrefour_50.png',
-    validFrom: '2025-07-01',
-    validUntil: '2025-12-31',
+    validFrom: cairoLocalToIso('2025-07-01'),
+    validUntil: cairoLocalToIso('2025-12-31'),
   },
   {
     itemId: 'RWD-002',
@@ -32,8 +33,8 @@ export const MOCK_REWARDS: AdminRewardItem[] = [
     redemptionsCount: 518,
     status: RewardStatus.InStock,
     imageUrl: 'assets/images/rewards/talabat_100.png',
-    validFrom: '2025-07-01',
-    validUntil: '2025-12-31',
+    validFrom: cairoLocalToIso('2025-07-01'),
+    validUntil: cairoLocalToIso('2025-12-31'),
   },
   {
     itemId: 'RWD-003',
@@ -47,8 +48,8 @@ export const MOCK_REWARDS: AdminRewardItem[] = [
     redemptionsCount: 903,
     status: RewardStatus.OutOfStock,
     imageUrl: 'assets/images/rewards/vodafone_1gb.png',
-    validFrom: '2025-07-01',
-    validUntil: '2025-12-31',
+    validFrom: cairoLocalToIso('2025-07-01'),
+    validUntil: cairoLocalToIso('2025-12-31'),
   },
   {
     itemId: 'RWD-004',
@@ -62,8 +63,8 @@ export const MOCK_REWARDS: AdminRewardItem[] = [
     redemptionsCount: 127,
     status: RewardStatus.InStock,
     imageUrl: 'assets/images/rewards/vox_cinema.png',
-    validFrom: '2025-07-01',
-    validUntil: '2025-12-31',
+    validFrom: cairoLocalToIso('2025-07-01'),
+    validUntil: cairoLocalToIso('2025-12-31'),
   },
   {
     itemId: 'RWD-005',
@@ -77,8 +78,8 @@ export const MOCK_REWARDS: AdminRewardItem[] = [
     redemptionsCount: 88,
     status: RewardStatus.InStock,
     imageUrl: 'assets/images/rewards/steel_bottle.png',
-    validFrom: '2025-07-01',
-    validUntil: '2025-12-31',
+    validFrom: cairoLocalToIso('2025-07-01'),
+    validUntil: cairoLocalToIso('2025-12-31'),
   },
   {
     itemId: 'RWD-006',
@@ -92,8 +93,8 @@ export const MOCK_REWARDS: AdminRewardItem[] = [
     redemptionsCount: 1210,
     status: RewardStatus.InStock,
     imageUrl: 'assets/images/rewards/plant_tree.png',
-    validFrom: '2025-07-01',
-    validUntil: '2025-12-31',
+    validFrom: cairoLocalToIso('2025-07-01'),
+    validUntil: cairoLocalToIso('2025-12-31'),
   },
   {
     itemId: 'RWD-007',
@@ -107,8 +108,8 @@ export const MOCK_REWARDS: AdminRewardItem[] = [
     redemptionsCount: 275,
     status: RewardStatus.Archived,
     imageUrl: 'assets/images/rewards/uber_75.png',
-    validFrom: '2025-07-01',
-    validUntil: '2025-12-31',
+    validFrom: cairoLocalToIso('2025-07-01'),
+    validUntil: cairoLocalToIso('2025-12-31'),
   },
   {
     itemId: 'RWD-008',
@@ -122,7 +123,7 @@ export const MOCK_REWARDS: AdminRewardItem[] = [
     redemptionsCount: 61,
     status: RewardStatus.InStock,
     imageUrl: 'assets/images/rewards/diwan_150.png',
-    validFrom: '2025-07-01',
-    validUntil: '2025-12-31',
+    validFrom: cairoLocalToIso('2025-07-01'),
+    validUntil: cairoLocalToIso('2025-12-31'),
   },
 ];

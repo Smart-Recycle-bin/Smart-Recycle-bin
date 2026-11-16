@@ -749,6 +749,8 @@ Errors return:
    - *Map popup "View details" button:* Does it navigate to bin detail or open a drawer?
    - *Recycler table eye icon:* Does it navigate to user profile or disposal history?
    - *Region Mapping:* How "Greater Cairo" vs "Alexandria" tabs map to backend districts is undefined.
+5. **Forgot Password Flow (S1/p1):** Screen p1 displays a "Forgot password?" link, but no corresponding password reset screen or reset token submission flow exists in the preliminary design mockup. Built as an in-page `app-modal` that collects the administrator's email, triggers `POST /api/v1/auth/forgot-password`, and presents a neutral success confirmation ("Check your inbox") without email enumeration vulnerabilities.
+6. **Date-only Filter Params (`from`, `to`):** Date-only query parameters (`from`, `to`) across filtering endpoints (such as `/admin/ledger` and `/admin/audit/logs`) are sent in `YYYY-MM-DD` format. The backend contract must clarify that the server interprets these boundaries in the application display timezone (`Africa/Cairo`) and that `to` is an inclusive end-of-day boundary (covering up to 23:59:59.999 local time).
 
 ---
 

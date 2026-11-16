@@ -38,6 +38,7 @@ export const COLLECTOR_TABLE_COLUMNS: TableColumn<CollectorListItem>[] = [
     key: 'lastActiveAt',
     label: 'Last Active',
     sortable: true,
+    value: (row) => (row.lastActiveAt ? new Date(row.lastActiveAt).getTime() : 0),
     width: '170px',
   },
 ];

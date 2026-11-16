@@ -1,3 +1,4 @@
+import { cairoLocalToIso } from '../_dates';
 import { LedgerEntryType } from '../../../models/wallet/ledger-entry-type.enum';
 import { LedgerSource } from '../../../models/wallet/ledger-source.enum';
 import { LedgerRow } from '../../../models/wallet/ledger.view-model';
@@ -6,7 +7,7 @@ export const MOCK_LEDGER_ROWS: LedgerRow[] = [
   // 10 visible rows from PDF p8 (Showing 1-10 of 15)
   {
     transactionId: '7f3a23a0-4c1e-4c12-92e1-000000000001',
-    timestamp: '2025-06-14 09:42',
+    timestamp: cairoLocalToIso('2025-06-14 09:42'),
     userId: 'U-10021',
     userName: 'Nour El-Sayed',
     binId: 'BIN-0001',
@@ -19,7 +20,7 @@ export const MOCK_LEDGER_ROWS: LedgerRow[] = [
   },
   {
     transactionId: '7f3a23c5-4c1e-4c12-92e1-000000000002',
-    timestamp: '2025-06-14 09:15',
+    timestamp: cairoLocalToIso('2025-06-14 09:15'),
     userId: 'U-10034',
     userName: 'Omar Hassan',
     binId: 'BIN-0042',
@@ -32,7 +33,7 @@ export const MOCK_LEDGER_ROWS: LedgerRow[] = [
   },
   {
     transactionId: '7f3a23ea-4c1e-4c12-92e1-000000000003',
-    timestamp: '2025-06-14 08:57',
+    timestamp: cairoLocalToIso('2025-06-14 08:57'),
     userId: 'U-10057',
     userName: 'Salma Ibrahim',
     binId: null,
@@ -45,7 +46,7 @@ export const MOCK_LEDGER_ROWS: LedgerRow[] = [
   },
   {
     transactionId: '7f3a240f-4c1e-4c12-92e1-000000000004',
-    timestamp: '2025-06-14 08:40',
+    timestamp: cairoLocalToIso('2025-06-14 08:40'),
     userId: 'U-10078',
     userName: 'Mariam Adel',
     binId: 'BIN-0018',
@@ -58,7 +59,7 @@ export const MOCK_LEDGER_ROWS: LedgerRow[] = [
   },
   {
     transactionId: '7f3a2434-4c1e-4c12-92e1-000000000005',
-    timestamp: '2025-06-14 08:12',
+    timestamp: cairoLocalToIso('2025-06-14 08:12'),
     userId: 'U-10063',
     userName: 'Ahmed Mostafa',
     binId: null,
@@ -71,7 +72,7 @@ export const MOCK_LEDGER_ROWS: LedgerRow[] = [
   },
   {
     transactionId: '7f3a2459-4c1e-4c12-92e1-000000000006',
-    timestamp: '2025-06-14 07:58',
+    timestamp: cairoLocalToIso('2025-06-14 07:58'),
     userId: 'U-10082',
     userName: 'Hana Farouk',
     binId: 'BIN-0012',
@@ -84,7 +85,7 @@ export const MOCK_LEDGER_ROWS: LedgerRow[] = [
   },
   {
     transactionId: '7f3a247e-4c1e-4c12-92e1-000000000007',
-    timestamp: '2025-06-14 07:33',
+    timestamp: cairoLocalToIso('2025-06-14 07:33'),
     userId: 'U-10102',
     userName: 'Yasmin Gamal',
     binId: 'BIN-0029',
@@ -97,7 +98,7 @@ export const MOCK_LEDGER_ROWS: LedgerRow[] = [
   },
   {
     transactionId: '7f3a24a3-4c1e-4c12-92e1-000000000008',
-    timestamp: '2025-06-14 07:10',
+    timestamp: cairoLocalToIso('2025-06-14 07:10'),
     userId: 'U-10139',
     userName: 'Dina Samir',
     binId: 'BIN-0077',
@@ -110,7 +111,7 @@ export const MOCK_LEDGER_ROWS: LedgerRow[] = [
   },
   {
     transactionId: '7f3a24c8-4c1e-4c12-92e1-000000000009',
-    timestamp: '2025-06-14 06:48',
+    timestamp: cairoLocalToIso('2025-06-14 06:48'),
     userId: 'U-10118',
     userName: 'Ali Reda',
     binId: null,
@@ -123,7 +124,7 @@ export const MOCK_LEDGER_ROWS: LedgerRow[] = [
   },
   {
     transactionId: '7f3a24ed-4c1e-4c12-92e1-000000000010',
-    timestamp: '2025-06-14 06:30',
+    timestamp: cairoLocalToIso('2025-06-14 06:30'),
     userId: 'U-10147',
     userName: 'Khaled Wahba',
     binId: 'BIN-0045',
@@ -137,7 +138,7 @@ export const MOCK_LEDGER_ROWS: LedgerRow[] = [
   // Additional rows to complete the 15 total indicated on p8 ("1-10 of 15")
   {
     transactionId: '7f3a2512-4c1e-4c12-92e1-000000000011',
-    timestamp: '2025-06-13 18:45',
+    timestamp: cairoLocalToIso('2025-06-13 18:45'),
     userId: 'U-10155',
     userName: 'Tarek Salem',
     binId: 'BIN-0033',
@@ -150,7 +151,7 @@ export const MOCK_LEDGER_ROWS: LedgerRow[] = [
   },
   {
     transactionId: '7f3a2537-4c1e-4c12-92e1-000000000012',
-    timestamp: '2025-06-13 15:20',
+    timestamp: cairoLocalToIso('2025-06-13 15:20'),
     userId: 'U-10168',
     userName: 'Reem Al-Badry',
     binId: 'BIN-0023',
@@ -163,7 +164,7 @@ export const MOCK_LEDGER_ROWS: LedgerRow[] = [
   },
   {
     transactionId: '7f3a255c-4c1e-4c12-92e1-000000000013',
-    timestamp: '2025-06-13 11:10',
+    timestamp: cairoLocalToIso('2025-06-13 11:10'),
     userId: 'U-10180',
     userName: 'Kareem Fayed',
     binId: 'BIN-0065',
@@ -176,7 +177,7 @@ export const MOCK_LEDGER_ROWS: LedgerRow[] = [
   },
   {
     transactionId: '7f3a2581-4c1e-4c12-92e1-000000000014',
-    timestamp: '2025-06-12 16:30',
+    timestamp: cairoLocalToIso('2025-06-12 16:30'),
     userId: 'U-10095',
     userName: 'Mostafa Kamel',
     binId: null,
@@ -189,7 +190,7 @@ export const MOCK_LEDGER_ROWS: LedgerRow[] = [
   },
   {
     transactionId: '7f3a25a6-4c1e-4c12-92e1-000000000015',
-    timestamp: '2025-06-12 13:05',
+    timestamp: cairoLocalToIso('2025-06-12 13:05'),
     userId: 'U-10021',
     userName: 'Nour El-Sayed',
     binId: 'BIN-0007',

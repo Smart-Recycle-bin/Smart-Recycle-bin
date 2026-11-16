@@ -1,3 +1,4 @@
+import { cairoLocalToIso } from '../_dates';
 import { UserRole } from '../../../models/user/user-role.enum';
 import { AccountStatus } from '../../../models/user/account-status.enum';
 import { RecyclerListItem } from '../../../models/user/recycler.view-model';
@@ -37,7 +38,7 @@ export const MOCK_RECYCLERS: RecyclerListItem[] = [
     lifetimePoints: 18440,
     sessions: 214,
     status: AccountStatus.Active,
-    joined: '2024-02-11',
+    joined: cairoLocalToIso('2024-02-11'),
   },
   {
     userId: 'U-10034',
@@ -48,7 +49,7 @@ export const MOCK_RECYCLERS: RecyclerListItem[] = [
     lifetimePoints: 15210,
     sessions: 187,
     status: AccountStatus.Active,
-    joined: '2024-03-02',
+    joined: cairoLocalToIso('2024-03-02'),
   },
   {
     userId: 'U-10057',
@@ -59,7 +60,7 @@ export const MOCK_RECYCLERS: RecyclerListItem[] = [
     lifetimePoints: 12930,
     sessions: 162,
     status: AccountStatus.Active,
-    joined: '2024-03-19',
+    joined: cairoLocalToIso('2024-03-19'),
   },
   {
     userId: 'U-10063',
@@ -70,7 +71,7 @@ export const MOCK_RECYCLERS: RecyclerListItem[] = [
     lifetimePoints: 6120,
     sessions: 91,
     status: AccountStatus.Suspended,
-    joined: '2024-04-08',
+    joined: cairoLocalToIso('2024-04-08'),
   },
   {
     userId: 'U-10078',
@@ -81,7 +82,7 @@ export const MOCK_RECYCLERS: RecyclerListItem[] = [
     lifetimePoints: 9870,
     sessions: 128,
     status: AccountStatus.Active,
-    joined: '2024-04-27',
+    joined: cairoLocalToIso('2024-04-27'),
   },
   {
     userId: 'U-10082',
@@ -92,7 +93,7 @@ export const MOCK_RECYCLERS: RecyclerListItem[] = [
     lifetimePoints: 8420,
     sessions: 109,
     status: AccountStatus.Active,
-    joined: '2024-05-05',
+    joined: cairoLocalToIso('2024-05-05'),
   },
   {
     userId: 'U-10095',
@@ -103,7 +104,7 @@ export const MOCK_RECYCLERS: RecyclerListItem[] = [
     lifetimePoints: 3980,
     sessions: 64,
     status: AccountStatus.Banned,
-    joined: '2024-05-21',
+    joined: cairoLocalToIso('2024-05-21'),
   },
   {
     userId: 'U-10102',
@@ -114,7 +115,7 @@ export const MOCK_RECYCLERS: RecyclerListItem[] = [
     lifetimePoints: 7340,
     sessions: 98,
     status: AccountStatus.Active,
-    joined: '2024-06-14',
+    joined: cairoLocalToIso('2024-06-14'),
   },
   // Additional rows to complete the 14 total indicated on p5 ("1-8 of 14")
   {
@@ -126,7 +127,7 @@ export const MOCK_RECYCLERS: RecyclerListItem[] = [
     lifetimePoints: 5420,
     sessions: 76,
     status: AccountStatus.Active,
-    joined: '2024-07-01', // synthetic
+    joined: cairoLocalToIso('2024-07-01'), // synthetic
   },
   {
     userId: 'U-10118',
@@ -137,7 +138,7 @@ export const MOCK_RECYCLERS: RecyclerListItem[] = [
     lifetimePoints: 4890,
     sessions: 68,
     status: AccountStatus.Active,
-    joined: '2024-07-15', // synthetic
+    joined: cairoLocalToIso('2024-07-15'), // synthetic
   },
   {
     userId: 'U-10147',
@@ -148,7 +149,7 @@ export const MOCK_RECYCLERS: RecyclerListItem[] = [
     lifetimePoints: 3250,
     sessions: 45,
     status: AccountStatus.Active,
-    joined: '2024-08-03', // synthetic
+    joined: cairoLocalToIso('2024-08-03'), // synthetic
   },
   {
     userId: 'U-10155',
@@ -159,7 +160,7 @@ export const MOCK_RECYCLERS: RecyclerListItem[] = [
     lifetimePoints: 2900,
     sessions: 38,
     status: AccountStatus.Active,
-    joined: '2024-08-20', // synthetic
+    joined: cairoLocalToIso('2024-08-20'), // synthetic
   },
   {
     userId: 'U-10168',
@@ -170,7 +171,7 @@ export const MOCK_RECYCLERS: RecyclerListItem[] = [
     lifetimePoints: 2150,
     sessions: 29,
     status: AccountStatus.Active,
-    joined: '2024-09-05', // synthetic
+    joined: cairoLocalToIso('2024-09-05'), // synthetic
   },
   {
     userId: 'U-10180',
@@ -181,6 +182,6 @@ export const MOCK_RECYCLERS: RecyclerListItem[] = [
     lifetimePoints: 1600,
     sessions: 22,
     status: AccountStatus.Active,
-    joined: '2024-09-18', // synthetic
+    joined: cairoLocalToIso('2024-09-18'), // synthetic
   },
 ];

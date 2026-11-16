@@ -178,9 +178,17 @@ describe('Collectors Component', () => {
       district: 'Cairo',
       credentialsMode: CollectorCredentialsMode.InviteLink,
     });
-    expect(toastServiceSpy.success).toHaveBeenCalled();
+    expect(toastServiceSpy.success).toHaveBeenCalledWith(
+      'Collector account for Yasser Arafat provisioned successfully'
+    );
     expect(component.isCreateDrawerOpen()).toBe(false);
     expect(collectorsServiceSpy.getCollectors).toHaveBeenCalledTimes(1);
+  });
+
+  it('should initialize create drawer with empty district', () => {
+    component.openCreateDrawer();
+    expect(component.createForm.controls.district.value).toBe('');
+    expect(component.isCreateDrawerOpen()).toBe(true);
   });
 
   it('should submit create collector request with temporary password mode', () => {

@@ -53,6 +53,7 @@ import { ConfirmDialog } from '../../../shared/components/overlay/confirm-dialog
 import { DataTable } from '../../../shared/components/table/data-table/data-table';
 import { CellTemplateDirective } from '../../../shared/components/table/data-table/cell-template.directive';
 import { ResourceState } from '../../../shared/components/resource-state/resource-state';
+import { formatDate } from '../../../shared/utils/datetime';
 import { Skeleton } from '../../../shared/components/skeleton/skeleton';
 import {
   CATEGORY_FORM_OPTIONS,
@@ -138,11 +139,20 @@ export class Catalog implements OnInit {
     description: [''],
     category: [RewardCategory.Groceries, [Validators.required]],
     voucherCodeType: [VoucherCodeType.Code, [Validators.required]],
-    pointsCost: [1000, [Validators.required, Validators.min(1)]],
-    stock: [50, [Validators.required, Validators.min(0)]],
-    validFrom: ['2025-07-01'],
-    validUntil: ['2025-12-31'],
+    pointsCost: [null, [Validators.required, Validators.min(1)]],
+    stock: [null, [Validators.required, Validators.min(0)]],
+    validFrom: [''],
+    validUntil: [''],
   });
+
+  private computeDefaultDates(): { validFrom: string; validUntil: string } {
+    const now = new Date();
+    const validFrom = formatDate(now);
+    const nextYear = new Date(now.getTime());
+    nextYear.setFullYear(nextYear.getFullYear() + 1);
+    const validUntil = formatDate(nextYear);
+    return { validFrom, validUntil };
+  }
 
   ngOnInit(): void {
     this.loadRewards();
@@ -184,15 +194,16 @@ export class Catalog implements OnInit {
   openNewItemDrawer(): void {
     this.editingReward.set(null);
     this.uploadedImageUrl.set(null);
+    const { validFrom, validUntil } = this.computeDefaultDates();
     this.rewardForm.reset({
       title: '',
       description: '',
       category: RewardCategory.Groceries,
       voucherCodeType: VoucherCodeType.Code,
-      pointsCost: 1000,
-      stock: 50,
-      validFrom: '2025-07-01',
-      validUntil: '2025-12-31',
+      pointsCost: null,
+      stock: null,
+      validFrom,
+      validUntil,
     });
     this.isDrawerOpen.set(true);
   }
@@ -200,6 +211,7 @@ export class Catalog implements OnInit {
   openEditDrawer(item: AdminRewardItem): void {
     this.editingReward.set(item);
     this.uploadedImageUrl.set(item.imageUrl ?? null);
+    const { validFrom, validUntil } = this.computeDefaultDates();
     this.rewardForm.reset({
       title: item.title,
       description: item.description,
@@ -207,8 +219,8 @@ export class Catalog implements OnInit {
       voucherCodeType: item.voucherCodeType,
       pointsCost: item.pointsCost,
       stock: item.stock,
-      validFrom: item.validFrom ?? '2025-07-01',
-      validUntil: item.validUntil ?? '2025-12-31',
+      validFrom: item.validFrom ? formatDate(item.validFrom) : validFrom,
+      validUntil: item.validUntil ? formatDate(item.validUntil) : validUntil,
     });
     this.isDrawerOpen.set(true);
   }
