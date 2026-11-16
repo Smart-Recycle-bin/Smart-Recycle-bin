@@ -146,13 +146,13 @@ export class MapView {
   getStatusColor(status: MapMarkerStatus): string {
     switch (status) {
       case 'available':
-        return '#10b981';
+        return 'var(--success-fg)';
       case 'warning':
-        return '#f59e0b';
+        return 'var(--warning-fg)';
       case 'critical':
-        return '#ef4444';
+        return 'var(--danger-fg)';
       default:
-        return '#94a3b8';
+        return 'var(--text-muted)';
     }
   }
 

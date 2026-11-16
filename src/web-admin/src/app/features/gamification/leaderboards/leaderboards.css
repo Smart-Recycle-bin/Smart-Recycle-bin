@@ -66,25 +66,25 @@
 }
 
 .rank-gold {
-  background-color: #fef3c7;
-  color: #b45309;
-  border-color: #fcd34d;
+  background-color: var(--warning-bg);
+  color: var(--warning-fg);
+  border-color: var(--warning-border);
 }
 
 .rank-silver {
-  background-color: #f1f5f9;
-  color: #475569;
-  border-color: #cbd5e1;
+  background-color: var(--surface-muted);
+  color: var(--text-muted);
+  border-color: var(--border);
 }
 
 .rank-bronze {
-  background-color: #ffedd5;
-  color: #c2410c;
-  border-color: #fdba74;
+  background-color: var(--surface-muted);
+  color: var(--primary);
+  border-color: var(--primary-border);
 }
 
 .rank-neutral {
-  color: var(--text-secondary, #64748b);
+  color: var(--text-muted);
   background-color: transparent;
   font-weight: 500;
 }
@@ -106,14 +106,14 @@
   gap: 0.75rem;
   padding: 0.875rem;
   border-radius: 0.5rem;
-  border: 1px solid var(--border-subtle, #e2e8f0);
-  background-color: var(--bg-surface, #ffffff);
+  border: 1px solid var(--border);
+  background-color: var(--surface-raised);
   transition: background-color 0.15s ease, border-color 0.15s ease;
 }
 
 .badge-item:hover {
-  background-color: var(--bg-muted, #f8fafc);
-  border-color: var(--border-default, #cbd5e1);
+  background-color: var(--surface-muted);
+  border-color: var(--border-strong);
 }
 
 .badge-icon-box {
@@ -123,8 +123,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: var(--brand-light, #ecfdf5);
-  color: var(--brand, #059669);
+  background-color: var(--primary-soft);
+  color: var(--primary);
   flex-shrink: 0;
 }
 
@@ -145,24 +145,24 @@
 .badge-title {
   font-size: 0.875rem;
   font-weight: 600;
-  color: var(--text-primary, #0f172a);
+  color: var(--text);
   margin: 0;
 }
 
 .badge-earned-tag {
   font-size: 0.6875rem;
   font-weight: 600;
-  color: var(--text-secondary, #64748b);
-  background-color: var(--bg-muted, #f1f5f9);
+  color: var(--text-muted);
+  background-color: var(--surface-muted);
   padding: 0.125rem 0.5rem;
   border-radius: 9999px;
-  border: 1px solid var(--border-subtle, #e2e8f0);
+  border: 1px solid var(--border);
   white-space: nowrap;
 }
 
 .badge-description {
   font-size: 0.75rem;
-  color: var(--text-secondary, #64748b);
+  color: var(--text-muted);
   margin: 0;
   line-height: 1.35;
 }

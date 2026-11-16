@@ -16,18 +16,18 @@
 
 .progress-label {
   font-weight: 500;
-  color: var(--ink);
+  color: var(--text);
 }
 
 .progress-val {
-  color: var(--muted);
+  color: var(--text-muted);
   font-variant-numeric: tabular-nums;
   font-weight: 500;
 }
 
 .progress-track {
   width: 100%;
-  background-color: var(--soft);
+  background-color: var(--surface-muted);
   border-radius: 9999px;
   overflow: hidden;
   position: relative;
@@ -52,19 +52,19 @@
 
 /* Colors */
 .color-brand {
-  background-color: #009966;
+  background-color: var(--primary);
 }
 .color-success {
-  background-color: #10b981;
+  background-color: var(--success-fg);
 }
 .color-warning {
-  background-color: #f59e0b;
+  background-color: var(--warning-fg);
 }
 .color-danger {
-  background-color: #ef4444;
+  background-color: var(--danger-fg);
 }
 .color-info {
-  background-color: #0ea5e9;
+  background-color: var(--info-fg);
 }
 
 /* Animated stripes */

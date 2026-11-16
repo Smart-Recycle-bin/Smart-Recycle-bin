@@ -1,4 +1,4 @@
-import { DOCUMENT, inject, Injectable, signal, computed } from '@angular/core';
+import { DOCUMENT, inject, Injectable, signal, computed, DestroyRef } from '@angular/core';
 
 export type AppTheme = 'light' | 'dark';
 
@@ -7,6 +7,7 @@ export type AppTheme = 'light' | 'dark';
 })
 export class ThemeService {
   private readonly document = inject(DOCUMENT);
+  private readonly destroyRef = inject(DestroyRef, { optional: true });
   private readonly storageKey = 'app-theme-preference';
 
   /**
@@ -21,15 +22,19 @@ export class ThemeService {
   readonly isDark = computed<boolean>(() => this.theme() === 'dark');
   readonly isLight = computed<boolean>(() => this.theme() === 'light');
 
+  private mediaQueryList: MediaQueryList | null = null;
+  private mediaListener: ((e: MediaQueryListEvent) => void) | null = null;
+
   constructor() {
     this.initializeTheme();
+    this.setupSystemMediaListener();
   }
 
   /**
    * Initializes the theme on application startup:
    * 1. Checks if a theme is saved in localStorage.
-   * 2. If present, applies that theme.
-   * 3. If absent, detects operating system's color scheme preference.
+   * 2. If present, applies that theme (persisted).
+   * 3. If absent, detects operating system preference.
    * 4. Applies the selected theme to the document root immediately.
    */
   initializeTheme(): void {
@@ -60,7 +65,70 @@ export class ThemeService {
   }
 
   /**
-   * Applies the theme to the signal, the document root DOM element, and optionally localStorage.
+   * Returns true if the user has an explicit theme preference saved in localStorage.
+   */
+  hasSavedPreference(): boolean {
+    return this.getSavedTheme() !== null;
+  }
+
+  /**
+   * Clears explicit user preference, reverting to system theme.
+   */
+  clearSavedPreference(): void {
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        window.localStorage.removeItem(this.storageKey);
+      }
+    } catch {
+      // localStorage may be disabled
+    }
+    const systemPrefersDark = this.detectSystemDarkMode();
+    this.applyTheme(systemPrefersDark ? 'dark' : 'light', false);
+  }
+
+  /**
+   * Listens live to OS color scheme changes if no saved preference exists.
+   */
+  private setupSystemMediaListener(): void {
+    try {
+      if (typeof window !== 'undefined' && window.matchMedia) {
+        this.mediaQueryList = window.matchMedia('(prefers-color-scheme: dark)');
+        this.mediaListener = (e: MediaQueryListEvent) => {
+          // If the user has explicitly chosen and saved a theme, the user's choice wins.
+          if (this.hasSavedPreference()) {
+            return;
+          }
+          const newTheme: AppTheme = e.matches ? 'dark' : 'light';
+          this.applyTheme(newTheme, false);
+        };
+
+        if (this.mediaQueryList.addEventListener) {
+          this.mediaQueryList.addEventListener('change', this.mediaListener);
+        } else if ('addListener' in this.mediaQueryList) {
+          (this.mediaQueryList as unknown as { addListener: (cb: (e: MediaQueryListEvent) => void) => void }).addListener(
+            this.mediaListener
+          );
+        }
+
+        this.destroyRef?.onDestroy(() => {
+          if (this.mediaQueryList && this.mediaListener) {
+            if (this.mediaQueryList.removeEventListener) {
+              this.mediaQueryList.removeEventListener('change', this.mediaListener);
+            } else if ('removeListener' in this.mediaQueryList) {
+              (this.mediaQueryList as unknown as { removeListener: (cb: (e: MediaQueryListEvent) => void) => void }).removeListener(
+                this.mediaListener
+              );
+            }
+          }
+        });
+      }
+    } catch {
+      // matchMedia may be unavailable in certain environments
+    }
+  }
+
+  /**
+   * Applies the theme to the signal, the document root DOM element, meta tag, and optionally localStorage.
    */
   private applyTheme(theme: AppTheme, persist: boolean): void {
     this.theme.set(theme);
@@ -69,11 +137,24 @@ export class ThemeService {
       this.saveTheme(theme);
     }
 
-    const docEl = this.document.documentElement;
-    if (theme === 'dark') {
-      docEl.classList.add('dark');
-    } else {
-      docEl.classList.remove('dark');
+    const docEl = this.document?.documentElement;
+    if (docEl) {
+      if (theme === 'dark') {
+        docEl.classList.add('dark');
+        docEl.style.colorScheme = 'dark';
+      } else {
+        docEl.classList.remove('dark');
+        docEl.style.colorScheme = 'light';
+      }
+    }
+
+    try {
+      const meta = this.document?.querySelector('meta[name="theme-color"]');
+      if (meta) {
+        meta.setAttribute('content', theme === 'dark' ? '#0A101F' : '#009966');
+      }
+    } catch {
+      // DOM access might be constrained
     }
   }
 

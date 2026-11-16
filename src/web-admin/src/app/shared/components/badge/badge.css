@@ -40,62 +40,37 @@
 
 /* Variants */
 .variant-success {
-  background-color: rgba(16, 185, 129, 0.12);
-  color: #059669;
-  border: 1px solid rgba(16, 185, 129, 0.25);
-}
-:host-context(.dark) .variant-success {
-  background-color: rgba(16, 185, 129, 0.18);
-  color: #34d399;
-  border-color: rgba(16, 185, 129, 0.3);
+  background-color: var(--success-bg);
+  color: var(--success-fg);
+  border: 1px solid var(--success-border);
 }
 
 .variant-warning {
-  background-color: rgba(245, 158, 11, 0.12);
-  color: #d97706;
-  border: 1px solid rgba(245, 158, 11, 0.25);
-}
-:host-context(.dark) .variant-warning {
-  background-color: rgba(245, 158, 11, 0.18);
-  color: #fbbf24;
-  border-color: rgba(245, 158, 11, 0.3);
+  background-color: var(--warning-bg);
+  color: var(--warning-fg);
+  border: 1px solid var(--warning-border);
 }
 
 .variant-danger {
-  background-color: rgba(239, 68, 68, 0.12);
-  color: #dc2626;
-  border: 1px solid rgba(239, 68, 68, 0.25);
-}
-:host-context(.dark) .variant-danger {
-  background-color: rgba(239, 68, 68, 0.18);
-  color: #f87171;
-  border-color: rgba(239, 68, 68, 0.3);
+  background-color: var(--danger-bg);
+  color: var(--danger-fg);
+  border: 1px solid var(--danger-border);
 }
 
 .variant-info {
-  background-color: rgba(14, 165, 233, 0.12);
-  color: #0284c7;
-  border: 1px solid rgba(14, 165, 233, 0.25);
-}
-:host-context(.dark) .variant-info {
-  background-color: rgba(14, 165, 233, 0.18);
-  color: #38bdf8;
-  border-color: rgba(14, 165, 233, 0.3);
+  background-color: var(--info-bg);
+  color: var(--info-fg);
+  border: 1px solid var(--info-border);
 }
 
 .variant-purple {
-  background-color: rgba(139, 92, 246, 0.12);
-  color: #7c3aed;
-  border: 1px solid rgba(139, 92, 246, 0.25);
-}
-:host-context(.dark) .variant-purple {
-  background-color: rgba(139, 92, 246, 0.2);
-  color: #a78bfa;
-  border-color: rgba(139, 92, 246, 0.35);
+  background-color: var(--purple-bg);
+  color: var(--purple-fg);
+  border: 1px solid var(--purple-border);
 }
 
 .variant-neutral {
-  background-color: var(--soft);
-  color: var(--muted);
-  border: 1px solid var(--line);
+  background-color: var(--surface-muted);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
 }

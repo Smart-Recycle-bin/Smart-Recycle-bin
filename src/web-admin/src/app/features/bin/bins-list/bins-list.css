@@ -13,8 +13,8 @@
 }
 
 .filters-card {
-  background-color: var(--card, #ffffff);
-  border: 1px solid var(--line, #e2e8f0);
+  background-color: var(--surface-raised);
+  border: 1px solid var(--border);
   border-radius: 0.75rem;
   padding: 1rem 1.25rem;
 }
@@ -43,8 +43,8 @@
 }
 
 .table-container {
-  background-color: var(--card, #ffffff);
-  border: 1px solid var(--line, #e2e8f0);
+  background-color: var(--surface-raised);
+  border: 1px solid var(--border);
   border-radius: 0.75rem;
   overflow: hidden;
 }
@@ -62,17 +62,17 @@
 
 .bin-primary-name {
   font-weight: 600;
-  color: var(--ink, #0f172a);
+  color: var(--text);
 }
 
 .bin-sub-area {
   font-size: 0.75rem;
-  color: var(--muted, #64748b);
+  color: var(--text-muted);
 }
 
 .timestamp-text {
   font-size: 0.8125rem;
-  color: var(--muted, #64748b);
+  color: var(--text-muted);
   white-space: nowrap;
 }
 
@@ -108,7 +108,7 @@
   align-items: center;
   gap: 0.375rem;
   font-size: 0.75rem;
-  color: var(--muted, #64748b);
+  color: var(--text-muted);
 }
 
 .drawer-actions {

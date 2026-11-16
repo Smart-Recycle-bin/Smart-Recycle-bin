@@ -1,16 +1,27 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { ThemeService } from '../../core/services/theme/theme.service';
+import { Icon } from '../../shared/components/icon/icon';
+import { TooltipDirective } from '../../shared/components/tooltip/tooltip.directive';
 
 @Component({
   selector: 'app-auth-layout',
-  imports: [RouterOutlet],
+  imports: [RouterOutlet, Icon, TooltipDirective],
   templateUrl: './auth-layout.html',
   styleUrl: './auth-layout.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AuthLayout {
+  private readonly themeService = inject(ThemeService);
+
   readonly title = input<string>('Welcome back');
   readonly subtitle = input<string>('Sign in to the System Admin dashboard.');
   readonly logoSrc = input<string>('ecobin-logo.svg');
   readonly logoAlt = input<string>('EcoBin');
+
+  readonly isDark = this.themeService.isDark;
+
+  toggleTheme(): void {
+    this.themeService.toggleTheme();
+  }
 }

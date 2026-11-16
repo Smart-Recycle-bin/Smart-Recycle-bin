@@ -1,4 +1,5 @@
-import { Component, computed, input } from '@angular/core';
+import { Component, computed, inject, input } from '@angular/core';
+import { ThemeService } from '../../../../core/services/theme/theme.service';
 
 @Component({
   selector: 'app-gauge',
@@ -7,6 +8,8 @@ import { Component, computed, input } from '@angular/core';
   styleUrl: './gauge.css',
 })
 export class Gauge {
+  private readonly themeService = inject(ThemeService, { optional: true });
+
   readonly value = input<number>(0);
   readonly min = input<number>(0);
   readonly max = input<number>(100);
@@ -33,13 +36,16 @@ export class Gauge {
   });
 
   readonly statusColor = computed<string>(() => {
+    // Read theme signal so changes reactively trigger updates
+    this.themeService?.theme();
+
     if (this.color()) return this.color();
-    if (!this.autoColor()) return '#009966';
+    if (!this.autoColor()) return 'var(--primary)';
 
     const pct = this.percentage();
-    if (pct >= 85) return '#ef4444'; // Full / critical
-    if (pct >= 65) return '#f59e0b'; // Moderate / warning
-    return '#009966'; // Good / normal
+    if (pct >= 85) return 'var(--danger-fg)';
+    if (pct >= 65) return 'var(--warning-fg)';
+    return 'var(--primary)';
   });
 
   readonly statusLabel = computed<string>(() => {

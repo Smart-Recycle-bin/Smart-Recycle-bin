@@ -15,26 +15,26 @@
   padding-inline: 0.875rem;
   font-size: 0.875rem;
   font-family: inherit;
-  color: var(--ink);
-  background-color: var(--card);
-  border: 1px solid var(--line);
+  color: var(--text);
+  background-color: var(--surface-raised);
+  border: 1px solid var(--border);
   border-radius: 0.5rem;
   transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
   outline: none;
 }
 
 .input-field::placeholder {
-  color: var(--muted);
+  color: var(--text-muted);
   opacity: 0.8;
 }
 
 .input-field:hover:not(:disabled) {
-  border-color: var(--muted);
+  border-color: var(--border-strong);
 }
 
 .input-field:focus {
-  border-color: var(--color-brand);
-  box-shadow: 0 0 0 3px rgba(0, 153, 102, 0.15);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--focus-ring);
 }
 
 .input-field.has-leading-icon {
@@ -51,7 +51,7 @@
   display: flex;
   align-items: center;
   pointer-events: none;
-  color: var(--muted);
+  color: var(--text-muted);
 }
 
 .input-icon-trailing {
@@ -60,7 +60,7 @@
   display: flex;
   align-items: center;
   pointer-events: none;
-  color: var(--muted);
+  color: var(--text-muted);
 }
 
 .input-icon-trailing-btn {
@@ -74,33 +74,33 @@
   border-radius: 0.375rem;
   background: none;
   border: none;
-  color: var(--muted);
+  color: var(--text-muted);
   cursor: pointer;
   transition: color 0.15s;
 }
 
 .input-icon-trailing-btn:hover {
-  color: var(--ink);
+  color: var(--text);
 }
 
 .input-icon-trailing-btn:focus-visible {
-  outline: 2px solid var(--color-brand);
+  outline: 2px solid var(--primary);
   outline-offset: 2px;
 }
 
 /* Error state */
 .has-error .input-field {
-  border-color: var(--danger);
+  border-color: var(--danger-fg);
 }
 
 .has-error .input-field:focus {
-  border-color: var(--danger);
-  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+  border-color: var(--danger-fg);
+  box-shadow: 0 0 0 3px var(--danger-border);
 }
 
 /* Disabled */
 .is-disabled .input-field {
-  background-color: var(--soft);
+  background-color: var(--surface-muted);
   cursor: not-allowed;
   opacity: 0.65;
 }

@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+import { ThemeService } from '../../../../core/services/theme/theme.service';
 
 export type BarListTone = 'brand' | 'info' | 'warning' | 'danger' | 'purple';
 
@@ -31,6 +32,8 @@ const TONE_COLOR_MAP: Record<BarListTone, string> = {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class BarList {
+  private readonly themeService = inject(ThemeService, { optional: true });
+
   readonly items = input<BarListItem[]>([]);
   readonly title = input<string>('');
   readonly showPercentage = input<boolean>(true);
@@ -52,6 +55,9 @@ export class BarList {
   });
 
   readonly processedItems = computed(() => {
+    // Read theme so theme toggle triggers re-rendering
+    this.themeService?.theme();
+
     const max = this.maxValue();
     const total = this.totalValue() || 1;
     const rules = this.thresholds();

@@ -64,10 +64,10 @@
   align-items: center;
   justify-content: center;
   border-radius: inherit;
-  background-color: rgba(0, 153, 102, 0.12);
-  color: #009966;
+  background-color: var(--primary-soft);
+  color: var(--primary);
   font-weight: 600;
-  border: 1px solid rgba(0, 153, 102, 0.25);
+  border: 1px solid var(--border);
 }
 
 .avatar-initials {
@@ -81,7 +81,7 @@
   right: 0;
   display: block;
   border-radius: 9999px;
-  border: 2px solid var(--card);
+  border: 2px solid var(--surface-raised);
 }
 
 .size-xs .avatar-status {
@@ -100,14 +100,14 @@
 }
 
 .status-online {
-  background-color: #10b981;
+  background-color: var(--success-fg);
 }
 .status-offline {
-  background-color: #94a3b8;
+  background-color: var(--text-muted);
 }
 .status-busy {
-  background-color: #ef4444;
+  background-color: var(--danger-fg);
 }
 .status-away {
-  background-color: #f59e0b;
+  background-color: var(--warning-fg);
 }

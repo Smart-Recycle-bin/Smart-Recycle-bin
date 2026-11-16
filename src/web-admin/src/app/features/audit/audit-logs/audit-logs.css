@@ -15,8 +15,8 @@
 }
 
 .filters-card {
-  background-color: var(--bg-surface, #ffffff);
-  border: 1px solid var(--border-subtle, #e2e8f0);
+  background-color: var(--surface-raised);
+  border: 1px solid var(--border);
   border-radius: 0.75rem;
   padding: 1rem;
 }
@@ -45,8 +45,8 @@
 }
 
 .table-container {
-  background-color: var(--bg-surface, #ffffff);
-  border: 1px solid var(--border-subtle, #e2e8f0);
+  background-color: var(--surface-raised);
+  border: 1px solid var(--border);
   border-radius: 0.75rem;
   overflow: hidden;
 }

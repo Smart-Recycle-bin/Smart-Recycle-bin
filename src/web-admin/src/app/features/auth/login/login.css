@@ -41,7 +41,7 @@
   padding: 0;
   font-size: 0.8125rem;
   font-weight: 500;
-  color: var(--primary, #059669);
+  color: var(--primary);
   cursor: pointer;
   text-decoration: none;
   transition: color 0.15s ease-in-out;
@@ -49,11 +49,11 @@
 
 .forgot-password-link:hover {
   text-decoration: underline;
-  color: var(--primary-hover, #047857);
+  color: var(--primary-strong);
 }
 
 .forgot-password-link:focus-visible {
-  outline: 2px solid var(--primary, #059669);
+  outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
   border-radius: 2px;
 }
@@ -65,17 +65,11 @@
   padding: 0.625rem 0.875rem;
   font-size: 0.8125rem;
   font-weight: 500;
-  color: #b91c1c;
-  background-color: #fef2f2;
-  border: 1px solid #fecaca;
+  color: var(--danger-fg);
+  background-color: var(--danger-bg);
+  border: 1px solid var(--danger-border);
   border-radius: 0.5rem;
   animation: fadeIn 0.2s ease-in-out;
-}
-
-:host-context(.dark) .login-error-banner {
-  color: #fca5a5;
-  background-color: rgba(239, 68, 68, 0.12);
-  border-color: rgba(239, 68, 68, 0.3);
 }
 
 .submit-row {
@@ -84,28 +78,34 @@
 
 .prototype-hint {
   padding: 0.75rem 0.875rem;
-  background-color: var(--chip-bg, #f8fafc);
-  border: 1px dashed var(--line, #e2e8f0);
+  background-color: var(--surface-muted);
+  border: 1px dashed var(--border);
   border-radius: 0.5rem;
   font-size: 0.75rem;
   line-height: 1.45;
-  color: var(--muted, #64748b);
+  color: var(--text-muted);
   margin-top: 0.5rem;
 }
 
 .prototype-label {
   font-weight: 600;
-  color: var(--ink, #0f172a);
+  color: var(--text);
 }
 
 .prototype-hint code {
   font-family: monospace;
-  font-size: 0.75rem;
-  padding: 0.1rem 0.3rem;
-  background-color: var(--card, #ffffff);
-  border: 1px solid var(--line, #e2e8f0);
+  background-color: var(--surface-raised);
+  padding: 0.125rem 0.375rem;
   border-radius: 0.25rem;
-  color: var(--ink, #0f172a);
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+
+.forgot-modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 0.5rem 0;
 }
 
 .modal-footer-row {
@@ -113,12 +113,6 @@
   justify-content: flex-end;
   gap: 0.75rem;
   width: 100%;
-}
-
-.forgot-form {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
 }
 
 @keyframes fadeIn {

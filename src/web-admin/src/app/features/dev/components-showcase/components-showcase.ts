@@ -259,20 +259,20 @@ export class ComponentsShowcase {
 
   // Sample Data: Bar List (Collection by Material)
   readonly materialBarData: BarListItem[] = [
-    { label: 'PET Plastics', value: 1420, color: '#009966', formattedValue: '1,420 kg' },
-    { label: 'Cardboard & Paper', value: 2150, color: '#0ea5e9', formattedValue: '2,150 kg' },
-    { label: 'Clear & Amber Glass', value: 980, color: '#f59e0b', formattedValue: '980 kg' },
-    { label: 'Aluminium Cans', value: 640, color: '#8b5cf6', formattedValue: '640 kg' },
-    { label: 'E-Waste Devices', value: 310, color: '#ec4899', formattedValue: '310 kg' },
+    { label: 'PET Plastics', value: 1420, color: 'var(--chart-1)', formattedValue: '1,420 kg' },
+    { label: 'Cardboard & Paper', value: 2150, color: 'var(--chart-2)', formattedValue: '2,150 kg' },
+    { label: 'Clear & Amber Glass', value: 980, color: 'var(--chart-3)', formattedValue: '980 kg' },
+    { label: 'Aluminium Cans', value: 640, color: 'var(--chart-4)', formattedValue: '640 kg' },
+    { label: 'E-Waste Devices', value: 310, color: 'var(--chart-5)', formattedValue: '310 kg' },
   ];
 
   // Sample Data: Donut Chart (Waste Composition)
   readonly wasteComposition: DonutSegment[] = [
-    { label: 'Plastics', value: 38, color: '#009966' },
-    { label: 'Paper', value: 28, color: '#0ea5e9' },
-    { label: 'Glass', value: 18, color: '#f59e0b' },
-    { label: 'Metals', value: 11, color: '#8b5cf6' },
-    { label: 'Other', value: 5, color: '#94a3b8' },
+    { label: 'Plastics', value: 38, color: 'var(--chart-1)' },
+    { label: 'Paper', value: 28, color: 'var(--chart-2)' },
+    { label: 'Glass', value: 18, color: 'var(--chart-3)' },
+    { label: 'Metals', value: 11, color: 'var(--chart-4)' },
+    { label: 'Other', value: 5, color: 'var(--chart-6)' },
   ];
 
   // Sample Data: IoT Bins Table

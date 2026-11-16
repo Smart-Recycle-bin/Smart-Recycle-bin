@@ -114,9 +114,9 @@ describe('SurveyQa', () => {
     });
 
     it('should resolve category colors', () => {
-      expect(getCategoryColor('Mixed packaging', 0)).toBe('var(--danger, #ef4444)');
-      expect(getCategoryColor('Plastic (PET)', 1)).toBe('var(--brand, #059669)');
-      expect(getCategoryColor('Unknown Material', 0)).toBe('var(--brand, #059669)');
+      expect(getCategoryColor('Mixed packaging', 0)).toBe('var(--chart-5)');
+      expect(getCategoryColor('Plastic (PET)', 1)).toBe('var(--chart-1)');
+      expect(getCategoryColor('Unknown Material', 0)).toBe('var(--chart-1)');
     });
   });
 

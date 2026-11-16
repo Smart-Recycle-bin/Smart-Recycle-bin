@@ -1,4 +1,18 @@
 <div class="auth-root">
+  <!-- Theme Toggle in Auth Layout -->
+  <div class="auth-theme-toggle-wrap">
+    <button
+      type="button"
+      class="auth-theme-toggle-btn"
+      [appTooltip]="isDark() ? 'Switch to light mode' : 'Switch to dark mode'"
+      tooltipPosition="bottom"
+      [attr.aria-label]="isDark() ? 'Switch to light mode' : 'Switch to dark mode'"
+      (click)="toggleTheme()"
+    >
+      <app-icon [name]="isDark() ? 'sun' : 'moon'" size="sm" />
+    </button>
+  </div>
+
   <!-- Left Side: Auth Card -->
   <main class="auth-card-panel">
     <div class="auth-card fade-up">

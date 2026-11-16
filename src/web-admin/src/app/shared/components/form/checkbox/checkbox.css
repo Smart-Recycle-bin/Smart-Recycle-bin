@@ -39,8 +39,8 @@
   width: 1.125rem;
   height: 1.125rem;
   border-radius: 0.25rem;
-  border: 1.5px solid var(--line);
-  background-color: var(--card);
+  border: 1.5px solid var(--border);
+  background-color: var(--surface-raised);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -48,28 +48,28 @@
 }
 
 .checkbox-native:focus-visible + .checkbox-custom {
-  box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--color-brand);
+  box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--focus-ring);
 }
 
 .checkbox-container:hover:not(.is-disabled) .checkbox-custom {
-  border-color: var(--color-brand);
+  border-color: var(--primary);
 }
 
 .has-error .checkbox-custom {
-  border-color: var(--danger);
+  border-color: var(--danger-fg);
 }
 
 .is-checked .checkbox-custom,
 .checkbox-native:indeterminate + .checkbox-custom {
-  background-color: var(--color-brand);
-  border-color: var(--color-brand);
-  color: #ffffff;
+  background-color: var(--primary);
+  border-color: var(--primary);
+  color: var(--primary-fg);
 }
 
 .indeterminate-bar {
   width: 0.625rem;
   height: 0.125rem;
-  background-color: #ffffff;
+  background-color: var(--primary-fg);
   border-radius: 1px;
 }
 
@@ -80,32 +80,32 @@
 
 .checkbox-label {
   font-weight: 500;
-  color: var(--ink);
+  color: var(--text);
   line-height: 1.25;
 }
 
 .required-star {
-  color: var(--danger);
+  color: var(--danger-fg);
   margin-inline-start: 0.125rem;
 }
 
 .checkbox-desc {
   font-size: 0.75rem;
-  color: var(--muted);
+  color: var(--text-muted);
   margin-top: 0.125rem;
   line-height: 1.35;
 }
 
 .checkbox-error-msg {
   font-size: 0.75rem;
-  color: var(--danger-ink);
+  color: var(--danger-fg);
   margin: 0;
   padding-inline-start: 1.75rem;
 }
 
 .checkbox-hint-msg {
   font-size: 0.75rem;
-  color: var(--muted);
+  color: var(--text-muted);
   margin: 0;
   padding-inline-start: 1.75rem;
 }

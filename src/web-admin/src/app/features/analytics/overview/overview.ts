@@ -112,12 +112,12 @@ export class Overview implements OnInit {
     return [
       {
         name: 'Points Issued',
-        color: 'var(--brand, #059669)',
+        color: 'var(--chart-1)',
         points: data.map((p) => ({ label: formatShortDate(p.date), value: p.issued })),
       },
       {
         name: 'Points Redeemed',
-        color: 'var(--purple, #7c3aed)',
+        color: 'var(--chart-3)',
         points: data.map((p) => ({ label: formatShortDate(p.date), value: p.redeemed })),
       },
     ];

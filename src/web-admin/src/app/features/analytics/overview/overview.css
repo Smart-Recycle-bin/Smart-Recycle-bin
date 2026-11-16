@@ -58,8 +58,8 @@
 .stat-skeleton-card,
 .panel-skeleton-card,
 .chart-skeleton-card {
-  background-color: var(--card, #ffffff);
-  border: 1px solid var(--line, #e2e8f0);
+  background-color: var(--surface-raised);
+  border: 1px solid var(--border);
   border-radius: 0.75rem;
   padding: 1.25rem;
   display: flex;
@@ -90,7 +90,7 @@
   gap: 0.25rem;
   font-size: 0.8125rem;
   font-weight: 500;
-  color: var(--brand, #059669);
+  color: var(--primary);
   text-decoration: none;
   transition: opacity 0.15s ease-in-out;
 }
@@ -113,7 +113,7 @@
   height: 0.625rem;
   border-radius: 9999px;
   overflow: hidden;
-  background-color: var(--line, #e2e8f0);
+  background-color: var(--border);
 }
 
 .stacked-segment {
@@ -122,19 +122,19 @@
 }
 
 .stacked-segment.is-available {
-  background-color: var(--success, #10b981);
+  background-color: var(--success-fg);
 }
 
 .stacked-segment.is-eighty {
-  background-color: var(--warning, #f59e0b);
+  background-color: var(--warning-fg);
 }
 
 .stacked-segment.is-needs-service {
-  background-color: var(--danger, #ef4444);
+  background-color: var(--danger-fg);
 }
 
 .stacked-segment.is-offline {
-  background-color: var(--muted, #64748b);
+  background-color: var(--text-muted);
 }
 
 .fleet-status-list {
@@ -162,25 +162,25 @@
 }
 
 .dot-available {
-  background-color: var(--success, #10b981);
+  background-color: var(--success-fg);
 }
 
 .dot-eighty {
-  background-color: var(--warning, #f59e0b);
+  background-color: var(--warning-fg);
 }
 
 .dot-needs-service {
-  background-color: var(--danger, #ef4444);
+  background-color: var(--danger-fg);
 }
 
 .dot-offline {
-  background-color: var(--muted, #64748b);
+  background-color: var(--text-muted);
 }
 
 .status-name {
   font-size: 0.8125rem;
   font-weight: 500;
-  color: var(--ink, #0f172a);
+  color: var(--text);
 }
 
 .status-metrics {
@@ -188,12 +188,12 @@
   justify-content: space-between;
   align-items: baseline;
   font-size: 0.75rem;
-  color: var(--muted, #64748b);
+  color: var(--text-muted);
 }
 
 .status-count {
   font-weight: 600;
-  color: var(--ink, #0f172a);
+  color: var(--text);
 }
 
 /* Material Recovery & Donut */
@@ -249,7 +249,7 @@
   margin: 0;
   font-size: 0.875rem;
   font-weight: 600;
-  color: var(--ink, #0f172a);
+  color: var(--text);
 }
 
 .attention-items-list {
@@ -264,16 +264,16 @@
   align-items: center;
   gap: 0.75rem;
   padding: 0.75rem;
-  background-color: var(--chip-bg, #f8fafc);
-  border: 1px solid var(--line, #e2e8f0);
+  background-color: var(--surface-muted);
+  border: 1px solid var(--border);
   border-radius: 0.5rem;
   text-decoration: none;
   transition: all 0.15s ease-in-out;
 }
 
 .attention-item-row:hover {
-  background-color: var(--card-hover, #f1f5f9);
-  border-color: var(--brand, #059669);
+  background-color: var(--surface-raised);
+  border-color: var(--primary);
   transform: translateY(-1px);
 }
 
@@ -288,13 +288,13 @@
   font-family: monospace;
   font-size: 0.75rem;
   font-weight: 600;
-  color: var(--muted, #64748b);
+  color: var(--text-muted);
 }
 
 .item-title {
   font-size: 0.8125rem;
   font-weight: 600;
-  color: var(--ink, #0f172a);
+  color: var(--text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -302,13 +302,13 @@
 
 .item-sub {
   font-size: 0.75rem;
-  color: var(--muted, #64748b);
+  color: var(--text-muted);
 }
 
 .item-predicted {
   font-size: 0.8125rem;
   font-weight: 600;
-  color: var(--ink, #0f172a);
+  color: var(--text);
 }
 
 .review-title-row {
@@ -319,7 +319,7 @@
 
 .item-feedback {
   font-size: 0.75rem;
-  color: var(--muted, #64748b);
+  color: var(--text-muted);
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;

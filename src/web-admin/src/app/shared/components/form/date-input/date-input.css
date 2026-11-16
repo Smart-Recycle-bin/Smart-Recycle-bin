@@ -2,84 +2,57 @@
   display: block;
 }
 
-.date-wrapper {
+.date-input-wrapper {
   position: relative;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  width: 100%;
+}
+
+.date-field {
   width: 100%;
   height: 2.5rem;
-  padding-inline: 0.875rem;
-  background-color: var(--card);
-  border: 1px solid var(--line);
-  border-radius: 0.5rem;
-  cursor: pointer;
-  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-}
-
-.date-wrapper.is-compact {
-  height: 2.125rem;
-  padding-inline: 0.75rem;
-}
-
-.date-wrapper:hover:not(.is-disabled) {
-  border-color: var(--muted);
-}
-
-.date-wrapper:focus-within {
-  border-color: var(--color-brand);
-  box-shadow: 0 0 0 3px rgba(0, 153, 102, 0.15);
-}
-
-.date-display {
+  padding-inline-start: 0.875rem;
+  padding-inline-end: 2.25rem;
   font-size: 0.875rem;
-  font-variant-numeric: tabular-nums;
-  color: var(--ink);
-  pointer-events: none;
-  white-space: nowrap;
+  font-family: inherit;
+  color: var(--text);
+  background-color: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  outline: none;
 }
 
-.is-compact .date-display {
-  font-size: 0.8125rem;
+.date-field:hover:not(:disabled) {
+  border-color: var(--border-strong);
 }
 
-.date-display.is-placeholder {
-  color: var(--muted);
-  opacity: 0.85;
+.date-field:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--focus-ring);
 }
 
-.date-native {
+.date-icon-box {
   position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  opacity: 0;
-  cursor: pointer;
-}
-
-.date-icon {
-  display: inline-flex;
+  inset-inline-end: 0.75rem;
+  display: flex;
   align-items: center;
-  color: var(--muted);
   pointer-events: none;
-  margin-inline-start: 0.5rem;
+  color: var(--text-muted);
 }
 
-.has-error {
-  border-color: var(--danger);
+.has-error .date-field {
+  border-color: var(--danger-fg);
 }
 
-.has-error:focus-within {
-  border-color: var(--danger);
-  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+.has-error .date-field:focus {
+  border-color: var(--danger-fg);
+  box-shadow: 0 0 0 3px var(--danger-border);
 }
 
-.is-disabled {
-  background-color: var(--soft);
+.is-disabled .date-field {
+  background-color: var(--surface-muted);
   cursor: not-allowed;
   opacity: 0.65;
-}
-
-.is-disabled .date-native {
-  cursor: not-allowed;
 }

@@ -21,7 +21,7 @@
   display: inline-flex;
   flex-shrink: 0;
   border-radius: 9999px;
-  background-color: var(--line);
+  background-color: var(--border-strong);
   border: 2px solid transparent;
   transition: background-color 0.2s ease-in-out;
   padding: 0;
@@ -54,22 +54,22 @@
 }
 
 .toggle-switch:focus-visible {
-  box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--color-brand);
+  box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--focus-ring);
 }
 
 .toggle-switch.is-checked {
-  background-color: var(--color-brand);
+  background-color: var(--primary);
 }
 
 .has-error .toggle-switch {
-  border-color: var(--danger);
+  border-color: var(--danger-fg);
 }
 
 .toggle-thumb {
   pointer-events: none;
   display: inline-block;
   border-radius: 9999px;
-  background-color: #ffffff;
+  background-color: var(--primary-fg);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
   transition: transform 0.2s ease-in-out;
 }
@@ -82,31 +82,31 @@
 .toggle-label {
   font-size: 0.875rem;
   font-weight: 500;
-  color: var(--ink);
+  color: var(--text);
   line-height: 1.25;
 }
 
 .required-star {
-  color: var(--danger);
+  color: var(--danger-fg);
   margin-inline-start: 0.125rem;
 }
 
 .toggle-desc {
   font-size: 0.75rem;
-  color: var(--muted);
+  color: var(--text-muted);
   margin-top: 0.125rem;
   line-height: 1.35;
 }
 
 .toggle-error-msg {
   font-size: 0.75rem;
-  color: var(--danger-ink);
+  color: var(--danger-fg);
   margin: 0;
 }
 
 .toggle-hint-msg {
   font-size: 0.75rem;
-  color: var(--muted);
+  color: var(--text-muted);
   margin: 0;
 }
 

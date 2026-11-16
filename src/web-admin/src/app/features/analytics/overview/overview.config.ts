@@ -15,13 +15,13 @@ export const HOTSPOT_THRESHOLDS: BarListThresholds = {
 };
 
 export const MATERIAL_COLORS: Record<string, string> = {
-  Plastic: 'var(--brand, #059669)',
-  'Plastic (PET)': 'var(--brand, #059669)',
-  Paper: 'var(--info, #2563eb)',
-  Glass: 'var(--warning, #f59e0b)',
-  Metal: 'var(--purple, #7c3aed)',
-  Other: 'var(--muted, #64748b)',
-  'Mixed packaging': 'var(--danger, #ef4444)',
+  Plastic: 'var(--chart-1)',
+  'Plastic (PET)': 'var(--chart-1)',
+  Paper: 'var(--chart-2)',
+  Glass: 'var(--chart-4)',
+  Metal: 'var(--chart-3)',
+  Other: 'var(--chart-6)',
+  'Mixed packaging': 'var(--chart-5)',
 };
 
 export function getMaterialColor(material: string, index: number): string {
@@ -29,12 +29,12 @@ export function getMaterialColor(material: string, index: number): string {
     return MATERIAL_COLORS[material];
   }
   const fallbackPalette = [
-    'var(--brand, #059669)',
-    'var(--info, #2563eb)',
-    'var(--warning, #f59e0b)',
-    'var(--purple, #7c3aed)',
-    'var(--danger, #ef4444)',
-    'var(--muted, #64748b)',
+    'var(--chart-1)',
+    'var(--chart-2)',
+    'var(--chart-4)',
+    'var(--chart-3)',
+    'var(--chart-5)',
+    'var(--chart-6)',
   ];
   return fallbackPalette[index % fallbackPalette.length];
 }

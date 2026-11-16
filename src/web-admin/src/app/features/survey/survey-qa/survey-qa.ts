@@ -120,12 +120,12 @@ export class SurveyQa implements OnInit {
       {
         label: 'Confirmed',
         value: s.confirmCount,
-        color: 'var(--brand, #059669)',
+        color: 'var(--chart-1)',
       },
       {
         label: 'Rejected',
         value: s.rejectCount,
-        color: 'var(--danger, #ef4444)',
+        color: 'var(--chart-5)',
       },
     ];
   });

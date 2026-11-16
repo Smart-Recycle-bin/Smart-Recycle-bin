@@ -3,15 +3,15 @@
 }
 
 .card-root {
-  background-color: var(--card);
-  color: var(--ink);
+  background-color: var(--surface-raised);
+  color: var(--text);
   border-radius: 0.75rem;
   transition: all 0.2s ease-in-out;
   position: relative;
 }
 
 .is-bordered {
-  border: 1px solid var(--line);
+  border: 1px solid var(--border);
 }
 
 .is-hoverable:hover {
@@ -54,28 +54,24 @@
 .card-title {
   font-size: 1rem;
   font-weight: 600;
-  color: var(--ink);
+  color: var(--text);
   line-height: 1.25;
 }
 
 .card-subtitle {
   font-size: 0.8125rem;
-  color: var(--muted);
-  margin-top: 0.25rem;
-}
-
-.card-header-actions:empty,
-.card-footer:empty {
-  display: none;
+  color: var(--text-muted);
+  margin-top: 0.125rem;
 }
 
 .card-footer {
-  border-top: 1px solid var(--line);
-  padding: 0.875rem 1.25rem;
-}
-.padding-sm .card-footer {
-  padding: 0.5rem 0.75rem;
-}
-.padding-lg .card-footer {
-  padding: 1rem 1.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding: 0.75rem 1.25rem;
+  border-top: 1px solid var(--border);
+  background-color: var(--surface-muted);
+  border-bottom-left-radius: 0.75rem;
+  border-bottom-right-radius: 0.75rem;
 }

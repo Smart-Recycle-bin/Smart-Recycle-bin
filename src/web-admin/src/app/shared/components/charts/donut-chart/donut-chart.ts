@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, computed, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
+import { ThemeService } from '../../../../core/services/theme/theme.service';
 
 export interface DonutSegment {
   label: string;
@@ -14,6 +15,8 @@ export interface DonutSegment {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DonutChart {
+  private readonly themeService = inject(ThemeService, { optional: true });
+
   readonly data = input<DonutSegment[]>([]);
   readonly title = input<string>('');
   readonly centerLabel = input<string>('Total');
@@ -36,6 +39,9 @@ export class DonutChart {
   readonly hasData = computed(() => this.totalValue() > 0);
 
   readonly segments = computed(() => {
+    // Read theme signal so theme toggle triggers re-render
+    this.themeService?.theme();
+
     const list = this.data();
     const total = this.totalValue();
     if (!list || total === 0) return [];

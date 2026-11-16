@@ -1,32 +1,6 @@
 {
-  "/login:light": [
-    {
-      "id": "color-contrast",
-      "target": ".forgot-password-link"
-    },
-    {
-      "id": "color-contrast",
-      "target": ".btn-content"
-    },
-    {
-      "id": "color-contrast",
-      "target": ".aside-subcopy"
-    }
-  ],
-  "/login:dark": [
-    {
-      "id": "color-contrast",
-      "target": ".btn-content"
-    },
-    {
-      "id": "color-contrast",
-      "target": ".prototype-hint"
-    },
-    {
-      "id": "color-contrast",
-      "target": ".prototype-label"
-    }
-  ],
+  "/login:light": [],
+  "/login:dark": [],
   "/overview:light": [
     {
       "id": "color-contrast",
@@ -89,34 +63,6 @@
       "target": ".avatar-initials"
     },
     {
-      "id": "color-contrast",
-      "target": ".segmented-btn[role=\"radio\"]:nth-child(1)"
-    },
-    {
-      "id": "color-contrast",
-      "target": ".segmented-btn[role=\"radio\"]:nth-child(3)"
-    },
-    {
-      "id": "color-contrast",
-      "target": ".segmented-btn[role=\"radio\"]:nth-child(4)"
-    },
-    {
-      "id": "color-contrast",
-      "target": "app-stat[title=\"Daily Active Users\"] > .stat-card > .stat-body > .stat-trend-group > app-badge > .variant-success.size-sm.badge-base > .badge-text > .trend-inner > span"
-    },
-    {
-      "id": "color-contrast",
-      "target": "app-stat[title=\"Points Issued\"] > .stat-card > .stat-body > .stat-trend-group > app-badge > .variant-success.size-sm.badge-base > .badge-text > .trend-inner > span"
-    },
-    {
-      "id": "color-contrast",
-      "target": "app-stat[title=\"Points Redeemed\"] > .stat-card > .stat-body > .stat-trend-group > app-badge > .variant-success.size-sm.badge-base > .badge-text > .trend-inner > span"
-    },
-    {
-      "id": "color-contrast",
-      "target": ".variant-danger.size-sm.badge-base > .badge-text > .trend-inner > span"
-    },
-    {
       "id": "label-content-name-mismatch",
       "target": ".notif-btn"
     },
@@ -126,10 +72,6 @@
     }
   ],
   "/overview:dark": [
-    {
-      "id": "color-contrast",
-      "target": ".avatar-initials"
-    },
     {
       "id": "label-content-name-mismatch",
       "target": ".notif-btn"
@@ -201,54 +143,6 @@
       "target": ".avatar-initials"
     },
     {
-      "id": "color-contrast",
-      "target": ".btn-content"
-    },
-    {
-      "id": "color-contrast",
-      "target": "th:nth-child(1) > .th-content > span:nth-child(1)"
-    },
-    {
-      "id": "color-contrast",
-      "target": "th:nth-child(2) > .th-content > span:nth-child(1)"
-    },
-    {
-      "id": "color-contrast",
-      "target": "th:nth-child(3) > .th-content > span:nth-child(1)"
-    },
-    {
-      "id": "color-contrast",
-      "target": "th:nth-child(4) > .th-content > span:nth-child(1)"
-    },
-    {
-      "id": "color-contrast",
-      "target": "th:nth-child(5) > .th-content > span:nth-child(1)"
-    },
-    {
-      "id": "color-contrast",
-      "target": "th:nth-child(6) > .th-content > span:nth-child(1)"
-    },
-    {
-      "id": "color-contrast",
-      "target": "th:nth-child(7) > .th-content > span:nth-child(1)"
-    },
-    {
-      "id": "color-contrast",
-      "target": ".tr-row:nth-child(1) > td:nth-child(5) > app-badge > .variant-success.badge-base.size-md > .badge-text"
-    },
-    {
-      "id": "color-contrast",
-      "target": ".tr-row:nth-child(2) > td:nth-child(5) > app-badge > .variant-danger.badge-base.size-md > .badge-text"
-    },
-    {
-      "id": "color-contrast",
-      "target": ".tr-row:nth-child(3) > td:nth-child(5) > app-badge > .variant-success.badge-base.size-md > .badge-text"
-    },
-    {
-      "id": "color-contrast",
-      "target": ".tr-row:nth-child(4) > td:nth-child(5) > app-badge > .variant-warning.badge-base.size-md > .badge-text"
-    },
-    {
       "id": "label-content-name-mismatch",
       "target": ".notif-btn"
     },
@@ -270,14 +164,6 @@
     }
   ],
   "/bins:dark": [
-    {
-      "id": "color-contrast",
-      "target": ".avatar-initials"
-    },
-    {
-      "id": "color-contrast",
-      "target": ".btn-content"
-    },
     {
       "id": "label-content-name-mismatch",
       "target": ".notif-btn"
@@ -371,10 +257,6 @@
   ],
   "/bins/map:dark": [
     {
-      "id": "color-contrast",
-      "target": ".avatar-initials"
-    },
-    {
       "id": "label-content-name-mismatch",
       "target": ".notif-btn"
     },
@@ -446,35 +328,7 @@
     },
     {
       "id": "color-contrast",
-      "target": ".is-sortable.th-cell[aria-sort=\"none\"]:nth-child(1) > .th-content > span:nth-child(1)"
-    },
-    {
-      "id": "color-contrast",
-      "target": ".is-sortable.th-cell[aria-sort=\"none\"]:nth-child(2) > .th-content > span:nth-child(1)"
-    },
-    {
-      "id": "color-contrast",
-      "target": ".is-sortable.th-cell[aria-sort=\"none\"]:nth-child(3) > .th-content > span:nth-child(1)"
-    },
-    {
-      "id": "color-contrast",
-      "target": ".is-sortable.th-cell[aria-sort=\"none\"]:nth-child(4) > .th-content > span:nth-child(1)"
-    },
-    {
-      "id": "color-contrast",
-      "target": ".is-sortable.th-cell[aria-sort=\"none\"]:nth-child(5) > .th-content > span:nth-child(1)"
-    },
-    {
-      "id": "color-contrast",
-      "target": ".is-sortable.th-cell[aria-sort=\"none\"]:nth-child(6) > .th-content > span:nth-child(1)"
-    },
-    {
-      "id": "color-contrast",
       "target": ".tr-row:nth-child(1) > .align-left.td-cell:nth-child(1) > app-user-cell > .user-cell > app-avatar > .avatar-container.shape-circle.size-sm > .avatar-placeholder > .avatar-initials"
-    },
-    {
-      "id": "color-contrast",
-      "target": ".variant-warning > .badge-text"
     },
     {
       "id": "color-contrast",
@@ -482,15 +336,7 @@
     },
     {
       "id": "color-contrast",
-      "target": ".tr-row:nth-child(2) > .align-left.td-cell:nth-child(6) > app-badge > .variant-success.badge-base.size-md > .badge-text"
-    },
-    {
-      "id": "color-contrast",
       "target": ".tr-row:nth-child(3) > .align-left.td-cell:nth-child(1) > app-user-cell > .user-cell > app-avatar > .avatar-container.shape-circle.size-sm > .avatar-placeholder > .avatar-initials"
-    },
-    {
-      "id": "color-contrast",
-      "target": ".tr-row:nth-child(3) > .align-left.td-cell:nth-child(6) > app-badge > .variant-success.badge-base.size-md > .badge-text"
     },
     {
       "id": "color-contrast",
@@ -498,23 +344,11 @@
     },
     {
       "id": "color-contrast",
-      "target": ".tr-row:nth-child(4) > .align-left.td-cell:nth-child(6) > app-badge > .variant-success.badge-base.size-md > .badge-text"
-    },
-    {
-      "id": "color-contrast",
       "target": ".tr-row:nth-child(5) > .align-left.td-cell:nth-child(1) > app-user-cell > .user-cell > app-avatar > .avatar-container.shape-circle.size-sm > .avatar-placeholder > .avatar-initials"
     },
     {
       "id": "color-contrast",
-      "target": ".tr-row:nth-child(5) > .align-left.td-cell:nth-child(6) > app-badge > .variant-success.badge-base.size-md > .badge-text"
-    },
-    {
-      "id": "color-contrast",
       "target": ".tr-row:nth-child(6) > .align-left.td-cell:nth-child(1) > app-user-cell > .user-cell > app-avatar > .avatar-container.shape-circle.size-sm > .avatar-placeholder > .avatar-initials"
-    },
-    {
-      "id": "color-contrast",
-      "target": ".tr-row:nth-child(6) > .align-left.td-cell:nth-child(6) > app-badge > .variant-success.badge-base.size-md > .badge-text"
     },
     {
       "id": "label-content-name-mismatch",
@@ -530,34 +364,6 @@
     }
   ],
   "/recyclers:dark": [
-    {
-      "id": "color-contrast",
-      "target": ".user-trigger-btn > app-avatar > .avatar-container.shape-circle.size-sm > .avatar-placeholder > .avatar-initials"
-    },
-    {
-      "id": "color-contrast",
-      "target": ".tr-row:nth-child(1) > .align-left.td-cell:nth-child(1) > app-user-cell > .user-cell > app-avatar > .avatar-container.shape-circle.size-sm > .avatar-placeholder > .avatar-initials"
-    },
-    {
-      "id": "color-contrast",
-      "target": ".tr-row:nth-child(2) > .align-left.td-cell:nth-child(1) > app-user-cell > .user-cell > app-avatar > .avatar-container.shape-circle.size-sm > .avatar-placeholder > .avatar-initials"
-    },
-    {
-      "id": "color-contrast",
-      "target": ".tr-row:nth-child(3) > .align-left.td-cell:nth-child(1) > app-user-cell > .user-cell > app-avatar > .avatar-container.shape-circle.size-sm > .avatar-placeholder > .avatar-initials"
-    },
-    {
-      "id": "color-contrast",
-      "target": ".tr-row:nth-child(4) > .align-left.td-cell:nth-child(1) > app-user-cell > .user-cell > app-avatar > .avatar-container.shape-circle.size-sm > .avatar-placeholder > .avatar-initials"
-    },
-    {
-      "id": "color-contrast",
-      "target": ".tr-row:nth-child(5) > .align-left.td-cell:nth-child(1) > app-user-cell > .user-cell > app-avatar > .avatar-container.shape-circle.size-sm > .avatar-placeholder > .avatar-initials"
-    },
-    {
-      "id": "color-contrast",
-      "target": ".tr-row:nth-child(6) > .align-left.td-cell:nth-child(1) > app-user-cell > .user-cell > app-avatar > .avatar-container.shape-circle.size-sm > .avatar-placeholder > .avatar-initials"
-    },
     {
       "id": "label-content-name-mismatch",
       "target": ".notif-btn"
@@ -634,39 +440,7 @@
     },
     {
       "id": "color-contrast",
-      "target": ".btn-content"
-    },
-    {
-      "id": "color-contrast",
-      "target": ".is-sortable.th-cell[aria-sort=\"none\"]:nth-child(1) > .th-content > span:nth-child(1)"
-    },
-    {
-      "id": "color-contrast",
-      "target": ".is-sortable.th-cell[aria-sort=\"none\"]:nth-child(2) > .th-content > span:nth-child(1)"
-    },
-    {
-      "id": "color-contrast",
-      "target": ".is-sortable.th-cell[aria-sort=\"none\"]:nth-child(3) > .th-content > span:nth-child(1)"
-    },
-    {
-      "id": "color-contrast",
-      "target": ".is-sortable.th-cell[aria-sort=\"none\"]:nth-child(4) > .th-content > span:nth-child(1)"
-    },
-    {
-      "id": "color-contrast",
-      "target": ".is-sortable.th-cell[aria-sort=\"none\"]:nth-child(5) > .th-content > span:nth-child(1)"
-    },
-    {
-      "id": "color-contrast",
-      "target": ".is-sortable.th-cell[aria-sort=\"none\"]:nth-child(6) > .th-content > span:nth-child(1)"
-    },
-    {
-      "id": "color-contrast",
       "target": ".tr-row:nth-child(1) > .align-left.td-cell:nth-child(1) > app-user-cell > .user-cell > app-avatar > .avatar-container.shape-circle > .avatar-placeholder > .avatar-initials"
-    },
-    {
-      "id": "color-contrast",
-      "target": ".tr-row:nth-child(1) > .align-left.td-cell:nth-child(5) > app-badge > .variant-success.badge-base.size-md > .badge-text"
     },
     {
       "id": "color-contrast",
@@ -674,23 +448,11 @@
     },
     {
       "id": "color-contrast",
-      "target": ".tr-row:nth-child(2) > .align-left.td-cell:nth-child(5) > app-badge > .variant-success.badge-base.size-md > .badge-text"
-    },
-    {
-      "id": "color-contrast",
       "target": ".tr-row:nth-child(3) > .align-left.td-cell:nth-child(1) > app-user-cell > .user-cell > app-avatar > .avatar-container.shape-circle > .avatar-placeholder > .avatar-initials"
     },
     {
       "id": "color-contrast",
-      "target": ".tr-row:nth-child(3) > .align-left.td-cell:nth-child(5) > app-badge > .variant-success.badge-base.size-md > .badge-text"
-    },
-    {
-      "id": "color-contrast",
       "target": ".tr-row:nth-child(4) > .align-left.td-cell:nth-child(1) > app-user-cell > .user-cell > app-avatar > .avatar-container.shape-circle > .avatar-placeholder > .avatar-initials"
-    },
-    {
-      "id": "color-contrast",
-      "target": ".tr-row:nth-child(4) > .align-left.td-cell:nth-child(5) > app-badge > .variant-success.badge-base.size-md > .badge-text"
     },
     {
       "id": "label-content-name-mismatch",
@@ -702,30 +464,6 @@
     }
   ],
   "/collectors:dark": [
-    {
-      "id": "color-contrast",
-      "target": ".user-trigger-btn > app-avatar > .avatar-container.shape-circle > .avatar-placeholder > .avatar-initials"
-    },
-    {
-      "id": "color-contrast",
-      "target": ".btn-content"
-    },
-    {
-      "id": "color-contrast",
-      "target": ".tr-row:nth-child(1) > .align-left.td-cell:nth-child(1) > app-user-cell > .user-cell > app-avatar > .avatar-container.shape-circle > .avatar-placeholder > .avatar-initials"
-    },
-    {
-      "id": "color-contrast",
-      "target": ".tr-row:nth-child(2) > .align-left.td-cell:nth-child(1) > app-user-cell > .user-cell > app-avatar > .avatar-container.shape-circle > .avatar-placeholder > .avatar-initials"
-    },
-    {
-      "id": "color-contrast",
-      "target": ".tr-row:nth-child(3) > .align-left.td-cell:nth-child(1) > app-user-cell > .user-cell > app-avatar > .avatar-container.shape-circle > .avatar-placeholder > .avatar-initials"
-    },
-    {
-      "id": "color-contrast",
-      "target": ".tr-row:nth-child(4) > .align-left.td-cell:nth-child(1) > app-user-cell > .user-cell > app-avatar > .avatar-container.shape-circle > .avatar-placeholder > .avatar-initials"
-    },
     {
       "id": "label-content-name-mismatch",
       "target": ".notif-btn"
@@ -853,18 +591,6 @@
       "target": ".avatar-initials"
     },
     {
-      "id": "color-contrast",
-      "target": ".badge-text"
-    },
-    {
-      "id": "color-contrast",
-      "target": ".rejection-badge"
-    },
-    {
-      "id": "color-contrast",
-      "target": ".highlight-value"
-    },
-    {
       "id": "label-content-name-mismatch",
       "target": ".notif-btn"
     },
@@ -878,18 +604,6 @@
     }
   ],
   "/review-queue/AIR-2048:dark": [
-    {
-      "id": "color-contrast",
-      "target": ".avatar-initials"
-    },
-    {
-      "id": "color-contrast",
-      "target": "blockquote"
-    },
-    {
-      "id": "color-contrast",
-      "target": ".model-tag"
-    },
     {
       "id": "label-content-name-mismatch",
       "target": ".notif-btn"
@@ -965,14 +679,6 @@
       "target": ".avatar-initials"
     },
     {
-      "id": "color-contrast",
-      "target": "app-stat[title=\"Confirm rate\"] > .stat-card > .stat-body > .stat-trend-group > app-badge > .variant-success.badge-base.size-sm > .badge-text > .trend-inner > span"
-    },
-    {
-      "id": "color-contrast",
-      "target": "app-stat[title=\"Reject rate\"] > .stat-card > .stat-body > .stat-trend-group > app-badge > .variant-success.badge-base.size-sm > .badge-text > .trend-inner > span"
-    },
-    {
       "id": "label-content-name-mismatch",
       "target": ".notif-btn"
     },
@@ -982,10 +688,6 @@
     }
   ],
   "/survey-qa:dark": [
-    {
-      "id": "color-contrast",
-      "target": ".avatar-initials"
-    },
     {
       "id": "label-content-name-mismatch",
       "target": ".notif-btn"
@@ -1057,38 +759,6 @@
       "target": ".avatar-initials"
     },
     {
-      "id": "color-contrast",
-      "target": ".segmented-btn[role=\"radio\"]:nth-child(2)"
-    },
-    {
-      "id": "color-contrast",
-      "target": ".btn-content"
-    },
-    {
-      "id": "color-contrast",
-      "target": "div[data-testid=\"reward-card-RWD-001\"] > .card-body-content > .reward-price"
-    },
-    {
-      "id": "color-contrast",
-      "target": "div[data-testid=\"reward-card-RWD-002\"] > .card-body-content > .reward-price"
-    },
-    {
-      "id": "color-contrast",
-      "target": "div[data-testid=\"reward-card-RWD-003\"] > .card-body-content > .reward-price"
-    },
-    {
-      "id": "color-contrast",
-      "target": ".stock-out-danger"
-    },
-    {
-      "id": "color-contrast",
-      "target": "div[data-testid=\"reward-card-RWD-004\"] > .card-body-content > .reward-price"
-    },
-    {
-      "id": "color-contrast",
-      "target": ".variant-neutral > .badge-text"
-    },
-    {
       "id": "label-content-name-mismatch",
       "target": ".notif-btn"
     },
@@ -1102,34 +772,6 @@
     }
   ],
   "/rewards:dark": [
-    {
-      "id": "color-contrast",
-      "target": ".avatar-initials"
-    },
-    {
-      "id": "color-contrast",
-      "target": ".btn-content"
-    },
-    {
-      "id": "color-contrast",
-      "target": "div[data-testid=\"reward-card-RWD-001\"] > .card-body-content > .reward-price"
-    },
-    {
-      "id": "color-contrast",
-      "target": "div[data-testid=\"reward-card-RWD-002\"] > .card-body-content > .reward-price"
-    },
-    {
-      "id": "color-contrast",
-      "target": "div[data-testid=\"reward-card-RWD-003\"] > .card-body-content > .reward-price"
-    },
-    {
-      "id": "color-contrast",
-      "target": ".stock-out-danger"
-    },
-    {
-      "id": "color-contrast",
-      "target": "div[data-testid=\"reward-card-RWD-004\"] > .card-body-content > .reward-price"
-    },
     {
       "id": "label-content-name-mismatch",
       "target": ".notif-btn"
@@ -1206,27 +848,7 @@
     },
     {
       "id": "color-contrast",
-      "target": ".badge-text"
-    },
-    {
-      "id": "color-contrast",
       "target": ".is-active.tab-btn[role=\"tab\"]"
-    },
-    {
-      "id": "color-contrast",
-      "target": "th:nth-child(1) > .th-content > span:nth-child(1)"
-    },
-    {
-      "id": "color-contrast",
-      "target": "th:nth-child(2) > .th-content > span:nth-child(1)"
-    },
-    {
-      "id": "color-contrast",
-      "target": "th:nth-child(3) > .th-content > span:nth-child(1)"
-    },
-    {
-      "id": "color-contrast",
-      "target": "th:nth-child(4) > .th-content > span:nth-child(1)"
     },
     {
       "id": "color-contrast",
@@ -1251,22 +873,6 @@
     {
       "id": "color-contrast",
       "target": ".tr-row:nth-child(6) > .align-left > app-user-cell > .user-cell > app-avatar > .avatar-container.shape-circle.size-sm > .avatar-placeholder > .avatar-initials"
-    },
-    {
-      "id": "color-contrast",
-      "target": "div[data-testid=\"milestone-badge-bdg-01\"] > .badge-info > .badge-header-row > .badge-earned-tag"
-    },
-    {
-      "id": "color-contrast",
-      "target": "div[data-testid=\"milestone-badge-bdg-02\"] > .badge-info > .badge-header-row > .badge-earned-tag"
-    },
-    {
-      "id": "color-contrast",
-      "target": "div[data-testid=\"milestone-badge-bdg-03\"] > .badge-info > .badge-header-row > .badge-earned-tag"
-    },
-    {
-      "id": "color-contrast",
-      "target": "div[data-testid=\"milestone-badge-bdg-04\"] > .badge-info > .badge-header-row > .badge-earned-tag"
     },
     {
       "id": "label-content-name-mismatch",
@@ -1278,50 +884,6 @@
     }
   ],
   "/leaderboards:dark": [
-    {
-      "id": "color-contrast",
-      "target": ".user-trigger-btn > app-avatar > .avatar-container.shape-circle.size-sm > .avatar-placeholder > .avatar-initials"
-    },
-    {
-      "id": "color-contrast",
-      "target": ".tr-row:nth-child(1) > .align-left > app-user-cell > .user-cell > app-avatar > .avatar-container.shape-circle.size-sm > .avatar-placeholder > .avatar-initials"
-    },
-    {
-      "id": "color-contrast",
-      "target": ".tr-row:nth-child(2) > .align-left > app-user-cell > .user-cell > app-avatar > .avatar-container.shape-circle.size-sm > .avatar-placeholder > .avatar-initials"
-    },
-    {
-      "id": "color-contrast",
-      "target": ".tr-row:nth-child(3) > .align-left > app-user-cell > .user-cell > app-avatar > .avatar-container.shape-circle.size-sm > .avatar-placeholder > .avatar-initials"
-    },
-    {
-      "id": "color-contrast",
-      "target": ".tr-row:nth-child(4) > .align-left > app-user-cell > .user-cell > app-avatar > .avatar-container.shape-circle.size-sm > .avatar-placeholder > .avatar-initials"
-    },
-    {
-      "id": "color-contrast",
-      "target": ".tr-row:nth-child(5) > .align-left > app-user-cell > .user-cell > app-avatar > .avatar-container.shape-circle.size-sm > .avatar-placeholder > .avatar-initials"
-    },
-    {
-      "id": "color-contrast",
-      "target": ".tr-row:nth-child(6) > .align-left > app-user-cell > .user-cell > app-avatar > .avatar-container.shape-circle.size-sm > .avatar-placeholder > .avatar-initials"
-    },
-    {
-      "id": "color-contrast",
-      "target": "div[data-testid=\"milestone-badge-bdg-01\"] > .badge-info > .badge-header-row > .badge-earned-tag"
-    },
-    {
-      "id": "color-contrast",
-      "target": "div[data-testid=\"milestone-badge-bdg-02\"] > .badge-info > .badge-header-row > .badge-earned-tag"
-    },
-    {
-      "id": "color-contrast",
-      "target": "div[data-testid=\"milestone-badge-bdg-03\"] > .badge-info > .badge-header-row > .badge-earned-tag"
-    },
-    {
-      "id": "color-contrast",
-      "target": "div[data-testid=\"milestone-badge-bdg-04\"] > .badge-info > .badge-header-row > .badge-earned-tag"
-    },
     {
       "id": "label-content-name-mismatch",
       "target": ".notif-btn"
@@ -1367,28 +929,7 @@
       "target": "[id^=\"select-\"]"
     }
   ],
-  "/overview:notifications:light": [
-    {
-      "id": "color-contrast",
-      "target": ".mark-all-btn"
-    },
-    {
-      "id": "color-contrast",
-      "target": "li:nth-child(1) > .is-unread.notif-row > .notif-body > .notif-item-time"
-    },
-    {
-      "id": "color-contrast",
-      "target": "li:nth-child(2) > .is-unread.notif-row > .notif-body > .notif-item-time"
-    },
-    {
-      "id": "color-contrast",
-      "target": "li:nth-child(3) > .is-unread.notif-row > .notif-body > .notif-item-time"
-    },
-    {
-      "id": "color-contrast",
-      "target": "li:nth-child(4) > .is-unread.notif-row > .notif-body > .notif-item-time"
-    }
-  ],
+  "/overview:notifications:light": [],
   "/bins:drawer:light": [
     {
       "id": "aria-dialog-name",
@@ -1399,10 +940,6 @@
     {
       "id": "color-contrast",
       "target": ".avatar-initials"
-    },
-    {
-      "id": "color-contrast",
-      "target": ".user-display-role"
     },
     {
       "id": "label-content-name-mismatch",

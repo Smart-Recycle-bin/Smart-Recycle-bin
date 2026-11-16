@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, computed, input, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
+import { ThemeService } from '../../../../core/services/theme/theme.service';
 
 export interface AreaChartPoint {
   label: string;
@@ -28,7 +29,7 @@ interface ComputedSeries {
   areaPath: string;
 }
 
-const DEFAULT_PALETTE = ['var(--brand)', 'var(--info)', 'var(--purple)', 'var(--warning)'];
+const DEFAULT_PALETTE = ['var(--chart-1)', 'var(--chart-2)', 'var(--chart-3)', 'var(--chart-4)'];
 
 @Component({
   selector: 'app-area-chart',
@@ -38,12 +39,14 @@ const DEFAULT_PALETTE = ['var(--brand)', 'var(--info)', 'var(--purple)', 'var(--
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AreaChart {
+  private readonly themeService = inject(ThemeService, { optional: true });
+
   readonly data = input<AreaChartPoint[]>([]);
   readonly series = input<AreaChartSeries[]>([]);
   readonly seriesLabel = input<string>('');
   readonly title = input<string>('');
   readonly height = input<number>(220);
-  readonly color = input<string>('var(--brand)');
+  readonly color = input<string>('var(--chart-1)');
   readonly unit = input<string>('');
   readonly showGrid = input<boolean>(true);
   readonly showLegend = input<boolean>(true);
@@ -61,6 +64,9 @@ export class AreaChart {
   private readonly chartId = `area-grad-${Math.random().toString(36).slice(2, 9)}`;
 
   readonly rawSeries = computed<AreaChartSeries[]>(() => {
+    // Read theme so theme change triggers chart recalculation
+    this.themeService?.currentTheme();
+
     const multi = this.series();
     if (multi && multi.length > 0) {
       return multi;

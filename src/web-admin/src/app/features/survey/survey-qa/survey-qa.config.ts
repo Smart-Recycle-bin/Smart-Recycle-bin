@@ -50,12 +50,12 @@ export const BIN_REJECTION_THRESHOLDS: BarListThresholds = {
 };
 
 export const CATEGORY_COLORS: Record<string, string> = {
-  'Mixed packaging': 'var(--danger, #ef4444)',
-  'Plastic (HDPE)': 'var(--warning, #f59e0b)',
-  'Plastic (PET)': 'var(--brand, #059669)',
-  Paper: 'var(--info, #2563eb)',
-  Glass: 'var(--purple, #7c3aed)',
-  Metal: 'var(--muted, #64748b)',
+  'Mixed packaging': 'var(--chart-5)',
+  'Plastic (HDPE)': 'var(--chart-4)',
+  'Plastic (PET)': 'var(--chart-1)',
+  Paper: 'var(--chart-2)',
+  Glass: 'var(--chart-3)',
+  Metal: 'var(--chart-6)',
 };
 
 export function getCategoryColor(category: string, index: number): string {
@@ -63,12 +63,12 @@ export function getCategoryColor(category: string, index: number): string {
     return CATEGORY_COLORS[category];
   }
   const fallback = [
-    'var(--brand, #059669)',
-    'var(--info, #2563eb)',
-    'var(--warning, #f59e0b)',
-    'var(--purple, #7c3aed)',
-    'var(--danger, #ef4444)',
-    'var(--muted, #64748b)',
+    'var(--chart-1)',
+    'var(--chart-2)',
+    'var(--chart-4)',
+    'var(--chart-3)',
+    'var(--chart-5)',
+    'var(--chart-6)',
   ];
   return fallback[index % fallback.length];
 }

@@ -13,8 +13,8 @@
 }
 
 .filters-card {
-  background-color: var(--card, #ffffff);
-  border: 1px solid var(--line, #e2e8f0);
+  background-color: var(--surface-raised);
+  border: 1px solid var(--border);
   border-radius: 0.75rem;
   padding: 1rem 1.25rem;
 }
@@ -43,8 +43,8 @@
 }
 
 .table-container {
-  background-color: var(--card, #ffffff);
-  border: 1px solid var(--line, #e2e8f0);
+  background-color: var(--surface-raised);
+  border: 1px solid var(--border);
   border-radius: 0.75rem;
   overflow: hidden;
 }
@@ -55,14 +55,14 @@
 
 .timestamp-text {
   font-size: 0.8125rem;
-  color: var(--muted, #64748b);
+  color: var(--text-muted);
   white-space: nowrap;
 }
 
 .bin-text {
   font-family: var(--font-mono, monospace);
   font-size: 0.8125rem;
-  color: var(--ink, #0f172a);
+  color: var(--text);
 }
 
 .detail-cell {
@@ -73,7 +73,7 @@
 
 .detail-text {
   font-size: 0.875rem;
-  color: var(--ink, #0f172a);
+  color: var(--text);
   line-height: 1.35;
 }
 
@@ -84,7 +84,7 @@
 .balance-text {
   font-variant-numeric: tabular-nums;
   font-weight: 500;
-  color: var(--ink, #0f172a);
+  color: var(--text);
 }
 
 /* Adjustment Drawer Styling */
@@ -115,7 +115,7 @@
 .field-label {
   font-size: 0.875rem;
   font-weight: 500;
-  color: var(--ink, #0f172a);
+  color: var(--text);
 }
 
 .drawer-footer-wrapper {
@@ -134,7 +134,7 @@
 
 .audit-note {
   font-size: 0.75rem;
-  color: var(--muted, #64748b);
+  color: var(--text-muted);
   font-style: italic;
   margin: 0;
 }

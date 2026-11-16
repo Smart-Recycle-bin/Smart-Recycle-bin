@@ -15,7 +15,7 @@
   display: flex;
   align-items: center;
   pointer-events: none;
-  color: var(--muted);
+  color: var(--text-muted);
 }
 
 .search-field {
@@ -24,9 +24,9 @@
   padding-right: 2.25rem;
   font-size: 0.875rem;
   font-family: inherit;
-  color: var(--ink);
-  background-color: var(--card);
-  border: 1px solid var(--line);
+  color: var(--text);
+  background-color: var(--surface-raised);
+  border: 1px solid var(--border);
   border-radius: 0.5rem;
   transition: all 0.15s ease-in-out;
   outline: none;
@@ -54,20 +54,17 @@
 }
 
 .search-field::placeholder {
-  color: var(--muted);
+  color: var(--text-muted);
   opacity: 0.8;
 }
 
 .search-field:hover:not(:disabled) {
-  border-color: #cbd5e1;
-}
-:host-context(.dark) .search-field:hover:not(:disabled) {
-  border-color: #334155;
+  border-color: var(--border-strong);
 }
 
 .search-field:focus {
-  border-color: #009966;
-  box-shadow: 0 0 0 3px rgba(0, 153, 102, 0.15);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--focus-ring);
 }
 
 .search-clear-btn {
@@ -79,19 +76,19 @@
   width: 1.5rem;
   height: 1.5rem;
   border-radius: 9999px;
-  background-color: var(--soft);
+  background-color: var(--surface-muted);
   border: none;
-  color: var(--muted);
+  color: var(--text-muted);
   cursor: pointer;
   transition: all 0.15s;
 }
 .search-clear-btn:hover {
-  background-color: var(--line);
-  color: var(--ink);
+  background-color: var(--border);
+  color: var(--text);
 }
 
 .is-disabled .search-field {
-  background-color: var(--soft);
+  background-color: var(--surface-muted);
   cursor: not-allowed;
   opacity: 0.65;
 }

@@ -51,6 +51,8 @@ export class TooltipDirective {
 
   @HostListener('mouseleave')
   @HostListener('focusout')
+  @HostListener('blur')
+  @HostListener('click')
   @HostListener('keydown.escape')
   hide(): void {
     if (!this.tooltipEl) return;
