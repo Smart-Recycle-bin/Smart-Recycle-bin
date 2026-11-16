@@ -1,7 +1,6 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  OnInit,
   computed,
   inject,
   signal,
@@ -34,6 +33,7 @@ import { Modal } from '../../../shared/components/overlay/modal/modal';
 import { ConfirmDialog } from '../../../shared/components/overlay/confirm-dialog/confirm-dialog';
 import { Textarea } from '../../../shared/components/form/textarea/textarea';
 import { Button } from '../../../shared/components/button/button';
+import { createPagedList } from '../../../shared/utils/paged-list';
 
 @Component({
   selector: 'app-recyclers',
@@ -61,7 +61,7 @@ import { Button } from '../../../shared/components/button/button';
   styleUrl: './recyclers.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class Recyclers implements OnInit {
+export class Recyclers {
   private readonly recyclersService = inject(RecyclersService);
   private readonly toastService = inject(ToastService);
   private readonly fb = inject(FormBuilder);
@@ -73,17 +73,13 @@ export class Recyclers implements OnInit {
   readonly getStatusLabel = getRecyclerStatusLabel;
 
   /**
-   * Data state signals
+   * Paged-list infrastructure
    */
-  readonly recyclers = signal<RecyclerListItem[]>([]);
-  readonly isLoading = signal<boolean>(true);
-  readonly error = signal<unknown>(null);
-
-  /**
-   * Filter signals
-   */
-  readonly searchTerm = signal<string>('');
-  readonly selectedStatus = signal<string>('');
+  readonly pagedList = createPagedList<RecyclerListItem, RecyclerQuery>({
+    fetch: (query) => this.recyclersService.getRecyclers(query),
+    debounceKeys: ['search'],
+    debounceMs: 300,
+  });
 
   /**
    * Action / Modal dialog state signals
@@ -122,45 +118,12 @@ export class Recyclers implements OnInit {
     return `Are you sure you want to restore access for ${user.name} (${user.userId})? Their account status will be set back to Active and they will be able to log in and participate.`;
   });
 
-  ngOnInit(): void {
-    this.loadRecyclers();
-  }
-
-  loadRecyclers(): void {
-    this.isLoading.set(true);
-    this.error.set(null);
-
-    const query: RecyclerQuery = {};
-    const search = this.searchTerm().trim();
-    if (search) {
-      query.search = search;
-    }
-    const status = this.selectedStatus();
-    if (status) {
-      query.status = status as AccountStatus;
-    }
-
-    this.recyclersService.getRecyclers(query).subscribe({
-      next: (page) => {
-        // TODO(prompt-3): full server-side pagination UI
-        this.recyclers.set(page.items);
-        this.isLoading.set(false);
-      },
-      error: (err) => {
-        this.error.set(err);
-        this.isLoading.set(false);
-      },
-    });
-  }
-
   handleSearch(term: string): void {
-    this.searchTerm.set(term);
-    this.loadRecyclers();
+    this.pagedList.patchFilters({ search: term || undefined });
   }
 
   handleStatusChange(status: string | number): void {
-    this.selectedStatus.set(String(status ?? ''));
-    this.loadRecyclers();
+    this.pagedList.patchFilters({ status: status ? (status as AccountStatus) : undefined });
   }
 
   handleTableAction(event: { action: string; row: RecyclerListItem }): void {
@@ -198,7 +161,7 @@ export class Recyclers implements OnInit {
         this.toastService.success(`Account for ${recycler.name} suspended successfully`);
         this.isSubmitting.set(false);
         this.closeSuspendModal();
-        this.loadRecyclers();
+        this.pagedList.reload();
       },
       error: (err) => {
         this.isSubmitting.set(false);
@@ -220,10 +183,10 @@ export class Recyclers implements OnInit {
     this.isSubmitting.set(true);
     this.recyclersService.unsuspendRecycler(recycler.userId).subscribe({
       next: () => {
-        this.toastService.success(`Account for ${recycler.name} unsuspended successfully`);
+        this.toastService.success(`Account for ${recycler.name} restored to Active`);
         this.isSubmitting.set(false);
         this.closeUnsuspendDialog();
-        this.loadRecyclers();
+        this.pagedList.reload();
       },
       error: (err) => {
         this.isSubmitting.set(false);

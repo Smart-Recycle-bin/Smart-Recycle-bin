@@ -28,6 +28,7 @@ import { Progress, ProgressColor } from '../../../shared/components/progress/pro
 import { ResourceState } from '../../../shared/components/resource-state/resource-state';
 import { Icon } from '../../../shared/components/icon/icon';
 import { DateTimePipe } from '../../../shared/pipes';
+import { createPagedList } from '../../../shared/utils/paged-list';
 
 @Component({
   selector: 'app-review-queue',
@@ -60,6 +61,7 @@ export class ReviewQueue implements OnInit {
   readonly statusOptions = INSPECTION_STATUS_OPTIONS;
   readonly getStatusBadgeVariant = getInspectionReportStatusBadgeVariant;
   readonly getStatusLabel = getInspectionReportStatusLabel;
+  readonly InspectionReportStatus = InspectionReportStatus;
 
   /**
    * Data state signals
@@ -67,19 +69,17 @@ export class ReviewQueue implements OnInit {
   readonly summary = signal<InspectionSummary | null>(null);
   readonly isLoadingSummary = signal<boolean>(true);
 
-  readonly reports = signal<InspectionReportListItem[]>([]);
-  readonly isLoadingReports = signal<boolean>(true);
-  readonly error = signal<unknown>(null);
-
   /**
-   * Filter state signals
+   * Paged-list infrastructure
    */
-  readonly searchTerm = signal<string>('');
-  readonly selectedStatus = signal<string>('');
+  readonly pagedList = createPagedList<InspectionReportListItem, InspectionReportQuery>({
+    fetch: (query) => this.inspectionReportsService.getReports(query),
+    debounceKeys: ['search'],
+    debounceMs: 300,
+  });
 
   ngOnInit(): void {
     this.loadSummary();
-    this.loadReports();
   }
 
   loadSummary(): void {
@@ -96,46 +96,16 @@ export class ReviewQueue implements OnInit {
     });
   }
 
-  loadReports(): void {
-    this.isLoadingReports.set(true);
-    this.error.set(null);
-
-    const query: InspectionReportQuery = {};
-    const search = this.searchTerm().trim();
-    if (search) {
-      query.search = search;
-    }
-    const status = this.selectedStatus();
-    if (status) {
-      query.status = status as InspectionReportStatus;
-    }
-
-    this.inspectionReportsService.getReports(query).subscribe({
-      next: (page) => {
-        // TODO(prompt-3): full server-side pagination UI
-        this.reports.set(page.items);
-        this.isLoadingReports.set(false);
-      },
-      error: (err) => {
-        this.error.set(err);
-        this.isLoadingReports.set(false);
-      },
-    });
-  }
-
   handleSearch(term: string): void {
-    this.searchTerm.set(term);
-    this.loadReports();
+    this.pagedList.patchFilters({ search: term || undefined });
   }
 
   handleStatusChange(status: string | number): void {
-    this.selectedStatus.set(String(status ?? ''));
-    this.loadReports();
+    this.pagedList.patchFilters({ status: status ? (status as InspectionReportStatus) : undefined });
   }
 
   filterByStatus(status: InspectionReportStatus): void {
-    this.selectedStatus.set(status);
-    this.loadReports();
+    this.pagedList.patchFilters({ status });
   }
 
   navigateToDetail(row: InspectionReportListItem): void {

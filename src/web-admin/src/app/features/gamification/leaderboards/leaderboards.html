@@ -27,14 +27,14 @@
 
       <!-- Leaderboard Card Container -->
       <app-card>
-        @if (leaderboardError()) {
+        @if (pagedList.error() && pagedList.items().length === 0) {
           <div class="p-6">
             <app-resource-state
-              [error]="leaderboardError()"
-              (retry)="loadLeaderboard()"
+              [error]="pagedList.error()"
+              (retry)="pagedList.reload()"
             />
           </div>
-        } @else if (isLoadingLeaderboard()) {
+        } @else if (pagedList.loading() && pagedList.items().length === 0) {
           <div class="p-6 space-y-4">
             <app-skeleton height="40px" variant="rectangular" />
             @for (i of [1, 2, 3, 4, 5]; track i) {
@@ -53,10 +53,17 @@
           <div class="table-wrapper">
             <app-data-table
               [columns]="columns"
-              [data]="leaderboardRows()"
-              [pageSize]="10"
-              mode="client"
+              [data]="pagedList.items()"
+              [loading]="pagedList.refreshing() || pagedList.loading()"
+              mode="server"
               [showPagination]="true"
+              [page]="pagedList.page()"
+              [pageSize]="pagedList.pageSize()"
+              [total]="pagedList.total()"
+              [sortColumn]="pagedList.sortBy()"
+              [sortDir]="pagedList.sortDir()"
+              (pageChange)="pagedList.setPage($event)"
+              (sortChange)="pagedList.setSort($event.key, $event.dir)"
               [rowId]="getRowId"
             >
               <!-- Rank Cell Template with Gold/Silver/Bronze circles for 1-3 -->

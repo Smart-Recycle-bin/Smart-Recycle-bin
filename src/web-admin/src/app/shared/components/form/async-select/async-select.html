@@ -1,0 +1,106 @@
+<app-form-field
+  [label]="compact() ? '' : label()"
+  [forId]="id()"
+  [required]="required()"
+  [hint]="compact() ? '' : hint()"
+  [error]="effectiveError()"
+  [disabled]="internalDisabled()"
+>
+  <div
+    class="async-select-wrapper"
+    [class.is-compact]="compact()"
+    [class.has-error]="!!effectiveError()"
+    [class.is-disabled]="internalDisabled()"
+    [class.is-open]="isOpen()"
+  >
+    <div class="input-container">
+      <input
+        [id]="id()"
+        type="text"
+        role="combobox"
+        aria-autocomplete="list"
+        [attr.aria-expanded]="isOpen()"
+        aria-haspopup="listbox"
+        [attr.aria-controls]="listboxId()"
+        [attr.aria-activedescendant]="activeOptionId()"
+        [attr.aria-label]="ariaLabel() || label() || placeholder()"
+        [attr.aria-invalid]="!!effectiveError()"
+        [placeholder]="placeholder()"
+        [value]="displayLabel()"
+        [disabled]="internalDisabled()"
+        [required]="required()"
+        (input)="onInput($event)"
+        (focus)="openDropdown()"
+        (keydown)="onKeyDown($event)"
+        (blur)="onBlur()"
+        class="async-select-input"
+        autocomplete="off"
+      />
+
+      <div class="trailing-actions">
+        @if (isLoading()) {
+          <div class="loading-indicator" aria-hidden="true">
+            <app-icon name="loader" size="sm" class="animate-spin" />
+          </div>
+        } @else if (internalValue() && !internalDisabled()) {
+          <button
+            type="button"
+            class="clear-btn"
+            aria-label="Clear selection"
+            (click)="clearSelection($event)"
+            tabindex="-1"
+          >
+            <app-icon name="x" size="xs" />
+          </button>
+        }
+
+        <div class="chevron-icon" aria-hidden="true" (click)="isOpen() ? closeDropdown() : openDropdown()">
+          <app-icon name="chevron-down" size="sm" [class.rotated]="isOpen()" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Dropdown Listbox -->
+    @if (isOpen()) {
+      <div
+        [id]="listboxId()"
+        role="listbox"
+        [attr.aria-label]="label() || 'Options'"
+        class="options-dropdown"
+      >
+        @if (isLoading() && options().length === 0) {
+          <div class="status-message" role="status">
+            <app-icon name="loader" size="xs" class="animate-spin" />
+            <span>Loading...</span>
+          </div>
+        } @else if (options().length === 0) {
+          <div class="status-message empty-message" role="status">
+            <span>No results found</span>
+          </div>
+        } @else {
+          @for (opt of options(); track opt.value; let i = $index) {
+            <div
+              [id]="getOptionId(i)"
+              role="option"
+              [attr.aria-selected]="isSelected(opt)"
+              [attr.aria-disabled]="opt.disabled"
+              [class.is-selected]="isSelected(opt)"
+              [class.is-active]="activeIndex() === i"
+              [class.is-disabled]="opt.disabled"
+              (mousedown)="$event.preventDefault(); selectOption(opt)"
+              (mouseenter)="activeIndex.set(i)"
+              class="option-item"
+            >
+              <span class="option-label">{{ opt.label }}</span>
+              @if (isSelected(opt)) {
+                <span class="check-icon" aria-hidden="true">
+                  <app-icon name="check" size="xs" />
+                </span>
+              }
+            </div>
+          }
+        }
+      </div>
+    }
+  </div>
+</app-form-field>

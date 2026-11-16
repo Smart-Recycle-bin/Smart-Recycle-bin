@@ -21,7 +21,7 @@
       <div class="filter-item search-filter">
         <app-search-input
           placeholder="Search by ID, name, area, or collector..."
-          [value]="searchTerm()"
+          [value]="pagedList.filters().search || ''"
           (valueChange)="handleSearch($event)"
           (search)="handleSearch($event)"
         />
@@ -30,7 +30,7 @@
       <div class="filter-item">
         <app-select
           [options]="districtOptions()"
-          [value]="selectedDistrict()"
+          [value]="pagedList.filters().district || ''"
           placeholder="All districts"
           (valueChange)="handleDistrictChange($event)"
         />
@@ -39,7 +39,7 @@
       <div class="filter-item">
         <app-select
           [options]="statusOptions()"
-          [value]="selectedStatus()"
+          [value]="pagedList.filters().status || ''"
           placeholder="All statuses"
           (valueChange)="handleStatusChange($event)"
         />
@@ -48,7 +48,7 @@
       <div class="filter-item">
         <app-select
           [options]="collectorOptions()"
-          [value]="selectedCollector()"
+          [value]="pagedList.filters().collectorId || ''"
           placeholder="All collectors"
           (valueChange)="handleCollectorChange($event)"
         />
@@ -57,22 +57,28 @@
   </div>
 
   <!-- Table or Error State -->
-  @if (error()) {
+  @if (pagedList.error() && pagedList.items().length === 0) {
     <div class="error-container">
       <app-resource-state
-        [error]="error()"
-        (retry)="loadBins()"
+        [error]="pagedList.error()"
+        (retry)="pagedList.reload()"
       />
     </div>
   } @else {
     <div class="table-container">
       <app-data-table
         [columns]="tableColumns"
-        [data]="bins()"
-        [loading]="isLoading()"
-        mode="client"
+        [data]="pagedList.items()"
+        [loading]="pagedList.refreshing() || pagedList.loading()"
+        mode="server"
+        [page]="pagedList.page()"
+        [pageSize]="pagedList.pageSize()"
+        [total]="pagedList.total()"
+        [sortColumn]="pagedList.sortBy()"
+        [sortDir]="pagedList.sortDir()"
         [showPagination]="true"
-        [pageSize]="10"
+        (pageChange)="pagedList.setPage($event)"
+        (sortChange)="pagedList.setSort($event.key, $event.dir)"
         emptyTitle="No smart bins found"
         emptyDescription="No bins match the selected filter criteria."
       >
@@ -107,12 +113,21 @@
           />
         </ng-template>
 
+        <!-- Custom District Cell Template -->
+        <ng-template appCell="district" let-row>
+          <span class="district-text">{{ row.district }}</span>
+        </ng-template>
+
         <!-- Custom Collector Cell Template -->
-        <ng-template appCell="collectorName" let-row>
-          <app-user-cell
-            [name]="row.collectorName || 'Unassigned'"
-            [subtitle]="row.collectorId || 'No collector assigned'"
-          />
+        <ng-template appCell="collector" let-row>
+          @if (row.collectorId && row.collectorName) {
+            <app-user-cell
+              [name]="row.collectorName"
+              [subtitle]="row.collectorId"
+            />
+          } @else {
+            <span class="unassigned-text">Unassigned</span>
+          }
         </ng-template>
 
         <!-- Custom Last Serviced Cell Template -->
@@ -123,86 +138,83 @@
     </div>
   }
 
-  <!-- Register Bin Drawer -->
+  <!-- Register Smart Bin Drawer -->
   <app-drawer
     [open]="isDrawerOpen()"
     title="Register Smart Bin"
-    description="Provision a new telemetry sensor node into the fleet."
+    description="Provision a new IoT waste bin on the network with telemetry sensors."
     size="md"
     (closed)="closeRegisterDrawer()"
   >
-    <form [formGroup]="registerForm" (ngSubmit)="submitRegisterBin()" class="register-bin-form">
-      <div class="drawer-fields">
-        <app-input
-          label="Device Serial Number"
-          placeholder="e.g. SN-98214"
-          formControlName="deviceSerial"
-          [required]="true"
-          [error]="serialServerError()"
-          hint="Hardware serial identifier engraved on the node module."
-        />
+    <div class="drawer-content">
+      <form [formGroup]="registerForm" (ngSubmit)="submitRegisterBin()" class="register-form">
+        <div class="form-fields">
+          <div class="form-field-group">
+            <app-input
+              formControlName="deviceSerial"
+              label="Device Serial Number"
+              placeholder="e.g. SN-883492"
+              [required]="true"
+              [error]="serialServerError() || ''"
+            />
+          </div>
 
-        <app-input
-          label="District"
-          placeholder="e.g. Cairo, Giza, Alexandria"
-          formControlName="district"
-          [required]="true"
-          hint="Operational district where the bin is deployed."
-        />
+          <div class="form-field-group">
+            <app-input
+              formControlName="district"
+              label="District / Area"
+              placeholder="e.g. Nasr City, Maadi, Dokki"
+              [required]="true"
+            />
+          </div>
 
-        <div class="coords-row">
-          <app-input
-            label="Latitude"
-            type="number"
-            placeholder="30.0444"
-            formControlName="latitude"
-            [required]="true"
-          />
+          <div class="coordinates-grid">
+            <app-input
+              formControlName="latitude"
+              type="number"
+              label="Latitude"
+              placeholder="30.0444"
+              [required]="true"
+            />
+            <app-input
+              formControlName="longitude"
+              type="number"
+              label="Longitude"
+              placeholder="31.2357"
+              [required]="true"
+            />
+          </div>
 
-          <app-input
-            label="Longitude"
-            type="number"
-            placeholder="31.2357"
-            formControlName="longitude"
-            [required]="true"
-          />
+          <div class="form-field-group">
+            <app-input
+              formControlName="capacityThresholdKg"
+              type="number"
+              label="Capacity Threshold (kg)"
+              placeholder="120"
+              [required]="true"
+              hint="Maximum rated capacity before triggering maintenance alerts"
+            />
+          </div>
         </div>
+      </form>
+    </div>
 
-        <app-input
-          label="Capacity Threshold (kg)"
-          type="number"
-          placeholder="120"
-          formControlName="capacityThresholdKg"
-          [required]="true"
-          hint="Maximum payload weight before triggering a servicing alert."
-        />
-      </div>
-
-      <div drawer-footer class="drawer-footer-wrapper">
-        <div class="audit-note">
-          <app-icon name="shield" size="xs" />
-          <span>This action will be recorded in the audit log.</span>
-        </div>
-
-        <div class="drawer-actions">
-          <app-button
-            variant="secondary"
-            (clicked)="closeRegisterDrawer()"
-            [disabled]="isSubmitting()"
-          >
-            Cancel
-          </app-button>
-
-          <app-button
-            type="submit"
-            variant="primary"
-            [loading]="isSubmitting()"
-            [disabled]="isSubmitting()"
-          >
-            Register bin
-          </app-button>
-        </div>
-      </div>
-    </form>
+    <div drawer-footer class="drawer-footer-actions">
+      <app-button
+        variant="ghost"
+        (clicked)="closeRegisterDrawer()"
+        [disabled]="isSubmitting()"
+      >
+        Cancel
+      </app-button>
+      <app-button
+        variant="primary"
+        (clicked)="submitRegisterBin()"
+        [loading]="isSubmitting()"
+        [disabled]="registerForm.invalid || isSubmitting()"
+      >
+        Register bin
+      </app-button>
+    </div>
   </app-drawer>
 </div>

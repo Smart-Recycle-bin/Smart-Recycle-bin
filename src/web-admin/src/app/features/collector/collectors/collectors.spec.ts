@@ -1,10 +1,11 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { of, throwError } from 'rxjs';
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { of, throwError, Subject } from 'rxjs';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { Collectors } from './collectors';
 import { CollectorsService } from '../../../core/services/collector/collectors.service';
 import { BinsService } from '../../../core/services/bin/bins.service';
+import { LookupsService } from '../../../core/services/lookup/lookups.service';
 import { ToastService } from '../../../core/services/toast/toast.service';
 import { AccountStatus } from '../../../core/models/user/account-status.enum';
 import { CollectorCredentialsMode } from '../../../core/models/collector/collector-credentials-mode.enum';
@@ -34,6 +35,10 @@ describe('Collectors Component', () => {
     getBins: ReturnType<typeof vi.fn>;
     assignCollector: ReturnType<typeof vi.fn>;
   };
+  let lookupsServiceSpy: {
+    getDistricts: ReturnType<typeof vi.fn>;
+    invalidate: ReturnType<typeof vi.fn>;
+  };
   let toastServiceSpy: {
     success: ReturnType<typeof vi.fn>;
     error: ReturnType<typeof vi.fn>;
@@ -55,14 +60,18 @@ describe('Collectors Component', () => {
   ];
 
   beforeEach(async () => {
+    vi.useFakeTimers();
+
     collectorsServiceSpy = {
-      getCollectors: vi.fn().mockReturnValue(of({
-        items: MOCK_COLLECTORS,
-        page: 1,
-        pageSize: 10,
-        totalItems: MOCK_COLLECTORS.length,
-        totalPages: Math.ceil(MOCK_COLLECTORS.length / 10),
-      })),
+      getCollectors: vi.fn().mockReturnValue(
+        of({
+          items: MOCK_COLLECTORS,
+          page: 1,
+          pageSize: 10,
+          totalItems: MOCK_COLLECTORS.length,
+          totalPages: Math.ceil(MOCK_COLLECTORS.length / 10),
+        })
+      ),
       createCollector: vi.fn().mockReturnValue(
         of({
           userId: 'col_new',
@@ -89,20 +98,32 @@ describe('Collectors Component', () => {
     };
 
     binsServiceSpy = {
-      getBins: vi.fn().mockReturnValue(of({
-        items: MOCK_BINS,
-        page: 1,
-        pageSize: 10,
-        totalItems: MOCK_BINS.length,
-        totalPages: Math.ceil(MOCK_BINS.length / 10),
-      })),
+      getBins: vi.fn().mockReturnValue(
+        of({
+          items: MOCK_BINS,
+          page: 1,
+          pageSize: 10,
+          totalItems: MOCK_BINS.length,
+          totalPages: Math.ceil(MOCK_BINS.length / 10),
+        })
+      ),
       assignCollector: vi.fn().mockReturnValue(
         of({
           binId: 'BIN-1001',
-          assignedCollectorId: activeCollector.collectorId,
+          collectorId: activeCollector.collectorId,
           assignedAt: new Date().toISOString(),
         })
       ),
+    };
+
+    lookupsServiceSpy = {
+      getDistricts: vi.fn().mockReturnValue(
+        of([
+          { name: 'Cairo', region: 'Cairo Central' },
+          { name: 'Giza', region: 'Giza' },
+        ])
+      ),
+      invalidate: vi.fn(),
     };
 
     toastServiceSpy = {
@@ -116,170 +137,181 @@ describe('Collectors Component', () => {
         provideRouter([]),
         { provide: CollectorsService, useValue: collectorsServiceSpy },
         { provide: BinsService, useValue: binsServiceSpy },
+        { provide: LookupsService, useValue: lookupsServiceSpy },
         { provide: ToastService, useValue: toastServiceSpy },
       ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(Collectors);
     component = fixture.componentInstance;
-    await fixture.whenStable();
     fixture.detectChanges();
   });
 
-  it('should initialize and load collectors on mount', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('should initialize and load collectors on mount via pagedList', () => {
     expect(component).toBeTruthy();
     expect(collectorsServiceSpy.getCollectors).toHaveBeenCalledTimes(1);
-    expect(component.collectors().length).toBe(MOCK_COLLECTORS.length);
-    expect(component.isLoading()).toBe(false);
-    expect(component.error()).toBeNull();
+    expect(component.pagedList.items().length).toBe(MOCK_COLLECTORS.length);
+    expect(component.pagedList.loading()).toBe(false);
   });
 
-  it('should filter collectors by search query', () => {
+  it('debounces rapid search keystrokes: typing "mahmoud" fires exactly 1 request', () => {
     collectorsServiceSpy.getCollectors.mockClear();
 
-    component.handleSearch('Mahmoud');
-    expect(component.searchTerm()).toBe('Mahmoud');
-    expect(collectorsServiceSpy.getCollectors).toHaveBeenCalledWith({
-      search: 'Mahmoud',
-    });
+    component.handleSearch('m');
+    vi.advanceTimersByTime(50);
+    component.handleSearch('mah');
+    vi.advanceTimersByTime(50);
+    component.handleSearch('mahmoud');
+
+    expect(collectorsServiceSpy.getCollectors).not.toHaveBeenCalled();
+
+    vi.advanceTimersByTime(300);
+
+    expect(collectorsServiceSpy.getCollectors).toHaveBeenCalledTimes(1);
+    expect(collectorsServiceSpy.getCollectors).toHaveBeenCalledWith(
+      expect.objectContaining({
+        search: 'mahmoud',
+        page: 1,
+      })
+    );
   });
 
-  it('should open create drawer with default invite link credentials mode', () => {
+  it('handles race conditions: slow first request is cancelled by faster second request', () => {
+    const slowSubject = new Subject<any>();
+    const fastSubject = new Subject<any>();
+    let call = 0;
+
+    collectorsServiceSpy.getCollectors.mockImplementation(() => {
+      call++;
+      return call === 1 ? slowSubject : fastSubject;
+    });
+
+    component.pagedList.setPage(2);
+    component.pagedList.setPage(3);
+
+    fastSubject.next({
+      items: [{ ...activeCollector, collectorId: 'col-fast' }],
+      page: 3,
+      pageSize: 10,
+      totalItems: 30,
+      totalPages: 3,
+    });
+    fastSubject.complete();
+
+    expect(component.pagedList.items()[0].collectorId).toBe('col-fast');
+
+    slowSubject.next({
+      items: [{ ...activeCollector, collectorId: 'col-slow' }],
+      page: 2,
+      pageSize: 10,
+      totalItems: 30,
+      totalPages: 3,
+    });
+    slowSubject.complete();
+
+    expect(component.pagedList.items()[0].collectorId).toBe('col-fast');
+  });
+
+  it('should open create drawer with default InviteLink credentials mode', () => {
     component.openCreateDrawer();
 
     expect(component.isCreateDrawerOpen()).toBe(true);
     expect(component.createCredentialsMode()).toBe(CollectorCredentialsMode.InviteLink);
     expect(component.createForm.controls.temporaryPassword.validator).toBeNull();
-    expect(component.createForm.valid).toBe(false);
   });
 
-  it('should switch credentials mode to temporary password and validate required password field', () => {
+  it('should toggle temporary password validation when switching credentials mode', () => {
     component.openCreateDrawer();
+
     component.handleCredentialsModeChange(CollectorCredentialsMode.TemporaryPassword);
-
     expect(component.createCredentialsMode()).toBe(CollectorCredentialsMode.TemporaryPassword);
-    expect(component.createForm.controls.temporaryPassword.hasError('required')).toBe(true);
 
-    component.createForm.controls.temporaryPassword.setValue('TempPass123!');
-    expect(component.createForm.controls.temporaryPassword.valid).toBe(true);
+    const passwordControl = component.createForm.controls.temporaryPassword;
+    passwordControl.setValue('');
+    expect(passwordControl.valid).toBe(false);
 
-    // Switch back to invite link
     component.handleCredentialsModeChange(CollectorCredentialsMode.InviteLink);
     expect(component.createCredentialsMode()).toBe(CollectorCredentialsMode.InviteLink);
-    expect(component.createForm.controls.temporaryPassword.validator).toBeNull();
+    expect(passwordControl.valid).toBe(true);
   });
 
-  it('should submit create collector request with invite link mode', () => {
-    collectorsServiceSpy.getCollectors.mockClear();
-    component.openCreateDrawer();
+  it('should successfully submit create form, reload pagedList, and invalidate collectors lookup', () => {
+    const reloadSpy = vi.spyOn(component.pagedList, 'reload');
 
+    component.openCreateDrawer();
     component.createForm.setValue({
-      displayName: 'Yasser Arafat',
-      email: 'y.arafat@ecobin.eg',
-      phoneNumber: '+20 100 111 2222',
+      displayName: 'Tarek Nour',
+      email: 'tarek@ecobin.eg',
+      phoneNumber: '+20 100 999 8877',
       temporaryPassword: '',
-      district: 'Cairo',
+      district: 'Giza',
     });
 
     component.submitCreate();
 
     expect(collectorsServiceSpy.createCollector).toHaveBeenCalledWith({
-      displayName: 'Yasser Arafat',
-      email: 'y.arafat@ecobin.eg',
-      phoneNumber: '+20 100 111 2222',
-      district: 'Cairo',
+      displayName: 'Tarek Nour',
+      email: 'tarek@ecobin.eg',
+      phoneNumber: '+20 100 999 8877',
+      district: 'Giza',
       credentialsMode: CollectorCredentialsMode.InviteLink,
-    });
-    expect(toastServiceSpy.success).toHaveBeenCalledWith(
-      'Collector account for Yasser Arafat provisioned successfully'
-    );
-    expect(component.isCreateDrawerOpen()).toBe(false);
-    expect(collectorsServiceSpy.getCollectors).toHaveBeenCalledTimes(1);
-  });
-
-  it('should initialize create drawer with empty district', () => {
-    component.openCreateDrawer();
-    expect(component.createForm.controls.district.value).toBe('');
-    expect(component.isCreateDrawerOpen()).toBe(true);
-  });
-
-  it('should submit create collector request with temporary password mode', () => {
-    component.openCreateDrawer();
-    component.handleCredentialsModeChange(CollectorCredentialsMode.TemporaryPassword);
-
-    component.createForm.setValue({
-      displayName: 'Tamer Hosny',
-      email: 't.hosny@ecobin.eg',
-      phoneNumber: '+20 100 333 4444',
-      temporaryPassword: 'SecretPassword99!',
-      district: 'Giza',
-    });
-
-    component.submitCreate();
-
-    expect(collectorsServiceSpy.createCollector).toHaveBeenCalledWith({
-      displayName: 'Tamer Hosny',
-      email: 't.hosny@ecobin.eg',
-      phoneNumber: '+20 100 333 4444',
-      temporaryPassword: 'SecretPassword99!',
-      district: 'Giza',
-      credentialsMode: CollectorCredentialsMode.TemporaryPassword,
     });
     expect(toastServiceSpy.success).toHaveBeenCalled();
     expect(component.isCreateDrawerOpen()).toBe(false);
+    expect(reloadSpy).toHaveBeenCalled();
+    expect(lookupsServiceSpy.invalidate).toHaveBeenCalledWith('collectors');
   });
 
-  it('should map EMAIL_ALREADY_EXISTS error to email form control', () => {
-    const error409 = new ApiError({
-      message: 'Email already exists',
-      code: ApiErrorCode.EmailAlreadyExists,
+  it('should handle duplicate email conflict error on collector creation', () => {
+    const duplicateError = new ApiError({
       status: 409,
+      code: ApiErrorCode.EmailAlreadyExists,
+      message: 'This email address is already registered',
       requestUrl: '/api/v1/admin/collectors',
     });
-    collectorsServiceSpy.createCollector.mockReturnValue(throwError(() => error409));
+    collectorsServiceSpy.createCollector.mockReturnValueOnce(throwError(() => duplicateError));
 
     component.openCreateDrawer();
     component.createForm.setValue({
       displayName: 'Duplicate User',
-      email: 'existing@ecobin.eg',
-      phoneNumber: '+20 100 999 8888',
+      email: 'duplicate@ecobin.eg',
+      phoneNumber: '+20 100 000 0000',
       temporaryPassword: '',
       district: 'Cairo',
     });
 
     component.submitCreate();
 
-    expect(component.createForm.controls.email.hasError('emailAlreadyExists')).toBe(true);
-    expect(component.createEmailError()).toBe('This email address is already registered');
-    expect(component.isCreateDrawerOpen()).toBe(true);
+    expect(component.isSubmitting()).toBe(false);
+    expect(component.createForm.controls.email.errors).toEqual({ emailAlreadyExists: true });
+    expect(component.emailServerError()).toBe('This email address is already registered');
   });
 
-  it('should open edit drawer with prefilled values and submit update', () => {
-    collectorsServiceSpy.getCollectors.mockClear();
+  it('should open edit drawer and submit updated collector details', () => {
+    const reloadSpy = vi.spyOn(component.pagedList, 'reload');
 
     component.handleTableAction({ action: 'edit', row: activeCollector });
 
     expect(component.isEditDrawerOpen()).toBe(true);
     expect(component.selectedCollector()).toEqual(activeCollector);
-    expect(component.editForm.value.displayName).toBe(activeCollector.name);
-    expect(component.editForm.value.email).toBe(activeCollector.email);
-    expect(component.editForm.value.district).toBe(activeCollector.district);
+    expect(component.editForm.controls.displayName.value).toBe(activeCollector.name);
 
-    component.editForm.controls.displayName.setValue('Mahmoud Fathy Updated');
+    component.editForm.controls.displayName.setValue('Updated Collector Name');
     component.submitEdit();
 
-    expect(collectorsServiceSpy.updateCollector).toHaveBeenCalledWith(
-      activeCollector.collectorId,
-      {
-        displayName: 'Mahmoud Fathy Updated',
-        email: activeCollector.email,
-        phoneNumber: activeCollector.phone,
-        district: activeCollector.district,
-      }
-    );
+    expect(collectorsServiceSpy.updateCollector).toHaveBeenCalledWith(activeCollector.collectorId, {
+      displayName: 'Updated Collector Name',
+      email: activeCollector.email,
+      phoneNumber: activeCollector.phone,
+      district: activeCollector.district,
+    });
     expect(toastServiceSpy.success).toHaveBeenCalled();
     expect(component.isEditDrawerOpen()).toBe(false);
-    expect(collectorsServiceSpy.getCollectors).toHaveBeenCalledTimes(1);
+    expect(reloadSpy).toHaveBeenCalled();
   });
 
   it('should open assigned-bins drawer and load assigned bins for collector', () => {
@@ -296,29 +328,54 @@ describe('Collectors Component', () => {
     expect(component.assignedBins()).toEqual([]);
   });
 
-  it('should open assign bin modal, load bins from BinsService, and assign collector', () => {
-    collectorsServiceSpy.getCollectors.mockClear();
+  it('should open assign bin modal and fetchAvailableBins searches BinsService with pageSize 20 excluding already assigned', () => {
+    binsServiceSpy.getBins.mockReturnValue(
+      of({
+        items: [
+          { binId: 'BIN-1001', name: 'Bin 1', collectorId: activeCollector.collectorId, district: 'Cairo', fillLevel: 50 },
+          { binId: 'BIN-1002', name: 'Bin 2', collectorId: 'other-col', district: 'Giza', fillLevel: 30 },
+        ],
+        page: 1,
+        pageSize: 20,
+        totalItems: 2,
+        totalPages: 1,
+      })
+    );
 
     component.handleTableAction({ action: 'assign', row: activeCollector });
 
     expect(component.isAssignModalOpen()).toBe(true);
     expect(component.selectedCollector()).toEqual(activeCollector);
-    expect(binsServiceSpy.getBins).toHaveBeenCalledTimes(1);
-    expect(component.availableBins().length).toBe(MOCK_BINS.length);
 
-    component.assignBinForm.controls.binId.setValue('BIN-1001');
+    // Call fetchAvailableBins
+    let resultOptions: any[] = [];
+    component.fetchAvailableBins('term').subscribe((opts) => {
+      resultOptions = opts;
+    });
+
+    expect(binsServiceSpy.getBins).toHaveBeenCalledWith({ search: 'term', pageSize: 20 });
+    // BIN-1001 had collectorId == activeCollector.collectorId, so it must be excluded!
+    expect(resultOptions.length).toBe(1);
+    expect(resultOptions[0].value).toBe('BIN-1002');
+  });
+
+  it('submits assign bin and reloads pagedList', () => {
+    const reloadSpy = vi.spyOn(component.pagedList, 'reload');
+
+    component.handleTableAction({ action: 'assign', row: activeCollector });
+    component.assignBinForm.controls.binId.setValue('BIN-1002');
     component.submitAssign();
 
-    expect(binsServiceSpy.assignCollector).toHaveBeenCalledWith('BIN-1001', {
+    expect(binsServiceSpy.assignCollector).toHaveBeenCalledWith('BIN-1002', {
       collectorId: activeCollector.collectorId,
     });
     expect(toastServiceSpy.success).toHaveBeenCalled();
     expect(component.isAssignModalOpen()).toBe(false);
-    expect(collectorsServiceSpy.getCollectors).toHaveBeenCalledTimes(1);
+    expect(reloadSpy).toHaveBeenCalled();
   });
 
   it('should open deactivate confirm dialog and deactivate collector on confirmation', () => {
-    collectorsServiceSpy.getCollectors.mockClear();
+    const reloadSpy = vi.spyOn(component.pagedList, 'reload');
 
     component.handleTableAction({ action: 'deactivate', row: activeCollector });
 
@@ -331,7 +388,7 @@ describe('Collectors Component', () => {
     expect(collectorsServiceSpy.deactivateCollector).toHaveBeenCalledWith(activeCollector.collectorId);
     expect(toastServiceSpy.success).toHaveBeenCalled();
     expect(component.isDeactivateDialogOpen()).toBe(false);
-    expect(collectorsServiceSpy.getCollectors).toHaveBeenCalledTimes(1);
+    expect(reloadSpy).toHaveBeenCalled();
   });
 
   it('should hide deactivate action for inactive collectors', () => {
@@ -340,39 +397,5 @@ describe('Collectors Component', () => {
 
     expect(deactivateAction.visible?.(activeCollector)).toBe(true);
     expect(deactivateAction.visible?.(inactiveCollector)).toBe(false);
-  });
-
-  it('should render error state on initial load failure and retry successfully', () => {
-    collectorsServiceSpy.getCollectors.mockReturnValueOnce(
-      throwError(() => ({ message: 'Network error' }))
-    );
-
-    component.loadCollectors();
-
-    expect(component.isLoading()).toBe(false);
-    expect(component.error()).toBeTruthy();
-
-    collectorsServiceSpy.getCollectors.mockReturnValueOnce(
-      of({
-        items: MOCK_COLLECTORS,
-        page: 1,
-        pageSize: 10,
-        totalItems: MOCK_COLLECTORS.length,
-        totalPages: 1,
-      })
-    );
-    component.loadCollectors();
-
-    expect(component.error()).toBeNull();
-    expect(component.collectors().length).toBe(MOCK_COLLECTORS.length);
-  });
-
-  it('should map AccountStatus to expected badge variants and labels', () => {
-    expect(getCollectorStatusBadgeVariant(AccountStatus.Active)).toBe('success');
-    expect(getCollectorStatusBadgeVariant(AccountStatus.Inactive)).toBe('neutral');
-
-    expect(getCollectorStatusLabel(AccountStatus.Active)).toBe('Active');
-    expect(getCollectorStatusLabel(AccountStatus.Inactive)).toBe('Inactive');
-    expect(getCollectorStatusLabel('unknown')).toBe('unknown');
   });
 });

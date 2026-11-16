@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { of, throwError } from 'rxjs';
+import { of, Subject, throwError } from 'rxjs';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { Leaderboards } from './leaderboards';
 import { LeaderboardService } from '../../../core/services/gamification/leaderboard.service';
@@ -25,8 +25,8 @@ describe('Leaderboards', () => {
           items: structuredClone(MOCK_LEADERBOARD_WEEKLY),
           page: 1,
           pageSize: 10,
-          totalItems: MOCK_LEADERBOARD_WEEKLY.length,
-          totalPages: Math.ceil(MOCK_LEADERBOARD_WEEKLY.length / 10),
+          totalItems: 25,
+          totalPages: 3,
         })
       ),
       getMilestoneBadges: vi.fn().mockReturnValue(of(structuredClone(MOCK_MILESTONE_BADGES))),
@@ -49,9 +49,9 @@ describe('Leaderboards', () => {
 
   it('should create and load weekly leaderboard and milestone badges on mount', () => {
     expect(component).toBeTruthy();
-    expect(leaderboardServiceMock.getLeaderboard).toHaveBeenCalledWith({
-      scope: LeaderboardScope.Weekly,
-    });
+    expect(leaderboardServiceMock.getLeaderboard).toHaveBeenCalledWith(
+      expect.objectContaining({ scope: LeaderboardScope.Weekly })
+    );
     expect(leaderboardServiceMock.getMilestoneBadges).toHaveBeenCalledTimes(1);
 
     expect(component.activeScope()).toBe(LeaderboardScope.Weekly);
@@ -73,23 +73,23 @@ describe('Leaderboards', () => {
     // Switch to Monthly tab
     component.handleTabChange(LeaderboardScope.Monthly);
     expect(component.activeScope()).toBe(LeaderboardScope.Monthly);
-    expect(leaderboardServiceMock.getLeaderboard).toHaveBeenLastCalledWith({
-      scope: LeaderboardScope.Monthly,
-    });
+    expect(leaderboardServiceMock.getLeaderboard).toHaveBeenLastCalledWith(
+      expect.objectContaining({ scope: LeaderboardScope.Monthly, page: 1 })
+    );
 
     // Switch to All-time tab
     component.handleTabChange(LeaderboardScope.AllTime);
     expect(component.activeScope()).toBe(LeaderboardScope.AllTime);
-    expect(leaderboardServiceMock.getLeaderboard).toHaveBeenLastCalledWith({
-      scope: LeaderboardScope.AllTime,
-    });
+    expect(leaderboardServiceMock.getLeaderboard).toHaveBeenLastCalledWith(
+      expect.objectContaining({ scope: LeaderboardScope.AllTime, page: 1 })
+    );
 
     // Switch back to Weekly tab
     component.handleTabChange(LeaderboardScope.Weekly);
     expect(component.activeScope()).toBe(LeaderboardScope.Weekly);
-    expect(leaderboardServiceMock.getLeaderboard).toHaveBeenLastCalledWith({
-      scope: LeaderboardScope.Weekly,
-    });
+    expect(leaderboardServiceMock.getLeaderboard).toHaveBeenLastCalledWith(
+      expect.objectContaining({ scope: LeaderboardScope.Weekly, page: 1 })
+    );
   });
 
   describe('Rank styling', () => {
@@ -157,20 +157,80 @@ describe('Leaderboards', () => {
     expect(textContent).toContain('38 earned');
   });
 
+  it('resets page to 1 when changing scope tabs', () => {
+    component.pagedList.setPage(2);
+    expect(component.pagedList.page()).toBe(2);
+
+    component.handleTabChange(LeaderboardScope.Monthly);
+    expect(component.pagedList.page()).toBe(1);
+    expect(component.activeScope()).toBe(LeaderboardScope.Monthly);
+  });
+
+  it('handles race conditions: slow first request is cancelled by faster second request', () => {
+    const slowSubject = new Subject<any>();
+    const fastSubject = new Subject<any>();
+    let call = 0;
+
+    leaderboardServiceMock.getLeaderboard.mockImplementation(() => {
+      call++;
+      return call === 1 ? slowSubject : fastSubject;
+    });
+
+    component.pagedList.setPage(2);
+    component.pagedList.setPage(3);
+
+    fastSubject.next({
+      items: [{ ...MOCK_LEADERBOARD_WEEKLY[0], userId: 'U-FAST' }],
+      page: 3,
+      pageSize: 10,
+      totalItems: 25,
+      totalPages: 3,
+    });
+    fastSubject.complete();
+
+    expect(component.pagedList.items()[0].userId).toBe('U-FAST');
+
+    slowSubject.next({
+      items: [{ ...MOCK_LEADERBOARD_WEEKLY[0], userId: 'U-SLOW' }],
+      page: 2,
+      pageSize: 10,
+      totalItems: 25,
+      totalPages: 3,
+    });
+    slowSubject.complete();
+
+    expect(component.pagedList.items()[0].userId).toBe('U-FAST');
+  });
+
+  it('handles server-side pagination and sorting', () => {
+    leaderboardServiceMock.getLeaderboard.mockClear();
+
+    component.pagedList.setPage(2);
+    expect(leaderboardServiceMock.getLeaderboard).toHaveBeenCalledWith(
+      expect.objectContaining({ page: 2, pageSize: 10 })
+    );
+
+    component.pagedList.setSort('lifetimePoints', 'desc');
+    expect(leaderboardServiceMock.getLeaderboard).toHaveBeenCalledWith(
+      expect.objectContaining({ page: 1, sortBy: 'lifetimePoints', sortDir: 'desc' })
+    );
+  });
+
   describe('Independent error and retry states', () => {
-    it('should show error in leaderboard section while badges remain rendered when leaderboard fails', () => {
+    it('should show error in leaderboard section while badges remain rendered when leaderboard fails on initial load', () => {
       // Mock leaderboard error, badges remain successful
       leaderboardServiceMock.getLeaderboard.mockReturnValue(
         throwError(() => new Error('Failed to load leaderboard'))
       );
 
-      component.loadLeaderboard();
-      fixture.detectChanges();
+      const errorFixture = TestBed.createComponent(Leaderboards);
+      const errorComp = errorFixture.componentInstance;
+      errorFixture.detectChanges();
 
-      expect(component.leaderboardError()).toBeTruthy();
-      expect(component.badgesError()).toBeNull();
+      expect(errorComp.leaderboardError()).toBeTruthy();
+      expect(errorComp.badgesError()).toBeNull();
 
-      const compiled = fixture.nativeElement as HTMLElement;
+      const compiled = errorFixture.nativeElement as HTMLElement;
       const leaderboardSection = compiled.querySelector('[data-testid="leaderboard-section"]');
       const badgesSection = compiled.querySelector('[data-testid="badges-section"]');
 
@@ -184,14 +244,14 @@ describe('Leaderboards', () => {
           items: structuredClone(MOCK_LEADERBOARD_WEEKLY),
           page: 1,
           pageSize: 10,
-          totalItems: MOCK_LEADERBOARD_WEEKLY.length,
-          totalPages: 1,
+          totalItems: 25,
+          totalPages: 3,
         })
       );
-      component.loadLeaderboard();
-      fixture.detectChanges();
+      errorComp.loadLeaderboard();
+      errorFixture.detectChanges();
 
-      expect(component.leaderboardError()).toBeNull();
+      expect(errorComp.leaderboardError()).toBeNull();
       expect(leaderboardSection?.querySelector('app-error-state')).toBeFalsy();
       expect(leaderboardSection?.querySelector('app-data-table')).toBeTruthy();
     });

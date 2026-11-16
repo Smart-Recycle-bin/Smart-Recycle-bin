@@ -1,20 +1,20 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  OnInit,
   computed,
   inject,
   signal,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { AccountStatus } from '../../../core/models/user/account-status.enum';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { map } from 'rxjs/operators';
 import { CollectorListItem, CollectorQuery, CollectorAssignedBin } from '../../../core/models/collector/collector.view-model';
 import { CollectorCredentialsMode } from '../../../core/models/collector/collector-credentials-mode.enum';
 import { CreateCollectorRequest, UpdateCollectorRequest } from '../../../core/models/collector/collector.dto';
-import { BinListItem } from '../../../core/models/bin/bin.view-model';
 import { CollectorsService } from '../../../core/services/collector/collectors.service';
 import { BinsService } from '../../../core/services/bin/bins.service';
+import { LookupsService } from '../../../core/services/lookup/lookups.service';
 import { ToastService } from '../../../core/services/toast/toast.service';
 import { ApiErrorCode } from '../../../core/models/common/api-error-code.enum';
 import { isApiErrorCode, getErrorMessage } from '../../../core/errors/error-message';
@@ -29,6 +29,7 @@ import { getBinStatusBadgeVariant, getBinStatusLabel } from '../../bin/bins-list
 import { PageHeader } from '../../../shared/components/page-header/page-header';
 import { SearchInput } from '../../../shared/components/form/search-input/search-input';
 import { Select, SelectOption } from '../../../shared/components/form/select/select';
+import { AsyncSelect } from '../../../shared/components/form/async-select/async-select';
 import { DataTable } from '../../../shared/components/table/data-table/data-table';
 import { CellTemplateDirective } from '../../../shared/components/table/data-table/cell-template.directive';
 import { UserCell } from '../../../shared/components/table/cells/user-cell/user-cell';
@@ -44,6 +45,7 @@ import { Button } from '../../../shared/components/button/button';
 import { IconButton } from '../../../shared/components/button/icon-button/icon-button';
 import { Icon } from '../../../shared/components/icon/icon';
 import { DateTimePipe } from '../../../shared/pipes';
+import { createPagedList } from '../../../shared/utils/paged-list';
 
 @Component({
   selector: 'app-collectors',
@@ -54,6 +56,7 @@ import { DateTimePipe } from '../../../shared/pipes';
     PageHeader,
     SearchInput,
     Select,
+    AsyncSelect,
     DataTable,
     CellTemplateDirective,
     UserCell,
@@ -74,9 +77,10 @@ import { DateTimePipe } from '../../../shared/pipes';
   styleUrl: './collectors.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class Collectors implements OnInit {
+export class Collectors {
   private readonly collectorsService = inject(CollectorsService);
   private readonly binsService = inject(BinsService);
+  private readonly lookupsService = inject(LookupsService);
   private readonly toastService = inject(ToastService);
   private readonly fb = inject(FormBuilder);
 
@@ -89,13 +93,13 @@ export class Collectors implements OnInit {
   readonly getBinLabel = getBinStatusLabel;
 
   /**
-   * Data state signals
+   * Paged-list infrastructure
    */
-  readonly collectors = signal<CollectorListItem[]>([]);
-  readonly allCollectors = signal<CollectorListItem[]>([]);
-  readonly isLoading = signal<boolean>(true);
-  readonly error = signal<unknown>(null);
-  readonly searchTerm = signal<string>('');
+  readonly pagedList = createPagedList<CollectorListItem, CollectorQuery>({
+    fetch: (query) => this.collectorsService.getCollectors(query),
+    debounceKeys: ['search'],
+    debounceMs: 300,
+  });
 
   /**
    * Drawer & Modal visibility state signals
@@ -113,8 +117,6 @@ export class Collectors implements OnInit {
   readonly selectedCollector = signal<CollectorListItem | null>(null);
   readonly assignedBins = signal<CollectorAssignedBin[]>([]);
   readonly isLoadingAssignedBins = signal<boolean>(false);
-  readonly availableBins = signal<BinListItem[]>([]);
-  readonly isLoadingAvailableBins = signal<boolean>(false);
 
   /**
    * Create Collector Credentials Mode
@@ -124,31 +126,31 @@ export class Collectors implements OnInit {
   );
 
   /**
-   * Distinct district options computed from loaded collectors
+   * District options from LookupsService
    */
-  readonly districtOptions = computed<SelectOption[]>(() => {
-    const list = this.allCollectors();
-    const districts = Array.from(new Set(list.map((c) => c.district).filter(Boolean))).sort();
-    if (districts.length === 0) {
-      return [
-        { label: 'Cairo', value: 'Cairo' },
-        { label: 'Giza', value: 'Giza' },
-        { label: 'Alexandria', value: 'Alexandria' },
-        { label: 'Qalyubia', value: 'Qalyubia' },
-      ];
-    }
-    return districts.map((d) => ({ label: d, value: d }));
-  });
+  readonly districtOptions = toSignal(
+    this.lookupsService.getDistricts().pipe(
+      map((districts) => districts.map((d) => ({ label: d.name, value: d.name as string | number })))
+    ),
+    { initialValue: [] as SelectOption[] }
+  );
 
   /**
-   * Available bin select options for assignment
+   * Fetch function for app-async-select in Assign Bin Modal
    */
-  readonly availableBinOptions = computed<SelectOption[]>(() => {
-    return this.availableBins().map((b) => ({
-      label: `${b.name} (${b.binId}) · ${b.district} [${b.fillLevel}%]`,
-      value: b.binId,
-    }));
-  });
+  readonly fetchAvailableBins = (term: string) => {
+    const collector = this.selectedCollector();
+    return this.binsService.getBins({ search: term, pageSize: 20 }).pipe(
+      map((page) =>
+        page.items
+          .filter((b) => b.collectorId !== collector?.collectorId)
+          .map((b) => ({
+            label: `${b.name} (${b.binId}) · ${b.district} [${b.fillLevel}%]`,
+            value: b.binId,
+          }))
+      )
+    );
+  };
 
   /**
    * Reactive form for creating a new collector account (UI p7)
@@ -197,39 +199,8 @@ export class Collectors implements OnInit {
     return `Are you sure you want to deactivate ${c.name} (${c.collectorId})? They will no longer be able to log in or service assigned bins.`;
   });
 
-  ngOnInit(): void {
-    this.loadCollectors();
-  }
-
-  loadCollectors(): void {
-    this.isLoading.set(true);
-    this.error.set(null);
-
-    const query: CollectorQuery = {};
-    const search = this.searchTerm().trim();
-    if (search) {
-      query.search = search;
-    }
-
-    this.collectorsService.getCollectors(query).subscribe({
-      next: (page) => {
-        // TODO(prompt-3): server-side pagination migration
-        this.collectors.set(page.items);
-        if (!search) {
-          this.allCollectors.set(page.items);
-        }
-        this.isLoading.set(false);
-      },
-      error: (err) => {
-        this.error.set(err);
-        this.isLoading.set(false);
-      },
-    });
-  }
-
   handleSearch(term: string): void {
-    this.searchTerm.set(term);
-    this.loadCollectors();
+    this.pagedList.patchFilters({ search: term || undefined });
   }
 
   handleTableAction(event: { action: string; row: CollectorListItem }): void {
@@ -304,7 +275,8 @@ export class Collectors implements OnInit {
         this.toastService.success(`Collector account for ${val.displayName.trim()} provisioned successfully`);
         this.isSubmitting.set(false);
         this.closeCreateDrawer();
-        this.loadCollectors();
+        this.pagedList.reload();
+        this.lookupsService.invalidate('collectors');
       },
       error: (err) => {
         this.isSubmitting.set(false);
@@ -359,10 +331,10 @@ export class Collectors implements OnInit {
     this.isSubmitting.set(true);
     this.collectorsService.updateCollector(collector.collectorId, req).subscribe({
       next: () => {
-        this.toastService.success(`Collector ${val.displayName} updated successfully`);
+        this.toastService.success(`Collector details for ${val.displayName.trim()} updated successfully`);
         this.isSubmitting.set(false);
         this.closeEditDrawer();
-        this.loadCollectors();
+        this.pagedList.reload();
       },
       error: (err) => {
         this.isSubmitting.set(false);
@@ -378,14 +350,13 @@ export class Collectors implements OnInit {
     this.selectedCollector.set(collector);
     this.isAssignedBinsDrawerOpen.set(true);
     this.isLoadingAssignedBins.set(true);
-    this.assignedBins.set([]);
 
     this.collectorsService.getAssignedBins(collector.collectorId).subscribe({
-      next: (bins) => {
+      next: (bins: CollectorAssignedBin[]) => {
         this.assignedBins.set(bins);
         this.isLoadingAssignedBins.set(false);
       },
-      error: (err) => {
+      error: (err: unknown) => {
         this.isLoadingAssignedBins.set(false);
         this.toastService.error(getErrorMessage(err));
       },
@@ -405,19 +376,6 @@ export class Collectors implements OnInit {
     this.selectedCollector.set(collector);
     this.assignBinForm.reset({ binId: '' });
     this.isAssignModalOpen.set(true);
-    this.isLoadingAvailableBins.set(true);
-
-    this.binsService.getBins().subscribe({
-      next: (page) => {
-        // TODO(prompt-3): server-side pagination migration
-        this.availableBins.set(page.items);
-        this.isLoadingAvailableBins.set(false);
-      },
-      error: (err) => {
-        this.isLoadingAvailableBins.set(false);
-        this.toastService.error(getErrorMessage(err));
-      },
-    });
   }
 
   closeAssignModal(): void {
@@ -443,7 +401,7 @@ export class Collectors implements OnInit {
         this.toastService.success(`Smart bin assigned to ${collector.name} successfully`);
         this.isSubmitting.set(false);
         this.closeAssignModal();
-        this.loadCollectors();
+        this.pagedList.reload();
       },
       error: (err) => {
         this.isSubmitting.set(false);
@@ -476,7 +434,7 @@ export class Collectors implements OnInit {
         this.toastService.success(`Collector ${collector.name} deactivated successfully`);
         this.isSubmitting.set(false);
         this.closeDeactivateDialog();
-        this.loadCollectors();
+        this.pagedList.reload();
       },
       error: (err) => {
         this.isSubmitting.set(false);

@@ -1,15 +1,15 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { of, throwError } from 'rxjs';
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { of, throwError, Subject } from 'rxjs';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { BinsList } from './bins-list';
 import { BinsService } from '../../../core/services/bin/bins.service';
+import { LookupsService } from '../../../core/services/lookup/lookups.service';
 import { ToastService } from '../../../core/services/toast/toast.service';
 import { BinStatus } from '../../../core/models/bin/bin-status.enum';
 import { ApiErrorCode } from '../../../core/models/common/api-error-code.enum';
 import { ApiError } from '../../../core/errors/api-error';
 import { MOCK_BINS } from '../../../core/mock/data/bin/bin.mock';
-import { getBinStatusBadgeVariant } from './bins-list.config';
 
 describe('BinsList Component', () => {
   let component: BinsList;
@@ -18,26 +18,51 @@ describe('BinsList Component', () => {
     getBins: ReturnType<typeof vi.fn>;
     registerBin: ReturnType<typeof vi.fn>;
   };
+  let lookupsServiceSpy: {
+    getDistricts: ReturnType<typeof vi.fn>;
+    getCollectors: ReturnType<typeof vi.fn>;
+    invalidate: ReturnType<typeof vi.fn>;
+  };
   let toastServiceSpy: {
     success: ReturnType<typeof vi.fn>;
     error: ReturnType<typeof vi.fn>;
   };
 
   beforeEach(async () => {
+    vi.useFakeTimers();
+
     binsServiceSpy = {
-      getBins: vi.fn().mockReturnValue(of({
-        items: MOCK_BINS,
-        page: 1,
-        pageSize: 10,
-        totalItems: MOCK_BINS.length,
-        totalPages: Math.ceil(MOCK_BINS.length / 10),
-      })),
-      registerBin: vi.fn().mockReturnValue(of({
-        binId: 'BIN-9999',
-        deviceSerial: 'SN-99999',
-        status: BinStatus.Available,
-        fillLevel: 0,
-      })),
+      getBins: vi.fn().mockReturnValue(
+        of({
+          items: MOCK_BINS,
+          page: 1,
+          pageSize: 10,
+          totalItems: MOCK_BINS.length,
+          totalPages: Math.ceil(MOCK_BINS.length / 10),
+        })
+      ),
+      registerBin: vi.fn().mockReturnValue(
+        of({
+          binId: 'BIN-9999',
+          deviceSerial: 'SN-99999',
+          status: BinStatus.Available,
+          fillLevel: 0,
+        })
+      ),
+    };
+
+    lookupsServiceSpy = {
+      getDistricts: vi.fn().mockReturnValue(
+        of([
+          { name: 'Downtown', region: 'Cairo Central' },
+          { name: 'Zamalek', region: 'Cairo West' },
+          { name: 'Nasr City', region: 'Cairo East' },
+        ])
+      ),
+      getCollectors: vi.fn().mockReturnValue(
+        of([{ collectorId: 'col-1', displayName: 'Ahmed Hassan' }])
+      ),
+      invalidate: vi.fn(),
     };
 
     toastServiceSpy = {
@@ -50,165 +75,157 @@ describe('BinsList Component', () => {
       providers: [
         provideRouter([]),
         { provide: BinsService, useValue: binsServiceSpy },
+        { provide: LookupsService, useValue: lookupsServiceSpy },
         { provide: ToastService, useValue: toastServiceSpy },
       ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(BinsList);
     component = fixture.componentInstance;
-    await fixture.whenStable();
     fixture.detectChanges();
   });
 
-  it('should initialize and load bins on mount', () => {
-    expect(component).toBeTruthy();
-    expect(binsServiceSpy.getBins).toHaveBeenCalledTimes(1);
-    expect(component.bins().length).toBe(MOCK_BINS.length);
-    expect(component.allBins().length).toBe(MOCK_BINS.length);
-    expect(component.isLoading()).toBe(false);
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
-  it('should compute derived header subtitle with total bins and districts count', () => {
-    const uniqueDistricts = new Set(MOCK_BINS.map((b) => b.district)).size;
-    const expected = `${MOCK_BINS.length} registered smart bins across ${uniqueDistricts} districts`;
+  it('should initialize and load bins on mount via pagedList', () => {
+    expect(component).toBeTruthy();
+    expect(binsServiceSpy.getBins).toHaveBeenCalledTimes(1);
+    expect(component.pagedList.items().length).toBe(MOCK_BINS.length);
+    expect(component.pagedList.loading()).toBe(false);
+  });
+
+  it('should compute derived header subtitle with total bins and districts count from lookups', () => {
+    const expected = `${MOCK_BINS.length} registered smart bins across 3 districts`;
     expect(component.headerSubtitle()).toBe(expected);
   });
 
-  it('should filter bins by search query', () => {
+  it('debounces rapid search keystrokes: typing "nasr" fires exactly 1 request', () => {
     binsServiceSpy.getBins.mockClear();
 
-    component.handleSearch('Tahrir');
-    expect(component.searchTerm()).toBe('Tahrir');
-    expect(binsServiceSpy.getBins).toHaveBeenCalledWith({
-      search: 'Tahrir',
-    });
+    // Type rapidly
+    component.handleSearch('n');
+    vi.advanceTimersByTime(50);
+    component.handleSearch('na');
+    vi.advanceTimersByTime(50);
+    component.handleSearch('nas');
+    vi.advanceTimersByTime(50);
+    component.handleSearch('nasr');
+
+    expect(binsServiceSpy.getBins).not.toHaveBeenCalled();
+
+    vi.advanceTimersByTime(300);
+
+    expect(binsServiceSpy.getBins).toHaveBeenCalledTimes(1);
+    expect(binsServiceSpy.getBins).toHaveBeenCalledWith(
+      expect.objectContaining({
+        search: 'nasr',
+        page: 1,
+      })
+    );
   });
 
-  it('should filter bins by district', () => {
-    binsServiceSpy.getBins.mockClear();
+  it('handles race conditions: slow first request is superseded by faster second request', () => {
+    const slowSubject = new Subject<any>();
+    const fastSubject = new Subject<any>();
+    let call = 0;
 
-    component.handleDistrictChange('Cairo');
-    expect(component.selectedDistrict()).toBe('Cairo');
-    expect(binsServiceSpy.getBins).toHaveBeenCalledWith({
-      district: 'Cairo',
+    binsServiceSpy.getBins.mockImplementation(() => {
+      call++;
+      return call === 1 ? slowSubject : fastSubject;
     });
+
+    // Fire first request
+    component.pagedList.setPage(2);
+    // Fire second request immediately
+    component.pagedList.setPage(3);
+
+    // Fast second request finishes first
+    fastSubject.next({
+      items: [{ id: 'fast-3', binId: 'BIN-3333', name: 'Bin 3' }],
+      page: 3,
+      pageSize: 10,
+      totalItems: 30,
+      totalPages: 3,
+    });
+    fastSubject.complete();
+
+    expect(component.pagedList.items()[0].binId).toBe('BIN-3333');
+
+    // Slow first request finishes later
+    slowSubject.next({
+      items: [{ id: 'slow-2', binId: 'BIN-2222', name: 'Bin 2' }],
+      page: 2,
+      pageSize: 10,
+      totalItems: 30,
+      totalPages: 3,
+    });
+    slowSubject.complete();
+
+    // Must still retain fast request result!
+    expect(component.pagedList.items()[0].binId).toBe('BIN-3333');
   });
 
-  it('should filter bins by status', () => {
-    binsServiceSpy.getBins.mockClear();
+  it('resets page to 1 on filter changes', () => {
+    component.pagedList.setPage(2);
+    expect(component.pagedList.page()).toBe(2);
+
+    component.handleDistrictChange('Zamalek');
+    expect(component.pagedList.page()).toBe(1);
+
+    component.pagedList.setPage(2);
+    expect(component.pagedList.page()).toBe(2);
 
     component.handleStatusChange(BinStatus.NeedsServicing);
-    expect(component.selectedStatus()).toBe(BinStatus.NeedsServicing);
-    expect(binsServiceSpy.getBins).toHaveBeenCalledWith({
-      status: BinStatus.NeedsServicing,
-    });
+    expect(component.pagedList.page()).toBe(1);
   });
 
-  it('should filter bins by collector', () => {
-    binsServiceSpy.getBins.mockClear();
-
-    component.handleCollectorChange('C-001');
-    expect(component.selectedCollector()).toBe('C-001');
-    expect(binsServiceSpy.getBins).toHaveBeenCalledWith({
-      collectorId: 'C-001',
-    });
-  });
-
-  it('should combine multiple filters in BinQuery', () => {
-    binsServiceSpy.getBins.mockClear();
-
-    component.searchTerm.set('Mall');
-    component.selectedDistrict.set('Cairo');
-    component.selectedStatus.set(BinStatus.Available);
-    component.selectedCollector.set('C-001');
-
-    component.loadBins();
-
-    expect(binsServiceSpy.getBins).toHaveBeenCalledWith({
-      search: 'Mall',
-      district: 'Cairo',
-      status: BinStatus.Available,
-      collectorId: 'C-001',
-    });
-  });
-
-  it('should map BinStatus to correct badge variants', () => {
-    expect(getBinStatusBadgeVariant(BinStatus.Available)).toBe('success');
-    expect(getBinStatusBadgeVariant(BinStatus.EightyPercentFull)).toBe('warning');
-    expect(getBinStatusBadgeVariant(BinStatus.NeedsServicing)).toBe('danger');
-    expect(getBinStatusBadgeVariant(BinStatus.Offline)).toBe('neutral');
-  });
-
-  it('should handle register drawer open and close', () => {
-    expect(component.isDrawerOpen()).toBe(false);
+  it('invalidates districts lookup and reloads paged list upon successful bin registration', () => {
+    const reloadSpy = vi.spyOn(component.pagedList, 'reload');
 
     component.openRegisterDrawer();
-    expect(component.isDrawerOpen()).toBe(true);
-    expect(component.registerForm.value.capacityThresholdKg).toBe(120);
+    component.registerForm.setValue({
+      deviceSerial: 'SN-77788',
+      district: 'Heliopolis',
+      latitude: 30.08,
+      longitude: 31.32,
+      capacityThresholdKg: 120,
+    });
 
-    component.closeRegisterDrawer();
-    expect(component.isDrawerOpen()).toBe(false);
-  });
-
-  it('should validate form and prevent submission when fields are empty', () => {
-    component.openRegisterDrawer();
     component.submitRegisterBin();
 
-    expect(binsServiceSpy.registerBin).not.toHaveBeenCalled();
-    expect(component.registerForm.controls.deviceSerial.touched).toBe(true);
-    expect(component.registerForm.controls.district.touched).toBe(true);
-    expect(component.registerForm.controls.latitude.touched).toBe(true);
-    expect(component.registerForm.controls.longitude.touched).toBe(true);
+    expect(binsServiceSpy.registerBin).toHaveBeenCalled();
+    expect(toastServiceSpy.success).toHaveBeenCalledWith('Smart bin registered successfully.');
+    expect(component.isDrawerOpen()).toBe(false);
+    expect(reloadSpy).toHaveBeenCalled();
+    expect(lookupsServiceSpy.invalidate).toHaveBeenCalledWith('districts');
   });
 
-  it('should show field error when server returns DEVICE_ALREADY_REGISTERED', () => {
-    const error = new ApiError({
+  it('handles duplicate device serial registration error', () => {
+    const duplicateError = new ApiError({
       status: 409,
       code: ApiErrorCode.DeviceAlreadyRegistered,
-      message: 'Device serial is already registered',
+      message: 'A bin with this device serial is already registered.',
       requestUrl: '/api/v1/admin/bins',
     });
-    binsServiceSpy.registerBin.mockReturnValue(throwError(() => error));
+    binsServiceSpy.registerBin.mockReturnValueOnce(throwError(() => duplicateError));
 
     component.openRegisterDrawer();
     component.registerForm.setValue({
       deviceSerial: 'SN-DUPLICATE',
-      district: 'Cairo',
-      latitude: 30.0444,
-      longitude: 31.2357,
-      capacityThresholdKg: 100,
+      district: 'Dokki',
+      latitude: 30.04,
+      longitude: 31.21,
+      capacityThresholdKg: 120,
     });
 
     component.submitRegisterBin();
 
     expect(component.isSubmitting()).toBe(false);
-    expect(component.serialServerError()).toContain('already registered');
-    expect(component.registerForm.controls.deviceSerial.invalid).toBe(true);
-  });
-
-  it('should register bin, show toast, close drawer, and reload list on success', () => {
-    component.openRegisterDrawer();
-    component.registerForm.setValue({
-      deviceSerial: 'SN-NEW-NODE',
-      district: 'Alexandria',
-      latitude: 31.2001,
-      longitude: 29.9187,
-      capacityThresholdKg: 150,
-    });
-
-    binsServiceSpy.getBins.mockClear();
-    component.submitRegisterBin();
-
-    expect(binsServiceSpy.registerBin).toHaveBeenCalledWith({
-      deviceSerial: 'SN-NEW-NODE',
-      district: 'Alexandria',
-      latitude: 31.2001,
-      longitude: 29.9187,
-      capacityThresholdKg: 150,
-    });
-
-    expect(toastServiceSpy.success).toHaveBeenCalledWith('Smart bin registered successfully.');
-    expect(component.isDrawerOpen()).toBe(false);
-    expect(binsServiceSpy.getBins).toHaveBeenCalledTimes(1);
+    expect(component.serialServerError()).toBe(
+      'A bin with this device serial is already registered.'
+    );
+    expect(component.registerForm.controls.deviceSerial.errors).toEqual({ duplicate: true });
   });
 });

@@ -47,7 +47,7 @@
       <button
         type="button"
         class="filter-action-link"
-        (click)="filterByStatus('pending')"
+        (click)="filterByStatus(InspectionReportStatus.Pending)"
       >
         Show pending →
       </button>
@@ -66,7 +66,7 @@
       <button
         type="button"
         class="filter-action-link"
-        (click)="filterByStatus('reviewed')"
+        (click)="filterByStatus(InspectionReportStatus.Reviewed)"
       >
         Show reviewed →
       </button>
@@ -79,7 +79,7 @@
       <div class="filter-item search-filter">
         <app-search-input
           placeholder="Search by AIR ID, bin, waste category..."
-          [value]="searchTerm()"
+          [value]="pagedList.filters().search || ''"
           (valueChange)="handleSearch($event)"
           (search)="handleSearch($event)"
         />
@@ -88,7 +88,7 @@
       <div class="filter-item status-filter">
         <app-select
           [options]="statusOptions"
-          [value]="selectedStatus()"
+          [value]="pagedList.filters().status || ''"
           placeholder="All statuses"
           (valueChange)="handleStatusChange($event)"
         />
@@ -97,22 +97,28 @@
   </div>
 
   <!-- Table or Error State -->
-  @if (error()) {
+  @if (pagedList.error() && pagedList.items().length === 0) {
     <div class="error-container">
       <app-resource-state
-        [error]="error()"
-        (retry)="loadReports()"
+        [error]="pagedList.error()"
+        (retry)="pagedList.reload()"
       />
     </div>
   } @else {
     <div class="table-container">
       <app-data-table
         [columns]="tableColumns"
-        [data]="reports()"
-        [loading]="isLoadingReports()"
-        mode="client"
+        [data]="pagedList.items()"
+        [loading]="pagedList.refreshing() || pagedList.loading()"
+        mode="server"
         [showPagination]="true"
-        [pageSize]="10"
+        [page]="pagedList.page()"
+        [pageSize]="pagedList.pageSize()"
+        [total]="pagedList.total()"
+        [sortColumn]="pagedList.sortBy()"
+        [sortDir]="pagedList.sortDir()"
+        (pageChange)="pagedList.setPage($event)"
+        (sortChange)="pagedList.setSort($event.key, $event.dir)"
         [rowClickable]="true"
         (rowClick)="navigateToDetail($event)"
         emptyTitle="No inspection reports found"

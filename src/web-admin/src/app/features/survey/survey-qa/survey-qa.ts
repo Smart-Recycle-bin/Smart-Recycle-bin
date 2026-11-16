@@ -9,10 +9,10 @@ import {
 } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { forkJoin } from 'rxjs';
 import { SurveyQaService } from '../../../core/services/survey/survey-qa.service';
 import {
   RecentSurveyRow,
+  SurveyQaQuery,
   SurveyQaSummary,
 } from '../../../core/models/survey/survey.view-model';
 import {
@@ -40,6 +40,7 @@ import { CellTemplateDirective } from '../../../shared/components/table/data-tab
 import { MonoIdCell } from '../../../shared/components/table/cells/mono-id-cell/mono-id-cell';
 import { ResourceState } from '../../../shared/components/resource-state/resource-state';
 import { Skeleton } from '../../../shared/components/skeleton/skeleton';
+import { createPagedList } from '../../../shared/utils/paged-list';
 import {
   BIN_REJECTION_THRESHOLDS,
   formatShortDate,
@@ -82,9 +83,13 @@ export class SurveyQa implements OnInit {
   readonly binThresholds = BIN_REJECTION_THRESHOLDS;
 
   readonly summary = signal<SurveyQaSummary | null>(null);
-  readonly recentSurveys = signal<RecentSurveyRow[]>([]);
   readonly isLoading = signal<boolean>(true);
   readonly error = signal<unknown>(null);
+
+  readonly pagedList = createPagedList<RecentSurveyRow, SurveyQaQuery>({
+    fetch: (query) => this.surveyQaService.getRecentSurveys(query),
+    initial: { pageSize: 6 },
+  });
 
   readonly kpis = computed(() => this.summary()?.kpis ?? null);
 
@@ -165,18 +170,12 @@ export class SurveyQa implements OnInit {
     this.isLoading.set(true);
     this.error.set(null);
 
-    // Prompt F9 requirement: Call getQaSummary() without a period, and getRecentSurveys() for the table.
-    // Note: summary.recentSurveys duplicates getRecentSurveys(); per scope we load table data from getRecentSurveys().
-    forkJoin({
-      summary: this.surveyQaService.getQaSummary(),
-      recentSurveys: this.surveyQaService.getRecentSurveys(),
-    })
+    this.surveyQaService
+      .getQaSummary()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: ({ summary, recentSurveys }) => {
+        next: (summary) => {
           this.summary.set(summary);
-          // TODO(prompt-3): full server-side pagination UI
-          this.recentSurveys.set(recentSurveys.items);
           this.isLoading.set(false);
         },
         error: (err) => {
@@ -184,6 +183,11 @@ export class SurveyQa implements OnInit {
           this.isLoading.set(false);
         },
       });
+  }
+
+  reload(): void {
+    this.loadData();
+    this.pagedList.reload();
   }
 
   readonly getRowId = (row: RecentSurveyRow): string => row.sessionId;

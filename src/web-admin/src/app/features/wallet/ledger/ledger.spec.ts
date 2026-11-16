@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { of, throwError } from 'rxjs';
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { of, throwError, Subject } from 'rxjs';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { Ledger } from './ledger';
 import { LedgerService } from '../../../core/services/wallet/ledger.service';
 import { RecyclersService } from '../../../core/services/user/recyclers.service';
@@ -35,14 +35,18 @@ describe('Ledger Component', () => {
   };
 
   beforeEach(async () => {
+    vi.useFakeTimers();
+
     ledgerServiceSpy = {
-      getLedger: vi.fn().mockReturnValue(of({
-        items: MOCK_LEDGER_ROWS,
-        page: 1,
-        pageSize: 10,
-        totalItems: MOCK_LEDGER_ROWS.length,
-        totalPages: Math.ceil(MOCK_LEDGER_ROWS.length / 10),
-      })),
+      getLedger: vi.fn().mockReturnValue(
+        of({
+          items: MOCK_LEDGER_ROWS,
+          page: 1,
+          pageSize: 10,
+          totalItems: MOCK_LEDGER_ROWS.length,
+          totalPages: Math.ceil(MOCK_LEDGER_ROWS.length / 10),
+        })
+      ),
       adjustPoints: vi.fn().mockReturnValue(
         of({
           transactionId: 'tx_adj_001',
@@ -54,13 +58,15 @@ describe('Ledger Component', () => {
     };
 
     recyclersServiceSpy = {
-      getRecyclers: vi.fn().mockReturnValue(of({
-        items: MOCK_RECYCLERS,
-        page: 1,
-        pageSize: 10,
-        totalItems: MOCK_RECYCLERS.length,
-        totalPages: Math.ceil(MOCK_RECYCLERS.length / 10),
-      })),
+      getRecyclers: vi.fn().mockReturnValue(
+        of({
+          items: MOCK_RECYCLERS,
+          page: 1,
+          pageSize: 20,
+          totalItems: MOCK_RECYCLERS.length,
+          totalPages: Math.ceil(MOCK_RECYCLERS.length / 20),
+        })
+      ),
     };
 
     toastServiceSpy = {
@@ -80,234 +86,216 @@ describe('Ledger Component', () => {
 
     fixture = TestBed.createComponent(Ledger);
     component = fixture.componentInstance;
-    await fixture.whenStable();
     fixture.detectChanges();
   });
 
-  it('should initialize and load ledger transactions on mount', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('should initialize and load ledger transactions on mount via pagedList sorted newest first', () => {
     expect(component).toBeTruthy();
     expect(ledgerServiceSpy.getLedger).toHaveBeenCalledTimes(1);
-    expect(component.ledgerRows().length).toBe(MOCK_LEDGER_ROWS.length);
-    expect(component.isLoading()).toBe(false);
-    expect(component.error()).toBeNull();
-  });
-
-  it('should filter ledger by search query', () => {
-    ledgerServiceSpy.getLedger.mockClear();
-
-    component.handleSearch('Omar');
-    expect(component.searchTerm()).toBe('Omar');
-    expect(ledgerServiceSpy.getLedger).toHaveBeenCalledWith({
-      search: 'Omar',
-    });
-  });
-
-  it('should filter ledger by source type', () => {
-    ledgerServiceSpy.getLedger.mockClear();
-
-    component.handleTypeChange(LedgerSource.ManualAdjustment);
-    expect(component.selectedSource()).toBe(LedgerSource.ManualAdjustment);
-    expect(ledgerServiceSpy.getLedger).toHaveBeenCalledWith({
-      source: LedgerSource.ManualAdjustment,
-    });
-  });
-
-  it('should filter ledger by date range', () => {
-    ledgerServiceSpy.getLedger.mockClear();
-
-    component.handleDateRangeChange({
-      from: '2025-06-01',
-      to: '2025-06-15',
-    });
-
-    expect(ledgerServiceSpy.getLedger).toHaveBeenCalledWith({
-      from: '2025-06-01',
-      to: '2025-06-15',
-    });
-  });
-
-  it('should combine search, source, and date range in LedgerQuery', () => {
-    ledgerServiceSpy.getLedger.mockClear();
-
-    component.searchTerm.set('BIN-0001');
-    component.selectedSource.set(LedgerSource.SessionConfirm);
-    component.handleDateRangeChange({
-      from: '2025-06-10',
-      to: '2025-06-14',
-    });
-
-    expect(ledgerServiceSpy.getLedger).toHaveBeenCalledWith({
-      search: 'BIN-0001',
-      source: LedgerSource.SessionConfirm,
-      from: '2025-06-10',
-      to: '2025-06-14',
-    });
-  });
-
-  it('should open manual adjustment drawer and load recyclers', () => {
-    component.openAdjustmentDrawer();
-
-    expect(component.isAdjustmentDrawerOpen()).toBe(true);
-    expect(recyclersServiceSpy.getRecyclers).toHaveBeenCalledTimes(1);
-    expect(component.userOptions().length).toBe(MOCK_RECYCLERS.length);
-    expect(component.adjustmentType()).toBe(LedgerEntryType.Credit);
-  });
-
-  it('should validate adjustment form required fields and minimum amount', () => {
-    component.openAdjustmentDrawer();
-
-    component.adjustmentForm.controls.userId.setValue('');
-    component.adjustmentForm.controls.amount.setValue(0);
-    component.adjustmentForm.controls.reasonNote.setValue('');
-
-    component.submitAdjustment();
-
-    expect(ledgerServiceSpy.adjustPoints).not.toHaveBeenCalled();
-    expect(component.userFieldError()).toBe('Target user is required');
-    expect(component.amountFieldError()).toBe('Amount must be greater than zero');
-  });
-
-  it('should submit manual adjustment request with credit type, toast, close drawer, and reload', () => {
-    ledgerServiceSpy.getLedger.mockClear();
-    component.openAdjustmentDrawer();
-
-    component.adjustmentForm.setValue({
-      userId: 'U-10021',
-      amount: 250,
-      reasonCode: 'PROMOTION_BONUS',
-      reasonNote: 'Special Earth Day community participation bonus',
-    });
-
-    component.submitAdjustment();
-
-    expect(ledgerServiceSpy.adjustPoints).toHaveBeenCalledWith({
-      userId: 'U-10021',
-      amount: 250,
-      type: LedgerEntryType.Credit,
-      reasonCode: 'PROMOTION_BONUS',
-      reasonNote: 'Special Earth Day community participation bonus',
-    });
-    expect(toastServiceSpy.success).toHaveBeenCalled();
-    expect(component.isAdjustmentDrawerOpen()).toBe(false);
-    expect(ledgerServiceSpy.getLedger).toHaveBeenCalledTimes(1);
-  });
-
-  it('should submit manual adjustment request with debit type', () => {
-    component.openAdjustmentDrawer();
-    component.handleAdjustmentTypeChange(LedgerEntryType.Debit);
-
-    component.adjustmentForm.setValue({
-      userId: 'U-10034',
-      amount: 100,
-      reasonCode: 'CORRECTION_CLAWBACK',
-      reasonNote: 'Duplicate disposal credit adjustment clawback',
-    });
-
-    component.submitAdjustment();
-
-    expect(ledgerServiceSpy.adjustPoints).toHaveBeenCalledWith({
-      userId: 'U-10034',
-      amount: 100,
-      type: LedgerEntryType.Debit,
-      reasonCode: 'CORRECTION_CLAWBACK',
-      reasonNote: 'Duplicate disposal credit adjustment clawback',
-    });
-    expect(toastServiceSpy.success).toHaveBeenCalled();
-  });
-
-  it('should map INSUFFICIENT_BALANCE error to amount control', () => {
-    const error400 = new ApiError({
-      message: 'Insufficient balance',
-      code: ApiErrorCode.InsufficientBalance,
-      status: 400,
-      requestUrl: '/api/v1/admin/ledger/adjustments',
-    });
-    ledgerServiceSpy.adjustPoints.mockReturnValue(throwError(() => error400));
-
-    component.openAdjustmentDrawer();
-    component.adjustmentForm.setValue({
-      userId: 'U-10021',
-      amount: 999999,
-      reasonCode: 'DEBIT_TEST',
-      reasonNote: 'Testing large debit',
-    });
-
-    component.submitAdjustment();
-
-    expect(component.adjustmentForm.controls.amount.hasError('insufficientBalance')).toBe(true);
-    expect(component.amountFieldError()).toBe(
-      'User has insufficient available points for this debit adjustment'
-    );
-    expect(component.isAdjustmentDrawerOpen()).toBe(true);
-  });
-
-  it('should map NOT_FOUND error to user control', () => {
-    const error404 = new ApiError({
-      message: 'User not found',
-      code: ApiErrorCode.NotFound,
-      status: 404,
-      requestUrl: '/api/v1/admin/ledger/adjustments',
-    });
-    ledgerServiceSpy.adjustPoints.mockReturnValue(throwError(() => error404));
-
-    component.openAdjustmentDrawer();
-    component.adjustmentForm.setValue({
-      userId: 'U-INVALID-USER',
-      amount: 50,
-      reasonCode: 'TEST',
-      reasonNote: 'Testing non-existent user',
-    });
-
-    component.submitAdjustment();
-
-    expect(component.adjustmentForm.controls.userId.hasError('notFound')).toBe(true);
-    expect(component.userFieldError()).toBe('Target recycler account was not found');
-    expect(component.isAdjustmentDrawerOpen()).toBe(true);
-  });
-
-  it('should render error state on initial load failure and retry successfully', () => {
-    ledgerServiceSpy.getLedger.mockReturnValueOnce(
-      throwError(() => ({ message: 'Failed to fetch ledger' }))
-    );
-
-    component.loadLedger();
-
-    expect(component.isLoading()).toBe(false);
-    expect(component.error()).toBeTruthy();
-
-    ledgerServiceSpy.getLedger.mockReturnValueOnce(
-      of({
-        items: MOCK_LEDGER_ROWS,
+    expect(ledgerServiceSpy.getLedger).toHaveBeenCalledWith(
+      expect.objectContaining({
         page: 1,
         pageSize: 10,
-        totalItems: MOCK_LEDGER_ROWS.length,
-        totalPages: 1,
+        sortBy: 'timestamp',
+        sortDir: 'desc',
       })
     );
-    component.loadLedger();
-
-    expect(component.error()).toBeNull();
-    expect(component.ledgerRows().length).toBe(MOCK_LEDGER_ROWS.length);
+    expect(component.pagedList.items().length).toBe(MOCK_LEDGER_ROWS.length);
+    expect(component.pagedList.loading()).toBe(false);
   });
 
-  it('should correctly format points, map tones, truncate IDs, and map source badges', () => {
+  it('debounces rapid search keystrokes: typing "omar" fires exactly 1 request', () => {
+    ledgerServiceSpy.getLedger.mockClear();
+
+    component.handleSearch('o');
+    vi.advanceTimersByTime(50);
+    component.handleSearch('om');
+    vi.advanceTimersByTime(50);
+    component.handleSearch('oma');
+    vi.advanceTimersByTime(50);
+    component.handleSearch('omar');
+
+    expect(ledgerServiceSpy.getLedger).not.toHaveBeenCalled();
+
+    vi.advanceTimersByTime(300);
+
+    expect(ledgerServiceSpy.getLedger).toHaveBeenCalledTimes(1);
+    expect(ledgerServiceSpy.getLedger).toHaveBeenCalledWith(
+      expect.objectContaining({
+        search: 'omar',
+        page: 1,
+      })
+    );
+  });
+
+  it('handles race conditions: slow first request is cancelled by faster second request', () => {
+    const slowSubject = new Subject<any>();
+    const fastSubject = new Subject<any>();
+    let call = 0;
+
+    ledgerServiceSpy.getLedger.mockImplementation(() => {
+      call++;
+      return call === 1 ? slowSubject : fastSubject;
+    });
+
+    component.pagedList.setPage(2);
+    component.pagedList.setPage(3);
+
+    fastSubject.next({
+      items: [{ ...MOCK_LEDGER_ROWS[0], transactionId: 'tx-fast' }],
+      page: 3,
+      pageSize: 10,
+      totalItems: 30,
+      totalPages: 3,
+    });
+    fastSubject.complete();
+
+    expect(component.pagedList.items()[0].transactionId).toBe('tx-fast');
+
+    slowSubject.next({
+      items: [{ ...MOCK_LEDGER_ROWS[0], transactionId: 'tx-slow' }],
+      page: 2,
+      pageSize: 10,
+      totalItems: 30,
+      totalPages: 3,
+    });
+    slowSubject.complete();
+
+    expect(component.pagedList.items()[0].transactionId).toBe('tx-fast');
+  });
+
+  it('resets page to 1 on filter changes', () => {
+    component.pagedList.setPage(2);
+    expect(component.pagedList.page()).toBe(2);
+
+    component.handleSourceChange(LedgerSource.ManualAdjustment);
+    expect(component.pagedList.page()).toBe(1);
+
+    component.pagedList.setPage(2);
+    expect(component.pagedList.page()).toBe(2);
+
+    component.handleDateRangeChange({ from: '2026-01-01', to: '2026-01-31' });
+    expect(component.pagedList.page()).toBe(1);
+  });
+
+  it('fetches recyclers with pageSize 20 for typeahead in adjustment drawer', () => {
+    let options: any[] = [];
+    component.fetchRecyclers('Nour').subscribe((opts) => {
+      options = opts;
+    });
+
+    expect(recyclersServiceSpy.getRecyclers).toHaveBeenCalledWith({
+      search: 'Nour',
+      pageSize: 20,
+    });
+    expect(options.length).toBe(MOCK_RECYCLERS.length);
+    expect(options[0].value).toBe(MOCK_RECYCLERS[0].userId);
+  });
+
+  it('submits manual credit adjustment successfully and reloads pagedList', () => {
+    const reloadSpy = vi.spyOn(component.pagedList, 'reload');
+
+    component.openAdjustmentDrawer();
+    component.adjustmentType.set(LedgerEntryType.Credit);
+    component.adjustmentForm.setValue({
+      userId: 'U-10021',
+      amount: 150,
+      reasonCode: 'PROMOTION_BONUS',
+      reasonNote: 'Community event bonus',
+    });
+
+    component.submitAdjustment();
+
+    expect(ledgerServiceSpy.adjustPoints).toHaveBeenCalledWith({
+      userId: 'U-10021',
+      amount: 150,
+      type: LedgerEntryType.Credit,
+      reasonCode: 'PROMOTION_BONUS',
+      reasonNote: 'Community event bonus',
+    });
+    expect(toastServiceSpy.success).toHaveBeenCalledWith(
+      'Manual points adjustment recorded successfully'
+    );
+    expect(component.isAdjustmentDrawerOpen()).toBe(false);
+    expect(reloadSpy).toHaveBeenCalled();
+  });
+
+  it('submits manual debit adjustment with negated delta', () => {
+    const reloadSpy = vi.spyOn(component.pagedList, 'reload');
+
+    component.openAdjustmentDrawer();
+    component.handleAdjustmentTypeChange(LedgerEntryType.Debit);
+    component.adjustmentForm.setValue({
+      userId: 'U-10021',
+      amount: 75,
+      reasonCode: 'ADMIN_CORRECTION',
+      reasonNote: 'Clawback due to disputed survey',
+    });
+
+    component.submitAdjustment();
+
+    expect(ledgerServiceSpy.adjustPoints).toHaveBeenCalledWith({
+      userId: 'U-10021',
+      amount: -75,
+      type: LedgerEntryType.Debit,
+      reasonCode: 'ADMIN_CORRECTION',
+      reasonNote: 'Clawback due to disputed survey',
+    });
+    expect(reloadSpy).toHaveBeenCalled();
+  });
+
+  it('handles insufficient balance error on debit adjustment', () => {
+    const insufficientBalanceError = new ApiError({
+      status: 422,
+      code: ApiErrorCode.InsufficientBalance,
+      message: 'User has insufficient points for this deduction',
+      requestUrl: '/api/v1/admin/wallet/adjust',
+    });
+    ledgerServiceSpy.adjustPoints.mockReturnValueOnce(
+      throwError(() => insufficientBalanceError)
+    );
+
+    component.openAdjustmentDrawer();
+    component.handleAdjustmentTypeChange(LedgerEntryType.Debit);
+    component.adjustmentForm.setValue({
+      userId: 'U-10021',
+      amount: 99999,
+      reasonCode: 'ADMIN_CORRECTION',
+      reasonNote: 'Excessive debit',
+    });
+
+    component.submitAdjustment();
+
+    expect(component.isSubmitting()).toBe(false);
+    expect(component.amountServerError()).toBe(
+      'User has insufficient available points for this debit adjustment'
+    );
+    expect(component.adjustmentForm.controls.amount.errors).toEqual({
+      insufficientBalance: true,
+    });
+  });
+
+  it('formats points correctly with +/- signs and handles tones', () => {
     expect(formatSignedPoints(150)).toBe('+150');
-    expect(formatSignedPoints(-420)).toBe('-420');
+    expect(formatSignedPoints(-50)).toBe('-50');
     expect(formatSignedPoints(0)).toBe('0');
 
     expect(getPointsTone(100)).toBe('positive');
-    expect(getPointsTone(-50)).toBe('negative');
+    expect(getPointsTone(-100)).toBe('negative');
     expect(getPointsTone(0)).toBe('default');
+  });
 
-    expect(component.truncateId('7f3a23a0-4c1e-4c12-92e1-000000000001')).toBe('7f3a23a0-4…');
-    expect(component.truncateId('tx_short')).toBe('tx_short');
-
+  it('maps ledger source types to expected badge variant and labels', () => {
     expect(getLedgerSourceBadgeVariant(LedgerSource.SessionConfirm)).toBe('success');
-    expect(getLedgerSourceBadgeVariant(LedgerSource.VoucherRedemption)).toBe('neutral');
     expect(getLedgerSourceBadgeVariant(LedgerSource.ManualAdjustment)).toBe('warning');
+    expect(getLedgerSourceBadgeVariant(LedgerSource.VoucherRedemption)).toBe('neutral');
 
     expect(getLedgerSourceLabel(LedgerSource.SessionConfirm)).toBe('Disposal credit');
-    expect(getLedgerSourceLabel(LedgerSource.VoucherRedemption)).toBe('Redemption debit');
     expect(getLedgerSourceLabel(LedgerSource.ManualAdjustment)).toBe('Manual adjustment');
+    expect(getLedgerSourceLabel(LedgerSource.VoucherRedemption)).toBe('Redemption debit');
   });
 });

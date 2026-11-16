@@ -1,13 +1,12 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  DestroyRef,
   inject,
-  OnInit,
-  signal,
 } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { map } from 'rxjs';
 import { AuditLogService } from '../../../core/services/audit/audit-log.service';
+import { LookupsService } from '../../../core/services/lookup/lookups.service';
 import {
   AuditLogQuery,
   AuditLogRow,
@@ -34,6 +33,7 @@ import { ResourceState } from '../../../shared/components/resource-state/resourc
 import { Skeleton } from '../../../shared/components/skeleton/skeleton';
 import { TooltipDirective } from '../../../shared/components/tooltip/tooltip.directive';
 import { DateTimePipe } from '../../../shared/pipes';
+import { createPagedList } from '../../../shared/utils/paged-list';
 import {
   ACTION_TYPE_FILTER_OPTIONS,
   AUDIT_ACTION_BADGE_VARIANTS,
@@ -63,118 +63,64 @@ import {
   styleUrl: './audit-logs.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class AuditLogs implements OnInit {
+export class AuditLogs {
   private readonly auditLogService = inject(AuditLogService);
-  private readonly destroyRef = inject(DestroyRef);
+  private readonly lookupsService = inject(LookupsService);
 
   readonly columns = AUDIT_TABLE_COLUMNS;
   readonly actionTypeFilterOptions = ACTION_TYPE_FILTER_OPTIONS;
 
-  readonly auditLogs = signal<AuditLogRow[]>([]);
-  readonly isLoading = signal<boolean>(true);
-  readonly error = signal<unknown>(null);
+  readonly pagedList = createPagedList<AuditLogRow, AuditLogQuery>({
+    fetch: (query) => this.auditLogService.getAuditLogs(query),
+    initial: {
+      pageSize: 8,
+      sortBy: 'timestamp',
+      sortDir: 'desc',
+    },
+    debounceKeys: ['resourceId'],
+    debounceMs: 300,
+  });
 
-  // Filters
-  readonly selectedAdminId = signal<string>('');
-  readonly selectedActionType = signal<AuditActionType | ''>('');
-  readonly resourceIdFilter = signal<string>('');
-  readonly dateRange = signal<DateRangeValue>({ from: null, to: null });
+  // Backward compatible delegates for template and tests
+  readonly auditLogs = this.pagedList.items;
+  readonly isLoading = this.pagedList.loading;
+  readonly error = this.pagedList.error;
 
-  // Admin select options derived from initial unfiltered load so choosing an admin does not shrink the options
-  readonly adminOptions = signal<SelectOption[]>([{ label: 'All admins', value: '' }]);
-  private hasPopulatedAdminOptions = false;
-
-  ngOnInit(): void {
-    this.loadAuditLogs();
-  }
-
-  loadAuditLogs(): void {
-    this.isLoading.set(true);
-    this.error.set(null);
-
-    const query: AuditLogQuery = {};
-
-    if (this.selectedAdminId()) {
-      query.adminId = this.selectedAdminId();
-    }
-
-    if (this.selectedActionType()) {
-      query.actionType = this.selectedActionType() as AuditActionType;
-    }
-
-    const resId = this.resourceIdFilter().trim();
-    if (resId) {
-      query.resourceId = resId;
-    }
-
-    const range = this.dateRange();
-    if (range.from) {
-      query.from = range.from;
-    }
-    if (range.to) {
-      query.to = range.to;
-    }
-
-    this.auditLogService
-      .getAuditLogs(query)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (page) => {
-          // TODO(prompt-3): full server-side pagination UI
-          const rows = page.items;
-          this.auditLogs.set(rows);
-          this.isLoading.set(false);
-
-          // Populate admin filter options once from unfiltered dataset so selection stays stable
-          if (!this.hasPopulatedAdminOptions && Object.keys(query).length === 0) {
-            this.populateAdminOptions(rows);
-            this.hasPopulatedAdminOptions = true;
-          }
-        },
-        error: (err) => {
-          this.error.set(err);
-          this.isLoading.set(false);
-        },
-      });
-  }
-
-  private populateAdminOptions(rows: AuditLogRow[]): void {
-    const adminMap = new Map<string, string>();
-    for (const r of rows) {
-      if (!adminMap.has(r.adminId)) {
-        adminMap.set(r.adminId, `${r.adminId} · ${r.adminName}`);
-      }
-    }
-
-    const options: SelectOption[] = [
-      { label: 'All admins', value: '' },
-      ...Array.from(adminMap.entries()).map(([value, label]) => ({
-        value,
-        label,
-      })),
-    ];
-
-    this.adminOptions.set(options);
-  }
+  // Admin options from LookupsService
+  readonly adminOptions = toSignal(
+    this.lookupsService.getAdmins().pipe(
+      map((admins): SelectOption[] => [
+        { label: 'All admins', value: '' },
+        ...admins.map((a) => ({
+          label: `${a.adminId} · ${a.displayName}`,
+          value: a.adminId,
+        })),
+      ])
+    ),
+    { initialValue: [{ label: 'All admins', value: '' }] as SelectOption[] }
+  );
 
   handleAdminChange(adminId: string | number): void {
-    this.selectedAdminId.set(String(adminId));
-    this.loadAuditLogs();
+    this.pagedList.patchFilters({ adminId: adminId ? String(adminId) : undefined });
   }
 
   handleActionChange(action: string | number): void {
-    this.selectedActionType.set((action || '') as AuditActionType | '');
-    this.loadAuditLogs();
+    this.pagedList.patchFilters({ actionType: action ? (action as AuditActionType) : undefined });
   }
 
   handleResourceIdChange(resourceId: string): void {
-    this.resourceIdFilter.set(resourceId);
-    this.loadAuditLogs();
+    this.pagedList.patchFilters({ resourceId: resourceId || undefined });
   }
 
   handleDateRangeChange(range: DateRangeValue): void {
-    this.dateRange.set(range);
-    this.loadAuditLogs();
+    this.pagedList.patchFilters({
+      from: range.from || undefined,
+      to: range.to || undefined,
+    });
+  }
+
+  loadAuditLogs(): void {
+    this.pagedList.reload();
   }
 
   getActionBadgeVariant(action: AuditActionType): BadgeVariant {

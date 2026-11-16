@@ -11,7 +11,7 @@
       <div class="filter-item search-filter">
         <app-search-input
           placeholder="Search by name, email, phone, or ID..."
-          [value]="searchTerm()"
+          [value]="pagedList.filters().search || ''"
           (valueChange)="handleSearch($event)"
           (search)="handleSearch($event)"
         />
@@ -20,7 +20,7 @@
       <div class="filter-item status-filter">
         <app-select
           [options]="statusOptions"
-          [value]="selectedStatus()"
+          [value]="pagedList.filters().status || ''"
           placeholder="All statuses"
           (valueChange)="handleStatusChange($event)"
         />
@@ -29,24 +29,30 @@
   </div>
 
   <!-- Table or Error State -->
-  @if (error()) {
+  @if (pagedList.error() && pagedList.items().length === 0) {
     <div class="error-container">
       <app-resource-state
-        [error]="error()"
-        (retry)="loadRecyclers()"
+        [error]="pagedList.error()"
+        (retry)="pagedList.reload()"
       />
     </div>
   } @else {
     <div class="table-container">
       <app-data-table
         [columns]="tableColumns"
-        [data]="recyclers()"
-        [loading]="isLoading()"
+        [data]="pagedList.items()"
+        [loading]="pagedList.refreshing() || pagedList.loading()"
         [actions]="tableActions"
         (actionClicked)="handleTableAction($event)"
-        mode="client"
+        mode="server"
+        [page]="pagedList.page()"
+        [pageSize]="pagedList.pageSize()"
+        [total]="pagedList.total()"
+        [sortColumn]="pagedList.sortBy()"
+        [sortDir]="pagedList.sortDir()"
         [showPagination]="true"
-        [pageSize]="10"
+        (pageChange)="pagedList.setPage($event)"
+        (sortChange)="pagedList.setSort($event.key, $event.dir)"
         emptyTitle="No recyclers found"
         emptyDescription="No recycler accounts match the search and status criteria."
       >
@@ -72,13 +78,6 @@
           />
         </ng-template>
 
-        <!-- Custom Sessions Cell Template -->
-        <ng-template appCell="sessions" let-row>
-          <app-number-cell
-            [value]="(row.sessions | number:'1.0-0') ?? '0'"
-          />
-        </ng-template>
-
         <!-- Custom Status Badge Cell Template -->
         <ng-template appCell="status" let-row>
           <app-badge
@@ -89,44 +88,43 @@
         </ng-template>
 
         <!-- Custom Joined Date Cell Template -->
-        <ng-template appCell="joined" let-row>
-          <span class="timestamp-text">{{ row.joined | dateOnly }}</span>
+        <ng-template appCell="joinedAt" let-row>
+          <span class="joined-date">{{ row.joinedAt | dateOnly }}</span>
         </ng-template>
       </app-data-table>
     </div>
   }
 
-  <!-- Suspend Account Modal -->
+  <!-- Suspension Justification Modal -->
   <app-modal
     [open]="isSuspendModalOpen()"
     title="Suspend Recycler Account"
-    description="Suspend a citizen account to prevent points accumulation and redemptions."
+    description="Suspending an account temporarily revokes access to the mobile application and rewards redemption."
     size="md"
     (closed)="closeSuspendModal()"
   >
-    @if (selectedRecycler(); as user) {
-      <div class="suspend-modal-content">
-        <div class="target-user-card">
+    <div class="modal-content">
+      @if (selectedRecycler()) {
+        <div class="target-user-info">
           <app-user-cell
-            [name]="user.name"
-            [subtitle]="user.userId"
+            [name]="selectedRecycler()!.name"
+            [subtitle]="selectedRecycler()!.userId + ' · ' + selectedRecycler()!.email"
           />
-          <span class="target-user-email">{{ user.email }}</span>
         </div>
+      }
 
-        <form [formGroup]="suspendForm" (ngSubmit)="confirmSuspend()" class="suspend-form">
-          <app-textarea
-            formControlName="reason"
-            label="Reason for suspension"
-            placeholder="Explain the reason for this action (e.g. repeated contamination, fraudulent activity)..."
-            [required]="true"
-            [rows]="3"
-            [error]="suspendReasonError()"
-          />
-          <p class="audit-note">This action will be recorded in the audit log.</p>
-        </form>
-      </div>
-    }
+      <form [formGroup]="suspendForm" (ngSubmit)="confirmSuspend()" class="suspend-form">
+        <app-textarea
+          formControlName="reason"
+          label="Reason for suspension"
+          placeholder="Enter administrative justification for audit logs..."
+          [required]="true"
+          [rows]="3"
+          [error]="suspendReasonError()"
+        />
+        <p class="audit-note">This action will be permanently recorded in the audit trail.</p>
+      </form>
+    </div>
 
     <div modal-footer class="modal-footer-actions">
       <app-button
@@ -147,12 +145,12 @@
     </div>
   </app-modal>
 
-  <!-- Unsuspend Account Confirmation Dialog -->
+  <!-- Restore Access Confirmation Dialog -->
   <app-confirm-dialog
     [open]="isUnsuspendDialogOpen()"
-    title="Unsuspend Recycler Account"
+    title="Restore Recycler Account"
     [description]="unsuspendDescription()"
-    confirmText="Unsuspend account"
+    confirmText="Restore account"
     cancelText="Cancel"
     [danger]="false"
     [loading]="isSubmitting()"

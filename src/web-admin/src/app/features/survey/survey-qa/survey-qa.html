@@ -162,46 +162,60 @@
         subtitle="Latest post-disposal survey evaluations submitted by recyclers"
         data-testid="recent-surveys-card"
       >
-        <app-data-table
-          [columns]="columns"
-          [data]="recentSurveys()"
-          [pageSize]="6"
-          mode="client"
-          [showPagination]="true"
-          [rowId]="getRowId"
-        >
-          <ng-template appCell="sessionId" let-row>
-            <app-mono-id-cell [value]="row.sessionId" />
-          </ng-template>
+        @if (pagedList.error() && pagedList.items().length === 0) {
+          <app-resource-state
+            [error]="pagedList.error()"
+            (retry)="pagedList.reload()"
+          />
+        } @else {
+          <app-data-table
+            [columns]="columns"
+            [data]="pagedList.items()"
+            [loading]="pagedList.refreshing() || pagedList.loading()"
+            mode="server"
+            [showPagination]="true"
+            [page]="pagedList.page()"
+            [pageSize]="pagedList.pageSize()"
+            [total]="pagedList.total()"
+            [sortColumn]="pagedList.sortBy()"
+            [sortDir]="pagedList.sortDir()"
+            (pageChange)="pagedList.setPage($event)"
+            (sortChange)="pagedList.setSort($event.key, $event.dir)"
+            [rowId]="getRowId"
+          >
+            <ng-template appCell="sessionId" let-row>
+              <app-mono-id-cell [value]="row.sessionId" />
+            </ng-template>
 
-          <ng-template appCell="userName" let-row>
-            <span class="font-medium text-text-primary">
-              {{ row.userName }}
-            </span>
-          </ng-template>
+            <ng-template appCell="userName" let-row>
+              <span class="font-medium text-text-primary">
+                {{ row.userName }}
+              </span>
+            </ng-template>
 
-          <ng-template appCell="itemsSummary" let-row>
-            <span class="text-text-secondary text-sm">
-              {{ row.itemsSummary }}
-            </span>
-          </ng-template>
+            <ng-template appCell="itemsSummary" let-row>
+              <span class="text-text-secondary text-sm">
+                {{ row.itemsSummary }}
+              </span>
+            </ng-template>
 
-          <ng-template appCell="points" let-row>
-            <span class="font-semibold text-text-primary text-sm">
-              +{{ row.points }} pts
-            </span>
-          </ng-template>
+            <ng-template appCell="points" let-row>
+              <span class="font-semibold text-text-primary text-sm">
+                +{{ row.points }} pts
+              </span>
+            </ng-template>
 
-          <ng-template appCell="result" let-row>
-            <app-badge
-              [variant]="getResultBadgeVariant(row.result)"
-              size="sm"
-              [dot]="true"
-            >
-              {{ getOutcomeLabel(row.result) }}
-            </app-badge>
-          </ng-template>
-        </app-data-table>
+            <ng-template appCell="result" let-row>
+              <app-badge
+                [variant]="getResultBadgeVariant(row.result)"
+                size="sm"
+                [dot]="true"
+              >
+                {{ getOutcomeLabel(row.result) }}
+              </app-badge>
+            </ng-template>
+          </app-data-table>
+        }
       </app-card>
     </div>
   }

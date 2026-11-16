@@ -1,6 +1,7 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  computed,
   DestroyRef,
   inject,
   OnInit,
@@ -10,6 +11,7 @@ import { DecimalPipe, NgClass } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { LeaderboardService } from '../../../core/services/gamification/leaderboard.service';
 import {
+  LeaderboardQuery,
   LeaderboardRow,
   MilestoneBadge,
 } from '../../../core/models/gamification/gamification.view-model';
@@ -24,6 +26,7 @@ import { UserCell } from '../../../shared/components/table/cells/user-cell/user-
 import { ResourceState } from '../../../shared/components/resource-state/resource-state';
 import { Skeleton } from '../../../shared/components/skeleton/skeleton';
 import { Icon } from '../../../shared/components/icon/icon';
+import { createPagedList } from '../../../shared/utils/paged-list';
 import {
   getRankBadgeClass,
   LEADERBOARD_TABLE_COLUMNS,
@@ -58,13 +61,21 @@ export class Leaderboards implements OnInit {
   readonly columns = LEADERBOARD_TABLE_COLUMNS;
   readonly getRankClass = getRankBadgeClass;
 
-  // Active Scope ('weekly' | 'monthly' | 'all-time')
-  readonly activeScope = signal<LeaderboardScope>(LeaderboardScope.Weekly);
+  // Paged list infrastructure
+  readonly pagedList = createPagedList<LeaderboardRow, LeaderboardQuery>({
+    fetch: (query) => this.leaderboardService.getLeaderboard(query),
+    initial: {
+      filters: { scope: LeaderboardScope.Weekly },
+    },
+  });
 
-  // Leaderboard Rankings State
-  readonly leaderboardRows = signal<LeaderboardRow[]>([]);
-  readonly isLoadingLeaderboard = signal<boolean>(true);
-  readonly leaderboardError = signal<unknown>(null);
+  // Active Scope ('weekly' | 'monthly' | 'all-time')
+  readonly activeScope = computed(() => this.pagedList.filters().scope ?? LeaderboardScope.Weekly);
+
+  // Leaderboard Rankings State (delegates to pagedList)
+  readonly leaderboardRows = this.pagedList.items;
+  readonly isLoadingLeaderboard = this.pagedList.loading;
+  readonly leaderboardError = this.pagedList.error;
 
   // Milestone Badges State (independent loading/error per prompt instructions)
   readonly milestoneBadges = signal<MilestoneBadge[]>([]);
@@ -72,29 +83,15 @@ export class Leaderboards implements OnInit {
   readonly badgesError = signal<unknown>(null);
 
   ngOnInit(): void {
-    this.loadLeaderboard(this.activeScope());
     this.loadBadges();
   }
 
   loadLeaderboard(scope?: LeaderboardScope): void {
-    const targetScope = scope ?? this.activeScope();
-    this.isLoadingLeaderboard.set(true);
-    this.leaderboardError.set(null);
-
-    this.leaderboardService
-      .getLeaderboard({ scope: targetScope })
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (page) => {
-          // TODO(prompt-3): full server-side pagination UI
-          this.leaderboardRows.set(page.items);
-          this.isLoadingLeaderboard.set(false);
-        },
-        error: (err) => {
-          this.leaderboardError.set(err);
-          this.isLoadingLeaderboard.set(false);
-        },
-      });
+    if (scope) {
+      this.pagedList.patchFilters({ scope });
+    } else {
+      this.pagedList.reload();
+    }
   }
 
   loadBadges(): void {
@@ -118,8 +115,7 @@ export class Leaderboards implements OnInit {
 
   handleTabChange(tabId: string): void {
     const scope = tabId as LeaderboardScope;
-    this.activeScope.set(scope);
-    this.loadLeaderboard(scope);
+    this.pagedList.patchFilters({ scope });
   }
 
   readonly getRowId = (row: LeaderboardRow): string => row.userId;

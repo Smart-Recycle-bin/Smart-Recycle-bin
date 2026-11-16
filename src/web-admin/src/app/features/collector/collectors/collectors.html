@@ -24,7 +24,7 @@
       <div class="filter-item search-filter">
         <app-search-input
           placeholder="Search by name, email, or phone..."
-          [value]="searchTerm()"
+          [value]="pagedList.filters().search || ''"
           (valueChange)="handleSearch($event)"
           (search)="handleSearch($event)"
         />
@@ -33,24 +33,30 @@
   </div>
 
   <!-- Table or Error State -->
-  @if (error()) {
+  @if (pagedList.error() && pagedList.items().length === 0) {
     <div class="error-container">
       <app-resource-state
-        [error]="error()"
-        (retry)="loadCollectors()"
+        [error]="pagedList.error()"
+        (retry)="pagedList.reload()"
       />
     </div>
   } @else {
     <div class="table-container">
       <app-data-table
         [columns]="tableColumns"
-        [data]="collectors()"
-        [loading]="isLoading()"
+        [data]="pagedList.items()"
+        [loading]="pagedList.refreshing() || pagedList.loading()"
         [actions]="tableActions"
         (actionClicked)="handleTableAction($event)"
-        mode="client"
+        mode="server"
+        [page]="pagedList.page()"
+        [pageSize]="pagedList.pageSize()"
+        [total]="pagedList.total()"
+        [sortColumn]="pagedList.sortBy()"
+        [sortDir]="pagedList.sortDir()"
         [showPagination]="true"
-        [pageSize]="10"
+        (pageChange)="pagedList.setPage($event)"
+        (sortChange)="pagedList.setSort($event.key, $event.dir)"
         emptyTitle="No collectors found"
         emptyDescription="No field collector accounts match the search criteria."
       >
@@ -141,23 +147,17 @@
               (valueChange)="handleCredentialsModeChange($event)"
               size="sm"
             />
-
-            @if (createCredentialsMode() === 'invite_link') {
-              <p class="credentials-help-text">
-                A single-use invite link (valid 48h) will be emailed to the collector.
-              </p>
-            } @else {
-              <div class="temporary-password-field">
-                <app-input
-                  formControlName="temporaryPassword"
-                  label="Temporary password"
-                  type="password"
-                  placeholder="Enter temporary password"
-                  [required]="true"
-                />
-              </div>
-            }
           </div>
+
+          @if (createCredentialsMode() === 'temporary_password') {
+            <app-input
+              formControlName="temporaryPassword"
+              label="Temporary password"
+              type="password"
+              placeholder="Enter secure temporary password..."
+              [required]="true"
+            />
+          }
 
           <div class="form-field-group">
             <label class="field-label">District</label>
@@ -196,8 +196,8 @@
   <!-- Edit Collector Drawer -->
   <app-drawer
     [open]="isEditDrawerOpen()"
-    title="Edit Collector Account"
-    description="Update collector profile and district assignment."
+    title="Edit Collector Details"
+    [description]="'Editing collector profile for ' + (selectedCollector()?.name || '')"
     size="md"
     (closed)="closeEditDrawer()"
   >
@@ -268,86 +268,90 @@
     <div class="assigned-bins-drawer-content">
       @if (isLoadingAssignedBins()) {
         <div class="loading-bins-state">
-          <p>Loading assigned smart bins...</p>
+          <app-resource-state [loading]="true" />
         </div>
       } @else if (assignedBins().length === 0) {
         <div class="empty-assigned-bins">
-          <app-icon name="trash" size="lg" />
-          <p class="empty-title">No smart bins assigned</p>
-          <p class="empty-desc">This collector currently has no smart bins assigned to their route.</p>
+          <p class="empty-bins-title">No smart bins assigned</p>
+          <p class="empty-bins-subtitle">
+            This collector currently has no active smart bins allocated for daily collection routes.
+          </p>
         </div>
       } @else {
-        <div class="assigned-bins-list">
-          @for (bin of assignedBins(); track bin.binId) {
-            <div class="assigned-bin-card">
-              <div class="bin-card-header">
-                <div>
-                  <h4 class="bin-card-title">{{ bin.name }}</h4>
-                  <span class="bin-card-subtitle">{{ bin.binId }} · {{ bin.area }} ({{ bin.district }})</span>
-                </div>
-                <app-badge
-                  [label]="getBinLabel(bin.status)"
-                  [variant]="getBinBadgeVariant(bin.status)"
-                  [dot]="true"
-                />
-              </div>
-
-              <div class="bin-card-body">
-                <div class="bin-fill-metric">
-                  <span class="metric-label">Fill Level</span>
-                  <app-fill-level-cell
-                    [value]="bin.fillLevel"
-                    [warningThreshold]="80"
-                    [dangerThreshold]="95"
-                  />
-                </div>
-                <div class="bin-service-metric">
-                  <span class="metric-label">Last Serviced</span>
-                  <span class="metric-value">{{ bin.lastServicedAt }}</span>
-                </div>
-              </div>
-            </div>
-          }
+        <div class="assigned-bins-table-wrapper">
+          <table class="assigned-bins-table">
+            <thead>
+              <tr>
+                <th>Bin ID</th>
+                <th>Name / Area</th>
+                <th>Fill Level</th>
+                <th>Status</th>
+                <th>District</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (bin of assignedBins(); track bin.binId) {
+                <tr>
+                  <td class="bin-id-cell">{{ bin.binId }}</td>
+                  <td>
+                    <div class="bin-name-info">
+                      <span class="bin-name">{{ bin.name }}</span>
+                      <span class="bin-area">{{ bin.area }}</span>
+                    </div>
+                  </td>
+                  <td>
+                    <app-fill-level-cell
+                      [value]="bin.fillLevel"
+                      [warningThreshold]="80"
+                      [dangerThreshold]="95"
+                    />
+                  </td>
+                  <td>
+                    <app-badge
+                      [label]="getBinLabel(bin.status)"
+                      [variant]="getBinBadgeVariant(bin.status)"
+                      [dot]="true"
+                    />
+                  </td>
+                  <td class="district-cell">{{ bin.district }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
         </div>
       }
     </div>
 
-    <div drawer-footer class="drawer-footer-wrapper">
-      <div class="drawer-footer-actions">
-        <app-button
-          variant="ghost"
-          (clicked)="closeAssignedBinsDrawer()"
-        >
-          Close
-        </app-button>
-      </div>
+    <div drawer-footer class="drawer-footer-actions">
+      <app-button
+        variant="ghost"
+        (clicked)="closeAssignedBinsDrawer()"
+      >
+        Close
+      </app-button>
     </div>
   </app-drawer>
 
   <!-- Assign Smart Bin Modal -->
   <app-modal
     [open]="isAssignModalOpen()"
-    title="Assign Smart Bin"
-    [description]="'Assign a smart bin hardware node to collector ' + (selectedCollector()?.name || '')"
+    [title]="'Assign Smart Bin to ' + (selectedCollector()?.name || '')"
+    description="Select a smart bin to allocate to this collector's daily collection route."
     size="md"
     (closed)="closeAssignModal()"
   >
-    <div class="assign-modal-content">
-      @if (isLoadingAvailableBins()) {
-        <p>Loading smart bins...</p>
-      } @else {
-        <form [formGroup]="assignBinForm" (ngSubmit)="submitAssign()" class="assign-form">
-          <div class="form-field-group">
-            <label class="field-label">Select Smart Bin</label>
-            <app-select
-              formControlName="binId"
-              [options]="availableBinOptions()"
-              placeholder="Select a bin to assign..."
-            />
-          </div>
-          <p class="audit-note">This bin assignment will be recorded in the audit log.</p>
-        </form>
-      }
+    <div class="modal-content">
+      <form [formGroup]="assignBinForm" (ngSubmit)="submitAssign()" class="assign-form">
+        <div class="form-field-group">
+          <app-async-select
+            formControlName="binId"
+            label="Select Smart Bin"
+            [fetcher]="fetchAvailableBins"
+            placeholder="Search bin by name, ID, or district..."
+          />
+        </div>
+        <p class="audit-note">This bin assignment will be recorded in the audit log.</p>
+      </form>
     </div>
 
     <div modal-footer class="modal-footer-actions">

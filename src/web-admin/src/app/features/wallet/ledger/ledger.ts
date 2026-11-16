@@ -1,18 +1,17 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  OnInit,
   computed,
   inject,
   signal,
 } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { map } from 'rxjs/operators';
 import { LedgerRow, LedgerQuery } from '../../../core/models/wallet/ledger.view-model';
 import { LedgerSource } from '../../../core/models/wallet/ledger-source.enum';
 import { LedgerEntryType } from '../../../core/models/wallet/ledger-entry-type.enum';
 import { ManualAdjustmentRequest } from '../../../core/models/wallet/ledger.dto';
-import { RecyclerListItem } from '../../../core/models/user/recycler.view-model';
 import { LedgerService } from '../../../core/services/wallet/ledger.service';
 import { RecyclersService } from '../../../core/services/user/recyclers.service';
 import { ToastService } from '../../../core/services/toast/toast.service';
@@ -30,7 +29,8 @@ import {
 import { PageHeader } from '../../../shared/components/page-header/page-header';
 import { Notice } from '../../../shared/components/notice/notice';
 import { SearchInput } from '../../../shared/components/form/search-input/search-input';
-import { Select, SelectOption } from '../../../shared/components/form/select/select';
+import { Select } from '../../../shared/components/form/select/select';
+import { AsyncSelect } from '../../../shared/components/form/async-select/async-select';
 import { DateRangeInput, DateRangeValue } from '../../../shared/components/form/date-range-input/date-range-input';
 import { DataTable } from '../../../shared/components/table/data-table/data-table';
 import { CellTemplateDirective } from '../../../shared/components/table/data-table/cell-template.directive';
@@ -46,6 +46,7 @@ import { NumberInput } from '../../../shared/components/form/number-input/number
 import { Textarea } from '../../../shared/components/form/textarea/textarea';
 import { Button } from '../../../shared/components/button/button';
 import { DateTimePipe } from '../../../shared/pipes';
+import { createPagedList } from '../../../shared/utils/paged-list';
 
 @Component({
   selector: 'app-ledger',
@@ -58,6 +59,7 @@ import { DateTimePipe } from '../../../shared/pipes';
     Notice,
     SearchInput,
     Select,
+    AsyncSelect,
     DateRangeInput,
     DataTable,
     CellTemplateDirective,
@@ -78,7 +80,7 @@ import { DateTimePipe } from '../../../shared/pipes';
   styleUrl: './ledger.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class Ledger implements OnInit {
+export class Ledger {
   private readonly ledgerService = inject(LedgerService);
   private readonly recyclersService = inject(RecyclersService);
   private readonly toastService = inject(ToastService);
@@ -93,17 +95,18 @@ export class Ledger implements OnInit {
   readonly getSourceLabel = getLedgerSourceLabel;
 
   /**
-   * Data signals
+   * Paged-list infrastructure (default newest first)
    */
-  readonly ledgerRows = signal<LedgerRow[]>([]);
-  readonly isLoading = signal<boolean>(true);
-  readonly error = signal<unknown>(null);
+  readonly pagedList = createPagedList<LedgerRow, LedgerQuery>({
+    fetch: (query) => this.ledgerService.getLedger(query),
+    initial: {
+      sortBy: 'timestamp',
+      sortDir: 'desc',
+    },
+    debounceKeys: ['search'],
+    debounceMs: 300,
+  });
 
-  /**
-   * Filter signals
-   */
-  readonly searchTerm = signal<string>('');
-  readonly selectedSource = signal<string>('');
   readonly dateRange = signal<DateRangeValue>({ from: null, to: null });
 
   /**
@@ -111,13 +114,25 @@ export class Ledger implements OnInit {
    */
   readonly isAdjustmentDrawerOpen = signal<boolean>(false);
   readonly isSubmitting = signal<boolean>(false);
-  readonly recyclerUsers = signal<RecyclerListItem[]>([]);
-  readonly isLoadingRecyclers = signal<boolean>(false);
   readonly adjustmentType = signal<LedgerEntryType>(LedgerEntryType.Credit);
 
   readonly userServerError = signal<string>('');
   readonly amountServerError = signal<string>('');
   readonly formTouched = signal<boolean>(false);
+
+  /**
+   * Fetch recyclers for typeahead picker in adjustment drawer
+   */
+  readonly fetchRecyclers = (term: string) => {
+    return this.recyclersService.getRecyclers({ search: term, pageSize: 20 }).pipe(
+      map((page) =>
+        page.items.map((r) => ({
+          label: `${r.name} · ${r.userId}`,
+          value: r.userId,
+        }))
+      )
+    );
+  };
 
   /**
    * Form for manual points adjustment
@@ -127,13 +142,6 @@ export class Ledger implements OnInit {
     amount: this.fb.control<number | null>(null, [Validators.required, Validators.min(1)]),
     reasonCode: this.fb.nonNullable.control('ADMIN_CORRECTION'),
     reasonNote: this.fb.nonNullable.control('', [Validators.required]),
-  });
-
-  readonly userOptions = computed<SelectOption[]>(() => {
-    return this.recyclerUsers().map((u) => ({
-      label: `${u.name} · ${u.userId}`,
-      value: u.userId,
-    }));
   });
 
   readonly userFieldError = computed(() => {
@@ -159,63 +167,20 @@ export class Ledger implements OnInit {
     return '';
   });
 
-  ngOnInit(): void {
-    this.loadLedger();
-  }
-
-  loadLedger(): void {
-    this.isLoading.set(true);
-    this.error.set(null);
-
-    const query: LedgerQuery = {};
-    const search = this.searchTerm().trim();
-    if (search) {
-      query.search = search;
-    }
-    const source = this.selectedSource();
-    if (source) {
-      query.source = source as LedgerSource;
-    }
-    const range = this.dateRange();
-    if (range.from) {
-      query.from = range.from;
-    }
-    if (range.to) {
-      query.to = range.to;
-    }
-
-    this.ledgerService.getLedger(query).subscribe({
-      next: (page) => {
-        // TODO(prompt-3): full server-side pagination UI
-        this.ledgerRows.set(page.items);
-        this.isLoading.set(false);
-      },
-      error: (err) => {
-        this.error.set(err);
-        this.isLoading.set(false);
-      },
-    });
-  }
-
   handleSearch(term: string): void {
-    this.searchTerm.set(term);
-    this.loadLedger();
+    this.pagedList.patchFilters({ search: term || undefined });
   }
 
-  handleTypeChange(type: string | number): void {
-    this.selectedSource.set(String(type ?? ''));
-    this.loadLedger();
+  handleSourceChange(source: string | number): void {
+    this.pagedList.patchFilters({ source: source ? (source as LedgerSource) : undefined });
   }
 
   handleDateRangeChange(range: DateRangeValue): void {
     this.dateRange.set(range);
-    this.loadLedger();
-  }
-
-  truncateId(id: string): string {
-    if (!id) return '';
-    if (id.length <= 12) return id;
-    return id.substring(0, 10) + '…';
+    this.pagedList.patchFilters({
+      from: range.from || undefined,
+      to: range.to || undefined,
+    });
   }
 
   /**
@@ -233,25 +198,6 @@ export class Ledger implements OnInit {
       reasonNote: '',
     });
     this.isAdjustmentDrawerOpen.set(true);
-
-    if (this.recyclerUsers().length === 0) {
-      this.isLoadingRecyclers.set(true);
-      this.recyclersService.getRecyclers().subscribe({
-        next: (page) => {
-          // TODO(prompt-3): replace with picker / lookup
-          const users = page.items;
-          this.recyclerUsers.set(users);
-          this.isLoadingRecyclers.set(false);
-          if (users[0] && !this.adjustmentForm.value.userId) {
-            this.adjustmentForm.controls.userId.setValue(users[0].userId);
-          }
-        },
-        error: (err) => {
-          this.isLoadingRecyclers.set(false);
-          this.toastService.error(getErrorMessage(err));
-        },
-      });
-    }
   }
 
   closeAdjustmentDrawer(): void {
@@ -265,33 +211,36 @@ export class Ledger implements OnInit {
   }
 
   submitAdjustment(): void {
+    this.formTouched.set(true);
     this.userServerError.set('');
     this.amountServerError.set('');
 
     if (this.adjustmentForm.invalid || this.isSubmitting()) {
-      this.formTouched.set(true);
       this.adjustmentForm.markAllAsTouched();
       return;
     }
 
     const val = this.adjustmentForm.getRawValue();
-    const payload: ManualAdjustmentRequest = {
+    const pointsDelta =
+      this.adjustmentType() === LedgerEntryType.Debit
+        ? -Math.abs(val.amount!)
+        : Math.abs(val.amount!);
+
+    const req: ManualAdjustmentRequest = {
       userId: val.userId,
-      amount: Number(val.amount),
+      amount: pointsDelta,
       type: this.adjustmentType(),
-      reasonCode: val.reasonCode.trim() || 'ADMIN_CORRECTION',
+      reasonCode: val.reasonCode,
       reasonNote: val.reasonNote.trim(),
     };
 
     this.isSubmitting.set(true);
-    this.ledgerService.adjustPoints(payload).subscribe({
-      next: (res) => {
-        this.toastService.success(
-          `Manual points adjustment of ${this.formatPoints(res.pointsDelta)} pts applied successfully.`
-        );
+    this.ledgerService.adjustPoints(req).subscribe({
+      next: () => {
+        this.toastService.success('Manual points adjustment recorded successfully');
         this.isSubmitting.set(false);
         this.closeAdjustmentDrawer();
-        this.loadLedger();
+        this.pagedList.reload();
       },
       error: (err) => {
         this.isSubmitting.set(false);
@@ -300,7 +249,7 @@ export class Ledger implements OnInit {
           this.amountServerError.set('User has insufficient available points for this debit adjustment');
         } else if (isApiErrorCode(err, ApiErrorCode.NotFound)) {
           this.adjustmentForm.controls.userId.setErrors({ notFound: true });
-          this.userServerError.set('Target recycler account was not found');
+          this.userServerError.set('Selected recycler account was not found');
         } else {
           this.toastService.error(getErrorMessage(err));
         }

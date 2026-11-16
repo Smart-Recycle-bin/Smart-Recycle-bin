@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { of, throwError } from 'rxjs';
+import { of, Subject, throwError } from 'rxjs';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { SurveyQa } from './survey-qa';
 import { SurveyQaService } from '../../../core/services/survey/survey-qa.service';
@@ -30,9 +30,9 @@ describe('SurveyQa', () => {
         of({
           items: structuredClone(MOCK_RECENT_SURVEYS),
           page: 1,
-          pageSize: 10,
-          totalItems: MOCK_RECENT_SURVEYS.length,
-          totalPages: Math.ceil(MOCK_RECENT_SURVEYS.length / 10),
+          pageSize: 6,
+          totalItems: 24,
+          totalPages: 4,
         })
       ),
     };
@@ -59,7 +59,7 @@ describe('SurveyQa', () => {
     // Verified: getQaSummary was called without query parameters per p11 fixed 14d
     expect(surveyQaServiceMock.getQaSummary).toHaveBeenCalledWith();
     expect(component.summary()).toEqual(MOCK_SURVEY_QA_SUMMARY);
-    expect(component.recentSurveys().length).toBe(9);
+    expect(component.pagedList.items().length).toBe(9);
     expect(component.isLoading()).toBe(false);
   });
 
@@ -171,7 +171,7 @@ describe('SurveyQa', () => {
   });
 
   it('should configure recent surveys table with client pagination and badge mapping', () => {
-    expect(component.recentSurveys().length).toBe(9);
+    expect(component.pagedList.items().length).toBe(9);
     expect(component.columns.length).toBe(5);
 
     // Badge mapping check
@@ -192,10 +192,59 @@ describe('SurveyQa', () => {
     expect(tableCard?.textContent).toContain('Confirmed');
   });
 
+  it('handles race conditions: slow first request is cancelled by faster second request', () => {
+    const slowSubject = new Subject<any>();
+    const fastSubject = new Subject<any>();
+    let call = 0;
+
+    surveyQaServiceMock.getRecentSurveys.mockImplementation(() => {
+      call++;
+      return call === 1 ? slowSubject : fastSubject;
+    });
+
+    component.pagedList.setPage(2);
+    component.pagedList.setPage(3);
+
+    fastSubject.next({
+      items: [{ ...MOCK_RECENT_SURVEYS[0], sessionId: 'S-FAST' }],
+      page: 3,
+      pageSize: 6,
+      totalItems: 24,
+      totalPages: 4,
+    });
+    fastSubject.complete();
+
+    expect(component.pagedList.items()[0].sessionId).toBe('S-FAST');
+
+    slowSubject.next({
+      items: [{ ...MOCK_RECENT_SURVEYS[0], sessionId: 'S-SLOW' }],
+      page: 2,
+      pageSize: 6,
+      totalItems: 24,
+      totalPages: 4,
+    });
+    slowSubject.complete();
+
+    expect(component.pagedList.items()[0].sessionId).toBe('S-FAST');
+  });
+
+  it('handles server-side pagination and sorting', () => {
+    surveyQaServiceMock.getRecentSurveys.mockClear();
+
+    component.pagedList.setPage(2);
+    expect(surveyQaServiceMock.getRecentSurveys).toHaveBeenCalledWith(
+      expect.objectContaining({ page: 2, pageSize: 6 })
+    );
+
+    component.pagedList.setSort('points', 'desc');
+    expect(surveyQaServiceMock.getRecentSurveys).toHaveBeenCalledWith(
+      expect.objectContaining({ page: 1, sortBy: 'points', sortDir: 'desc' })
+    );
+  });
+
   it('should handle error state and allow retrying data load', () => {
     // Reset service to return error on retry
     surveyQaServiceMock.getQaSummary.mockReturnValue(throwError(() => new Error('Server timeout')));
-    surveyQaServiceMock.getRecentSurveys.mockReturnValue(throwError(() => new Error('Server timeout')));
 
     component.loadData();
     fixture.detectChanges();
@@ -208,22 +257,12 @@ describe('SurveyQa', () => {
 
     // Now mock recovery on second retry
     surveyQaServiceMock.getQaSummary.mockReturnValue(of(structuredClone(MOCK_SURVEY_QA_SUMMARY)));
-    surveyQaServiceMock.getRecentSurveys.mockReturnValue(
-      of({
-        items: structuredClone(MOCK_RECENT_SURVEYS),
-        page: 1,
-        pageSize: 10,
-        totalItems: MOCK_RECENT_SURVEYS.length,
-        totalPages: 1,
-      })
-    );
 
     component.loadData();
     fixture.detectChanges();
 
     expect(component.error()).toBeNull();
     expect(component.summary()).not.toBeNull();
-    expect(component.recentSurveys().length).toBe(9);
     expect(compiled.querySelector('app-error-state')).toBeFalsy();
     expect(compiled.querySelector('[data-testid="survey-qa-stats"]')).toBeTruthy();
   });

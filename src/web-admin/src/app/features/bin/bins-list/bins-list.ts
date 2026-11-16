@@ -3,7 +3,6 @@ import {
   Component,
   computed,
   inject,
-  OnInit,
   signal,
 } from '@angular/core';
 import {
@@ -11,7 +10,10 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { map } from 'rxjs/operators';
 import { BinsService } from '../../../core/services/bin/bins.service';
+import { LookupsService } from '../../../core/services/lookup/lookups.service';
 import { ToastService } from '../../../core/services/toast/toast.service';
 import { BinListItem, BinQuery } from '../../../core/models/bin/bin.view-model';
 import {
@@ -41,6 +43,7 @@ import { Input } from '../../../shared/components/form/input/input';
 import { ResourceState } from '../../../shared/components/resource-state/resource-state';
 import { Icon } from '../../../shared/components/icon/icon';
 import { DateTimePipe } from '../../../shared/pipes';
+import { createPagedList } from '../../../shared/utils/paged-list';
 
 @Component({
   selector: 'app-bins-list',
@@ -59,15 +62,15 @@ import { DateTimePipe } from '../../../shared/pipes';
     Drawer,
     Input,
     ResourceState,
-    Icon,
     DateTimePipe,
   ],
   templateUrl: './bins-list.html',
   styleUrl: './bins-list.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class BinsList implements OnInit {
+export class BinsList {
   private readonly binsService = inject(BinsService);
+  private readonly lookupsService = inject(LookupsService);
   private readonly toastService = inject(ToastService);
   private readonly fb = inject(FormBuilder);
 
@@ -77,66 +80,52 @@ export class BinsList implements OnInit {
   readonly binStatusLabels = BIN_STATUS_LABELS;
 
   /**
-   * Data state signals
+   * Paged-list infrastructure
    */
-  readonly bins = signal<BinListItem[]>([]);
-  readonly allBins = signal<BinListItem[]>([]);
-  readonly isLoading = signal<boolean>(true);
-  readonly error = signal<unknown>(null);
+  readonly pagedList = createPagedList<BinListItem, BinQuery>({
+    fetch: (query) => this.binsService.getBins(query),
+    debounceKeys: ['search'],
+    debounceMs: 300,
+  });
 
   /**
-   * Filter state signals
+   * Filter dropdown options from LookupsService
    */
-  readonly searchTerm = signal<string>('');
-  readonly selectedDistrict = signal<string>('');
-  readonly selectedStatus = signal<string>('');
-  readonly selectedCollector = signal<string>('');
+  readonly districtOptions = toSignal(
+    this.lookupsService.getDistricts().pipe(
+      map((districts) => [
+        { label: 'All districts', value: '' },
+        ...districts.map((d) => ({ label: d.name, value: d.name })),
+      ])
+    ),
+    { initialValue: [{ label: 'All districts', value: '' }] }
+  );
+
+  readonly statusOptions = computed<SelectOption[]>(() => [
+    { label: 'All statuses', value: '' },
+    { label: BIN_STATUS_LABELS[BinStatus.Available], value: BinStatus.Available },
+    { label: BIN_STATUS_LABELS[BinStatus.EightyPercentFull], value: BinStatus.EightyPercentFull },
+    { label: BIN_STATUS_LABELS[BinStatus.NeedsServicing], value: BinStatus.NeedsServicing },
+    { label: BIN_STATUS_LABELS[BinStatus.Offline], value: BinStatus.Offline },
+  ]);
+
+  readonly collectorOptions = toSignal(
+    this.lookupsService.getCollectors().pipe(
+      map((collectors) => [
+        { label: 'All collectors', value: '' },
+        ...collectors.map((c) => ({ label: c.displayName, value: c.collectorId })),
+      ])
+    ),
+    { initialValue: [{ label: 'All collectors', value: '' }] }
+  );
 
   /**
-   * Computed header subtitle: "N registered smart bins across M districts"
+   * Header subtitle: "N registered smart bins across M districts"
    */
   readonly headerSubtitle = computed(() => {
-    const list = this.allBins();
-    const count = list.length;
-    const districtsCount = new Set(list.map((b) => b.district).filter(Boolean)).size;
+    const count = this.pagedList.total();
+    const districtsCount = Math.max(0, this.districtOptions().length - 1);
     return `${count} registered smart bins across ${districtsCount} districts`;
-  });
-
-  /**
-   * Filter dropdown options derived from allBins dataset
-   */
-  readonly districtOptions = computed<SelectOption[]>(() => {
-    const districts = Array.from(
-      new Set(this.allBins().map((b) => b.district).filter(Boolean))
-    ).sort();
-    return [
-      { label: 'All districts', value: '' },
-      ...districts.map((d) => ({ label: d, value: d })),
-    ];
-  });
-
-  readonly statusOptions = computed<SelectOption[]>(() => {
-    return [
-      { label: 'All statuses', value: '' },
-      { label: BIN_STATUS_LABELS[BinStatus.Available], value: BinStatus.Available },
-      { label: BIN_STATUS_LABELS[BinStatus.EightyPercentFull], value: BinStatus.EightyPercentFull },
-      { label: BIN_STATUS_LABELS[BinStatus.NeedsServicing], value: BinStatus.NeedsServicing },
-      { label: BIN_STATUS_LABELS[BinStatus.Offline], value: BinStatus.Offline },
-    ];
-  });
-
-  readonly collectorOptions = computed<SelectOption[]>(() => {
-    const map = new Map<string, string>();
-    for (const b of this.allBins()) {
-      if (b.collectorId && b.collectorName) {
-        map.set(b.collectorId, b.collectorName);
-      }
-    }
-    const sorted = Array.from(map.entries()).sort((a, b) => a[1].localeCompare(b[1]));
-    return [
-      { label: 'All collectors', value: '' },
-      ...sorted.map(([id, name]) => ({ label: name, value: id })),
-    ];
   });
 
   /**
@@ -154,63 +143,20 @@ export class BinsList implements OnInit {
     capacityThresholdKg: [120 as number | null, [Validators.required, Validators.min(1)]],
   });
 
-  ngOnInit(): void {
-    this.loadBins(true);
-  }
-
-  loadBins(isInitial = false): void {
-    const query: BinQuery = {};
-
-    if (this.searchTerm().trim()) {
-      query.search = this.searchTerm().trim();
-    }
-    if (this.selectedDistrict()) {
-      query.district = this.selectedDistrict();
-    }
-    if (this.selectedStatus()) {
-      query.status = this.selectedStatus() as BinStatus;
-    }
-    if (this.selectedCollector()) {
-      query.collectorId = this.selectedCollector();
-    }
-
-    this.isLoading.set(true);
-    this.error.set(null);
-
-    this.binsService.getBins(query).subscribe({
-      next: (page) => {
-        // TODO(prompt-3): server-side pagination migration
-        this.bins.set(page.items);
-        if (isInitial || this.allBins().length === 0) {
-          this.allBins.set(page.items);
-        }
-        this.isLoading.set(false);
-      },
-      error: (err: unknown) => {
-        this.error.set(err);
-        this.isLoading.set(false);
-      },
-    });
-  }
-
   handleSearch(val: string): void {
-    this.searchTerm.set(val);
-    this.loadBins();
+    this.pagedList.patchFilters({ search: val || undefined });
   }
 
   handleDistrictChange(val: string | number): void {
-    this.selectedDistrict.set(String(val));
-    this.loadBins();
+    this.pagedList.patchFilters({ district: val ? String(val) : undefined });
   }
 
   handleStatusChange(val: string | number): void {
-    this.selectedStatus.set(String(val));
-    this.loadBins();
+    this.pagedList.patchFilters({ status: val ? (val as BinStatus) : undefined });
   }
 
   handleCollectorChange(val: string | number): void {
-    this.selectedCollector.set(String(val));
-    this.loadBins();
+    this.pagedList.patchFilters({ collectorId: val ? String(val) : undefined });
   }
 
   openRegisterDrawer(): void {
@@ -258,7 +204,8 @@ export class BinsList implements OnInit {
         this.isSubmitting.set(false);
         this.toastService.success('Smart bin registered successfully.');
         this.closeRegisterDrawer();
-        this.loadBins(true);
+        this.pagedList.reload();
+        this.lookupsService.invalidate('districts');
       },
       error: (err: unknown) => {
         this.isSubmitting.set(false);

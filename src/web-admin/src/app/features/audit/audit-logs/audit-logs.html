@@ -26,11 +26,11 @@
   <!-- Filters Toolbar Card -->
   <div class="filters-card">
     <div class="filters-grid">
-      <!-- Admin Select (Derived from unfiltered load so options don't shrink) -->
+      <!-- Admin Select (Derived from LookupsService so options don't shrink) -->
       <div class="filter-item">
         <app-select
           [options]="adminOptions()"
-          [value]="selectedAdminId()"
+          [value]="pagedList.filters().adminId || ''"
           placeholder="All admins"
           ariaLabel="Filter by administrator"
           (valueChange)="handleAdminChange($event)"
@@ -41,7 +41,7 @@
       <div class="filter-item">
         <app-select
           [options]="actionTypeFilterOptions"
-          [value]="selectedActionType()"
+          [value]="pagedList.filters().actionType || ''"
           placeholder="All action types"
           ariaLabel="Filter by action type"
           (valueChange)="handleActionChange($event)"
@@ -52,7 +52,7 @@
       <div class="filter-item">
         <app-input
           placeholder="Filter by resource ID..."
-          [value]="resourceIdFilter()"
+          [value]="pagedList.filters().resourceId || ''"
           leadingIcon="search"
           ariaLabel="Filter by resource ID"
           (valueChange)="handleResourceIdChange($event)"
@@ -62,7 +62,7 @@
       <!-- Date Range Filter -->
       <div class="filter-item date-filter">
         <app-date-range-input
-          [value]="dateRange()"
+          [value]="{ from: pagedList.filters().from ?? null, to: pagedList.filters().to ?? null }"
           (valueChange)="handleDateRangeChange($event)"
         />
       </div>
@@ -71,14 +71,14 @@
 
   <!-- Audit Logs Table Section -->
   <div class="table-container">
-    @if (error()) {
+    @if (pagedList.error() && pagedList.items().length === 0) {
       <div class="p-8">
         <app-resource-state
-          [error]="error()"
-          (retry)="loadAuditLogs()"
+          [error]="pagedList.error()"
+          (retry)="pagedList.reload()"
         />
       </div>
-    } @else if (isLoading()) {
+    } @else if (pagedList.loading() && pagedList.items().length === 0) {
       <div class="p-6 space-y-4">
         <app-skeleton height="42px" variant="rectangular" />
         @for (i of [1, 2, 3, 4, 5, 6, 7, 8]; track i) {
@@ -93,7 +93,7 @@
         }
       </div>
     } @else {
-      @if (auditLogs().length === 0) {
+      @if (pagedList.items().length === 0) {
         <app-resource-state
           [empty]="true"
           emptyTitle="No audit records found"
@@ -104,10 +104,17 @@
         <!-- Data Table (p16: Page size 8 -> "Showing 1–8 of 10") -->
         <app-data-table
           [columns]="columns"
-          [data]="auditLogs()"
-          [pageSize]="8"
-          mode="client"
+          [data]="pagedList.items()"
+          [loading]="pagedList.refreshing() || pagedList.loading()"
+          mode="server"
           [showPagination]="true"
+          [page]="pagedList.page()"
+          [pageSize]="pagedList.pageSize()"
+          [total]="pagedList.total()"
+          [sortColumn]="pagedList.sortBy()"
+          [sortDir]="pagedList.sortDir()"
+          (pageChange)="pagedList.setPage($event)"
+          (sortChange)="pagedList.setSort($event.key, $event.dir)"
           [rowId]="getRowId"
         >
           <!-- Timestamp Column -->

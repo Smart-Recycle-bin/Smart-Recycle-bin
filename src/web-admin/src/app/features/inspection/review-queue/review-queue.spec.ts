@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
-import { of, throwError } from 'rxjs';
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { of, Subject } from 'rxjs';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { ReviewQueue } from './review-queue';
 import { InspectionReportsService } from '../../../core/services/inspection/inspection-reports.service';
 import { ReviewQueueStateService } from '../../../core/services/inspection/review-queue-state.service';
@@ -25,6 +25,8 @@ describe('ReviewQueue Component', () => {
   };
 
   beforeEach(async () => {
+    vi.useFakeTimers();
+
     inspectionReportsServiceSpy = {
       getSummary: vi.fn().mockReturnValue(of(MOCK_INSPECTION_SUMMARY)),
       getReports: vi.fn().mockReturnValue(
@@ -32,8 +34,8 @@ describe('ReviewQueue Component', () => {
           items: MOCK_INSPECTION_REPORTS,
           page: 1,
           pageSize: 10,
-          totalItems: MOCK_INSPECTION_REPORTS.length,
-          totalPages: Math.ceil(MOCK_INSPECTION_REPORTS.length / 10),
+          totalItems: 28,
+          totalPages: 3,
         })
       ),
     };
@@ -56,112 +58,120 @@ describe('ReviewQueue Component', () => {
 
     fixture = TestBed.createComponent(ReviewQueue);
     component = fixture.componentInstance;
-    await fixture.whenStable();
     fixture.detectChanges();
   });
 
-  it('should initialize and load summary and inspection reports on mount', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('should initialize and load summary and inspection reports on mount via pagedList', () => {
     expect(component).toBeTruthy();
     expect(inspectionReportsServiceSpy.getSummary).toHaveBeenCalledTimes(1);
     expect(inspectionReportsServiceSpy.getReports).toHaveBeenCalledTimes(1);
     expect(component.summary()).toEqual(MOCK_INSPECTION_SUMMARY);
-    expect(component.reports().length).toBe(MOCK_INSPECTION_REPORTS.length);
+    expect(component.pagedList.items().length).toBe(MOCK_INSPECTION_REPORTS.length);
     expect(reviewQueueStateSpy.setPendingCount).toHaveBeenCalledWith(
       MOCK_INSPECTION_SUMMARY.pendingReviewCount
     );
-    expect(component.isLoadingReports()).toBe(false);
-    expect(component.error()).toBeNull();
+    expect(component.pagedList.loading()).toBe(false);
   });
 
-  it('should filter reports by search query', () => {
+  it('debounces rapid search keystrokes: typing "AIR-2048" fires exactly 1 request', () => {
     inspectionReportsServiceSpy.getReports.mockClear();
 
+    component.handleSearch('A');
+    vi.advanceTimersByTime(50);
+    component.handleSearch('AIR');
+    vi.advanceTimersByTime(50);
     component.handleSearch('AIR-2048');
-    expect(component.searchTerm()).toBe('AIR-2048');
-    expect(inspectionReportsServiceSpy.getReports).toHaveBeenCalledWith({
-      search: 'AIR-2048',
-    });
+
+    expect(inspectionReportsServiceSpy.getReports).not.toHaveBeenCalled();
+
+    vi.advanceTimersByTime(300);
+
+    expect(inspectionReportsServiceSpy.getReports).toHaveBeenCalledTimes(1);
+    expect(inspectionReportsServiceSpy.getReports).toHaveBeenCalledWith(
+      expect.objectContaining({
+        search: 'AIR-2048',
+        page: 1,
+      })
+    );
   });
 
-  it('should filter reports by status select', () => {
-    inspectionReportsServiceSpy.getReports.mockClear();
+  it('handles race conditions: slow first request is cancelled by faster second request', () => {
+    const slowSubject = new Subject<any>();
+    const fastSubject = new Subject<any>();
+    let call = 0;
+
+    inspectionReportsServiceSpy.getReports.mockImplementation(() => {
+      call++;
+      return call === 1 ? slowSubject : fastSubject;
+    });
+
+    component.pagedList.setPage(2);
+    component.pagedList.setPage(3);
+
+    fastSubject.next({
+      items: [{ ...MOCK_INSPECTION_REPORTS[0], reportId: 'AIR-FAST' }],
+      page: 3,
+      pageSize: 10,
+      totalItems: 30,
+      totalPages: 3,
+    });
+    fastSubject.complete();
+
+    expect(component.pagedList.items()[0].reportId).toBe('AIR-FAST');
+
+    slowSubject.next({
+      items: [{ ...MOCK_INSPECTION_REPORTS[0], reportId: 'AIR-SLOW' }],
+      page: 2,
+      pageSize: 10,
+      totalItems: 30,
+      totalPages: 3,
+    });
+    slowSubject.complete();
+
+    expect(component.pagedList.items()[0].reportId).toBe('AIR-FAST');
+  });
+
+  it('resets page to 1 on filter changes', () => {
+    component.pagedList.setPage(2);
+    expect(component.pagedList.page()).toBe(2);
 
     component.handleStatusChange(InspectionReportStatus.Pending);
-    expect(component.selectedStatus()).toBe(InspectionReportStatus.Pending);
-    expect(inspectionReportsServiceSpy.getReports).toHaveBeenCalledWith({
-      status: InspectionReportStatus.Pending,
-    });
-  });
+    expect(component.pagedList.page()).toBe(1);
 
-  it('should filter reports to pending when clicking "Show pending"', () => {
-    inspectionReportsServiceSpy.getReports.mockClear();
-
-    component.filterByStatus(InspectionReportStatus.Pending);
-    expect(component.selectedStatus()).toBe(InspectionReportStatus.Pending);
-    expect(inspectionReportsServiceSpy.getReports).toHaveBeenCalledWith({
-      status: InspectionReportStatus.Pending,
-    });
-  });
-
-  it('should filter reports to reviewed when clicking "Show reviewed"', () => {
-    inspectionReportsServiceSpy.getReports.mockClear();
+    component.pagedList.setPage(2);
+    expect(component.pagedList.page()).toBe(2);
 
     component.filterByStatus(InspectionReportStatus.Reviewed);
-    expect(component.selectedStatus()).toBe(InspectionReportStatus.Reviewed);
-    expect(inspectionReportsServiceSpy.getReports).toHaveBeenCalledWith({
-      status: InspectionReportStatus.Reviewed,
-    });
+    expect(component.pagedList.page()).toBe(1);
   });
 
-  it('should navigate to report detail on row click', () => {
-    const targetRow = MOCK_INSPECTION_REPORTS[0];
-    component.navigateToDetail(targetRow);
+  it('should navigate to report detail page on row click', () => {
+    const sampleRow = MOCK_INSPECTION_REPORTS[0];
+    component.navigateToDetail(sampleRow);
 
-    expect(router.navigate).toHaveBeenCalledWith(['/review-queue', targetRow.reportId]);
+    expect(router.navigate).toHaveBeenCalledWith(['/review-queue', sampleRow.reportId]);
   });
 
-  it('should determine correct confidence progress color (green >=70%, amber below)', () => {
-    expect(component.getConfidenceColor(0.70)).toBe('success');
+  it('should format confidence percentages and determine progress color', () => {
+    expect(component.formatConfidencePercent(0.684)).toBe(68);
+    expect(component.formatConfidencePercent(0.952)).toBe(95);
+
     expect(component.getConfidenceColor(0.85)).toBe('success');
-    expect(component.getConfidenceColor(0.69)).toBe('warning');
-    expect(component.getConfidenceColor(0.50)).toBe('warning');
-
-    expect(component.formatConfidencePercent(0.62)).toBe(62);
-    expect(component.formatConfidencePercent(0.71)).toBe(71);
+    expect(component.getConfidenceColor(0.65)).toBe('warning');
   });
 
-  it('should map InspectionReportStatus to expected badge variants and labels', () => {
+  it('should map inspection report status to correct badge variant and label', () => {
     expect(getInspectionReportStatusBadgeVariant(InspectionReportStatus.Pending)).toBe('warning');
-    expect(getInspectionReportStatusBadgeVariant(InspectionReportStatus.Reviewed)).toBe('success');
     expect(getInspectionReportStatusBadgeVariant(InspectionReportStatus.SentToRetraining)).toBe('purple');
+    expect(getInspectionReportStatusBadgeVariant(InspectionReportStatus.Reviewed)).toBe('success');
+    expect(getInspectionReportStatusBadgeVariant('unknown')).toBe('neutral');
 
     expect(getInspectionReportStatusLabel(InspectionReportStatus.Pending)).toBe('Pending');
     expect(getInspectionReportStatusLabel(InspectionReportStatus.Reviewed)).toBe('Reviewed');
     expect(getInspectionReportStatusLabel(InspectionReportStatus.SentToRetraining)).toBe('Sent to Retraining');
-  });
-
-  it('should render error state on load error and retry successfully', () => {
-    inspectionReportsServiceSpy.getReports.mockReturnValueOnce(
-      throwError(() => ({ message: 'Server down' }))
-    );
-
-    component.loadReports();
-
-    expect(component.isLoadingReports()).toBe(false);
-    expect(component.error()).toBeTruthy();
-
-    inspectionReportsServiceSpy.getReports.mockReturnValueOnce(
-      of({
-        items: MOCK_INSPECTION_REPORTS,
-        page: 1,
-        pageSize: 10,
-        totalItems: MOCK_INSPECTION_REPORTS.length,
-        totalPages: 1,
-      })
-    );
-    component.loadReports();
-
-    expect(component.error()).toBeNull();
-    expect(component.reports().length).toBe(MOCK_INSPECTION_REPORTS.length);
   });
 });

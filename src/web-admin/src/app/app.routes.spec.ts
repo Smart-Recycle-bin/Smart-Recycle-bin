@@ -8,7 +8,9 @@ import { UserRole } from './core/models/user/user-role.enum';
 import { AuthService } from './core/services/auth/auth.service';
 import { TokenStorageService } from './core/services/auth/token-storage.service';
 import { ToastService } from './core/services/toast/toast.service';
+import { authInterceptor, errorInterceptor } from './core/interceptors';
 import { mockBackendInterceptor } from './core/interceptors/mock-backend/engine/mock-backend.interceptor';
+import { generateMockAccessToken } from './core/interceptors/mock-backend/engine/mock-auth';
 import { resetMockDb } from './core/mock/db/mock-db';
 import { environment } from '../environments/environment';
 
@@ -34,7 +36,7 @@ describe('App Routes', () => {
     await TestBed.configureTestingModule({
       providers: [
         provideRouter(routes),
-        provideHttpClient(withInterceptors([mockBackendInterceptor])),
+        provideHttpClient(withInterceptors([errorInterceptor, authInterceptor, mockBackendInterceptor])),
         AuthService,
         TokenStorageService,
         ToastService,
@@ -46,8 +48,12 @@ describe('App Routes', () => {
     tokenStorage = TestBed.inject(TokenStorageService);
 
     // Seed active admin session by default so admin routes are reachable in basic render tests
+    const validToken = generateMockAccessToken(
+      { userId: 'ADM-001', role: UserRole.Admin, displayName: 'Sarah Connor' },
+      3600
+    );
     tokenStorage.saveSession({
-      accessToken: 'valid_access_token',
+      accessToken: validToken,
       expiresAt: new Date(Date.now() + 3600000).toISOString(),
       refreshToken: 'valid_refresh_token',
       user: {

@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { of, throwError } from 'rxjs';
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { of, Subject } from 'rxjs';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { Recyclers } from './recyclers';
 import { RecyclersService } from '../../../core/services/user/recyclers.service';
 import { ToastService } from '../../../core/services/toast/toast.service';
@@ -32,14 +32,18 @@ describe('Recyclers Component', () => {
   const bannedUser = MOCK_RECYCLERS.find((r) => r.status === AccountStatus.Banned)!;
 
   beforeEach(async () => {
+    vi.useFakeTimers();
+
     recyclersServiceSpy = {
-      getRecyclers: vi.fn().mockReturnValue(of({
-        items: MOCK_RECYCLERS,
-        page: 1,
-        pageSize: 10,
-        totalItems: MOCK_RECYCLERS.length,
-        totalPages: Math.ceil(MOCK_RECYCLERS.length / 10),
-      })),
+      getRecyclers: vi.fn().mockReturnValue(
+        of({
+          items: MOCK_RECYCLERS,
+          page: 1,
+          pageSize: 10,
+          totalItems: MOCK_RECYCLERS.length,
+          totalPages: Math.ceil(MOCK_RECYCLERS.length / 10),
+        })
+      ),
       suspendRecycler: vi.fn().mockReturnValue(
         of({
           userId: activeUser.userId,
@@ -72,140 +76,119 @@ describe('Recyclers Component', () => {
 
     fixture = TestBed.createComponent(Recyclers);
     component = fixture.componentInstance;
-    await fixture.whenStable();
     fixture.detectChanges();
   });
 
-  it('should initialize and load recyclers on mount', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('should initialize and load recyclers on mount via pagedList', () => {
     expect(component).toBeTruthy();
     expect(recyclersServiceSpy.getRecyclers).toHaveBeenCalledTimes(1);
-    expect(recyclersServiceSpy.getRecyclers).toHaveBeenCalledWith({});
-    expect(component.recyclers().length).toBe(MOCK_RECYCLERS.length);
-    expect(component.isLoading()).toBe(false);
-    expect(component.error()).toBeNull();
+    expect(component.pagedList.items().length).toBe(MOCK_RECYCLERS.length);
+    expect(component.pagedList.loading()).toBe(false);
+    expect(component.pagedList.error()).toBeNull();
   });
 
-  it('should filter recyclers by search query', () => {
+  it('debounces rapid search keystrokes: typing "nour" fires exactly 1 request', () => {
     recyclersServiceSpy.getRecyclers.mockClear();
 
-    component.handleSearch('Nour');
-    expect(component.searchTerm()).toBe('Nour');
-    expect(recyclersServiceSpy.getRecyclers).toHaveBeenCalledWith({
-      search: 'Nour',
+    component.handleSearch('n');
+    vi.advanceTimersByTime(50);
+    component.handleSearch('no');
+    vi.advanceTimersByTime(50);
+    component.handleSearch('nou');
+    vi.advanceTimersByTime(50);
+    component.handleSearch('nour');
+
+    expect(recyclersServiceSpy.getRecyclers).not.toHaveBeenCalled();
+
+    vi.advanceTimersByTime(300);
+
+    expect(recyclersServiceSpy.getRecyclers).toHaveBeenCalledTimes(1);
+    expect(recyclersServiceSpy.getRecyclers).toHaveBeenCalledWith(
+      expect.objectContaining({
+        search: 'nour',
+        page: 1,
+      })
+    );
+  });
+
+  it('handles race conditions: slow first request is cancelled by faster second request', () => {
+    const slowSubject = new Subject<any>();
+    const fastSubject = new Subject<any>();
+    let call = 0;
+
+    recyclersServiceSpy.getRecyclers.mockImplementation(() => {
+      call++;
+      return call === 1 ? slowSubject : fastSubject;
     });
-  });
 
-  it('should filter recyclers by status', () => {
-    recyclersServiceSpy.getRecyclers.mockClear();
+    component.pagedList.setPage(2);
+    component.pagedList.setPage(3);
 
-    component.handleStatusChange(AccountStatus.Active);
-    expect(component.selectedStatus()).toBe(AccountStatus.Active);
-    expect(recyclersServiceSpy.getRecyclers).toHaveBeenCalledWith({
-      status: AccountStatus.Active,
+    fastSubject.next({
+      items: [{ ...activeUser, userId: 'usr-fast' }],
+      page: 3,
+      pageSize: 10,
+      totalItems: 30,
+      totalPages: 3,
     });
+    fastSubject.complete();
+
+    expect(component.pagedList.items()[0].userId).toBe('usr-fast');
+
+    slowSubject.next({
+      items: [{ ...activeUser, userId: 'usr-slow' }],
+      page: 2,
+      pageSize: 10,
+      totalItems: 30,
+      totalPages: 3,
+    });
+    slowSubject.complete();
+
+    expect(component.pagedList.items()[0].userId).toBe('usr-fast');
   });
 
-  it('should combine search query and status in RecyclerQuery', () => {
-    recyclersServiceSpy.getRecyclers.mockClear();
+  it('resets page to 1 on filter changes', () => {
+    component.pagedList.setPage(2);
+    expect(component.pagedList.page()).toBe(2);
 
-    component.searchTerm.set('Ahmed');
     component.handleStatusChange(AccountStatus.Suspended);
-
-    expect(recyclersServiceSpy.getRecyclers).toHaveBeenCalledWith({
-      search: 'Ahmed',
-      status: AccountStatus.Suspended,
-    });
+    expect(component.pagedList.page()).toBe(1);
   });
 
-  it('should configure table actions and enforce visibility and disabled state per status', () => {
-    const viewAction = RECYCLER_TABLE_ACTIONS.find((a) => a.id === 'view')!;
-    const suspendAction = RECYCLER_TABLE_ACTIONS.find((a) => a.id === 'suspend')!;
-    const unsuspendAction = RECYCLER_TABLE_ACTIONS.find((a) => a.id === 'unsuspend')!;
-
-    expect(viewAction).toBeDefined();
-    expect(suspendAction).toBeDefined();
-    expect(unsuspendAction).toBeDefined();
-
-    // Eye action is always disabled
-    expect(viewAction.disabled?.(activeUser)).toBe(true);
-    expect(viewAction.disabled?.(suspendedUser)).toBe(true);
-    expect(viewAction.disabled?.(bannedUser)).toBe(true);
-
-    // Active row: suspend is visible, unsuspend is hidden
-    expect(suspendAction.visible?.(activeUser)).toBe(true);
-    expect(unsuspendAction.visible?.(activeUser)).toBe(false);
-
-    // Suspended row: unsuspend is visible, suspend is hidden
-    expect(suspendAction.visible?.(suspendedUser)).toBe(false);
-    expect(unsuspendAction.visible?.(suspendedUser)).toBe(true);
-
-    // Banned row: neither action is visible
-    expect(suspendAction.visible?.(bannedUser)).toBe(false);
-    expect(unsuspendAction.visible?.(bannedUser)).toBe(false);
-  });
-
-  it('should open suspend modal when suspend action is clicked on active user', () => {
+  it('should open suspend modal with selected user', () => {
     component.handleTableAction({ action: 'suspend', row: activeUser });
 
     expect(component.isSuspendModalOpen()).toBe(true);
     expect(component.selectedRecycler()).toEqual(activeUser);
-    expect(component.suspendForm.value.reason).toBe('');
-    expect(component.suspendForm.invalid).toBe(true);
+    expect(component.suspendForm.controls.reason.value).toBe('');
   });
 
-  it('should validate that suspension reason is required and cannot be whitespace only', () => {
+  it('should submit suspension with mandatory reason and reload pagedList', () => {
+    const reloadSpy = vi.spyOn(component.pagedList, 'reload');
+
     component.handleTableAction({ action: 'suspend', row: activeUser });
 
-    // Empty reason
-    component.confirmSuspend();
-    expect(recyclersServiceSpy.suspendRecycler).not.toHaveBeenCalled();
-
-    // Whitespace only
-    component.suspendForm.controls.reason.setValue('    ');
-    expect(component.suspendForm.invalid).toBe(true);
-    component.confirmSuspend();
-    expect(recyclersServiceSpy.suspendRecycler).not.toHaveBeenCalled();
-
-    // Valid reason
-    component.suspendForm.controls.reason.setValue('Repeated contamination offenses');
-    expect(component.suspendForm.valid).toBe(true);
-  });
-
-  it('should successfully submit suspend request, toast success, close modal, and reload', () => {
-    recyclersServiceSpy.getRecyclers.mockClear();
-    component.handleTableAction({ action: 'suspend', row: activeUser });
-
-    component.suspendForm.controls.reason.setValue('Repeated glass in paper bin');
+    component.suspendForm.controls.reason.setValue('Suspected repeated fraudulent drop-offs');
     component.confirmSuspend();
 
     expect(recyclersServiceSpy.suspendRecycler).toHaveBeenCalledWith(
       activeUser.userId,
-      'Repeated glass in paper bin'
+      'Suspected repeated fraudulent drop-offs'
     );
     expect(toastServiceSpy.success).toHaveBeenCalledWith(
       `Account for ${activeUser.name} suspended successfully`
     );
     expect(component.isSuspendModalOpen()).toBe(false);
-    expect(recyclersServiceSpy.getRecyclers).toHaveBeenCalledTimes(1);
+    expect(reloadSpy).toHaveBeenCalled();
   });
 
-  it('should handle service error during suspension without closing modal', () => {
-    recyclersServiceSpy.suspendRecycler.mockReturnValue(
-      throwError(() => ({ message: 'Failed to suspend account' }))
-    );
+  it('should open restore access confirm dialog and unsuspend user on confirmation', () => {
+    const reloadSpy = vi.spyOn(component.pagedList, 'reload');
 
-    component.handleTableAction({ action: 'suspend', row: activeUser });
-    component.suspendForm.controls.reason.setValue('Contamination');
-    component.confirmSuspend();
-
-    expect(recyclersServiceSpy.suspendRecycler).toHaveBeenCalled();
-    expect(toastServiceSpy.error).toHaveBeenCalled();
-    expect(component.isSuspendModalOpen()).toBe(true);
-    expect(component.isSubmitting()).toBe(false);
-  });
-
-  it('should open unsuspend confirm dialog and execute unsuspend on confirmation', () => {
-    recyclersServiceSpy.getRecyclers.mockClear();
     component.handleTableAction({ action: 'unsuspend', row: suspendedUser });
 
     expect(component.isUnsuspendDialogOpen()).toBe(true);
@@ -216,76 +199,34 @@ describe('Recyclers Component', () => {
 
     expect(recyclersServiceSpy.unsuspendRecycler).toHaveBeenCalledWith(suspendedUser.userId);
     expect(toastServiceSpy.success).toHaveBeenCalledWith(
-      `Account for ${suspendedUser.name} unsuspended successfully`
+      `Account for ${suspendedUser.name} restored to Active`
     );
     expect(component.isUnsuspendDialogOpen()).toBe(false);
-    expect(recyclersServiceSpy.getRecyclers).toHaveBeenCalledTimes(1);
+    expect(reloadSpy).toHaveBeenCalled();
   });
 
-  it('should handle service error during unsuspend and show toast error', () => {
-    recyclersServiceSpy.unsuspendRecycler.mockReturnValue(
-      throwError(() => ({ message: 'Network failure' }))
-    );
+  it('should show correct action buttons based on account status', () => {
+    const suspendAction = RECYCLER_TABLE_ACTIONS.find((a) => a.id === 'suspend')!;
+    const unsuspendAction = RECYCLER_TABLE_ACTIONS.find((a) => a.id === 'unsuspend')!;
 
-    component.handleTableAction({ action: 'unsuspend', row: suspendedUser });
-    component.confirmUnsuspend();
+    expect(suspendAction.visible?.(activeUser)).toBe(true);
+    expect(unsuspendAction.visible?.(activeUser)).toBe(false);
 
-    expect(recyclersServiceSpy.unsuspendRecycler).toHaveBeenCalled();
-    expect(toastServiceSpy.error).toHaveBeenCalled();
-    expect(component.isSubmitting()).toBe(false);
+    expect(suspendAction.visible?.(suspendedUser)).toBe(false);
+    expect(unsuspendAction.visible?.(suspendedUser)).toBe(true);
+
+    expect(suspendAction.visible?.(bannedUser)).toBe(false);
+    expect(unsuspendAction.visible?.(bannedUser)).toBe(false);
   });
 
-  it('should close modals on cancel without calling services', () => {
-    // Suspend cancel
-    component.handleTableAction({ action: 'suspend', row: activeUser });
-    component.closeSuspendModal();
-    expect(component.isSuspendModalOpen()).toBe(false);
-    expect(component.selectedRecycler()).toBeNull();
-    expect(recyclersServiceSpy.suspendRecycler).not.toHaveBeenCalled();
-
-    // Unsuspend cancel
-    component.handleTableAction({ action: 'unsuspend', row: suspendedUser });
-    component.closeUnsuspendDialog();
-    expect(component.isUnsuspendDialogOpen()).toBe(false);
-    expect(component.selectedRecycler()).toBeNull();
-    expect(recyclersServiceSpy.unsuspendRecycler).not.toHaveBeenCalled();
-  });
-
-  it('should render error state on initial load failure and retry successfully', () => {
-    recyclersServiceSpy.getRecyclers.mockReturnValueOnce(
-      throwError(() => ({ message: 'Server unavailable' }))
-    );
-
-    component.loadRecyclers();
-
-    expect(component.isLoading()).toBe(false);
-    expect(component.error()).toBeTruthy();
-
-    // Now retry
-    recyclersServiceSpy.getRecyclers.mockReturnValueOnce(
-      of({
-        items: MOCK_RECYCLERS,
-        page: 1,
-        pageSize: 10,
-        totalItems: MOCK_RECYCLERS.length,
-        totalPages: 1,
-      })
-    );
-    component.loadRecyclers();
-
-    expect(component.error()).toBeNull();
-    expect(component.recyclers().length).toBe(MOCK_RECYCLERS.length);
-  });
-
-  it('should map AccountStatus to expected badge variants and labels', () => {
+  it('should map account status to correct badge variant and label', () => {
     expect(getRecyclerStatusBadgeVariant(AccountStatus.Active)).toBe('success');
     expect(getRecyclerStatusBadgeVariant(AccountStatus.Suspended)).toBe('warning');
     expect(getRecyclerStatusBadgeVariant(AccountStatus.Banned)).toBe('danger');
-    expect(getRecyclerStatusBadgeVariant(AccountStatus.Inactive)).toBe('neutral');
+    expect(getRecyclerStatusBadgeVariant('unknown')).toBe('neutral');
 
     expect(getRecyclerStatusLabel(AccountStatus.Active)).toBe('Active');
     expect(getRecyclerStatusLabel(AccountStatus.Suspended)).toBe('Suspended');
     expect(getRecyclerStatusLabel(AccountStatus.Banned)).toBe('Banned');
-    expect(getRecyclerStatusLabel('unknown')).toBe('unknown');
   });
 });

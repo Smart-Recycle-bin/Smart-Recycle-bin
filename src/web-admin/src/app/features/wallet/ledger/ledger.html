@@ -1,33 +1,36 @@
 <div class="ledger-page">
   <!-- Page Header -->
   <app-page-header
-    title="Wallet & global ledger"
-    subtitle="Every points movement across the platform."
+    title="Wallet ledger"
+    subtitle="Audit-grade ledger of every point transaction in the system."
   >
     <div page-actions>
       <app-button
         variant="primary"
-        leadingIcon="plus"
         (clicked)="openAdjustmentDrawer()"
+        leadingIcon="plus"
       >
         Manual adjustment
       </app-button>
     </div>
   </app-page-header>
 
-  <!-- Immutable Ledger Notice -->
-  <app-notice
-    variant="info"
-    description="Immutable ledger — entries cannot be edited or deleted. Corrections are made by appending a new manual adjustment."
-  />
+  <!-- Immutable Notice Banner -->
+  <div class="notice-container">
+    <app-notice
+      variant="info"
+      title="Immutable system of record"
+      message="Ledger entries are permanent and cannot be modified or deleted. Manual adjustments append compensating credit/debit records with full audit trail."
+    />
+  </div>
 
   <!-- Filters Toolbar Card -->
   <div class="filters-card">
     <div class="filters-grid">
       <div class="filter-item search-filter">
         <app-search-input
-          placeholder="Search user, bin, transaction ID..."
-          [value]="searchTerm()"
+          placeholder="Search by ID, user, or reason..."
+          [value]="pagedList.filters().search || ''"
           (valueChange)="handleSearch($event)"
           (search)="handleSearch($event)"
         />
@@ -36,9 +39,9 @@
       <div class="filter-item type-filter">
         <app-select
           [options]="typeOptions"
-          [value]="selectedSource()"
-          placeholder="All types"
-          (valueChange)="handleTypeChange($event)"
+          [value]="pagedList.filters().source || ''"
+          placeholder="All transaction types"
+          (valueChange)="handleSourceChange($event)"
         />
       </div>
 
@@ -46,38 +49,40 @@
         <app-date-range-input
           [value]="dateRange()"
           (valueChange)="handleDateRangeChange($event)"
-          [compact]="true"
         />
       </div>
     </div>
   </div>
 
   <!-- Table or Error State -->
-  @if (error()) {
+  @if (pagedList.error() && pagedList.items().length === 0) {
     <div class="error-container">
       <app-resource-state
-        [error]="error()"
-        (retry)="loadLedger()"
+        [error]="pagedList.error()"
+        (retry)="pagedList.reload()"
       />
     </div>
   } @else {
     <div class="table-container">
       <app-data-table
         [columns]="tableColumns"
-        [data]="ledgerRows()"
-        [loading]="isLoading()"
-        mode="client"
+        [data]="pagedList.items()"
+        [loading]="pagedList.refreshing() || pagedList.loading()"
+        mode="server"
+        [page]="pagedList.page()"
+        [pageSize]="pagedList.pageSize()"
+        [total]="pagedList.total()"
+        [sortColumn]="pagedList.sortBy()"
+        [sortDir]="pagedList.sortDir()"
         [showPagination]="true"
-        [pageSize]="10"
-        emptyTitle="No ledger transactions found"
-        emptyDescription="No transaction records match the specified query filters."
+        (pageChange)="pagedList.setPage($event)"
+        (sortChange)="pagedList.setSort($event.key, $event.dir)"
+        emptyTitle="No ledger records found"
+        emptyDescription="No transaction records match the specified search or filter parameters."
       >
         <!-- Custom Transaction ID Cell -->
-        <ng-template appCell="transactionId" let-row>
-          <app-mono-id-cell
-            [value]="truncateId(row.transactionId)"
-            [title]="row.transactionId"
-          />
+        <ng-template appCell="id" let-row>
+          <app-mono-id-cell [value]="row.id" />
         </ng-template>
 
         <!-- Custom Timestamp Cell -->
@@ -86,7 +91,7 @@
         </ng-template>
 
         <!-- Custom User Cell -->
-        <ng-template appCell="userName" let-row>
+        <ng-template appCell="user" let-row>
           <app-user-cell
             [name]="row.userName"
             [subtitle]="row.userId"
@@ -151,10 +156,10 @@
       <form [formGroup]="adjustmentForm" (ngSubmit)="submitAdjustment()" class="adjustment-form">
         <div class="form-fields">
           <div class="form-field-group">
-            <label class="field-label">Recycler Account</label>
-            <app-select
+            <app-async-select
               formControlName="userId"
-              [options]="userOptions()"
+              label="Recycler Account"
+              [fetcher]="fetchRecyclers"
               placeholder="Select target recycler account..."
               [error]="userFieldError()"
             />
@@ -203,7 +208,7 @@
     </div>
 
     <div drawer-footer class="drawer-footer-wrapper">
-      <p class="audit-note">This action will be recorded in the audit log.</p>
+      <p class="audit-note">This transaction is immutable and will appear on the audit ledger immediately.</p>
       <div class="drawer-footer-actions">
         <app-button
           variant="ghost"
@@ -218,7 +223,7 @@
           [loading]="isSubmitting()"
           [disabled]="adjustmentForm.invalid || isSubmitting()"
         >
-          Apply adjustment
+          Confirm adjustment
         </app-button>
       </div>
     </div>
