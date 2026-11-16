@@ -77,6 +77,11 @@
   --focus-ring: rgba(0, 153, 102, 0.25);
   --overlay-backdrop: rgba(15, 23, 42, 0.65);
   --brand-gradient: linear-gradient(135deg, #009966 0%, #047857 100%);
+  --brand-panel-gradient: linear-gradient(145deg, #064E3B 0%, #008556 100%);
+  --brand-panel-fg: #FFFFFF;
+  --glass-chip-bg: rgba(255, 255, 255, 0.15);
+  --glass-chip-border: rgba(255, 255, 255, 0.25);
+  --glass-chip-fg: #FFFFFF;
   --tooltip-bg: #0F172A;
   --tooltip-fg: #FFFFFF;
   --tooltip-border: #334155;
@@ -176,6 +181,11 @@
   --focus-ring: rgba(16, 185, 129, 0.35);
   --overlay-backdrop: rgba(0, 0, 0, 0.75);
   --brand-gradient: linear-gradient(135deg, #064E3B 0%, #065F46 100%);
+  --brand-panel-gradient: linear-gradient(145deg, #031B14 0%, #064E3B 100%);
+  --brand-panel-fg: #F8FAFC;
+  --glass-chip-bg: rgba(255, 255, 255, 0.08);
+  --glass-chip-border: rgba(255, 255, 255, 0.15);
+  --glass-chip-fg: #F8FAFC;
   --tooltip-bg: #1E293B;
   --tooltip-fg: #F8FAFC;
   --tooltip-border: #334155;

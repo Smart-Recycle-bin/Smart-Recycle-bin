@@ -7,6 +7,7 @@ import {
   inject,
   input,
   linkedSignal,
+  model,
   output,
   signal,
 } from '@angular/core';
@@ -34,6 +35,8 @@ export class Input implements ControlValueAccessor, OnInit {
   readonly error = input<string>('');
   readonly required = input<boolean>(false);
   readonly disabled = input<boolean>(false);
+  readonly autocomplete = input<string>('');
+  readonly autofocus = input<boolean>(false);
   readonly leadingIcon = input<IconName | string | null | undefined>();
   readonly trailingIcon = input<IconName | string | null | undefined>();
   readonly id = input<string>(`input-${Math.random().toString(36).substring(2, 9)}`);
@@ -45,7 +48,7 @@ export class Input implements ControlValueAccessor, OnInit {
   readonly controlError = signal<string>('');
   readonly touched = signal<boolean>(false);
   readonly dirty = signal<boolean>(false);
-  readonly showPassword = signal<boolean>(false);
+  readonly showPassword = model<boolean>(false);
 
   private onChange: (val: string) => void = () => {};
   private onTouched: () => void = () => {};

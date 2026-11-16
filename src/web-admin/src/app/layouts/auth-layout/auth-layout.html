@@ -1,21 +1,8 @@
 <div class="auth-root">
-  <!-- Theme Toggle in Auth Layout -->
-  <div class="auth-theme-toggle-wrap">
-    <button
-      type="button"
-      class="auth-theme-toggle-btn"
-      [appTooltip]="isDark() ? 'Switch to light mode' : 'Switch to dark mode'"
-      tooltipPosition="bottom"
-      [attr.aria-label]="isDark() ? 'Switch to light mode' : 'Switch to dark mode'"
-      (click)="toggleTheme()"
-    >
-      <app-icon [name]="isDark() ? 'sun' : 'moon'" size="sm" />
-    </button>
-  </div>
-
-  <!-- Left Side: Auth Card -->
+  <!-- Left Side: Form Panel -->
   <main class="auth-card-panel">
-    <div class="auth-card fade-up">
+    <!-- Top Bar: Brand Logo & Theme Toggle -->
+    <header class="auth-card-header">
       <div class="auth-logo-wrap">
         <ng-content select="[auth-logo]">
           @if (logoSrc()) {
@@ -24,36 +11,156 @@
         </ng-content>
       </div>
 
-      @if (title() || subtitle()) {
-        <header class="auth-header">
-          @if (title()) {
-            <h1 class="auth-title">{{ title() }}</h1>
-          }
-          @if (subtitle()) {
-            <p class="auth-subtitle">{{ subtitle() }}</p>
-          }
-        </header>
-      }
+      <div class="auth-theme-toggle-wrap">
+        <button
+          type="button"
+          class="auth-theme-toggle-btn"
+          [appTooltip]="isDark() ? 'Switch to light mode' : 'Switch to dark mode'"
+          tooltipPosition="bottom"
+          [attr.aria-label]="isDark() ? 'Switch to light mode' : 'Switch to dark mode'"
+          (click)="toggleTheme()"
+        >
+          <app-icon [name]="isDark() ? 'sun' : 'moon'" size="sm" />
+        </button>
+      </div>
+    </header>
 
-      <div class="auth-content">
-        <router-outlet />
+    <!-- Mobile/Tablet Compact Gradient Header (< 1024px) -->
+    <div class="auth-compact-brand" aria-hidden="true">
+      <div class="compact-brand-content">
+        <span class="compact-badge">EcoBin System Admin</span>
+        <h2 class="compact-headline">Every bin, every kilo, accounted for.</h2>
       </div>
     </div>
+
+    <!-- Centered Form Container -->
+    <div class="auth-card-body">
+      <div class="auth-card fade-up">
+        @if (title() || subtitle()) {
+          <div class="auth-title-group">
+            @if (title()) {
+              <h1 class="auth-title">{{ title() }}</h1>
+            }
+            @if (subtitle()) {
+              <p class="auth-subtitle">{{ subtitle() }}</p>
+            }
+          </div>
+        }
+
+        <div class="auth-content">
+          <router-outlet />
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Footer -->
+    <footer class="auth-footer">
+      <p class="auth-footer-text">© EcoBin · Authorised administrators only</p>
+    </footer>
   </main>
 
-  <!-- Right Side: Projected Illustration / Tagline Panel -->
+  <!-- Right Side: Brand Panel (Full-Bleed Gradient on >= 1024px) -->
   <aside class="auth-aside-panel">
     <ng-content select="[auth-aside]">
-      <div class="auth-aside-default">
-        <div class="aside-illustration-placeholder" aria-hidden="true">
-          <img [src]="logoSrc()" [alt]="logoAlt()" class="aside-logo-mark" />
+      <div class="auth-brand-content">
+        <!-- Subtle SVG grid pattern -->
+        <svg class="brand-bg-pattern" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
+          <defs>
+            <pattern id="brand-grid" width="36" height="36" patternUnits="userSpaceOnUse">
+              <path d="M 36 0 L 0 0 0 36" fill="none" stroke="currentColor" stroke-width="1" stroke-opacity="0.08" />
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#brand-grid)" />
+        </svg>
+
+        <!-- Illustration composition & decorative floating glass chips -->
+        <div class="brand-visual-stage">
+          <!-- Glass Chip 1: Points earned -->
+          <div class="glass-chip chip-points" aria-hidden="true">
+            <app-icon name="sparkles" size="xs" />
+            <span class="chip-text">+12 pts</span>
+          </div>
+
+          <!-- Stylized Inline-SVG Smart Bin Composition -->
+          <div class="smart-bin-art" aria-hidden="true">
+            <svg viewBox="0 0 200 220" fill="none" xmlns="http://www.w3.org/2000/svg" class="smart-bin-svg">
+              <!-- Fill-level circular gauge / ring -->
+              <circle cx="100" cy="110" r="92" stroke="currentColor" stroke-opacity="0.15" stroke-width="4" stroke-dasharray="6 6" />
+              <circle cx="100" cy="110" r="76" stroke="currentColor" stroke-opacity="0.25" stroke-width="2" />
+
+              <!-- WiFi telemetry waves -->
+              <path d="M 82 22 A 26 26 0 0 1 118 22" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-opacity="0.75" />
+              <path d="M 72 12 A 40 40 0 0 1 128 12" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-opacity="0.45" />
+
+              <!-- Bin Body -->
+              <rect x="52" y="60" width="96" height="126" rx="14" fill="currentColor" fill-opacity="0.18" stroke="currentColor" stroke-width="3" />
+              
+              <!-- Bin Lid & Handle -->
+              <rect x="42" y="44" width="116" height="18" rx="6" fill="currentColor" fill-opacity="0.3" stroke="currentColor" stroke-width="3" />
+              <path d="M 88 44 V 38 A 4 4 0 0 1 92 34 H 108 A 4 4 0 0 1 112 38 V 44" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
+
+              <!-- Fill Level Indicator (internal gauge block) -->
+              <rect x="58" y="118" width="84" height="62" rx="8" fill="currentColor" fill-opacity="0.32" />
+              <line x1="58" y1="118" x2="142" y2="118" stroke="currentColor" stroke-width="2" stroke-dasharray="4 2" stroke-opacity="0.8" />
+
+              <!-- QR Code & Leaf Emblem on Bin Front -->
+              <rect x="85" y="74" width="30" height="30" rx="5" fill="currentColor" fill-opacity="0.22" stroke="currentColor" stroke-width="1.5" />
+              <rect x="89" y="78" width="8" height="8" rx="1.5" fill="currentColor" />
+              <rect x="103" y="78" width="8" height="8" rx="1.5" fill="currentColor" />
+              <rect x="89" y="92" width="8" height="8" rx="1.5" fill="currentColor" />
+              <rect x="103" y="92" width="4" height="4" fill="currentColor" />
+
+              <!-- Eco Leaf accent -->
+              <path d="M 100 142 C 100 134 108 128 116 128 C 116 136 108 142 100 142 Z" fill="currentColor" fill-opacity="0.85" />
+              <path d="M 100 142 C 96 142 93 145 93 148" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+            </svg>
+          </div>
+
+          <!-- Glass Chip 2: Telemetry status -->
+          <div class="glass-chip chip-bin" aria-hidden="true">
+            <span class="chip-pulse-dot"></span>
+            <span class="chip-text">BIN-0007 · 97%</span>
+          </div>
         </div>
-        <h2 class="aside-headline">
-          Every bin, every kilo, <span class="aside-accent">accounted for.</span>
-        </h2>
-        <p class="aside-subcopy">
-          Monitor the smart bin fleet, moderate accounts and keep the points ledger honest. Authorised administrators only.
-        </p>
+
+        <!-- Headline & Copy -->
+        <div class="brand-text-wrap">
+          <h2 class="brand-headline">
+            Every bin, every kilo, <span class="brand-headline-accent">accounted for.</span>
+          </h2>
+
+          <div class="brand-features-list">
+            <div class="brand-feature-item">
+              <div class="brand-feature-icon-box">
+                <app-icon name="activity" size="sm" />
+              </div>
+              <div class="brand-feature-copy">
+                <strong class="feature-title">Monitor the fleet</strong>
+                <span class="feature-desc">Real-time fill telemetry, battery diagnostics, and route alerts.</span>
+              </div>
+            </div>
+
+            <div class="brand-feature-item">
+              <div class="brand-feature-icon-box">
+                <app-icon name="shield" size="sm" />
+              </div>
+              <div class="brand-feature-copy">
+                <strong class="feature-title">Moderate accounts</strong>
+                <span class="feature-desc">Oversight of citizen, collector, and administrative activity.</span>
+              </div>
+            </div>
+
+            <div class="brand-feature-item">
+              <div class="brand-feature-icon-box">
+                <app-icon name="clipboard-check" size="sm" />
+              </div>
+              <div class="brand-feature-copy">
+                <strong class="feature-title">Keep the ledger honest</strong>
+                <span class="feature-desc">Tamper-evident audit trails and reliable points reconciliation.</span>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </ng-content>
   </aside>

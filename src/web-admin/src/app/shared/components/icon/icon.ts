@@ -38,6 +38,7 @@ import {
   LayoutDashboard,
   Lock,
   LogOut,
+  Mail,
   Map as MapIcon,
   MapPin,
   Menu,
@@ -112,6 +113,7 @@ export type IconName =
   | 'moon'
   | 'refresh'
   | 'lock'
+  | 'mail'
   | 'log-out'
   | 'shield'
   | 'trending-up'
@@ -182,6 +184,7 @@ const LUCIDE_ICONS: Record<IconName, IconNode> = {
   moon: Moon,
   refresh: RefreshCw,
   lock: Lock,
+  mail: Mail,
   'log-out': LogOut,
   shield: Shield,
   'trending-up': TrendingUp,

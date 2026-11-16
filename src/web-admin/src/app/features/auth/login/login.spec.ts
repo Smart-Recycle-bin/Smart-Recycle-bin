@@ -254,15 +254,68 @@ describe('Login Component', () => {
 
   it('should conditionally render prototype hint based on environment.useMockBackend', () => {
     const el = fixture.nativeElement as HTMLElement;
-    const hint = el.querySelector('.prototype-hint');
+    const hint = el.querySelector('.mock-backend-card, .prototype-hint');
 
     if (environment.useMockBackend) {
       expect(hint).toBeTruthy();
-      expect(hint?.textContent).toContain('Prototype:');
+      expect(hint?.textContent).toContain('Mock backend');
       expect(hint?.textContent).toContain('wrongpass');
     } else {
       expect(hint).toBeNull();
     }
+  });
+
+  it('should toggle password visibility and update aria-pressed', () => {
+    expect(component.showPassword()).toBe(false);
+
+    component.togglePasswordVisibility();
+    expect(component.showPassword()).toBe(true);
+
+    fixture.detectChanges();
+    const toggleBtn = fixture.nativeElement.querySelector('.input-icon-trailing-btn');
+    if (toggleBtn) {
+      expect(toggleBtn.getAttribute('aria-pressed')).toBe('true');
+    }
+
+    component.togglePasswordVisibility();
+    expect(component.showPassword()).toBe(false);
+  });
+
+  it('should detect caps lock and show warning hint', () => {
+    expect(component.capsLockActive()).toBe(false);
+
+    // Event with CapsLock active
+    const eventOn = {
+      getModifierState: (key: string) => key === 'CapsLock',
+    } as unknown as KeyboardEvent;
+    component.checkCapsLock(eventOn);
+    expect(component.capsLockActive()).toBe(true);
+
+    fixture.detectChanges();
+    const el = fixture.nativeElement as HTMLElement;
+    const warning = el.querySelector('.caps-lock-hint');
+    expect(warning).toBeTruthy();
+    expect(warning?.textContent).toContain('Caps Lock is on');
+
+    // Event with CapsLock inactive
+    const eventOff = {
+      getModifierState: () => false,
+    } as unknown as KeyboardEvent;
+    component.checkCapsLock(eventOff);
+    expect(component.capsLockActive()).toBe(false);
+  });
+
+  it('should fill mock credentials when fill button is clicked', () => {
+    if (!environment.useMockBackend) {
+      return;
+    }
+
+    component.fillMockCredentials();
+    expect(component.loginForm.value).toEqual({
+      email: 'admin@ecobin.eg',
+      password: 'password123',
+    });
+    expect(component.loginForm.valid).toBe(true);
   });
 
   it('should open and handle "Forgot password?" modal workflow', () => {

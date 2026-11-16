@@ -16,7 +16,7 @@ export class AuthLayout {
 
   readonly title = input<string>('Welcome back');
   readonly subtitle = input<string>('Sign in to the System Admin dashboard.');
-  readonly logoSrc = input<string>('ecobin-logo.svg');
+  readonly logoSrc = input<string>('brand/ecobin-logo.svg');
   readonly logoAlt = input<string>('EcoBin');
 
   readonly isDark = this.themeService.isDark;

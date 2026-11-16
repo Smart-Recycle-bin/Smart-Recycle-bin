@@ -50,6 +50,9 @@ export class Login {
   readonly prototypeErrorKeyword = environment.useMockBackend
     ? atob('d3JvbmdwYXNz')
     : '';
+  readonly mockCredentials = environment.useMockBackend
+    ? { email: 'admin@ecobin.eg', password: 'password123' }
+    : null;
 
   /**
    * State signals for authentication request and error handling.
@@ -58,6 +61,8 @@ export class Login {
   readonly invalidCredentials = signal<boolean>(false);
   readonly isSuspended = signal<boolean>(false);
   readonly isNotAdmin = signal<boolean>(false);
+  readonly showPassword = signal<boolean>(false);
+  readonly capsLockActive = signal<boolean>(false);
   readonly emailServerError = signal<string>('');
   readonly passwordServerError = signal<string>('');
 
@@ -80,6 +85,27 @@ export class Login {
   readonly forgotForm = this.fb.nonNullable.group({
     email: ['', [Validators.required, Validators.email]],
   });
+
+  togglePasswordVisibility(): void {
+    this.showPassword.update((v) => !v);
+  }
+
+  checkCapsLock(event: KeyboardEvent): void {
+    if (event && typeof event.getModifierState === 'function') {
+      this.capsLockActive.set(event.getModifierState('CapsLock'));
+    }
+  }
+
+  fillMockCredentials(): void {
+    if (!this.mockCredentials) {
+      return;
+    }
+    this.loginForm.setValue({
+      email: this.mockCredentials.email,
+      password: this.mockCredentials.password,
+    });
+    this.clearErrors();
+  }
 
   submitLogin(): void {
     if (this.isLoading()) {

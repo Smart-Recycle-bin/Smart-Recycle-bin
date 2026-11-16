@@ -24,6 +24,8 @@
       [placeholder]="placeholder()"
       [disabled]="internalDisabled()"
       [required]="required()"
+      [attr.autocomplete]="autocomplete() || null"
+      [autofocus]="autofocus()"
       [attr.aria-invalid]="!!effectiveError()"
       (input)="handleInput($event)"
       (blur)="handleBlur()"
@@ -38,6 +40,7 @@
         class="input-icon-trailing-btn"
         (click)="togglePasswordVisibility()"
         [attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'"
+        [attr.aria-pressed]="showPassword()"
       >
         <app-icon [name]="showPassword() ? 'eye-off' : 'eye'" size="sm" />
       </button>

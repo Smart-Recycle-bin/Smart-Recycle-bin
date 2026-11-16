@@ -20,28 +20,43 @@
   }
 
   <form [formGroup]="loginForm" (ngSubmit)="submitLogin()" class="login-form">
+    <!-- Email Field -->
     <div class="form-group">
       <app-input
-        label="Email"
+        label="Email address"
         type="email"
-        placeholder="admin@ecobin.org"
+        placeholder="admin@ecobin.eg"
         formControlName="email"
+        autocomplete="username"
+        [autofocus]="true"
+        leadingIcon="mail"
         [required]="true"
         [error]="emailServerError()"
         (valueChange)="clearErrors()"
       />
     </div>
 
-    <div class="form-group password-group">
+    <!-- Password Field & Caps-Lock Detection -->
+    <div class="form-group password-group" (keydown)="checkCapsLock($event)" (keyup)="checkCapsLock($event)">
       <app-input
         label="Password"
         type="password"
         placeholder="••••••••"
         formControlName="password"
+        autocomplete="current-password"
+        leadingIcon="lock"
+        [(showPassword)]="showPassword"
         [required]="true"
         [error]="passwordServerError()"
         (valueChange)="clearErrors()"
       />
+
+      @if (capsLockActive()) {
+        <div class="caps-lock-hint" role="status" aria-live="polite">
+          <app-icon name="alert-circle" size="xs" />
+          <span>Caps Lock is on</span>
+        </div>
+      }
 
       <div class="forgot-link-row">
         <button
@@ -54,17 +69,22 @@
       </div>
     </div>
 
-    @if (invalidCredentials()) {
-      <div class="login-error-banner" role="alert">
-        <app-icon name="alert-circle" size="sm" />
-        <span>Invalid email or password. Please try again.</span>
-      </div>
-    }
+    <!-- Reserved Error Banner Slot (No layout shift) -->
+    <div class="error-banner-slot">
+      @if (invalidCredentials()) {
+        <div class="login-error-banner" role="alert">
+          <app-icon name="alert-circle" size="sm" />
+          <span>Invalid email or password. Please try again.</span>
+        </div>
+      }
+    </div>
 
+    <!-- Submit Button -->
     <div class="submit-row">
       <app-button
         type="submit"
         variant="primary"
+        size="lg"
         [loading]="isLoading()"
         [disabled]="isLoading()"
         [fullWidth]="true"
@@ -74,10 +94,26 @@
     </div>
   </form>
 
-  @if (isMockBackend) {
-    <div class="prototype-hint">
-      <span class="prototype-label">Prototype:</span>
-      any valid email with a 6+ character password signs in. Use <code>{{ prototypeErrorKeyword }}</code> to see the error state.
+  <!-- Mock Backend Credentials Helper (Tree-shaken in production) -->
+  @if (isMockBackend && mockCredentials) {
+    <div class="mock-backend-card">
+      <div class="mock-chip-header">
+        <div class="mock-tag-group">
+          <span class="mock-chip-badge">Mock backend</span>
+          <span class="mock-chip-creds">{{ mockCredentials.email }}</span>
+        </div>
+        <button
+          type="button"
+          class="mock-fill-btn"
+          (click)="fillMockCredentials()"
+          aria-label="Auto-fill seeded admin credentials"
+        >
+          Fill
+        </button>
+      </div>
+      <p class="mock-test-note">
+        Any valid email signs in. Use <code>{{ prototypeErrorKeyword }}</code> to preview error state.
+      </p>
     </div>
   }
 
@@ -106,8 +142,10 @@
         <app-input
           label="Email address"
           type="email"
-          placeholder="admin@ecobin.org"
+          placeholder="admin@ecobin.eg"
           formControlName="email"
+          autocomplete="email"
+          leadingIcon="mail"
           [required]="true"
           [error]="forgotEmailError()"
         />
