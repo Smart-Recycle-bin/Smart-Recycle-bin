@@ -1,7 +1,7 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { MockRouter } from '../../engine/mock-router';
 import { getMockDb } from '../../../../mock/db/mock-db';
-import { okResponse, requireSysAdmin } from '../handler-utils';
+import { okResponse, requireSysAdmin, paginate } from '../handler-utils';
 
 export function registerAuditHandlers(router: MockRouter): void {
   // 1. Audit trail list with filters
@@ -51,6 +51,10 @@ export function registerAuditHandlers(router: MockRouter): void {
       );
     }
 
-    return okResponse(list);
+    return paginate(list, ctx.query, {
+      sortable: ['timestamp', 'adminName', 'actionType', 'resourceId', 'auditId'],
+      defaultSort: 'timestamp',
+      defaultDir: 'desc',
+    });
   });
 }

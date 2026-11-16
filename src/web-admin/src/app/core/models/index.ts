@@ -11,3 +11,4 @@ export * from './gamification';
 export * from './notification';
 export * from './audit';
 export * from './analytics';
+export * from './lookup';

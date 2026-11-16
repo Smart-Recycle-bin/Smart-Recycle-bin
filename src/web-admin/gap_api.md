@@ -712,6 +712,87 @@ Errors return:
 
 ---
 
+### 1.9 Pagination and Lookups (PROPOSED)
+
+To scale administrative fleet, recycler, audit, and transaction listings, server-side pagination and lightweight lookup endpoints are defined as additive, non-breaking enhancements.
+
+#### Pagination Contract
+- **Query Parameters on List Endpoints:**
+  - `page` (optional integer, 1-based, default: `1`).
+  - `pageSize` (optional integer, default: `10`, maximum: `100`).
+  - `sortBy` (optional string, validated against per-endpoint whitelist).
+  - `sortDir` (optional string, `'asc'` | `'desc'`, default per endpoint).
+  - Plus all existing filter parameters (`search`, `status`, `district`, `from`, `to`, etc.).
+- **Response Envelope:**
+  When `page` is provided by the client, the response envelope keeps `data` as an array and adds a sibling `meta` object:
+  ```json
+  {
+    "success": true,
+    "data": [ ... ],
+    "meta": {
+      "page": 1,
+      "pageSize": 10,
+      "totalItems": 23,
+      "totalPages": 3
+    }
+  }
+  ```
+- **Backward-Compatible Unpaged Fallback:**
+  If the client sends **no** `page` parameter, the endpoint behaves exactly as previously: returning the full array under `data` without a `meta` field. This guarantees full backward compatibility for existing consumers (including the mobile app).
+- **Validation and Edge Cases:**
+  - Invalid `page` (non-integer, $\le 0$), invalid `pageSize` (non-integer, $\le 0$, $> 100$), invalid `sortBy` (not on whitelist), or invalid `sortDir` (not `asc`/`desc`) returns `400 VALIDATION_ERROR`.
+  - Requesting a page beyond `totalPages` (e.g. `page=99`) returns empty `data: []` with accurate `meta` (not an error).
+- **Paginated Endpoints and Sort Whitelists:**
+  1. `GET /api/v1/admin/bins`:
+     - Sort whitelist: `['name', 'fillLevel', 'status', 'lastServicedAt', 'binId', 'area', 'district']`
+     - Default sort: `binId` ascending (`asc`).
+  2. `GET /api/v1/admin/collectors`:
+     - Sort whitelist: `['name', 'district', 'status', 'assignedBinsCount', 'lastActiveAt', 'collectorId']`
+     - Default sort: `collectorId` ascending (`asc`).
+  3. `GET /api/v1/admin/users`:
+     - Documented user search endpoint extended with server-side pagination parameters.
+     - Sort whitelist: `['name', 'status', 'availablePoints', 'lifetimePoints', 'sessions', 'joined', 'userId']`
+     - Default sort: `name` ascending (`asc`).
+  4. `GET /api/v1/admin/ledger`:
+     - Sort whitelist: `['timestamp', 'pointsDelta', 'runningBalance', 'userName', 'entryType', 'source']`
+     - Default sort: `timestamp` descending (`desc`, newest first).
+  5. `GET /api/v1/admin/audit-logs`:
+     - Sort whitelist: `['timestamp', 'adminName', 'actionType', 'resourceId', 'auditId']`
+     - Default sort: `timestamp` descending (`desc`, newest first).
+  6. `GET /api/v1/admin/inspections`:
+     - Sort whitelist: `['date', 'status', 'mlPredictedWasteType', 'mlConfidence', 'airId', 'reportId']`
+     - Default sort: `date` descending (`desc`, newest first).
+  7. `GET /api/v1/admin/survey-qa/recent`:
+     - Sort whitelist: `['sessionId', 'userName', 'points', 'result']`
+     - Default sort: `sessionId` ascending (`asc`).
+  8. `GET /api/v1/leaderboard`:
+     - Documented leaderboard endpoint extended with server-side pagination parameters.
+     - Sort whitelist: `['rank', 'displayName', 'lifetimePoints', 'recyclingVolumeKg']`
+     - Default sort: `rank` ascending (`asc`).
+- **Endpoints NOT Paginated:**
+  - Rewards catalog (`/admin/rewards` — small fixed inventory)
+  - Notifications panel (`/admin/notifications`)
+  - Analytics overview (`/admin/analytics/overview`)
+  - Milestone badges (`/admin/badges` — fixed threshold set)
+  - Waste-type options (`/admin/waste-types`)
+
+#### Lookups Endpoints (PROPOSED, Not Paginated)
+Lightweight lookup endpoints dedicated for dropdowns, filters, and assignment selectors:
+
+1. `GET /api/v1/admin/lookups/districts`
+   - Purpose: Retrieve all unique districts and regions for filter dropdowns.
+   - Response: `DistrictLookupItem[]`: `[{ "name": "Cairo", "region": "Greater Cairo" }, ...]`
+2. `GET /api/v1/admin/lookups/collectors`
+   - Purpose: Retrieve minimal collector identifiers and names for filter/assignment selects.
+   - Response: `CollectorLookupItem[]`: `[{ "collectorId": "C-001", "displayName": "Mahmoud Hassan" }, ...]`
+3. `GET /api/v1/admin/lookups/admins`
+   - Purpose: Retrieve admin options for audit log filters without depending on filtered query results.
+   - Response: `AdminLookupItem[]`: `[{ "adminId": "ADM-001", "displayName": "Laila Hamdy" }, ...]`
+- **Note on Large Pickers:**
+  For picking recyclers (e.g. manual points adjustment) or smart bins (fleet assignment), pickers query the paginated list endpoint with `search` and `pageSize=20`.
+
+---
+
 ## 2. Contract Discrepancies
 
 | Item | `APIs.md` | `schema.dbml` | UI (`smart waste bins.pdf`) | Frontend Decision |
@@ -737,7 +818,7 @@ Errors return:
 1. **API Error Body Shape:** `APIs.md` does not specify a single canonical JSON error envelope.
    - *Current Assumption:* `{ success: false, error?: { code: string; message?: string }, code?: string, message?: string }`.
 2. **Pagination Strategy:** `APIs.md` lacks pagination query parameters (`page`, `pageSize`, `limit`, `offset`) and pagination envelope metadata across all endpoints.
-   - *Current Assumption:* All tables in frontend prototype use client-side pagination over full result sets.
+   - *Resolution:* Additive, backward-compatible server-side pagination contract defined in Section 1.9 (`page`, `pageSize`, `sortBy`, `sortDir`, `meta` envelope). Unpaged requests without `page` continue returning raw data array for backward compatibility. Dedicated lightweight lookups (`districts`, `collectors`, `admins`) introduced for dropdown filters.
 3. **Refresh Token Storage & Schema:** `schema.dbml` has no `refresh_tokens` table.
    - *Recommendation:* Backend needs a `refresh_tokens` table storing `(id, user_id, token_hash, expires_at, revoked_at, replaced_by_token, created_at)`.
 4. **Behavior Undefined in Preliminary UI (Section 4 of `frontend-scope.md`):**

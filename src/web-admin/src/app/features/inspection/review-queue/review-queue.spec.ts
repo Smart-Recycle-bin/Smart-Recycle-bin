@@ -27,7 +27,15 @@ describe('ReviewQueue Component', () => {
   beforeEach(async () => {
     inspectionReportsServiceSpy = {
       getSummary: vi.fn().mockReturnValue(of(MOCK_INSPECTION_SUMMARY)),
-      getReports: vi.fn().mockReturnValue(of(MOCK_INSPECTION_REPORTS)),
+      getReports: vi.fn().mockReturnValue(
+        of({
+          items: MOCK_INSPECTION_REPORTS,
+          page: 1,
+          pageSize: 10,
+          totalItems: MOCK_INSPECTION_REPORTS.length,
+          totalPages: Math.ceil(MOCK_INSPECTION_REPORTS.length / 10),
+        })
+      ),
     };
 
     reviewQueueStateSpy = {
@@ -142,7 +150,15 @@ describe('ReviewQueue Component', () => {
     expect(component.isLoadingReports()).toBe(false);
     expect(component.error()).toBeTruthy();
 
-    inspectionReportsServiceSpy.getReports.mockReturnValueOnce(of(MOCK_INSPECTION_REPORTS));
+    inspectionReportsServiceSpy.getReports.mockReturnValueOnce(
+      of({
+        items: MOCK_INSPECTION_REPORTS,
+        page: 1,
+        pageSize: 10,
+        totalItems: MOCK_INSPECTION_REPORTS.length,
+        totalPages: 1,
+      })
+    );
     component.loadReports();
 
     expect(component.error()).toBeNull();

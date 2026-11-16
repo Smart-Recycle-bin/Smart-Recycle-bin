@@ -4,7 +4,7 @@ import { getMockDb } from '../../../../mock/db/mock-db';
 import { BinStatus } from '../../../../models/bin/bin-status.enum';
 import { AuditActionType } from '../../../../models/audit/audit-action-type.enum';
 import { ApiErrorCode } from '../../../../models/common/api-error-code.enum';
-import { okResponse, errorResponse, requireSysAdmin, appendAuditLog } from '../handler-utils';
+import { okResponse, errorResponse, requireSysAdmin, appendAuditLog, paginate } from '../handler-utils';
 import {
   RegisterBinRequest,
   RegisterBinResponse,
@@ -51,7 +51,11 @@ export function registerBinHandlers(router: MockRouter): void {
       );
     }
 
-    return okResponse(list);
+    return paginate(list, ctx.query, {
+      sortable: ['name', 'fillLevel', 'status', 'lastServicedAt', 'binId', 'area', 'district'],
+      defaultSort: 'binId',
+      defaultDir: 'asc',
+    });
   });
 
   // 2. Register smart bin (APIs.md 7.1)

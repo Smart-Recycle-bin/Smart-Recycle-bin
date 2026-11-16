@@ -1,12 +1,13 @@
 // GAP: see gap_api.md → Collectors List & Actions (UI p6, p7)
 import { BinStatus } from '../bin/bin-status.enum';
 import { Id } from '../common/id.model';
+import { PageQuery } from '../common/page.model';
 import { AccountStatus } from '../user/account-status.enum';
 
 /**
  * Filter query parameters for the collectors table (UI p6).
  */
-export interface CollectorQuery {
+export interface CollectorQuery extends PageQuery {
   search?: string;
   district?: string;
   status?: AccountStatus;

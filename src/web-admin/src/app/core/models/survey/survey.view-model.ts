@@ -1,15 +1,18 @@
 // GAP: see gap_api.md → Survey QA Quality Analytics (UI p11)
 import { Id } from '../common/id.model';
+import { PageQuery } from '../common/page.model';
 import { SurveyOutcome } from './survey-outcome.enum';
 
 /**
  * Filter query parameters for the Survey QA page (UI p11).
  */
-export interface SurveyQaQuery {
+export interface SurveyQaQuery extends PageQuery {
   period?: string;
   from?: string; // ISO date string
   to?: string;   // ISO date string
 }
+
+export type RecentSurveyQuery = SurveyQaQuery;
 
 /**
  * Top-level KPI card values and period deltas (UI p11).

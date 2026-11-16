@@ -27,7 +27,10 @@ describe('SurveyQaService', () => {
       .expectOne(`${environment.apiBaseUrl}/admin/survey-qa`)
       .flush({ success: true, data: { confirmCount: 17040 } });
 
-    service.getRecentSurveys().subscribe();
+    service.getRecentSurveys().subscribe((page) => {
+      expect(page.items).toEqual([]);
+      expect(page.totalItems).toBe(0);
+    });
     httpMock
       .expectOne(`${environment.apiBaseUrl}/admin/survey-qa/recent`)
       .flush({ success: true, data: [] });

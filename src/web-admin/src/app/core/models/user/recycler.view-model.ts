@@ -1,11 +1,12 @@
 // GAP: see gap_api.md → Recyclers Moderation List (UI p5)
 import { Id } from '../common/id.model';
+import { PageQuery } from '../common/page.model';
 import { AccountStatus } from './account-status.enum';
 
 /**
  * Filter query parameters for the recyclers moderation screen (UI p5).
  */
-export interface RecyclerQuery {
+export interface RecyclerQuery extends PageQuery {
   search?: string;
   status?: AccountStatus;
 }

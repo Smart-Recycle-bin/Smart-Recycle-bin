@@ -1,7 +1,7 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { MockRouter } from '../../engine/mock-router';
 import { getMockDb } from '../../../../mock/db/mock-db';
-import { okResponse, requireSysAdmin } from '../handler-utils';
+import { okResponse, requireSysAdmin, paginate } from '../handler-utils';
 
 export function registerSurveyHandlers(router: MockRouter): void {
   // 1. Survey QA summary and KPI trends
@@ -41,6 +41,10 @@ export function registerSurveyHandlers(router: MockRouter): void {
       );
     }
 
-    return okResponse(list);
+    return paginate(list, ctx.query, {
+      sortable: ['sessionId', 'userName', 'points', 'result'],
+      defaultSort: 'sessionId',
+      defaultDir: 'asc',
+    });
   });
 }

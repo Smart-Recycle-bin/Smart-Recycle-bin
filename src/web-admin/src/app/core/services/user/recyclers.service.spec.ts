@@ -23,10 +23,17 @@ describe('RecyclersService', () => {
   });
 
   it('should query recyclers with parameters', () => {
-    service.getRecyclers({ search: 'Nour', status: AccountStatus.Active }).subscribe();
+    service.getRecyclers({ search: 'Nour', status: AccountStatus.Active }).subscribe((page) => {
+      expect(page.items).toEqual([]);
+      expect(page.totalItems).toBe(0);
+    });
 
     const req = httpMock.expectOne(
-      `${environment.apiBaseUrl}/admin/users?role=USER_CITIZEN&query=Nour&status=active`
+      (r) =>
+        r.url === `${environment.apiBaseUrl}/admin/users` &&
+        r.params.get('role') === 'USER_CITIZEN' &&
+        r.params.get('query') === 'Nour' &&
+        r.params.get('status') === 'active'
     );
     expect(req.request.method).toBe('GET');
     req.flush({ success: true, data: [] });

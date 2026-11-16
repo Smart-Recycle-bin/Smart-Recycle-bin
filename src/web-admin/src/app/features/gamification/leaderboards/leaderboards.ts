@@ -85,8 +85,9 @@ export class Leaderboards implements OnInit {
       .getLeaderboard({ scope: targetScope })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (rows) => {
-          this.leaderboardRows.set(rows);
+        next: (page) => {
+          // TODO(prompt-3): full server-side pagination UI
+          this.leaderboardRows.set(page.items);
           this.isLoadingLeaderboard.set(false);
         },
         error: (err) => {

@@ -1,7 +1,7 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { MockRouter } from '../../engine/mock-router';
 import { getMockDb } from '../../../../mock/db/mock-db';
-import { okResponse, requireSysAdmin } from '../handler-utils';
+import { okResponse, requireSysAdmin, paginate } from '../handler-utils';
 
 export function registerGamificationHandlers(router: MockRouter): void {
   // 1. Leaderboard rankings by scope (APIs.md 5.5)
@@ -14,13 +14,18 @@ export function registerGamificationHandlers(router: MockRouter): void {
     const db = getMockDb();
     const scope = ctx.query.get('scope')?.toLowerCase();
 
+    let list = db.leaderboards.weekly;
     if (scope === 'monthly') {
-      return okResponse(db.leaderboards.monthly);
+      list = db.leaderboards.monthly;
+    } else if (scope === 'all-time' || scope === 'alltime') {
+      list = db.leaderboards.allTime;
     }
-    if (scope === 'all-time' || scope === 'alltime') {
-      return okResponse(db.leaderboards.allTime);
-    }
-    return okResponse(db.leaderboards.weekly);
+
+    return paginate(list, ctx.query, {
+      sortable: ['rank', 'displayName', 'lifetimePoints', 'recyclingVolumeKg'],
+      defaultSort: 'rank',
+      defaultDir: 'asc',
+    });
   });
 
   // 2. Milestone badges catalog

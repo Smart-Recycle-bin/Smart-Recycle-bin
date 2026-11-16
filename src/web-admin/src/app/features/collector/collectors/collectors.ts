@@ -212,10 +212,11 @@ export class Collectors implements OnInit {
     }
 
     this.collectorsService.getCollectors(query).subscribe({
-      next: (data) => {
-        this.collectors.set(data);
+      next: (page) => {
+        // TODO(prompt-3): server-side pagination migration
+        this.collectors.set(page.items);
         if (!search) {
-          this.allCollectors.set(data);
+          this.allCollectors.set(page.items);
         }
         this.isLoading.set(false);
       },
@@ -407,8 +408,9 @@ export class Collectors implements OnInit {
     this.isLoadingAvailableBins.set(true);
 
     this.binsService.getBins().subscribe({
-      next: (bins) => {
-        this.availableBins.set(bins);
+      next: (page) => {
+        // TODO(prompt-3): server-side pagination migration
+        this.availableBins.set(page.items);
         this.isLoadingAvailableBins.set(false);
       },
       error: (err) => {

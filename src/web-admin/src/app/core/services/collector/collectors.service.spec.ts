@@ -23,7 +23,10 @@ describe('CollectorsService', () => {
   });
 
   it('should query collectors list', () => {
-    service.getCollectors({ district: 'Cairo' }).subscribe();
+    service.getCollectors({ district: 'Cairo' }).subscribe((page) => {
+      expect(page.items).toEqual([]);
+      expect(page.totalItems).toBe(0);
+    });
 
     const req = httpMock.expectOne(`${environment.apiBaseUrl}/admin/collectors?district=Cairo`);
     expect(req.request.method).toBe('GET');

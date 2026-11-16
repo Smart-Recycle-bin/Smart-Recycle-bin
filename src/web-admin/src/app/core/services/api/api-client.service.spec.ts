@@ -84,4 +84,70 @@ describe('ApiClientService', () => {
       .expectOne(`${environment.apiBaseUrl}/test-delete`)
       .flush({ success: true, data: 'deleted' });
   });
+
+  describe('getPaged', () => {
+    it('should read data and meta and return Page<T> when meta is present', () => {
+      const items = [{ id: 1, name: 'Item 1' }, { id: 2, name: 'Item 2' }];
+      const meta = { page: 2, pageSize: 2, totalItems: 10, totalPages: 5 };
+      let result: any;
+
+      service.getPaged<{ id: number; name: string }>('/items', { page: 2, pageSize: 2 }).subscribe((p) => {
+        result = p;
+      });
+
+      const req = httpMock.expectOne(`${environment.apiBaseUrl}/items?page=2&pageSize=2`);
+      expect(req.request.method).toBe('GET');
+
+      req.flush({ success: true, data: items, meta });
+
+      expect(result).toEqual({
+        items,
+        page: 2,
+        pageSize: 2,
+        totalItems: 10,
+        totalPages: 5,
+      });
+    });
+
+    it('should derive pagination metadata from array when meta is missing', () => {
+      const items = [{ id: 1, name: 'Item 1' }, { id: 2, name: 'Item 2' }, { id: 3, name: 'Item 3' }];
+      let result: any;
+
+      service.getPaged<{ id: number; name: string }>('/items-no-meta').subscribe((p) => {
+        result = p;
+      });
+
+      const req = httpMock.expectOne(`${environment.apiBaseUrl}/items-no-meta`);
+      expect(req.request.method).toBe('GET');
+
+      req.flush({ success: true, data: items });
+
+      expect(result).toEqual({
+        items,
+        page: 1,
+        pageSize: 3,
+        totalItems: 3,
+        totalPages: 1,
+      });
+    });
+
+    it('should handle empty data without meta gracefully', () => {
+      let result: any;
+
+      service.getPaged('/empty').subscribe((p) => {
+        result = p;
+      });
+
+      const req = httpMock.expectOne(`${environment.apiBaseUrl}/empty`);
+      req.flush({ success: true, data: [] });
+
+      expect(result).toEqual({
+        items: [],
+        page: 1,
+        pageSize: 10,
+        totalItems: 0,
+        totalPages: 1,
+      });
+    });
+  });
 });

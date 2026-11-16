@@ -3,6 +3,7 @@ import { inject, Injectable } from '@angular/core';
 import { map, Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ApiResponse } from '../../models/common/api-response.dto';
+import { Page, PageQuery } from '../../models/common/page.model';
 
 export interface RequestOptions {
   params?: Record<string, unknown> | HttpParams;
@@ -31,6 +32,52 @@ export class ApiClientService {
         context: options?.context,
       })
       .pipe(map((res) => this.unwrapData<T>(res)));
+  }
+
+  /**
+   * Performs an HTTP GET request on a paginated list endpoint,
+   * reading data and meta to return a unified Page<T>.
+   * If meta is absent, derives pagination metadata from the array.
+   */
+  getPaged<T>(
+    endpoint: string,
+    query?: PageQuery | Record<string, unknown>,
+    options?: RequestOptions
+  ): Observable<Page<T>> {
+    const url = this.resolveUrl(endpoint);
+    const combinedParams = {
+      ...(query as Record<string, unknown>),
+      ...(options?.params as Record<string, unknown>),
+    };
+    const httpParams = this.buildParams(combinedParams);
+
+    return this.http
+      .get<ApiResponse<T[]>>(url, {
+        params: httpParams,
+        headers: options?.headers,
+        context: options?.context,
+      })
+      .pipe(
+        map((res) => {
+          const items = Array.isArray(res?.data) ? res.data : [];
+          if (res?.meta) {
+            return {
+              items,
+              page: res.meta.page,
+              pageSize: res.meta.pageSize,
+              totalItems: res.meta.totalItems,
+              totalPages: res.meta.totalPages,
+            };
+          }
+          return {
+            items,
+            page: 1,
+            pageSize: items.length || 10,
+            totalItems: items.length,
+            totalPages: 1,
+          };
+        })
+      );
   }
 
   /**

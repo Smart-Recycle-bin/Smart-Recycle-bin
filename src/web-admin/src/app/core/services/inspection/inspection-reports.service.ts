@@ -9,6 +9,7 @@ import {
   InspectionSummary,
   WasteTypeOption,
 } from '../../models/inspection/inspection.view-model';
+import { Page } from '../../models/common/page.model';
 import {
   CorrectCategoryRequest,
   InspectionActionResponse,
@@ -30,10 +31,8 @@ export class InspectionReportsService {
   /**
    * Retrieves list of inspection reports flagged for manual review (PROPOSED, gap_api.md 1.6).
    */
-  getReports(query?: InspectionReportQuery): Observable<InspectionReportListItem[]> {
-    return this.apiClient.get<InspectionReportListItem[]>(API_ENDPOINTS.inspection.list, {
-      params: query as Record<string, unknown>,
-    });
+  getReports(query?: InspectionReportQuery): Observable<Page<InspectionReportListItem>> {
+    return this.apiClient.getPaged<InspectionReportListItem>(API_ENDPOINTS.inspection.list, query);
   }
 
   /**

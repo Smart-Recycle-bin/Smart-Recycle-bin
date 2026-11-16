@@ -175,7 +175,8 @@ export class SurveyQa implements OnInit {
       .subscribe({
         next: ({ summary, recentSurveys }) => {
           this.summary.set(summary);
-          this.recentSurveys.set(recentSurveys);
+          // TODO(prompt-3): full server-side pagination UI
+          this.recentSurveys.set(recentSurveys.items);
           this.isLoading.set(false);
         },
         error: (err) => {

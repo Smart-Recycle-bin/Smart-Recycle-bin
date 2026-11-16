@@ -36,7 +36,13 @@ describe('Ledger Component', () => {
 
   beforeEach(async () => {
     ledgerServiceSpy = {
-      getLedger: vi.fn().mockReturnValue(of(MOCK_LEDGER_ROWS)),
+      getLedger: vi.fn().mockReturnValue(of({
+        items: MOCK_LEDGER_ROWS,
+        page: 1,
+        pageSize: 10,
+        totalItems: MOCK_LEDGER_ROWS.length,
+        totalPages: Math.ceil(MOCK_LEDGER_ROWS.length / 10),
+      })),
       adjustPoints: vi.fn().mockReturnValue(
         of({
           transactionId: 'tx_adj_001',
@@ -48,7 +54,13 @@ describe('Ledger Component', () => {
     };
 
     recyclersServiceSpy = {
-      getRecyclers: vi.fn().mockReturnValue(of(MOCK_RECYCLERS)),
+      getRecyclers: vi.fn().mockReturnValue(of({
+        items: MOCK_RECYCLERS,
+        page: 1,
+        pageSize: 10,
+        totalItems: MOCK_RECYCLERS.length,
+        totalPages: Math.ceil(MOCK_RECYCLERS.length / 10),
+      })),
     };
 
     toastServiceSpy = {
@@ -263,7 +275,15 @@ describe('Ledger Component', () => {
     expect(component.isLoading()).toBe(false);
     expect(component.error()).toBeTruthy();
 
-    ledgerServiceSpy.getLedger.mockReturnValueOnce(of(MOCK_LEDGER_ROWS));
+    ledgerServiceSpy.getLedger.mockReturnValueOnce(
+      of({
+        items: MOCK_LEDGER_ROWS,
+        page: 1,
+        pageSize: 10,
+        totalItems: MOCK_LEDGER_ROWS.length,
+        totalPages: 1,
+      })
+    );
     component.loadLedger();
 
     expect(component.error()).toBeNull();

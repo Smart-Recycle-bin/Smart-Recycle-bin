@@ -119,7 +119,9 @@ export class AuditLogs implements OnInit {
       .getAuditLogs(query)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (rows) => {
+        next: (page) => {
+          // TODO(prompt-3): full server-side pagination UI
+          const rows = page.items;
           this.auditLogs.set(rows);
           this.isLoading.set(false);
 

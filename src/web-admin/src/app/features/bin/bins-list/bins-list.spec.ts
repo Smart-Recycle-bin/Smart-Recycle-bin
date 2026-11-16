@@ -25,7 +25,13 @@ describe('BinsList Component', () => {
 
   beforeEach(async () => {
     binsServiceSpy = {
-      getBins: vi.fn().mockReturnValue(of(MOCK_BINS)),
+      getBins: vi.fn().mockReturnValue(of({
+        items: MOCK_BINS,
+        page: 1,
+        pageSize: 10,
+        totalItems: MOCK_BINS.length,
+        totalPages: Math.ceil(MOCK_BINS.length / 10),
+      })),
       registerBin: vi.fn().mockReturnValue(of({
         binId: 'BIN-9999',
         deviceSerial: 'SN-99999',

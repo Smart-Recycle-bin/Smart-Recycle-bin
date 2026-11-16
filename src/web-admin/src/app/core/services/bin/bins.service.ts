@@ -3,6 +3,7 @@ import { Observable } from 'rxjs';
 import { ApiClientService } from '../api/api-client.service';
 import { API_ENDPOINTS } from '../api/api-endpoints';
 import { BinListItem, BinQuery } from '../../models/bin/bin.view-model';
+import { Page } from '../../models/common/page.model';
 import {
   AssignBinRequest,
   AssignBinResponse,
@@ -19,10 +20,8 @@ export class BinsService {
   /**
    * Retrieves list of all smart bins for table view and live map (PROPOSED, gap_api.md 1.3).
    */
-  getBins(query?: BinQuery): Observable<BinListItem[]> {
-    return this.apiClient.get<BinListItem[]>(API_ENDPOINTS.bin.list, {
-      params: query as Record<string, unknown>,
-    });
+  getBins(query?: BinQuery): Observable<Page<BinListItem>> {
+    return this.apiClient.getPaged<BinListItem>(API_ENDPOINTS.bin.list, query);
   }
 
   /**

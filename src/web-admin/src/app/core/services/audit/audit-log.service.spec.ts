@@ -23,7 +23,10 @@ describe('AuditLogService', () => {
   });
 
   it('should query audit logs with parameters', () => {
-    service.getAuditLogs({ actionType: AuditActionType.BinAssignment }).subscribe();
+    service.getAuditLogs({ actionType: AuditActionType.BinAssignment }).subscribe((page) => {
+      expect(page.items).toEqual([]);
+      expect(page.totalItems).toBe(0);
+    });
 
     const req = httpMock.expectOne(
       `${environment.apiBaseUrl}/admin/audit-logs?actionType=BIN_ASSIGN`

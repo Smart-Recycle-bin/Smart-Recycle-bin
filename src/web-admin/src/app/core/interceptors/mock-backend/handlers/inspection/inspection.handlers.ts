@@ -3,7 +3,7 @@ import { MockRouter } from '../../engine/mock-router';
 import { getMockDb } from '../../../../mock/db/mock-db';
 import { InspectionReportStatus } from '../../../../models/inspection/inspection-report-status.enum';
 import { ApiErrorCode } from '../../../../models/common/api-error-code.enum';
-import { okResponse, errorResponse, requireSysAdmin } from '../handler-utils';
+import { okResponse, errorResponse, requireSysAdmin, paginate } from '../handler-utils';
 import {
   CorrectCategoryRequest,
   InspectionActionResponse,
@@ -47,7 +47,11 @@ export function registerInspectionHandlers(router: MockRouter): void {
       );
     }
 
-    return okResponse(list);
+    return paginate(list, ctx.query, {
+      sortable: ['date', 'status', 'mlPredictedWasteType', 'mlConfidence', 'airId', 'reportId'],
+      defaultSort: 'date',
+      defaultDir: 'desc',
+    });
   });
 
   // 3. Inspection report detail

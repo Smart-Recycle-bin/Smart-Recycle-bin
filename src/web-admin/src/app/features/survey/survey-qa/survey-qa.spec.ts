@@ -26,7 +26,15 @@ describe('SurveyQa', () => {
   beforeEach(async () => {
     surveyQaServiceMock = {
       getQaSummary: vi.fn().mockReturnValue(of(structuredClone(MOCK_SURVEY_QA_SUMMARY))),
-      getRecentSurveys: vi.fn().mockReturnValue(of(structuredClone(MOCK_RECENT_SURVEYS))),
+      getRecentSurveys: vi.fn().mockReturnValue(
+        of({
+          items: structuredClone(MOCK_RECENT_SURVEYS),
+          page: 1,
+          pageSize: 10,
+          totalItems: MOCK_RECENT_SURVEYS.length,
+          totalPages: Math.ceil(MOCK_RECENT_SURVEYS.length / 10),
+        })
+      ),
     };
 
     await TestBed.configureTestingModule({
@@ -200,7 +208,15 @@ describe('SurveyQa', () => {
 
     // Now mock recovery on second retry
     surveyQaServiceMock.getQaSummary.mockReturnValue(of(structuredClone(MOCK_SURVEY_QA_SUMMARY)));
-    surveyQaServiceMock.getRecentSurveys.mockReturnValue(of(structuredClone(MOCK_RECENT_SURVEYS)));
+    surveyQaServiceMock.getRecentSurveys.mockReturnValue(
+      of({
+        items: structuredClone(MOCK_RECENT_SURVEYS),
+        page: 1,
+        pageSize: 10,
+        totalItems: MOCK_RECENT_SURVEYS.length,
+        totalPages: 1,
+      })
+    );
 
     component.loadData();
     fixture.detectChanges();

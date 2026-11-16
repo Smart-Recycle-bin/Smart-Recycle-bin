@@ -23,7 +23,10 @@ describe('BinsService', () => {
   });
 
   it('should query bins list', () => {
-    service.getBins({ status: BinStatus.Available }).subscribe();
+    service.getBins({ status: BinStatus.Available }).subscribe((page) => {
+      expect(page.items).toEqual([]);
+      expect(page.totalItems).toBe(0);
+    });
 
     const req = httpMock.expectOne(`${environment.apiBaseUrl}/admin/bins?status=AVAILABLE`);
     expect(req.request.method).toBe('GET');

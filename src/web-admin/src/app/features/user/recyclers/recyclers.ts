@@ -141,8 +141,9 @@ export class Recyclers implements OnInit {
     }
 
     this.recyclersService.getRecyclers(query).subscribe({
-      next: (data) => {
-        this.recyclers.set(data);
+      next: (page) => {
+        // TODO(prompt-3): full server-side pagination UI
+        this.recyclers.set(page.items);
         this.isLoading.set(false);
       },
       error: (err) => {

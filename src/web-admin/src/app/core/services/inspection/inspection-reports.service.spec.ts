@@ -33,7 +33,10 @@ describe('InspectionReportsService', () => {
       .expectOne(`${environment.apiBaseUrl}/admin/inspections/summary`)
       .flush({ success: true, data: { labelledImagesCount: 1285 } });
 
-    service.getReports({ status: InspectionReportStatus.Pending }).subscribe();
+    service.getReports({ status: InspectionReportStatus.Pending }).subscribe((page) => {
+      expect(page.items).toEqual([]);
+      expect(page.totalItems).toBe(0);
+    });
     httpMock
       .expectOne(`${environment.apiBaseUrl}/admin/inspections?status=pending`)
       .flush({ success: true, data: [] });

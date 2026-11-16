@@ -3,6 +3,7 @@ import { Observable } from 'rxjs';
 import { ApiClientService } from '../api/api-client.service';
 import { API_ENDPOINTS } from '../api/api-endpoints';
 import { LedgerQuery, LedgerRow } from '../../models/wallet/ledger.view-model';
+import { Page } from '../../models/common/page.model';
 import {
   ManualAdjustmentRequest,
   ManualAdjustmentResponse,
@@ -17,10 +18,8 @@ export class LedgerService {
   /**
    * Retrieves global immutable ledger transactions with filtering (APIs.md 5.3).
    */
-  getLedger(query?: LedgerQuery): Observable<LedgerRow[]>{
-    return this.apiClient.get<LedgerRow[]>(API_ENDPOINTS.wallet.ledger, {
-      params: query as Record<string, unknown>,
-    });
+  getLedger(query?: LedgerQuery): Observable<Page<LedgerRow>> {
+    return this.apiClient.getPaged<LedgerRow>(API_ENDPOINTS.wallet.ledger, query);
   }
 
   /**

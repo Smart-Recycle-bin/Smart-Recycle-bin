@@ -3,6 +3,7 @@ import { Observable } from 'rxjs';
 import { ApiClientService } from '../api/api-client.service';
 import { API_ENDPOINTS } from '../api/api-endpoints';
 import { AuditLogQuery, AuditLogRow } from '../../models/audit/audit.view-model';
+import { Page } from '../../models/common/page.model';
 
 @Injectable({
   providedIn: 'root',
@@ -13,9 +14,7 @@ export class AuditLogService {
   /**
    * Retrieves administrative audit log records with filtering (APIs.md 7.8).
    */
-  getAuditLogs(query?: AuditLogQuery): Observable<AuditLogRow[]> {
-    return this.apiClient.get<AuditLogRow[]>(API_ENDPOINTS.audit.list, {
-      params: query as Record<string, unknown>,
-    });
+  getAuditLogs(query?: AuditLogQuery): Observable<Page<AuditLogRow>> {
+    return this.apiClient.getPaged<AuditLogRow>(API_ENDPOINTS.audit.list, query);
   }
 }

@@ -33,7 +33,13 @@ describe('Recyclers Component', () => {
 
   beforeEach(async () => {
     recyclersServiceSpy = {
-      getRecyclers: vi.fn().mockReturnValue(of(MOCK_RECYCLERS)),
+      getRecyclers: vi.fn().mockReturnValue(of({
+        items: MOCK_RECYCLERS,
+        page: 1,
+        pageSize: 10,
+        totalItems: MOCK_RECYCLERS.length,
+        totalPages: Math.ceil(MOCK_RECYCLERS.length / 10),
+      })),
       suspendRecycler: vi.fn().mockReturnValue(
         of({
           userId: activeUser.userId,
@@ -256,7 +262,15 @@ describe('Recyclers Component', () => {
     expect(component.error()).toBeTruthy();
 
     // Now retry
-    recyclersServiceSpy.getRecyclers.mockReturnValueOnce(of(MOCK_RECYCLERS));
+    recyclersServiceSpy.getRecyclers.mockReturnValueOnce(
+      of({
+        items: MOCK_RECYCLERS,
+        page: 1,
+        pageSize: 10,
+        totalItems: MOCK_RECYCLERS.length,
+        totalPages: 1,
+      })
+    );
     component.loadRecyclers();
 
     expect(component.error()).toBeNull();

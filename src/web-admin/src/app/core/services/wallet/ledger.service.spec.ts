@@ -23,7 +23,10 @@ describe('LedgerService', () => {
   });
 
   it('should query ledger rows with filters', () => {
-    service.getLedger({ type: LedgerEntryType.Credit }).subscribe();
+    service.getLedger({ type: LedgerEntryType.Credit }).subscribe((page) => {
+      expect(page.items).toEqual([]);
+      expect(page.totalItems).toBe(0);
+    });
 
     const req = httpMock.expectOne(`${environment.apiBaseUrl}/admin/ledger?type=credit`);
     expect(req.request.method).toBe('GET');

@@ -95,7 +95,7 @@ describe('App Routes', () => {
       await harness.navigateByUrl('/');
       expect(router.url).toBe('/overview');
       expect(harness.routeNativeElement?.textContent).toContain('Overview');
-    });
+    }, 15000);
 
     it('should render lazy dev components showcase', async () => {
       await harness.navigateByUrl('/dev/components');

@@ -1,11 +1,12 @@
 // GAP: see gap_api.md → Admin Bins List & Map Data (UI p3, p4)
 import { Id } from '../common/id.model';
+import { PageQuery } from '../common/page.model';
 import { BinStatus } from './bin-status.enum';
 
 /**
  * Filter query parameters for bins list and live map (UI p3, p4).
  */
-export interface BinQuery {
+export interface BinQuery extends PageQuery {
   district?: string;
   status?: BinStatus;
   collectorId?: string;

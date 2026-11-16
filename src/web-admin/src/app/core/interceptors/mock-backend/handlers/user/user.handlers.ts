@@ -4,7 +4,7 @@ import { getMockDb } from '../../../../mock/db/mock-db';
 import { AccountStatus } from '../../../../models/user/account-status.enum';
 import { AuditActionType } from '../../../../models/audit/audit-action-type.enum';
 import { ApiErrorCode } from '../../../../models/common/api-error-code.enum';
-import { okResponse, errorResponse, requireSysAdmin, appendAuditLog } from '../handler-utils';
+import { okResponse, errorResponse, requireSysAdmin, appendAuditLog, paginate } from '../handler-utils';
 import {
   SuspendUserRequest,
   SuspendUserResponse,
@@ -44,7 +44,11 @@ export function registerUserHandlers(router: MockRouter): void {
       );
     }
 
-    return okResponse(result);
+    return paginate(result, ctx.query, {
+      sortable: ['name', 'status', 'availablePoints', 'lifetimePoints', 'sessions', 'joined', 'userId'],
+      defaultSort: 'name',
+      defaultDir: 'asc',
+    });
   });
 
   // 2. Suspend user

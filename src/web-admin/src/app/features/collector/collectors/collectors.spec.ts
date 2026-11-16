@@ -56,7 +56,13 @@ describe('Collectors Component', () => {
 
   beforeEach(async () => {
     collectorsServiceSpy = {
-      getCollectors: vi.fn().mockReturnValue(of(MOCK_COLLECTORS)),
+      getCollectors: vi.fn().mockReturnValue(of({
+        items: MOCK_COLLECTORS,
+        page: 1,
+        pageSize: 10,
+        totalItems: MOCK_COLLECTORS.length,
+        totalPages: Math.ceil(MOCK_COLLECTORS.length / 10),
+      })),
       createCollector: vi.fn().mockReturnValue(
         of({
           userId: 'col_new',
@@ -83,7 +89,13 @@ describe('Collectors Component', () => {
     };
 
     binsServiceSpy = {
-      getBins: vi.fn().mockReturnValue(of(MOCK_BINS)),
+      getBins: vi.fn().mockReturnValue(of({
+        items: MOCK_BINS,
+        page: 1,
+        pageSize: 10,
+        totalItems: MOCK_BINS.length,
+        totalPages: Math.ceil(MOCK_BINS.length / 10),
+      })),
       assignCollector: vi.fn().mockReturnValue(
         of({
           binId: 'BIN-1001',
@@ -340,7 +352,15 @@ describe('Collectors Component', () => {
     expect(component.isLoading()).toBe(false);
     expect(component.error()).toBeTruthy();
 
-    collectorsServiceSpy.getCollectors.mockReturnValueOnce(of(MOCK_COLLECTORS));
+    collectorsServiceSpy.getCollectors.mockReturnValueOnce(
+      of({
+        items: MOCK_COLLECTORS,
+        page: 1,
+        pageSize: 10,
+        totalItems: MOCK_COLLECTORS.length,
+        totalPages: 1,
+      })
+    );
     component.loadCollectors();
 
     expect(component.error()).toBeNull();

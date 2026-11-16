@@ -15,7 +15,15 @@ describe('AuditLogs', () => {
 
   beforeEach(async () => {
     auditLogServiceMock = {
-      getAuditLogs: vi.fn().mockReturnValue(of(structuredClone(MOCK_AUDIT_LOGS))),
+      getAuditLogs: vi.fn().mockReturnValue(
+        of({
+          items: structuredClone(MOCK_AUDIT_LOGS),
+          page: 1,
+          pageSize: 10,
+          totalItems: MOCK_AUDIT_LOGS.length,
+          totalPages: Math.ceil(MOCK_AUDIT_LOGS.length / 10),
+        })
+      ),
     };
 
     await TestBed.configureTestingModule({
@@ -97,7 +105,15 @@ describe('AuditLogs', () => {
 
       // Filter by ADM-001 and return only filtered rows
       const filteredRows = MOCK_AUDIT_LOGS.filter((r) => r.adminId === 'ADM-001');
-      auditLogServiceMock.getAuditLogs.mockReturnValue(of(structuredClone(filteredRows)));
+      auditLogServiceMock.getAuditLogs.mockReturnValue(
+        of({
+          items: structuredClone(filteredRows),
+          page: 1,
+          pageSize: 10,
+          totalItems: filteredRows.length,
+          totalPages: 1,
+        })
+      );
 
       component.handleAdminChange('ADM-001');
       fixture.detectChanges();
@@ -170,7 +186,15 @@ describe('AuditLogs', () => {
     expect(compiled.querySelector('app-error-state')).toBeTruthy();
 
     // Successful retry
-    auditLogServiceMock.getAuditLogs.mockReturnValue(of(structuredClone(MOCK_AUDIT_LOGS)));
+    auditLogServiceMock.getAuditLogs.mockReturnValue(
+      of({
+        items: structuredClone(MOCK_AUDIT_LOGS),
+        page: 1,
+        pageSize: 10,
+        totalItems: MOCK_AUDIT_LOGS.length,
+        totalPages: 1,
+      })
+    );
     component.loadAuditLogs();
     fixture.detectChanges();
 

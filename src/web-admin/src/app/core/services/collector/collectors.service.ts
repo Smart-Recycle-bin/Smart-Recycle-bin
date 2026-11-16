@@ -7,6 +7,7 @@ import {
   CollectorListItem,
   CollectorQuery,
 } from '../../models/collector/collector.view-model';
+import { Page } from '../../models/common/page.model';
 import {
   CreateCollectorRequest,
   CreateCollectorResponse,
@@ -23,10 +24,8 @@ export class CollectorsService {
   /**
    * Retrieves field collectors list with optional search and filters (PROPOSED, gap_api.md 1.5).
    */
-  getCollectors(query?: CollectorQuery): Observable<CollectorListItem[]> {
-    return this.apiClient.get<CollectorListItem[]>(API_ENDPOINTS.collector.list, {
-      params: query as Record<string, unknown>,
-    });
+  getCollectors(query?: CollectorQuery): Observable<Page<CollectorListItem>> {
+    return this.apiClient.getPaged<CollectorListItem>(API_ENDPOINTS.collector.list, query);
   }
 
   /**

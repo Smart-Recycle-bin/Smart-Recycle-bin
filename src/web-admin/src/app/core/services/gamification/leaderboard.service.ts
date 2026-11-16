@@ -7,6 +7,7 @@ import {
   LeaderboardRow,
   MilestoneBadge,
 } from '../../models/gamification/gamification.view-model';
+import { Page } from '../../models/common/page.model';
 
 @Injectable({
   providedIn: 'root',
@@ -17,10 +18,8 @@ export class LeaderboardService {
   /**
    * Retrieves user leaderboard rankings for the specified scope (APIs.md 5.5).
    */
-  getLeaderboard(query?: LeaderboardQuery): Observable<LeaderboardRow[]> {
-    return this.apiClient.get<LeaderboardRow[]>(API_ENDPOINTS.gamification.leaderboard, {
-      params: query as Record<string, unknown>,
-    });
+  getLeaderboard(query?: LeaderboardQuery): Observable<Page<LeaderboardRow>> {
+    return this.apiClient.getPaged<LeaderboardRow>(API_ENDPOINTS.gamification.leaderboard, query);
   }
 
   /**

@@ -20,7 +20,15 @@ describe('Leaderboards', () => {
 
   beforeEach(async () => {
     leaderboardServiceMock = {
-      getLeaderboard: vi.fn().mockReturnValue(of(structuredClone(MOCK_LEADERBOARD_WEEKLY))),
+      getLeaderboard: vi.fn().mockReturnValue(
+        of({
+          items: structuredClone(MOCK_LEADERBOARD_WEEKLY),
+          page: 1,
+          pageSize: 10,
+          totalItems: MOCK_LEADERBOARD_WEEKLY.length,
+          totalPages: Math.ceil(MOCK_LEADERBOARD_WEEKLY.length / 10),
+        })
+      ),
       getMilestoneBadges: vi.fn().mockReturnValue(of(structuredClone(MOCK_MILESTONE_BADGES))),
     };
 
@@ -172,7 +180,13 @@ describe('Leaderboards', () => {
 
       // Retry leaderboard
       leaderboardServiceMock.getLeaderboard.mockReturnValue(
-        of(structuredClone(MOCK_LEADERBOARD_WEEKLY))
+        of({
+          items: structuredClone(MOCK_LEADERBOARD_WEEKLY),
+          page: 1,
+          pageSize: 10,
+          totalItems: MOCK_LEADERBOARD_WEEKLY.length,
+          totalPages: 1,
+        })
       );
       component.loadLeaderboard();
       fixture.detectChanges();

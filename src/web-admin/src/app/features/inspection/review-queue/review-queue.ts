@@ -111,8 +111,9 @@ export class ReviewQueue implements OnInit {
     }
 
     this.inspectionReportsService.getReports(query).subscribe({
-      next: (data) => {
-        this.reports.set(data);
+      next: (page) => {
+        // TODO(prompt-3): full server-side pagination UI
+        this.reports.set(page.items);
         this.isLoadingReports.set(false);
       },
       error: (err) => {

@@ -185,8 +185,9 @@ export class Ledger implements OnInit {
     }
 
     this.ledgerService.getLedger(query).subscribe({
-      next: (data) => {
-        this.ledgerRows.set(data);
+      next: (page) => {
+        // TODO(prompt-3): full server-side pagination UI
+        this.ledgerRows.set(page.items);
         this.isLoading.set(false);
       },
       error: (err) => {
@@ -236,7 +237,9 @@ export class Ledger implements OnInit {
     if (this.recyclerUsers().length === 0) {
       this.isLoadingRecyclers.set(true);
       this.recyclersService.getRecyclers().subscribe({
-        next: (users) => {
+        next: (page) => {
+          // TODO(prompt-3): replace with picker / lookup
+          const users = page.items;
           this.recyclerUsers.set(users);
           this.isLoadingRecyclers.set(false);
           if (users[0] && !this.adjustmentForm.value.userId) {

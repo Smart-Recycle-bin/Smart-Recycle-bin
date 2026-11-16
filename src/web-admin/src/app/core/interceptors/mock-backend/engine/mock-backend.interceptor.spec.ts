@@ -9,6 +9,8 @@ import { ApiErrorCode } from '../../../models/common/api-error-code.enum';
 import { AccountStatus } from '../../../models/user/account-status.enum';
 import { AuditActionType } from '../../../models/audit/audit-action-type.enum';
 import { ApiResponse } from '../../../models/common/api-response.dto';
+import { PageMeta } from '../../../models/common/page.model';
+import { DistrictLookupItem, CollectorLookupItem, AdminLookupItem } from '../../../models/lookup/lookup.model';
 import { LoginResponse } from '../../../models/auth/auth.dto';
 import { BinListItem } from '../../../models/bin/bin.view-model';
 import { SuspendUserResponse } from '../../../models/user/user.dto';
@@ -228,5 +230,220 @@ describe('mockBackendInterceptor', () => {
         ApiErrorCode.NotFound
       );
     }
+  });
+
+  describe('Server-side pagination contract and mock handlers', () => {
+    const adminToken = generateMockAccessToken(
+      {
+        userId: 'admin_test',
+        displayName: 'Test Admin',
+        role: UserRole.Admin,
+      },
+      900
+    );
+
+    it('returns full array without meta when page is not provided (unpaged fallback)', async () => {
+      const res = await new Promise<ApiResponse<BinListItem[]>>((resolve, reject) => {
+        http
+          .get<ApiResponse<BinListItem[]>>('/api/v1/admin/bins', {
+            headers: { Authorization: `Bearer ${adminToken}` },
+          })
+          .subscribe({ next: resolve, error: reject });
+      });
+
+      expect(res.success).toBe(true);
+      expect(res.data.length).toBe(23);
+      expect((res as { meta?: PageMeta }).meta).toBeUndefined();
+    });
+
+    it('returns paginated data with meta for page 1 and page 2', async () => {
+      const p1 = await new Promise<ApiResponse<BinListItem[]>>((resolve, reject) => {
+        http
+          .get<ApiResponse<BinListItem[]>>('/api/v1/admin/bins?page=1&pageSize=10', {
+            headers: { Authorization: `Bearer ${adminToken}` },
+          })
+          .subscribe({ next: resolve, error: reject });
+      });
+
+      expect(p1.success).toBe(true);
+      expect(p1.data.length).toBe(10);
+      expect(p1.meta).toEqual({
+        page: 1,
+        pageSize: 10,
+        totalItems: 23,
+        totalPages: 3,
+      });
+
+      const p2 = await new Promise<ApiResponse<BinListItem[]>>((resolve, reject) => {
+        http
+          .get<ApiResponse<BinListItem[]>>('/api/v1/admin/bins?page=2&pageSize=10', {
+            headers: { Authorization: `Bearer ${adminToken}` },
+          })
+          .subscribe({ next: resolve, error: reject });
+      });
+
+      expect(p2.success).toBe(true);
+      expect(p2.data.length).toBe(10);
+      expect(p2.meta).toEqual({
+        page: 2,
+        pageSize: 10,
+        totalItems: 23,
+        totalPages: 3,
+      });
+      // Ensure pages contain different items
+      expect(p1.data[0].binId).not.toBe(p2.data[0].binId);
+    });
+
+    it('returns empty data with accurate meta when page is beyond totalPages', async () => {
+      const res = await new Promise<ApiResponse<BinListItem[]>>((resolve, reject) => {
+        http
+          .get<ApiResponse<BinListItem[]>>('/api/v1/admin/bins?page=99&pageSize=10', {
+            headers: { Authorization: `Bearer ${adminToken}` },
+          })
+          .subscribe({ next: resolve, error: reject });
+      });
+
+      expect(res.success).toBe(true);
+      expect(res.data).toEqual([]);
+      expect(res.meta).toEqual({
+        page: 99,
+        pageSize: 10,
+        totalItems: 23,
+        totalPages: 3,
+      });
+    });
+
+    it('returns 400 VALIDATION_ERROR on invalid page or pageSize', async () => {
+      try {
+        await new Promise((resolve, reject) => {
+          http
+            .get('/api/v1/admin/bins?page=0', {
+              headers: { Authorization: `Bearer ${adminToken}` },
+            })
+            .subscribe({ next: resolve, error: reject });
+        });
+        expect.unreachable('Should have failed');
+      } catch (err) {
+        const httpErr = err as HttpErrorResponse;
+        expect(httpErr.status).toBe(400);
+        expect((httpErr.error as { error: { code: string } }).error.code).toBe(
+          ApiErrorCode.ValidationError
+        );
+      }
+
+      try {
+        await new Promise((resolve, reject) => {
+          http
+            .get('/api/v1/admin/bins?page=1&pageSize=0', {
+              headers: { Authorization: `Bearer ${adminToken}` },
+            })
+            .subscribe({ next: resolve, error: reject });
+        });
+        expect.unreachable('Should have failed');
+      } catch (err) {
+        const httpErr = err as HttpErrorResponse;
+        expect(httpErr.status).toBe(400);
+        expect((httpErr.error as { error: { code: string } }).error.code).toBe(
+          ApiErrorCode.ValidationError
+        );
+      }
+    });
+
+    it('returns 400 VALIDATION_ERROR on disallowed sortBy', async () => {
+      try {
+        await new Promise((resolve, reject) => {
+          http
+            .get('/api/v1/admin/bins?page=1&sortBy=disallowedField', {
+              headers: { Authorization: `Bearer ${adminToken}` },
+            })
+            .subscribe({ next: resolve, error: reject });
+        });
+        expect.unreachable('Should have failed');
+      } catch (err) {
+        const httpErr = err as HttpErrorResponse;
+        expect(httpErr.status).toBe(400);
+        expect((httpErr.error as { error: { code: string } }).error.code).toBe(
+          ApiErrorCode.ValidationError
+        );
+      }
+    });
+
+    it('returns 400 VALIDATION_ERROR on invalid sortDir', async () => {
+      try {
+        await new Promise((resolve, reject) => {
+          http
+            .get('/api/v1/admin/bins?page=1&sortDir=sideways', {
+              headers: { Authorization: `Bearer ${adminToken}` },
+            })
+            .subscribe({ next: resolve, error: reject });
+        });
+        expect.unreachable('Should have failed');
+      } catch (err) {
+        const httpErr = err as HttpErrorResponse;
+        expect(httpErr.status).toBe(400);
+        expect((httpErr.error as { error: { code: string } }).error.code).toBe(
+          ApiErrorCode.ValidationError
+        );
+      }
+    });
+  });
+
+  describe('Lookup endpoints', () => {
+    const adminToken = generateMockAccessToken(
+      {
+        userId: 'admin_test',
+        displayName: 'Test Admin',
+        role: UserRole.Admin,
+      },
+      900
+    );
+
+    it('returns districts lookup with name and region', async () => {
+      const res = await new Promise<ApiResponse<DistrictLookupItem[]>>((resolve, reject) => {
+        http
+          .get<ApiResponse<DistrictLookupItem[]>>('/api/v1/admin/lookups/districts', {
+            headers: { Authorization: `Bearer ${adminToken}` },
+          })
+          .subscribe({ next: resolve, error: reject });
+      });
+
+      expect(res.success).toBe(true);
+      expect(Array.isArray(res.data)).toBe(true);
+      expect(res.data.length).toBeGreaterThan(0);
+      expect(res.data[0].name).toBeTruthy();
+      expect(res.data[0].region).toBeTruthy();
+    });
+
+    it('returns collectors lookup with collectorId and displayName', async () => {
+      const res = await new Promise<ApiResponse<CollectorLookupItem[]>>((resolve, reject) => {
+        http
+          .get<ApiResponse<CollectorLookupItem[]>>('/api/v1/admin/lookups/collectors', {
+            headers: { Authorization: `Bearer ${adminToken}` },
+          })
+          .subscribe({ next: resolve, error: reject });
+      });
+
+      expect(res.success).toBe(true);
+      expect(Array.isArray(res.data)).toBe(true);
+      expect(res.data.length).toBeGreaterThan(0);
+      expect(res.data[0].collectorId).toBeTruthy();
+      expect(res.data[0].displayName).toBeTruthy();
+    });
+
+    it('returns admins lookup with adminId and displayName', async () => {
+      const res = await new Promise<ApiResponse<AdminLookupItem[]>>((resolve, reject) => {
+        http
+          .get<ApiResponse<AdminLookupItem[]>>('/api/v1/admin/lookups/admins', {
+            headers: { Authorization: `Bearer ${adminToken}` },
+          })
+          .subscribe({ next: resolve, error: reject });
+      });
+
+      expect(res.success).toBe(true);
+      expect(Array.isArray(res.data)).toBe(true);
+      expect(res.data.length).toBeGreaterThan(0);
+      expect(res.data[0].adminId).toBeTruthy();
+      expect(res.data[0].displayName).toBeTruthy();
+    });
   });
 });

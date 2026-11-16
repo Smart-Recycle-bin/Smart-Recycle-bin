@@ -7,6 +7,7 @@ import {
   SurveyQaQuery,
   SurveyQaSummary,
 } from '../../models/survey/survey.view-model';
+import { Page } from '../../models/common/page.model';
 
 @Injectable({
   providedIn: 'root',
@@ -26,9 +27,7 @@ export class SurveyQaService {
   /**
    * Retrieves recent post-disposal survey outcome rows (PROPOSED, gap_api.md 1.7).
    */
-  getRecentSurveys(query?: SurveyQaQuery): Observable<RecentSurveyRow[]> {
-    return this.apiClient.get<RecentSurveyRow[]>(API_ENDPOINTS.survey.recent, {
-      params: query as Record<string, unknown>,
-    });
+  getRecentSurveys(query?: SurveyQaQuery): Observable<Page<RecentSurveyRow>> {
+    return this.apiClient.getPaged<RecentSurveyRow>(API_ENDPOINTS.survey.recent, query);
   }
 }

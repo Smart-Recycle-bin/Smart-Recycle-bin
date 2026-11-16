@@ -4,7 +4,7 @@ import { getMockDb } from '../../../../mock/db/mock-db';
 import { AccountStatus } from '../../../../models/user/account-status.enum';
 import { AuditActionType } from '../../../../models/audit/audit-action-type.enum';
 import { ApiErrorCode } from '../../../../models/common/api-error-code.enum';
-import { okResponse, errorResponse, requireSysAdmin, appendAuditLog } from '../handler-utils';
+import { okResponse, errorResponse, requireSysAdmin, appendAuditLog, paginate } from '../handler-utils';
 import {
   CreateCollectorRequest,
   UpdateCollectorRequest,
@@ -44,7 +44,11 @@ export function registerCollectorHandlers(router: MockRouter): void {
       list = list.filter((c) => c.status.toLowerCase() === status);
     }
 
-    return okResponse(list);
+    return paginate(list, ctx.query, {
+      sortable: ['name', 'district', 'status', 'assignedBinsCount', 'lastActiveAt', 'collectorId'],
+      defaultSort: 'collectorId',
+      defaultDir: 'asc',
+    });
   });
 
   // 2. Create collector (APIs.md 2.7)

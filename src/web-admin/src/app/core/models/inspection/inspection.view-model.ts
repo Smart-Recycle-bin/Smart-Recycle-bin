@@ -1,11 +1,12 @@
 // GAP: see gap_api.md → Inspection Reports Queue & Review (UI p9, p10)
 import { Id } from '../common/id.model';
+import { PageQuery } from '../common/page.model';
 import { InspectionReportStatus } from './inspection-report-status.enum';
 
 /**
  * Filter query parameters for the inspection reports queue (UI p9).
  */
-export interface InspectionReportQuery {
+export interface InspectionReportQuery extends PageQuery {
   status?: InspectionReportStatus;
   search?: string;
 }

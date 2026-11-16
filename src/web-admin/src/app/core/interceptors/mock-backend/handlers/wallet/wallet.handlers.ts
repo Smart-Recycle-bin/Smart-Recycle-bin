@@ -5,7 +5,7 @@ import { AuditActionType } from '../../../../models/audit/audit-action-type.enum
 import { LedgerEntryType } from '../../../../models/wallet/ledger-entry-type.enum';
 import { LedgerSource } from '../../../../models/wallet/ledger-source.enum';
 import { ApiErrorCode } from '../../../../models/common/api-error-code.enum';
-import { okResponse, errorResponse, requireSysAdmin, appendAuditLog } from '../handler-utils';
+import { okResponse, errorResponse, requireSysAdmin, appendAuditLog, paginate } from '../handler-utils';
 import {
   ManualAdjustmentRequest,
   ManualAdjustmentResponse,
@@ -61,7 +61,11 @@ export function registerWalletHandlers(router: MockRouter): void {
       list = list.filter((r) => new Date(r.timestamp) <= toDate);
     }
 
-    return okResponse(list);
+    return paginate(list, ctx.query, {
+      sortable: ['timestamp', 'pointsDelta', 'runningBalance', 'userName', 'entryType', 'source'],
+      defaultSort: 'timestamp',
+      defaultDir: 'desc',
+    });
   });
 
   // 2. Manual points adjustment (APIs.md 5.4)

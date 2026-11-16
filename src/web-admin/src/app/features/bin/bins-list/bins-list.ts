@@ -178,10 +178,11 @@ export class BinsList implements OnInit {
     this.error.set(null);
 
     this.binsService.getBins(query).subscribe({
-      next: (items) => {
-        this.bins.set(items);
+      next: (page) => {
+        // TODO(prompt-3): server-side pagination migration
+        this.bins.set(page.items);
         if (isInitial || this.allBins().length === 0) {
-          this.allBins.set(items);
+          this.allBins.set(page.items);
         }
         this.isLoading.set(false);
       },

@@ -3,6 +3,7 @@ import { Observable } from 'rxjs';
 import { ApiClientService } from '../api/api-client.service';
 import { API_ENDPOINTS } from '../api/api-endpoints';
 import { RecyclerListItem, RecyclerQuery } from '../../models/user/recycler.view-model';
+import { Page } from '../../models/common/page.model';
 import {
   SuspendUserRequest,
   SuspendUserResponse,
@@ -19,20 +20,17 @@ export class RecyclersService {
   /**
    * Retrieves list of recycler accounts for admin moderation (APIs.md 2.11 / gap_api.md 1.4).
    */
-  getRecyclers(query?: RecyclerQuery): Observable<RecyclerListItem[]> {
-    const params: Record<string, string> = {
+  getRecyclers(query?: RecyclerQuery): Observable<Page<RecyclerListItem>> {
+    const { search, ...rest } = query ?? {};
+    const params: Record<string, unknown> = {
       role: 'USER_CITIZEN',
+      ...rest,
     };
-    if (query?.search) {
-      params['query'] = query.search;
-    }
-    if (query?.status) {
-      params['status'] = query.status;
+    if (search) {
+      params['query'] = search;
     }
 
-    return this.apiClient.get<RecyclerListItem[]>(API_ENDPOINTS.user.recyclers, {
-      params,
-    });
+    return this.apiClient.getPaged<RecyclerListItem>(API_ENDPOINTS.user.recyclers, params);
   }
 
   /**

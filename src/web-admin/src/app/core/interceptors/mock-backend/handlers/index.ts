@@ -11,6 +11,7 @@ import { registerRewardHandlers } from './reward/reward.handlers';
 import { registerGamificationHandlers } from './gamification/gamification.handlers';
 import { registerAuditHandlers } from './audit/audit.handlers';
 import { registerNotificationHandlers } from './notification/notification.handlers';
+import { registerLookupHandlers } from './lookup/lookup.handlers';
 
 export function registerAllMockHandlers(router: MockRouter): void {
   registerAuthHandlers(router);
@@ -25,4 +26,5 @@ export function registerAllMockHandlers(router: MockRouter): void {
   registerGamificationHandlers(router);
   registerAuditHandlers(router);
   registerNotificationHandlers(router);
+  registerLookupHandlers(router);
 }
