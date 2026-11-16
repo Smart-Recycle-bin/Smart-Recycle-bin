@@ -228,4 +228,74 @@ describe('BinsList Component', () => {
     );
     expect(component.registerForm.controls.deviceSerial.errors).toEqual({ duplicate: true });
   });
+
+  it('rejects invalid inputs (whitespace serial, lat 999, lng -500, capacity 0)', () => {
+    component.openRegisterDrawer();
+    component.registerForm.setValue({
+      deviceSerial: '   ',
+      district: '',
+      latitude: 999,
+      longitude: -500,
+      capacityThresholdKg: 0,
+    });
+
+    expect(component.registerForm.invalid).toBe(true);
+    expect(component.registerForm.controls.deviceSerial.errors).toHaveProperty('trimmedRequired');
+    expect(component.registerForm.controls.district.errors).toHaveProperty('trimmedRequired');
+    expect(component.registerForm.controls.latitude.errors).toEqual({ latitude: true });
+    expect(component.registerForm.controls.longitude.errors).toEqual({ longitude: true });
+    expect(component.registerForm.controls.capacityThresholdKg.errors).toEqual({ positiveInt: true });
+
+    component.submitRegisterBin();
+    expect(binsServiceSpy.registerBin).not.toHaveBeenCalled();
+  });
+
+  it('trims string inputs in payload before submitting', () => {
+    component.openRegisterDrawer();
+    component.registerForm.setValue({
+      deviceSerial: '  SN-SPACED-123  ',
+      district: '  Maadi  ',
+      latitude: 29.96,
+      longitude: 31.25,
+      capacityThresholdKg: 150,
+    });
+
+    component.submitRegisterBin();
+
+    expect(binsServiceSpy.registerBin).toHaveBeenCalledWith({
+      deviceSerial: 'SN-SPACED-123',
+      district: 'Maadi',
+      latitude: 29.96,
+      longitude: 31.25,
+      capacityThresholdKg: 150,
+    });
+  });
+
+  it('maps server validation field errors onto form controls', () => {
+    const serverValidationError = new ApiError({
+      status: 400,
+      code: ApiErrorCode.ValidationError,
+      message: 'Validation failed',
+      details: [
+        { field: 'latitude', message: 'Latitude is out of service boundary' },
+      ],
+      requestUrl: '/api/v1/admin/bins',
+    });
+    binsServiceSpy.registerBin.mockReturnValueOnce(throwError(() => serverValidationError));
+
+    component.openRegisterDrawer();
+    component.registerForm.setValue({
+      deviceSerial: 'SN-BOUNDARY',
+      district: 'Giza',
+      latitude: 35.0,
+      longitude: 31.0,
+      capacityThresholdKg: 120,
+    });
+
+    component.submitRegisterBin();
+
+    expect(component.registerForm.controls.latitude.errors).toEqual({
+      serverError: 'Latitude is out of service boundary',
+    });
+  });
 });

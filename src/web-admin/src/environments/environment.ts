@@ -10,4 +10,5 @@ export const environment: Environment = {
   mockRefreshTokenTtlDays: 7,
   sessionStorageKey: 'ecobin_admin_session',
   displayTimeZone: 'Africa/Cairo',
+  manualAdjustmentMaxPoints: 10000,
 };

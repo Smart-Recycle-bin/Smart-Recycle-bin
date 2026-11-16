@@ -26,6 +26,12 @@ describe('Catalog', () => {
   };
 
   beforeEach(async () => {
+    (globalThis as any).createImageBitmap = vi.fn().mockResolvedValue({
+      width: 800,
+      height: 600,
+      close: vi.fn(),
+    });
+
     catalogServiceMock = {
       getRewards: vi.fn().mockReturnValue(of(structuredClone(MOCK_REWARDS))),
       createReward: vi.fn().mockImplementation((req) =>
@@ -164,11 +170,11 @@ describe('Catalog', () => {
         stock: 10,
       });
       expect(form.get('pointsCost')?.valid).toBe(false);
-      expect(form.get('pointsCost')?.hasError('min')).toBe(true);
+      expect(form.get('pointsCost')?.hasError('positiveInt')).toBe(true);
 
-      // Zero pointsCost should also be invalid (min is 1)
+      // Zero pointsCost should also be invalid (must be positive)
       form.patchValue({ pointsCost: 0 });
-      expect(form.get('pointsCost')?.hasError('min')).toBe(true);
+      expect(form.get('pointsCost')?.hasError('positiveInt')).toBe(true);
 
       // Negative stock should be invalid
       form.patchValue({
@@ -176,7 +182,7 @@ describe('Catalog', () => {
         stock: -1,
       });
       expect(form.get('stock')?.valid).toBe(false);
-      expect(form.get('stock')?.hasError('min')).toBe(true);
+      expect(form.get('stock')?.hasError('nonNegativeInt')).toBe(true);
 
       // Stock of 0 is valid (automatically marks item Out of Stock)
       form.patchValue({ stock: 0 });
@@ -208,12 +214,12 @@ describe('Catalog', () => {
   });
 
   describe('Image upload and submission with imageUrl', () => {
-    it('should upload image asset and include imageUrl in create payload', () => {
+    it('should upload image asset and include imageUrl in create payload', async () => {
       component.openNewItemDrawer();
       const mockFile = new File(['content'], 'voucher.png', { type: 'image/png' });
 
       // Trigger image selection
-      component.onFileSelected(mockFile);
+      await component.onFileSelected(mockFile);
       expect(catalogServiceMock.uploadImage).toHaveBeenCalledWith(mockFile);
       expect(component.uploadedImageUrl()).toBe(
         'https://storage.ecobin.com/rewards/uploaded_test.png'
@@ -222,8 +228,8 @@ describe('Catalog', () => {
 
       // Fill in valid form
       component.rewardForm.patchValue({
-        title: 'Metro Market EGP 100',
-        description: 'Groceries credit voucher',
+        title: '   Metro Market EGP 100   ',
+        description: '   Groceries credit voucher   ',
         category: RewardCategory.Groceries,
         voucherCodeType: VoucherCodeType.Qr,
         pointsCost: 1800,
@@ -250,12 +256,12 @@ describe('Catalog', () => {
       expect(component.isDrawerOpen()).toBe(false);
     });
 
-    it('should include updated imageUrl in update payload when editing', () => {
+    it('should include updated imageUrl in update payload when editing', async () => {
       const itemToEdit = MOCK_REWARDS[1];
       component.openEditDrawer(itemToEdit);
 
       const mockFile = new File(['new-img'], 'talabat_updated.png', { type: 'image/png' });
-      component.onFileSelected(mockFile);
+      await component.onFileSelected(mockFile);
 
       component.rewardForm.patchValue({
         title: 'Talabat Credit EGP 150',
@@ -274,6 +280,118 @@ describe('Catalog', () => {
       );
       expect(toastServiceMock.success).toHaveBeenCalledWith('Reward item updated successfully');
       expect(component.isDrawerOpen()).toBe(false);
+    });
+
+    it('rejects image files with invalid mime types', async () => {
+      component.openNewItemDrawer();
+      const textFile = new File(['hello'], 'document.txt', { type: 'text/plain' });
+      await component.onFileSelected(textFile);
+
+      expect(catalogServiceMock.uploadImage).not.toHaveBeenCalled();
+      expect(component.uploadedImageUrl()).toBeNull();
+      expect(component.imageError()).toContain('Image must be a PNG or JPG file');
+    });
+
+    it('rejects image files exceeding 5 MB', async () => {
+      component.openNewItemDrawer();
+      // create a mock file with size > 5 MB
+      const bigFile = new File([''], 'big.png', { type: 'image/png' });
+      Object.defineProperty(bigFile, 'size', { value: 6 * 1024 * 1024 });
+
+      await component.onFileSelected(bigFile);
+
+      expect(catalogServiceMock.uploadImage).not.toHaveBeenCalled();
+      expect(component.uploadedImageUrl()).toBeNull();
+      expect(component.imageError()).toContain('5 MB or less');
+    });
+
+    it('rejects image files with dimensions smaller than 800x600', async () => {
+      component.openNewItemDrawer();
+      (globalThis as any).createImageBitmap = vi.fn().mockResolvedValue({
+        width: 400,
+        height: 300,
+        close: vi.fn(),
+      });
+
+      const smallImg = new File(['content'], 'small.png', { type: 'image/png' });
+      await component.onFileSelected(smallImg);
+
+      expect(catalogServiceMock.uploadImage).not.toHaveBeenCalled();
+      expect(component.uploadedImageUrl()).toBeNull();
+      expect(component.imageError()).toContain('at least 800×600');
+    });
+  });
+
+  describe('Form Validation & Server Field Error Handling', () => {
+    it('validates dateOrder when validUntil is earlier than validFrom', () => {
+      component.openNewItemDrawer();
+      component.rewardForm.patchValue({
+        validFrom: '2026-10-15',
+        validUntil: '2026-05-10',
+      });
+
+      expect(component.rewardForm.invalid).toBe(true);
+      expect(component.rewardForm.errors).toHaveProperty('dateOrder');
+    });
+
+    it('validates positiveInt for points price and nonNegativeInt for stock', () => {
+      component.openNewItemDrawer();
+      const pointsCost = component.rewardForm.controls['pointsCost'];
+      const stock = component.rewardForm.controls['stock'];
+
+      pointsCost.setValue(-10);
+      expect(pointsCost.invalid).toBe(true);
+      expect(pointsCost.errors).toHaveProperty('positiveInt');
+
+      pointsCost.setValue(0);
+      expect(pointsCost.invalid).toBe(true);
+      expect(pointsCost.errors).toHaveProperty('positiveInt');
+
+      pointsCost.setValue(1.5);
+      expect(pointsCost.invalid).toBe(true);
+      expect(pointsCost.errors).toHaveProperty('positiveInt');
+
+      pointsCost.setValue(100);
+      expect(pointsCost.valid).toBe(true);
+
+      stock.setValue(-5);
+      expect(stock.invalid).toBe(true);
+      expect(stock.errors).toHaveProperty('nonNegativeInt');
+
+      stock.setValue(0);
+      expect(stock.valid).toBe(true);
+    });
+
+    it('maps server field errors onto form controls upon creation failure', () => {
+      catalogServiceMock.createReward.mockReturnValueOnce(
+        throwError(() => ({
+          status: 400,
+          error: {
+            success: false,
+            code: 'VALIDATION_ERROR',
+            message: 'Validation failed',
+            details: [{ field: 'title', message: 'Reward title already exists' }],
+          },
+        }))
+      );
+
+      component.openNewItemDrawer();
+      component.rewardForm.patchValue({
+        title: 'Duplicate Title',
+        category: RewardCategory.Groceries,
+        voucherCodeType: VoucherCodeType.Code,
+        pointsCost: 500,
+        stock: 10,
+        validFrom: '2026-01-01',
+        validUntil: '2026-12-31',
+      });
+
+      component.submitDrawerForm();
+
+      expect(component.isSubmitting()).toBe(false);
+      expect(component.rewardForm.controls['title'].errors).toEqual({
+        serverError: 'Reward title already exists',
+      });
     });
   });
 

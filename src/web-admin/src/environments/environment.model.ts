@@ -7,4 +7,5 @@ export interface Environment {
   mockRefreshTokenTtlDays: number;
   sessionStorageKey: string;
   displayTimeZone: string;
+  manualAdjustmentMaxPoints: number;
 }

@@ -203,6 +203,9 @@ export class Overview implements OnInit {
 
   handleCustomRangeChange(range: DateRangeValue): void {
     this.customRange.set(range);
+    if (range.from && range.to && range.from > range.to) {
+      return;
+    }
     this.loadOverview();
   }
 

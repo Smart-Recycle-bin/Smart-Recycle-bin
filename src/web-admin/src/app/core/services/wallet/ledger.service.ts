@@ -24,8 +24,20 @@ export class LedgerService {
 
   /**
    * Applies manual administrative points adjustment to user balance (APIs.md 5.4).
+   * Supports optional Idempotency-Key header for duplicate protection.
    */
-  adjustPoints(req: ManualAdjustmentRequest): Observable<ManualAdjustmentResponse> {
-    return this.apiClient.post<ManualAdjustmentResponse>(API_ENDPOINTS.wallet.adjust, req);
+  adjustPoints(
+    req: ManualAdjustmentRequest,
+    options?: { idempotencyKey?: string }
+  ): Observable<ManualAdjustmentResponse> {
+    const headers: Record<string, string> = {};
+    if (options?.idempotencyKey) {
+      headers['Idempotency-Key'] = options.idempotencyKey;
+    }
+    return this.apiClient.post<ManualAdjustmentResponse>(
+      API_ENDPOINTS.wallet.adjust,
+      req,
+      options?.idempotencyKey ? { headers } : undefined
+    );
   }
 }

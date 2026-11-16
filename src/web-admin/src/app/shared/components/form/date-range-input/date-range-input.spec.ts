@@ -38,4 +38,23 @@ describe('DateRangeInput', () => {
 
     expect(host.ctrl.value).toEqual({ from: '2025-06-01', to: '2025-06-14' });
   });
+
+  it('shows error and one-click swap when from date is after to date', async () => {
+    host.ctrl.setValue({ from: '2025-06-20', to: '2025-06-10' });
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.textContent).toContain('Start date cannot be after end date');
+
+    const swapBtn = el.querySelector('[data-testid="swap-dates-btn"]') as HTMLButtonElement;
+    expect(swapBtn).toBeTruthy();
+
+    swapBtn.click();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(host.ctrl.value).toEqual({ from: '2025-06-10', to: '2025-06-20' });
+    expect(el.textContent).not.toContain('Start date cannot be after end date');
+  });
 });

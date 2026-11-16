@@ -5,6 +5,7 @@ import {
   inject,
   signal,
 } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { DateOnlyPipe } from '../../../shared/pipes';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -12,7 +13,8 @@ import { AccountStatus } from '../../../core/models/user/account-status.enum';
 import { RecyclerListItem, RecyclerQuery } from '../../../core/models/user/recycler.view-model';
 import { RecyclersService } from '../../../core/services/user/recyclers.service';
 import { ToastService } from '../../../core/services/toast/toast.service';
-import { getErrorMessage } from '../../../core/errors/error-message';
+import { getErrorMessage, getFieldErrors } from '../../../core/errors/error-message';
+import { trimmedRequired, maxLen } from '../../../shared/validators';
 import {
   RECYCLER_TABLE_COLUMNS,
   RECYCLER_TABLE_ACTIONS,
@@ -93,22 +95,17 @@ export class Recyclers {
    * Reactive form for suspension justification
    */
   readonly suspendForm = this.fb.group({
-    reason: [
-      '',
-      [
-        Validators.required,
-        (control: { value: unknown }) => {
-          const val = typeof control.value === 'string' ? control.value.trim() : '';
-          return val.length > 0 ? null : { required: true };
-        },
-      ],
-    ],
+    reason: ['', [trimmedRequired, maxLen(500)]],
   });
 
+  private readonly suspendFormChanges = toSignal(this.suspendForm.valueChanges);
+
   readonly suspendReasonError = computed(() => {
+    this.suspendFormChanges();
     const control = this.suspendForm.controls.reason;
-    if (!control.touched && !control.dirty) return '';
-    if (control.hasError('required')) return 'Reason for suspension is required';
+    if (control.hasError('trimmedRequired') || control.hasError('required')) return 'Reason for suspension is required';
+    if (control.hasError('maxLen')) return 'Reason cannot exceed 500 characters';
+    if (control.hasError('serverError')) return control.getError('serverError');
     return '';
   });
 
@@ -165,7 +162,13 @@ export class Recyclers {
       },
       error: (err) => {
         this.isSubmitting.set(false);
-        this.toastService.error(getErrorMessage(err));
+        const fieldErrors = getFieldErrors(err);
+        if (fieldErrors?.['reason']) {
+          this.suspendForm.controls.reason.setErrors({ serverError: fieldErrors['reason'] });
+          this.suspendForm.controls.reason.markAsTouched();
+        } else {
+          this.toastService.error(getErrorMessage(err));
+        }
       },
     });
   }

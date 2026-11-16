@@ -17,7 +17,13 @@ import { BinsService } from '../../../core/services/bin/bins.service';
 import { LookupsService } from '../../../core/services/lookup/lookups.service';
 import { ToastService } from '../../../core/services/toast/toast.service';
 import { ApiErrorCode } from '../../../core/models/common/api-error-code.enum';
-import { isApiErrorCode, getErrorMessage } from '../../../core/errors/error-message';
+import { isApiErrorCode, getErrorMessage, getFieldErrors } from '../../../core/errors/error-message';
+import {
+  trimmedRequired,
+  maxLen,
+  phone,
+  strongTempPassword,
+} from '../../../shared/validators';
 import {
   COLLECTOR_TABLE_COLUMNS,
   COLLECTOR_TABLE_ACTIONS,
@@ -156,9 +162,9 @@ export class Collectors {
    * Reactive form for creating a new collector account (UI p7)
    */
   readonly createForm = this.fb.nonNullable.group({
-    displayName: ['', [Validators.required]],
-    email: ['', [Validators.required, Validators.email]],
-    phoneNumber: ['', [Validators.required]],
+    displayName: ['', [trimmedRequired, maxLen(100)]],
+    email: ['', [trimmedRequired, Validators.email]],
+    phoneNumber: ['', [trimmedRequired, phone]],
     temporaryPassword: [''],
     district: [''],
   });
@@ -167,9 +173,9 @@ export class Collectors {
    * Reactive form for editing collector details
    */
   readonly editForm = this.fb.nonNullable.group({
-    displayName: ['', [Validators.required]],
-    email: ['', [Validators.required, Validators.email]],
-    phoneNumber: ['', [Validators.required]],
+    displayName: ['', [trimmedRequired, maxLen(100)]],
+    email: ['', [trimmedRequired, Validators.email]],
+    phoneNumber: ['', [trimmedRequired, phone]],
     district: [''],
   });
 
@@ -241,7 +247,7 @@ export class Collectors {
     this.createCredentialsMode.set(m);
     const passwordCtrl = this.createForm.controls.temporaryPassword;
     if (m === CollectorCredentialsMode.TemporaryPassword) {
-      passwordCtrl.setValidators([Validators.required]);
+      passwordCtrl.setValidators([trimmedRequired, strongTempPassword]);
     } else {
       passwordCtrl.clearValidators();
       passwordCtrl.setValue('');
@@ -266,7 +272,7 @@ export class Collectors {
     };
 
     if (this.createCredentialsMode() === CollectorCredentialsMode.TemporaryPassword) {
-      req.temporaryPassword = val.temporaryPassword || undefined;
+      req.temporaryPassword = val.temporaryPassword ? val.temporaryPassword.trim() : undefined;
     }
 
     this.isSubmitting.set(true);
@@ -280,11 +286,21 @@ export class Collectors {
       },
       error: (err) => {
         this.isSubmitting.set(false);
+        const fieldErrors = getFieldErrors(err);
+        if (fieldErrors) {
+          Object.entries(fieldErrors).forEach(([field, msg]) => {
+            const ctrl = this.createForm.get(field);
+            if (ctrl) {
+              ctrl.setErrors({ serverError: msg });
+              ctrl.markAsTouched();
+            }
+          });
+        }
         if (isApiErrorCode(err, ApiErrorCode.EmailAlreadyExists) || (err as { status?: number })?.status === 409) {
           this.createForm.controls.email.setErrors({ emailAlreadyExists: true });
           this.createForm.controls.email.markAsTouched();
           this.emailServerError.set('This email address is already registered');
-        } else {
+        } else if (!fieldErrors) {
           this.toastService.error(getErrorMessage(err));
         }
       },
@@ -338,7 +354,18 @@ export class Collectors {
       },
       error: (err) => {
         this.isSubmitting.set(false);
-        this.toastService.error(getErrorMessage(err));
+        const fieldErrors = getFieldErrors(err);
+        if (fieldErrors) {
+          Object.entries(fieldErrors).forEach(([field, msg]) => {
+            const ctrl = this.editForm.get(field);
+            if (ctrl) {
+              ctrl.setErrors({ serverError: msg });
+              ctrl.markAsTouched();
+            }
+          });
+        } else {
+          this.toastService.error(getErrorMessage(err));
+        }
       },
     });
   }

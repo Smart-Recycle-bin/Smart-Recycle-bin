@@ -233,10 +233,34 @@ describe('Collectors Component', () => {
     const passwordControl = component.createForm.controls.temporaryPassword;
     passwordControl.setValue('');
     expect(passwordControl.valid).toBe(false);
+    expect(passwordControl.errors).toHaveProperty('trimmedRequired');
+
+    passwordControl.setValue('abc');
+    expect(passwordControl.valid).toBe(false);
+    expect(passwordControl.errors).toHaveProperty('strongTempPassword');
+
+    passwordControl.setValue('Pass1234');
+    expect(passwordControl.valid).toBe(true);
 
     component.handleCredentialsModeChange(CollectorCredentialsMode.InviteLink);
     expect(component.createCredentialsMode()).toBe(CollectorCredentialsMode.InviteLink);
     expect(passwordControl.valid).toBe(true);
+  });
+
+  it('validates phone and name max length', () => {
+    component.openCreateDrawer();
+    const phoneCtrl = component.createForm.controls.phoneNumber;
+    phoneCtrl.setValue('12345');
+    expect(phoneCtrl.valid).toBe(false);
+    expect(phoneCtrl.errors).toHaveProperty('phone');
+
+    phoneCtrl.setValue('+20 100 123 4567');
+    expect(phoneCtrl.valid).toBe(true);
+
+    const nameCtrl = component.createForm.controls.displayName;
+    nameCtrl.setValue('a'.repeat(101));
+    expect(nameCtrl.valid).toBe(false);
+    expect(nameCtrl.errors).toHaveProperty('maxLen');
   });
 
   it('should successfully submit create form, reload pagedList, and invalidate collectors lookup', () => {
@@ -244,9 +268,9 @@ describe('Collectors Component', () => {
 
     component.openCreateDrawer();
     component.createForm.setValue({
-      displayName: 'Tarek Nour',
+      displayName: '  Tarek Nour  ',
       email: 'tarek@ecobin.eg',
-      phoneNumber: '+20 100 999 8877',
+      phoneNumber: '  +20 100 999 8877  ',
       temporaryPassword: '',
       district: 'Giza',
     });
@@ -289,6 +313,34 @@ describe('Collectors Component', () => {
     expect(component.isSubmitting()).toBe(false);
     expect(component.createForm.controls.email.errors).toEqual({ emailAlreadyExists: true });
     expect(component.emailServerError()).toBe('This email address is already registered');
+  });
+
+  it('maps server field errors to form controls on collector creation', () => {
+    const errorResponse = {
+      status: 400,
+      error: {
+        success: false,
+        code: 'VALIDATION_ERROR',
+        message: 'Invalid input',
+        details: [{ field: 'phoneNumber', message: 'Phone number already in use' }],
+      },
+    };
+    collectorsServiceSpy.createCollector.mockReturnValueOnce(throwError(() => errorResponse));
+
+    component.openCreateDrawer();
+    component.createForm.setValue({
+      displayName: 'Ali',
+      email: 'ali@ecobin.eg',
+      phoneNumber: '+20 100 111 2222',
+      temporaryPassword: '',
+      district: 'Cairo',
+    });
+
+    component.submitCreate();
+
+    expect(component.createForm.controls.phoneNumber.errors).toEqual({
+      serverError: 'Phone number already in use',
+    });
   });
 
   it('should open edit drawer and submit updated collector details', () => {

@@ -5,29 +5,42 @@
   [error]="effectiveError()"
   [disabled]="internalDisabled()"
 >
-  <div class="date-range-row" (focusout)="handleBlur()">
-    <app-date-input
-      class="date-range-item"
-      [value]="internalValue().from"
-      [max]="internalValue().to"
-      [displayFormat]="displayFormat()"
-      [compact]="compact()"
-      [disabled]="internalDisabled()"
-      [error]="effectiveError() ? ' ' : ''"
-      (valueChange)="updateFrom($event)"
-    />
+  <div class="date-range-wrapper">
+    <div class="date-range-row" (focusout)="handleBlur()">
+      <app-date-input
+        class="date-range-item"
+        [value]="internalValue().from"
+        [displayFormat]="displayFormat()"
+        [compact]="compact()"
+        [disabled]="internalDisabled()"
+        [error]="effectiveError() ? ' ' : ''"
+        (valueChange)="updateFrom($event)"
+      />
 
-    <span class="date-range-sep">{{ separator() }}</span>
+      <span class="date-range-sep">{{ separator() }}</span>
 
-    <app-date-input
-      class="date-range-item"
-      [value]="internalValue().to"
-      [min]="internalValue().from"
-      [displayFormat]="displayFormat()"
-      [compact]="compact()"
-      [disabled]="internalDisabled()"
-      [error]="effectiveError() ? ' ' : ''"
-      (valueChange)="updateTo($event)"
-    />
+      <app-date-input
+        class="date-range-item"
+        [value]="internalValue().to"
+        [displayFormat]="displayFormat()"
+        [compact]="compact()"
+        [disabled]="internalDisabled()"
+        [error]="effectiveError() ? ' ' : ''"
+        (valueChange)="updateTo($event)"
+      />
+    </div>
+
+    @if (isInverted()) {
+      <div class="date-range-swap-row">
+        <button
+          type="button"
+          class="swap-dates-btn"
+          (click)="swapDates()"
+          data-testid="swap-dates-btn"
+        >
+          Swap dates
+        </button>
+      </div>
+    }
   </div>
 </app-form-field>

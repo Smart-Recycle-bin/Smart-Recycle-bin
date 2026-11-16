@@ -12,6 +12,12 @@ import {
 } from '../../../../models/wallet/ledger.dto';
 import { LedgerRow } from '../../../../models/wallet/ledger.view-model';
 
+const idempotencyStore = new Map<string, ManualAdjustmentResponse>();
+
+export function clearAdjustmentIdempotencyStore(): void {
+  idempotencyStore.clear();
+}
+
 export function registerWalletHandlers(router: MockRouter): void {
   // 1. Ledger transactions list with filters
   router.get('/api/v1/admin/ledger', (ctx) => {
@@ -75,6 +81,12 @@ export function registerWalletHandlers(router: MockRouter): void {
       return auth;
     }
 
+    const idempotencyKey = ctx.req.headers.get('Idempotency-Key');
+    if (idempotencyKey && idempotencyStore.has(idempotencyKey)) {
+      const cached = idempotencyStore.get(idempotencyKey)!;
+      return okResponse(cached, 200);
+    }
+
     const body = ctx.req.body as ManualAdjustmentRequest | null;
     if (!body?.userId || body.amount === undefined || !body.type) {
       return errorResponse(400, ApiErrorCode.ValidationError, 'User ID, amount, and type are required');
@@ -134,6 +146,10 @@ export function registerWalletHandlers(router: MockRouter): void {
       pointsDelta,
       balanceAfter: newBalance,
     };
+
+    if (idempotencyKey) {
+      idempotencyStore.set(idempotencyKey, response);
+    }
 
     return okResponse(response, 201);
   });

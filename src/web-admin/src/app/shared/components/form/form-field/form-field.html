@@ -13,8 +13,8 @@
   </div>
 
   @if (error()) {
-    <p class="field-error-msg" role="alert">{{ error() }}</p>
+    <p class="field-error-msg" [id]="forId() ? forId() + '-error' : null" role="alert">{{ error() }}</p>
   } @else if (hint()) {
-    <p class="field-hint-msg">{{ hint() }}</p>
+    <p class="field-hint-msg" [id]="forId() ? forId() + '-hint' : null">{{ hint() }}</p>
   }
 </div>

@@ -52,7 +52,24 @@ export class DateRangeInput implements ControlValueAccessor, OnInit {
   private onChange: (val: DateRangeValue) => void = () => {};
   private onTouched: () => void = () => {};
 
-  readonly effectiveError = computed(() => this.error() || this.controlError());
+  readonly effectiveError = computed(() => {
+    if (this.isInverted()) {
+      return 'Start date cannot be after end date';
+    }
+    return this.error() || this.controlError();
+  });
+
+  readonly isInverted = computed(() => {
+    const v = this.internalValue();
+    return !!(v.from && v.to && v.from > v.to);
+  });
+
+  swapDates(): void {
+    const v = this.internalValue();
+    if (!v.from || !v.to) return;
+    const next: DateRangeValue = { from: v.to, to: v.from };
+    this.emitNext(next);
+  }
 
   constructor() {
     if (this.ngControl) {

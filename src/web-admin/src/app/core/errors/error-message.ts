@@ -87,3 +87,45 @@ export function isApiErrorCode(err: unknown, code: ApiErrorCode): boolean {
 
   return false;
 }
+
+/**
+ * Extracts field-level validation errors from an API error response (PROPOSED, gap_api.md).
+ * Reads `error.details` as `{ field: string, message: string }[]` and returns a key-value dictionary.
+ */
+export function getFieldErrors(err: unknown): Record<string, string> | null {
+  if (!err) {
+    return null;
+  }
+
+  let details: unknown;
+  if (err instanceof ApiError) {
+    details = err.details;
+  } else if (err instanceof HttpErrorResponse) {
+    const errorBody = err.error as Record<string, unknown> | null;
+    if (errorBody && typeof errorBody === 'object') {
+      const nested = errorBody['error'] as Record<string, unknown> | undefined;
+      details = nested?.['details'] ?? errorBody['details'];
+    }
+  } else if (typeof err === 'object') {
+    const obj = err as Record<string, unknown>;
+    const nested = obj['error'] as Record<string, unknown> | undefined;
+    details = obj['details'] ?? nested?.['details'];
+  }
+
+  if (Array.isArray(details) && details.length > 0) {
+    const result: Record<string, string> = {};
+    for (const item of details) {
+      if (item && typeof item === 'object') {
+        const field = (item as Record<string, unknown>)['field'];
+        const message = (item as Record<string, unknown>)['message'];
+        if (typeof field === 'string' && typeof message === 'string') {
+          result[field] = message;
+        }
+      }
+    }
+    return Object.keys(result).length > 0 ? result : null;
+  }
+
+  return null;
+}
+

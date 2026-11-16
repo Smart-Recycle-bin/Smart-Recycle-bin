@@ -283,15 +283,26 @@
               label="Valid until"
             />
           </div>
+          @if (rewardForm.errors?.['dateOrder'] && (rewardForm.touched || rewardForm.dirty)) {
+            <p class="error-text text-danger text-xs -mt-2 mb-2" role="alert" data-testid="date-order-error">
+              Valid until date cannot be earlier than valid from date
+            </p>
+          }
 
           <!-- Image Upload (PNG/JPG, min 800x600) -->
           <div class="image-upload-wrapper">
             <app-file-upload
               label="Reward voucher image"
-              hint="PNG or JPG, min 800×600"
+              hint="PNG or JPG, min 800×600, max 5 MB"
               accept="image/png,image/jpeg"
               (fileSelected)="onFileSelected($event)"
             />
+
+            @if (imageError()) {
+              <p class="error-text text-danger text-xs mt-1" role="alert" data-testid="image-error">
+                {{ imageError() }}
+              </p>
+            }
 
             @if (uploadedImageUrl()) {
               <div class="current-image-preview">

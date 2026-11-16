@@ -832,6 +832,17 @@ Lightweight lookup endpoints dedicated for dropdowns, filters, and assignment se
    - *Region Mapping:* How "Greater Cairo" vs "Alexandria" tabs map to backend districts is undefined.
 5. **Forgot Password Flow (S1/p1):** Screen p1 displays a "Forgot password?" link, but no corresponding password reset screen or reset token submission flow exists in the preliminary design mockup. Built as an in-page `app-modal` that collects the administrator's email, triggers `POST /api/v1/auth/forgot-password`, and presents a neutral success confirmation ("Check your inbox") without email enumeration vulnerabilities.
 6. **Date-only Filter Params (`from`, `to`):** Date-only query parameters (`from`, `to`) across filtering endpoints (such as `/admin/ledger` and `/admin/audit/logs`) are sent in `YYYY-MM-DD` format. The backend contract must clarify that the server interprets these boundaries in the application display timezone (`Africa/Cairo`) and that `to` is an inclusive end-of-day boundary (covering up to 23:59:59.999 local time).
+7. **Form Validation Rules & Payload Trimming (PROPOSED):**
+   - **Phone Number:** Evaluated with permissive E.164-style validation (optional leading `+`, allows digits, spaces, hyphens, and parentheses, requiring 7 to 15 digits).
+   - **Temporary Password Policy:** `strongTempPassword` requires minimum 8 characters, at least one letter, at least one digit, and no whitespace characters.
+   - **Reward Voucher Images:** Allowed mime types restricted to PNG and JPG (`image/png`, `image/jpeg`), max file size 5 MB, and minimum image dimensions of 800×600 pixels verified via `createImageBitmap` / `Image`. Rejections clear image preview and display specific inline feedback.
+   - **Manual Points Adjustment Limits:** Amount must be a positive integer not exceeding `environment.manualAdjustmentMaxPoints` (10,000 points). Reason note is required with maximum length of 500 characters.
+   - **Payload Trimming:** All string input values (names, serials, codes, notes, justifications) are trimmed of leading and trailing whitespace before constructing HTTP request payloads.
+8. **Safety & Idempotency of Money-Affecting Actions (PROPOSED):**
+   - **Idempotency Header:** On `POST /api/v1/admin/ledger/adjustments`, the client transmits an `Idempotency-Key` header with a client-generated UUID (generated when the adjustment drawer opens, preserved across retry attempts, and regenerated upon success). The backend caches the response and returns the original result on repeated keys to prevent double-crediting or double-debiting.
+   - **Confirmation Step:** Money-affecting actions (such as manual ledger adjustments) require explicit secondary confirmation via an `app-confirm-dialog` summarizing the transaction details (action type, amount, target user, balance before → after, reason) before dispatching the network request.
+9. **Server Field Error Mapping (PROPOSED):**
+   - Backend validation failures (HTTP 400 `VALIDATION_ERROR`) include a `details` array containing `{ field: string, message: string }` items. The frontend `getFieldErrors(err)` utility extracts these details and maps them directly to the corresponding form controls as `serverError: message`.
 
 ---
 

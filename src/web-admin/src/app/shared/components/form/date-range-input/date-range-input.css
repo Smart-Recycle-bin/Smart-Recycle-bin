@@ -20,6 +20,25 @@
   flex-shrink: 0;
 }
 
+.date-range-swap-row {
+  margin-top: 0.25rem;
+}
+
+.swap-dates-btn {
+  font-size: 0.75rem;
+  color: var(--color-brand, #16a34a);
+  background: none;
+  border: none;
+  padding: 0;
+  text-decoration: underline;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.swap-dates-btn:hover {
+  opacity: 0.8;
+}
+
 @media (max-width: 640px) {
   .date-range-row {
     flex-direction: column;

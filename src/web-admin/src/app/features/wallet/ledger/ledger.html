@@ -153,7 +153,7 @@
     (closed)="closeAdjustmentDrawer()"
   >
     <div class="drawer-content">
-      <form [formGroup]="adjustmentForm" (ngSubmit)="submitAdjustment()" class="adjustment-form">
+      <form [formGroup]="adjustmentForm" (ngSubmit)="handleApplyClick()" class="adjustment-form">
         <div class="form-fields">
           <div class="form-field-group">
             <app-async-select
@@ -219,13 +219,26 @@
         </app-button>
         <app-button
           variant="primary"
-          (clicked)="submitAdjustment()"
+          (clicked)="handleApplyClick()"
           [loading]="isSubmitting()"
           [disabled]="adjustmentForm.invalid || isSubmitting()"
         >
-          Confirm adjustment
+          Apply adjustment
         </app-button>
       </div>
     </div>
   </app-drawer>
+
+  <!-- Confirmation Dialog for Money-Affecting Action -->
+  <app-confirm-dialog
+    [open]="isConfirmDialogOpen()"
+    [title]="confirmDialogTitle()"
+    [description]="confirmDialogDescription()"
+    [confirmText]="adjustmentType() === 'debit' ? 'Confirm Debit' : 'Confirm Credit'"
+    cancelText="Cancel"
+    [danger]="adjustmentType() === 'debit'"
+    [loading]="isSubmitting()"
+    (confirmed)="confirmAdjustment()"
+    (cancelled)="isConfirmDialogOpen.set(false)"
+  />
 </div>

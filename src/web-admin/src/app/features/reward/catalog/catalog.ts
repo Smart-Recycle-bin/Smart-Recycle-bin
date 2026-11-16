@@ -55,6 +55,14 @@ import { CellTemplateDirective } from '../../../shared/components/table/data-tab
 import { ResourceState } from '../../../shared/components/resource-state/resource-state';
 import { formatDate } from '../../../shared/utils/datetime';
 import { Skeleton } from '../../../shared/components/skeleton/skeleton';
+import { getErrorMessage, getFieldErrors } from '../../../core/errors/error-message';
+import {
+  trimmedRequired,
+  maxLen,
+  positiveInt,
+  nonNegativeInt,
+  dateOrder,
+} from '../../../shared/validators';
 import {
   CATEGORY_FORM_OPTIONS,
   CatalogViewMode,
@@ -123,6 +131,7 @@ export class Catalog implements OnInit {
   readonly isSubmitting = signal<boolean>(false);
   readonly isUploadingImage = signal<boolean>(false);
   readonly uploadedImageUrl = signal<string | null>(null);
+  readonly imageError = signal<string>('');
 
   // Archive confirm dialog state
   readonly isConfirmArchiveOpen = signal<boolean>(false);
@@ -134,16 +143,19 @@ export class Catalog implements OnInit {
     () => `${this.rewards().length} items · stock reaching zero is flagged automatically`
   );
 
-  readonly rewardForm: FormGroup = this.fb.group({
-    title: ['', [Validators.required, Validators.maxLength(100)]],
-    description: [''],
-    category: [RewardCategory.Groceries, [Validators.required]],
-    voucherCodeType: [VoucherCodeType.Code, [Validators.required]],
-    pointsCost: [null, [Validators.required, Validators.min(1)]],
-    stock: [null, [Validators.required, Validators.min(0)]],
-    validFrom: [''],
-    validUntil: [''],
-  });
+  readonly rewardForm: FormGroup = this.fb.group(
+    {
+      title: ['', [trimmedRequired, maxLen(100)]],
+      description: ['', [maxLen(500)]],
+      category: [RewardCategory.Groceries, [trimmedRequired]],
+      voucherCodeType: [VoucherCodeType.Code, [trimmedRequired]],
+      pointsCost: [null, [trimmedRequired, positiveInt]],
+      stock: [null, [trimmedRequired, nonNegativeInt]],
+      validFrom: [''],
+      validUntil: [''],
+    },
+    { validators: [dateOrder('validFrom', 'validUntil')] }
+  );
 
   private computeDefaultDates(): { validFrom: string; validUntil: string } {
     const now = new Date();
@@ -194,6 +206,7 @@ export class Catalog implements OnInit {
   openNewItemDrawer(): void {
     this.editingReward.set(null);
     this.uploadedImageUrl.set(null);
+    this.imageError.set('');
     const { validFrom, validUntil } = this.computeDefaultDates();
     this.rewardForm.reset({
       title: '',
@@ -211,6 +224,7 @@ export class Catalog implements OnInit {
   openEditDrawer(item: AdminRewardItem): void {
     this.editingReward.set(item);
     this.uploadedImageUrl.set(item.imageUrl ?? null);
+    this.imageError.set('');
     const { validFrom, validUntil } = this.computeDefaultDates();
     this.rewardForm.reset({
       title: item.title,
@@ -229,12 +243,42 @@ export class Catalog implements OnInit {
     this.isDrawerOpen.set(false);
     this.editingReward.set(null);
     this.uploadedImageUrl.set(null);
+    this.imageError.set('');
     this.rewardForm.reset();
   }
 
-  onFileSelected(file: File | null): void {
+  async onFileSelected(file: File | null): Promise<void> {
+    this.imageError.set('');
     if (!file) {
       this.uploadedImageUrl.set(null);
+      return;
+    }
+
+    if (file.type !== 'image/png' && file.type !== 'image/jpeg') {
+      this.uploadedImageUrl.set(null);
+      this.imageError.set('Image must be a PNG or JPG file');
+      return;
+    }
+
+    const MAX_SIZE = 5 * 1024 * 1024;
+    if (file.size > MAX_SIZE) {
+      this.uploadedImageUrl.set(null);
+      this.imageError.set('Image file size must be 5 MB or less');
+      return;
+    }
+
+    try {
+      const dimensions = await this.getImageDimensions(file);
+      if (dimensions.width < 800 || dimensions.height < 600) {
+        this.uploadedImageUrl.set(null);
+        this.imageError.set(
+          `Image dimensions must be at least 800×600 pixels (uploaded: ${dimensions.width}×${dimensions.height})`
+        );
+        return;
+      }
+    } catch {
+      this.uploadedImageUrl.set(null);
+      this.imageError.set('Failed to read image dimensions');
       return;
     }
 
@@ -248,11 +292,36 @@ export class Catalog implements OnInit {
           this.isUploadingImage.set(false);
           this.toastService.success('Reward image uploaded');
         },
-        error: () => {
+        error: (err) => {
           this.isUploadingImage.set(false);
-          this.toastService.error('Failed to upload image asset');
+          this.toastService.error(getErrorMessage(err) || 'Failed to upload image asset');
         },
       });
+  }
+
+  private async getImageDimensions(file: File): Promise<{ width: number; height: number }> {
+    if (typeof createImageBitmap === 'function') {
+      const bitmap = await createImageBitmap(file);
+      const width = bitmap.width;
+      const height = bitmap.height;
+      if (typeof bitmap.close === 'function') {
+        bitmap.close();
+      }
+      return { width, height };
+    }
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        resolve({ width: img.naturalWidth, height: img.naturalHeight });
+      };
+      img.onerror = (err) => {
+        URL.revokeObjectURL(url);
+        reject(err);
+      };
+      img.src = url;
+    });
   }
 
   submitDrawerForm(): void {
@@ -262,19 +331,19 @@ export class Catalog implements OnInit {
     }
 
     this.isSubmitting.set(true);
-    const formVal = this.rewardForm.value;
+    const formVal = this.rewardForm.getRawValue();
 
     const editing = this.editingReward();
     if (editing) {
       const updateReq: UpdateRewardRequest = {
-        title: formVal.title,
-        description: formVal.description,
+        title: formVal.title.trim(),
+        description: formVal.description ? formVal.description.trim() : undefined,
         category: formVal.category,
         voucherCodeType: formVal.voucherCodeType,
         pointsCost: Number(formVal.pointsCost),
         stock: Number(formVal.stock),
-        validFrom: formVal.validFrom,
-        validUntil: formVal.validUntil,
+        validFrom: formVal.validFrom || undefined,
+        validUntil: formVal.validUntil || undefined,
         imageUrl: this.uploadedImageUrl() ?? undefined,
       };
 
@@ -290,19 +359,30 @@ export class Catalog implements OnInit {
           },
           error: (err) => {
             this.isSubmitting.set(false);
-            this.toastService.error(err?.message || 'Failed to update reward item');
+            const fieldErrors = getFieldErrors(err);
+            if (fieldErrors) {
+              Object.entries(fieldErrors).forEach(([field, msg]) => {
+                const ctrl = this.rewardForm.get(field);
+                if (ctrl) {
+                  ctrl.setErrors({ serverError: msg });
+                  ctrl.markAsTouched();
+                }
+              });
+            } else {
+              this.toastService.error(getErrorMessage(err) || 'Failed to update reward item');
+            }
           },
         });
     } else {
       const createReq: CreateRewardRequest = {
-        title: formVal.title,
-        description: formVal.description,
+        title: formVal.title.trim(),
+        description: formVal.description ? formVal.description.trim() : undefined,
         category: formVal.category,
         voucherCodeType: formVal.voucherCodeType,
         pointsCost: Number(formVal.pointsCost),
         stock: Number(formVal.stock),
-        validFrom: formVal.validFrom,
-        validUntil: formVal.validUntil,
+        validFrom: formVal.validFrom || undefined,
+        validUntil: formVal.validUntil || undefined,
         imageUrl: this.uploadedImageUrl() ?? undefined,
       };
 
@@ -318,7 +398,18 @@ export class Catalog implements OnInit {
           },
           error: (err) => {
             this.isSubmitting.set(false);
-            this.toastService.error(err?.message || 'Failed to create reward item');
+            const fieldErrors = getFieldErrors(err);
+            if (fieldErrors) {
+              Object.entries(fieldErrors).forEach(([field, msg]) => {
+                const ctrl = this.rewardForm.get(field);
+                if (ctrl) {
+                  ctrl.setErrors({ serverError: msg });
+                  ctrl.markAsTouched();
+                }
+              });
+            } else {
+              this.toastService.error(getErrorMessage(err) || 'Failed to create reward item');
+            }
           },
         });
     }

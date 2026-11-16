@@ -172,7 +172,7 @@ describe('Recyclers Component', () => {
 
     component.handleTableAction({ action: 'suspend', row: activeUser });
 
-    component.suspendForm.controls.reason.setValue('Suspected repeated fraudulent drop-offs');
+    component.suspendForm.controls.reason.setValue('  Suspected repeated fraudulent drop-offs  ');
     component.confirmSuspend();
 
     expect(recyclersServiceSpy.suspendRecycler).toHaveBeenCalledWith(
@@ -184,6 +184,26 @@ describe('Recyclers Component', () => {
     );
     expect(component.isSuspendModalOpen()).toBe(false);
     expect(reloadSpy).toHaveBeenCalled();
+  });
+
+  it('rejects empty or whitespace-only suspend reason and limits to 500 characters', () => {
+    component.handleTableAction({ action: 'suspend', row: activeUser });
+    const reasonCtrl = component.suspendForm.controls.reason;
+
+    reasonCtrl.setValue('   ');
+    reasonCtrl.markAsTouched();
+    expect(reasonCtrl.invalid).toBe(true);
+    expect(reasonCtrl.errors).toHaveProperty('trimmedRequired');
+    expect(component.suspendReasonError()).toBe('Reason for suspension is required');
+
+    reasonCtrl.setValue('a'.repeat(501));
+    expect(reasonCtrl.invalid).toBe(true);
+    expect(reasonCtrl.errors).toHaveProperty('maxLen');
+    expect(component.suspendReasonError()).toBe('Reason cannot exceed 500 characters');
+
+    reasonCtrl.setValue('Valid reason');
+    expect(reasonCtrl.valid).toBe(true);
+    expect(component.suspendReasonError()).toBe('');
   });
 
   it('should open restore access confirm dialog and unsuspend user on confirmation', () => {

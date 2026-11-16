@@ -208,23 +208,31 @@ describe('Ledger Component', () => {
       reasonNote: 'Community event bonus',
     });
 
-    component.submitAdjustment();
+    component.handleApplyClick();
+    expect(component.isConfirmDialogOpen()).toBe(true);
+    expect(ledgerServiceSpy.adjustPoints).not.toHaveBeenCalled();
 
-    expect(ledgerServiceSpy.adjustPoints).toHaveBeenCalledWith({
-      userId: 'U-10021',
-      amount: 150,
-      type: LedgerEntryType.Credit,
-      reasonCode: 'PROMOTION_BONUS',
-      reasonNote: 'Community event bonus',
-    });
+    component.confirmAdjustment();
+
+    expect(ledgerServiceSpy.adjustPoints).toHaveBeenCalledWith(
+      {
+        userId: 'U-10021',
+        amount: 150,
+        type: LedgerEntryType.Credit,
+        reasonCode: 'PROMOTION_BONUS',
+        reasonNote: 'Community event bonus',
+      },
+      { idempotencyKey: expect.any(String) }
+    );
     expect(toastServiceSpy.success).toHaveBeenCalledWith(
       'Manual points adjustment recorded successfully'
     );
     expect(component.isAdjustmentDrawerOpen()).toBe(false);
+    expect(component.isConfirmDialogOpen()).toBe(false);
     expect(reloadSpy).toHaveBeenCalled();
   });
 
-  it('submits manual debit adjustment with negated delta', () => {
+  it('submits manual debit adjustment with negated delta via confirmation dialog', () => {
     const reloadSpy = vi.spyOn(component.pagedList, 'reload');
 
     component.openAdjustmentDrawer();
@@ -236,15 +244,21 @@ describe('Ledger Component', () => {
       reasonNote: 'Clawback due to disputed survey',
     });
 
-    component.submitAdjustment();
+    component.handleApplyClick();
+    expect(component.isConfirmDialogOpen()).toBe(true);
 
-    expect(ledgerServiceSpy.adjustPoints).toHaveBeenCalledWith({
-      userId: 'U-10021',
-      amount: -75,
-      type: LedgerEntryType.Debit,
-      reasonCode: 'ADMIN_CORRECTION',
-      reasonNote: 'Clawback due to disputed survey',
-    });
+    component.confirmAdjustment();
+
+    expect(ledgerServiceSpy.adjustPoints).toHaveBeenCalledWith(
+      {
+        userId: 'U-10021',
+        amount: -75,
+        type: LedgerEntryType.Debit,
+        reasonCode: 'ADMIN_CORRECTION',
+        reasonNote: 'Clawback due to disputed survey',
+      },
+      { idempotencyKey: expect.any(String) }
+    );
     expect(reloadSpy).toHaveBeenCalled();
   });
 
@@ -263,12 +277,13 @@ describe('Ledger Component', () => {
     component.handleAdjustmentTypeChange(LedgerEntryType.Debit);
     component.adjustmentForm.setValue({
       userId: 'U-10021',
-      amount: 99999,
+      amount: 5000,
       reasonCode: 'ADMIN_CORRECTION',
       reasonNote: 'Excessive debit',
     });
 
-    component.submitAdjustment();
+    component.handleApplyClick();
+    component.confirmAdjustment();
 
     expect(component.isSubmitting()).toBe(false);
     expect(component.amountServerError()).toBe(
@@ -277,6 +292,41 @@ describe('Ledger Component', () => {
     expect(component.adjustmentForm.controls.amount.errors).toEqual({
       insufficientBalance: true,
     });
+  });
+
+  it('validates amount limits (positive integer, max points limit) and trims reason note', () => {
+    component.openAdjustmentDrawer();
+    const amountCtrl = component.adjustmentForm.controls.amount;
+    const noteCtrl = component.adjustmentForm.controls.reasonNote;
+
+    amountCtrl.setValue(-50);
+    expect(amountCtrl.invalid).toBe(true);
+    expect(amountCtrl.errors).toHaveProperty('positiveInt');
+
+    amountCtrl.setValue(1.5);
+    expect(amountCtrl.invalid).toBe(true);
+    expect(amountCtrl.errors).toHaveProperty('positiveInt');
+
+    amountCtrl.setValue(10001);
+    expect(amountCtrl.invalid).toBe(true);
+    expect(amountCtrl.errors).toHaveProperty('max');
+
+    amountCtrl.setValue(10000);
+    expect(amountCtrl.valid).toBe(true);
+
+    noteCtrl.setValue('   ');
+    expect(noteCtrl.invalid).toBe(true);
+    expect(noteCtrl.errors).toHaveProperty('trimmedRequired');
+
+    noteCtrl.setValue('a'.repeat(501));
+    expect(noteCtrl.invalid).toBe(true);
+    expect(noteCtrl.errors).toHaveProperty('maxLen');
+  });
+
+  it('does not send API request when date range is inverted (from > to)', () => {
+    component.handleDateRangeChange({ from: '2026-05-15', to: '2026-05-01' });
+    // getLedger only called once during init
+    expect(ledgerServiceSpy.getLedger).toHaveBeenCalledTimes(1);
   });
 
   it('formats points correctly with +/- signs and handles tones', () => {

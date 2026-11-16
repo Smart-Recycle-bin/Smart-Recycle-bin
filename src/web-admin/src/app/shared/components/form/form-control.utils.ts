@@ -4,8 +4,15 @@ import { AbstractControl, NgControl, ValidationErrors } from '@angular/forms';
 
 export function formatControlErrors(errors: ValidationErrors | null | undefined): string {
   if (!errors) return '';
-  if (errors['required']) return 'This field is required.';
+  if (errors['serverError']) {
+    return typeof errors['serverError'] === 'string' ? errors['serverError'] : 'Invalid value.';
+  }
+  if (errors['trimmedRequired'] || errors['required']) return 'This field is required.';
   if (errors['email']) return 'Please enter a valid email address.';
+  if (errors['maxLen']) {
+    const req = errors['maxLen'] as { requiredLength: number };
+    return `Must be at most ${req.requiredLength} characters.`;
+  }
   if (errors['minlength']) {
     const req = errors['minlength'] as { requiredLength: number };
     return `Must be at least ${req.requiredLength} characters.`;
@@ -14,6 +21,16 @@ export function formatControlErrors(errors: ValidationErrors | null | undefined)
     const req = errors['maxlength'] as { requiredLength: number };
     return `Must be at most ${req.requiredLength} characters.`;
   }
+  if (errors['positiveInt']) return 'Must be a whole number greater than 0.';
+  if (errors['nonNegativeInt']) return 'Must be a whole number 0 or greater.';
+  if (errors['integer']) return 'Must be a whole number.';
+  if (errors['latitude']) return 'Latitude must be between -90 and 90.';
+  if (errors['longitude']) return 'Longitude must be between -180 and 180.';
+  if (errors['phone']) return 'Please enter a valid phone number (7–15 digits).';
+  if (errors['strongTempPassword']) {
+    return 'Password must be at least 8 characters with at least one letter and one number.';
+  }
+  if (errors['dateOrder']) return 'End date cannot be earlier than start date.';
   if (errors['min']) {
     const req = errors['min'] as { min: number };
     return `Must be at least ${req.min}.`;

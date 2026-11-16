@@ -160,10 +160,11 @@
           </div>
 
           <div class="form-field-group">
-            <app-input
+            <app-select
               formControlName="district"
               label="District / Area"
-              placeholder="e.g. Nasr City, Maadi, Dokki"
+              placeholder="Select a district"
+              [options]="drawerDistrictOptions()"
               [required]="true"
             />
           </div>

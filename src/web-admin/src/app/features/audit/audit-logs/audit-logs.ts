@@ -113,6 +113,9 @@ export class AuditLogs {
   }
 
   handleDateRangeChange(range: DateRangeValue): void {
+    if (range.from && range.to && range.from > range.to) {
+      return;
+    }
     this.pagedList.patchFilters({
       from: range.from || undefined,
       to: range.to || undefined,

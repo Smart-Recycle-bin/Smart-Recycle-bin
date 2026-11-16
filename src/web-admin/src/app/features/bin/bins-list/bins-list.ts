@@ -22,7 +22,15 @@ import {
 } from '../../../core/models/bin/bin-status.enum';
 import { RegisterBinRequest } from '../../../core/models/bin/bin.dto';
 import { ApiErrorCode } from '../../../core/models/common/api-error-code.enum';
-import { isApiErrorCode, getErrorMessage } from '../../../core/errors/error-message';
+import { isApiErrorCode, getErrorMessage, getFieldErrors } from '../../../core/errors/error-message';
+import {
+  trimmedRequired,
+  maxLen,
+  latitude,
+  longitude,
+  positiveInt,
+  getValidationErrorMessage,
+} from '../../../shared/validators';
 import {
   BIN_TABLE_COLUMNS,
   getBinStatusBadgeVariant,
@@ -119,6 +127,11 @@ export class BinsList {
     { initialValue: [{ label: 'All collectors', value: '' }] }
   );
 
+  readonly drawerDistrictOptions = computed<SelectOption[]>(() => [
+    { label: 'Select a district', value: '' },
+    ...this.districtOptions().filter((d) => d.value !== ''),
+  ]);
+
   /**
    * Header subtitle: "N registered smart bins across M districts"
    */
@@ -136,11 +149,11 @@ export class BinsList {
   readonly serialServerError = signal<string>('');
 
   readonly registerForm = this.fb.group({
-    deviceSerial: ['', [Validators.required]],
-    district: ['', [Validators.required]],
-    latitude: [null as number | null, [Validators.required]],
-    longitude: [null as number | null, [Validators.required]],
-    capacityThresholdKg: [120 as number | null, [Validators.required, Validators.min(1)]],
+    deviceSerial: ['', [trimmedRequired, maxLen(64)]],
+    district: ['', [trimmedRequired]],
+    latitude: [null as number | null, [trimmedRequired, latitude]],
+    longitude: [null as number | null, [trimmedRequired, longitude]],
+    capacityThresholdKg: [120 as number | null, [trimmedRequired, positiveInt]],
   });
 
   handleSearch(val: string): void {
@@ -209,10 +222,19 @@ export class BinsList {
       },
       error: (err: unknown) => {
         this.isSubmitting.set(false);
+        const fieldErrors = getFieldErrors(err);
+        if (fieldErrors) {
+          for (const [field, message] of Object.entries(fieldErrors)) {
+            const ctrl = this.registerForm.get(field);
+            if (ctrl) {
+              ctrl.setErrors({ serverError: message });
+            }
+          }
+        }
         if (isApiErrorCode(err, ApiErrorCode.DeviceAlreadyRegistered)) {
           this.registerForm.controls.deviceSerial.setErrors({ duplicate: true });
           this.serialServerError.set('A bin with this device serial is already registered.');
-        } else {
+        } else if (!fieldErrors) {
           this.toastService.error(getErrorMessage(err));
         }
       },
