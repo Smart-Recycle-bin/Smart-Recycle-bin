@@ -201,4 +201,20 @@ describe('ReportDetail Component', () => {
     expect(component.error()).toBeNull();
     expect(component.report()).toEqual(samplePendingDetail);
   });
+
+  it('should detect 404 / NOT_FOUND and display not found empty state', () => {
+    inspectionReportsServiceSpy.getReportDetail.mockReturnValueOnce(
+      throwError(() => ({ status: 404, code: 'NOT_FOUND', message: 'Report not found' }))
+    );
+
+    component.loadDetail();
+    fixture.detectChanges();
+
+    expect(component.isLoading()).toBe(false);
+    expect(component.isNotFound()).toBe(true);
+
+    const notFoundEl = fixture.nativeElement.querySelector('[data-testid="report-not-found"]');
+    expect(notFoundEl).toBeTruthy();
+    expect(notFoundEl.textContent).toContain('Report not found');
+  });
 });

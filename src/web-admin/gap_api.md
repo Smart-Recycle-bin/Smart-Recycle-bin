@@ -843,6 +843,9 @@ Lightweight lookup endpoints dedicated for dropdowns, filters, and assignment se
    - **Confirmation Step:** Money-affecting actions (such as manual ledger adjustments) require explicit secondary confirmation via an `app-confirm-dialog` summarizing the transaction details (action type, amount, target user, balance before → after, reason) before dispatching the network request.
 9. **Server Field Error Mapping (PROPOSED):**
    - Backend validation failures (HTTP 400 `VALIDATION_ERROR`) include a `details` array containing `{ field: string, message: string }` items. The frontend `getFieldErrors(err)` utility extracts these details and maps them directly to the corresponding form controls as `serverError: message`.
+10. **Token-Storage Trade-off & Refresh Token Security (PROPOSED):**
+    - **Current State:** The SPA currently persists access and refresh tokens in client-side storage (`sessionStorage` / `localStorage`) via `TokenStorageService`. While standard for decoupled SPA architectures, tokens held in client storage are accessible to JavaScript if an XSS vulnerability exists.
+    - **Recommended Backend Migration:** The backend team should migrate `refreshToken` issuance to an `httpOnly`, `Secure`, `SameSite=Strict` cookie set by `POST /api/v1/auth/login` and rotated on `POST /api/v1/auth/refresh`. Short-lived access tokens (15-minute TTL) remain in-memory in the Angular application state, with token refresh calls automatically transmitting the cookie without JavaScript access. This requires backend CORS support with `Access-Control-Allow-Credentials: true` and appropriate domain/path cookie constraints.
 
 ---
 

@@ -16,10 +16,12 @@ import { ReviewQueueStateService } from '../../core/services/inspection/review-q
 import { NotificationItem } from '../../core/models/notification/notification.view-model';
 import { Sidebar, SidebarSection } from '../../shared/components/sidebar/sidebar';
 import { Topbar, TopbarMenuItem } from '../../shared/components/topbar/topbar';
+import { Icon } from '../../shared/components/icon/icon';
+import { OnlineService } from '../../core/services/online/online.service';
 
 @Component({
   selector: 'app-admin-layout',
-  imports: [Sidebar, Topbar, RouterOutlet],
+  imports: [Sidebar, Topbar, RouterOutlet, Icon],
   templateUrl: './admin-layout.html',
   styleUrl: './admin-layout.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -29,6 +31,7 @@ export class AdminLayout implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly notificationsService = inject(NotificationsService);
   private readonly reviewQueueState = inject(ReviewQueueStateService);
+  private readonly onlineService = inject(OnlineService);
   private readonly router = inject(Router);
 
   readonly currentUser = input<CurrentUser | null>(null);
@@ -38,6 +41,8 @@ export class AdminLayout implements OnInit {
 
   readonly sidebarCollapsed = signal<boolean>(false);
   readonly mobileSidebarOpen = signal<boolean>(false);
+
+  readonly isOffline = computed(() => !this.onlineService.isOnline());
 
   readonly activeUser = computed(() => this.currentUser() ?? this.currentUserService.user());
 

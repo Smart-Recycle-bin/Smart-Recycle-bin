@@ -5,6 +5,7 @@ import { AdminLayout } from './admin-layout';
 import { AuthService } from '../../core/services/auth/auth.service';
 import { NotificationsService } from '../../core/services/notification/notifications.service';
 import { ReviewQueueStateService } from '../../core/services/inspection/review-queue-state.service';
+import { OnlineService } from '../../core/services/online/online.service';
 import {
   NotificationItem,
   NotificationsResponse,
@@ -27,6 +28,9 @@ describe('AdminLayout', () => {
   let reviewQueueStateSpy: {
     pendingCount: ReturnType<typeof signal<number>>;
     refresh: ReturnType<typeof vi.fn>;
+  };
+  let onlineServiceSpy: {
+    isOnline: ReturnType<typeof signal<boolean>>;
   };
   let router: Router;
 
@@ -58,6 +62,10 @@ describe('AdminLayout', () => {
       refresh: vi.fn().mockReturnValue(of({ pendingReviewCount: 5 })),
     };
 
+    onlineServiceSpy = {
+      isOnline: signal(true),
+    };
+
     await TestBed.configureTestingModule({
       imports: [AdminLayout],
       providers: [
@@ -65,6 +73,7 @@ describe('AdminLayout', () => {
         { provide: AuthService, useValue: authServiceSpy },
         { provide: NotificationsService, useValue: notificationsServiceSpy },
         { provide: ReviewQueueStateService, useValue: reviewQueueStateSpy },
+        { provide: OnlineService, useValue: onlineServiceSpy },
       ],
     }).compileComponents();
 
@@ -202,5 +211,17 @@ describe('AdminLayout', () => {
 
     expect(authServiceSpy.logout).toHaveBeenCalledTimes(1);
     expect(router.navigate).toHaveBeenCalledWith(['/login']);
+  });
+
+  it('renders offline banner when network is disconnected and hides when online', () => {
+    onlineServiceSpy.isOnline.set(true);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[data-testid="offline-banner"]')).toBeNull();
+
+    onlineServiceSpy.isOnline.set(false);
+    fixture.detectChanges();
+    const banner = fixture.nativeElement.querySelector('[data-testid="offline-banner"]');
+    expect(banner).toBeTruthy();
+    expect(banner.textContent).toContain("You are offline — changes can't be saved");
   });
 });

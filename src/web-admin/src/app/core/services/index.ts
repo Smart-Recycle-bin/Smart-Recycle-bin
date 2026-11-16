@@ -13,3 +13,4 @@ export * from './reward';
 export * from './gamification';
 export * from './audit';
 export * from './notification';
+export * from './online/online.service';

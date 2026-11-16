@@ -1,7 +1,7 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { ApiErrorCode } from '../models/common/api-error-code.enum';
 
-export type ExtendedApiErrorCode = ApiErrorCode | 'NETWORK_ERROR' | 'UNKNOWN';
+export type ExtendedApiErrorCode = ApiErrorCode | 'NETWORK_ERROR' | 'TIMEOUT' | 'UNKNOWN';
 
 /**
  * Normalized application API error representing both server-side errors and client network failures.

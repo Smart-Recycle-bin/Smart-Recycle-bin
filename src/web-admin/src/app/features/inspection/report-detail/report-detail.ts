@@ -13,7 +13,7 @@ import { InspectionReportStatus } from '../../../core/models/inspection/inspecti
 import { InspectionReportsService } from '../../../core/services/inspection/inspection-reports.service';
 import { ReviewQueueStateService } from '../../../core/services/inspection/review-queue-state.service';
 import { ToastService } from '../../../core/services/toast/toast.service';
-import { getErrorMessage } from '../../../core/errors/error-message';
+import { getErrorMessage, isNotFoundError } from '../../../core/errors';
 import {
   getInspectionReportStatusBadgeVariant,
   getInspectionReportStatusLabel,
@@ -25,6 +25,7 @@ import { Select, SelectOption } from '../../../shared/components/form/select/sel
 import { Progress, ProgressColor } from '../../../shared/components/progress/progress';
 import { Modal } from '../../../shared/components/overlay/modal/modal';
 import { ResourceState } from '../../../shared/components/resource-state/resource-state';
+import { EmptyState } from '../../../shared/components/empty-state/empty-state';
 import { Icon } from '../../../shared/components/icon/icon';
 import { formatDateTime } from '../../../shared/utils/datetime';
 import { DateTimePipe } from '../../../shared/pipes';
@@ -41,6 +42,7 @@ import { DateTimePipe } from '../../../shared/pipes';
     Progress,
     Modal,
     ResourceState,
+    EmptyState,
     Icon,
     DateTimePipe,
   ],
@@ -77,6 +79,14 @@ export class ReportDetail implements OnInit {
   readonly isPending = computed(() => {
     return this.report()?.status === InspectionReportStatus.Pending;
   });
+
+  readonly isNotFound = computed(() => {
+    return isNotFoundError(this.error());
+  });
+
+  navigateBack(): void {
+    this.router.navigate(['/review-queue']);
+  }
 
   readonly headerTitle = computed(() => {
     const d = this.report();

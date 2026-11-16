@@ -8,4 +8,5 @@ export interface Environment {
   sessionStorageKey: string;
   displayTimeZone: string;
   manualAdjustmentMaxPoints: number;
+  appVersion: string;
 }

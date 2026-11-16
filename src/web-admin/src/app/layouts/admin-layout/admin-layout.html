@@ -20,6 +20,13 @@
 
   <!-- Main Area -->
   <div class="admin-main">
+    @if (isOffline()) {
+      <div class="offline-banner" role="alert" data-testid="offline-banner">
+        <app-icon name="alert-circle" size="sm" />
+        <span>You are offline — changes can't be saved</span>
+      </div>
+    }
+
     <app-topbar
       [notifications]="notifications()"
       [unreadNotifications]="unreadNotifications()"

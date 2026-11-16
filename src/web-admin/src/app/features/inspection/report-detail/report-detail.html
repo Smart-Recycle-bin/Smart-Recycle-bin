@@ -17,7 +17,16 @@
     </div>
   </app-page-header>
 
-  @if (error()) {
+  @if (isNotFound()) {
+    <div class="not-found-container" data-testid="report-not-found">
+      <app-empty-state
+        title="Report not found"
+        description="The requested inspection report does not exist or may have been removed."
+        actionLabel="Back to AI review queue"
+        (actionClicked)="navigateBack()"
+      />
+    </div>
+  } @else if (error()) {
     <div class="error-container">
       <app-resource-state
         [error]="error()"

@@ -11,4 +11,5 @@ export const environment: Environment = {
   sessionStorageKey: 'ecobin_admin_session',
   displayTimeZone: 'Africa/Cairo',
   manualAdjustmentMaxPoints: 10000,
+  appVersion: '1.0.0-dev',
 };

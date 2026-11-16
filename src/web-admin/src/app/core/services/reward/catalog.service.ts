@@ -1,5 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+import { HttpContext } from '@angular/common/http';
+import { REQUEST_TIMEOUT } from '../../interceptors/shared/http-context-tokens';
 import { ApiClientService } from '../api/api-client.service';
 import { API_ENDPOINTS } from '../api/api-endpoints';
 import { AdminRewardItem, RewardQuery } from '../../models/reward/reward.view-model';
@@ -51,6 +53,7 @@ export class CatalogService {
   uploadImage(file: File): Observable<{ imageUrl: string }> {
     const formData = new FormData();
     formData.append('file', file);
-    return this.apiClient.post<{ imageUrl: string }>(API_ENDPOINTS.reward.uploadImage, formData);
+    const context = new HttpContext().set(REQUEST_TIMEOUT, 120_000);
+    return this.apiClient.post<{ imageUrl: string }>(API_ENDPOINTS.reward.uploadImage, formData, { context });
   }
 }
