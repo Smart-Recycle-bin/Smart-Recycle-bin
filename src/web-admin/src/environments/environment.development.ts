@@ -12,4 +12,5 @@ export const environment: Environment = {
   displayTimeZone: 'Africa/Cairo',
   manualAdjustmentMaxPoints: 10000,
   appVersion: '1.0.0-dev',
+  e2e: false,
 };

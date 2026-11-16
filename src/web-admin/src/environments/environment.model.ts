@@ -9,4 +9,5 @@ export interface Environment {
   displayTimeZone: string;
   manualAdjustmentMaxPoints: number;
   appVersion: string;
+  e2e?: boolean;
 }

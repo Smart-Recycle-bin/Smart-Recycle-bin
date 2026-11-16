@@ -46,6 +46,10 @@ __screenshots__/
 .DS_Store
 Thumbs.db
 
+# Playwright
+.playwright-browsers/
+test-results/
+playwright-report/
 
 cmds.ps1
 smart waste bins.pdf

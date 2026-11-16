@@ -33,6 +33,11 @@ export const mockBackendInterceptor: HttpInterceptorFn = (req, next) => {
     return next(req);
   }
 
+  if (environment.e2e && typeof window !== 'undefined') {
+    (window as unknown as { __mockCalls?: number }).__mockCalls =
+      ((window as unknown as { __mockCalls?: number }).__mockCalls ?? 0) + 1;
+  }
+
   const router = getSharedMockRouter();
   const routeExec$ = router.execute(req);
 
