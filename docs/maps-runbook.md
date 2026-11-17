@@ -114,3 +114,31 @@ npm run check:prod-bundle
 ```
 
 `scripts/check-no-secrets.mjs` scans all tracked files and the `dist/` directory for the Google API key pattern (`AIza...`). Any match will cause the command to fail.
+
+---
+
+## 7. Dark Mode & `colorScheme: DARK` with `DEMO_MAP_ID`
+
+Google Maps JavaScript API (v3.55+) introduced `colorScheme: google.maps.ColorScheme.DARK` as an initialization-only `MapOptions` parameter for Vector Maps.
+
+### Compatibility with `DEMO_MAP_ID`
+1. **Live Behavior with `DEMO_MAP_ID`:**
+   - `DEMO_MAP_ID` is a local placeholder Map ID. When an application requests `colorScheme: DARK` with an unregistered demo Map ID, Google Maps API initializes successfully without runtime errors, but base roadmap tiles render using the standard raster palette because custom Cloud-based Map Styles require an active Google Cloud project.
+   - However, all UI overlays—including HTML Advanced Markers (green, amber, red, gray), marker selection rings, the top-right bin details card, freshness chip, toolbar buttons, and side panel—fully adapt to dark mode using the application's CSS design tokens (`--surface`, `--border`, `--text`, `--primary`, etc.).
+
+2. **Recreation Mechanism:**
+   - Because `colorScheme` cannot be updated dynamically on an existing Map instance without recreating it, `BinMapCanvas` monitors `ThemeService.theme()`.
+   - On theme change, the map instance is recreated once (debounced 400 ms), preserving:
+     - Map center (`savedCenter`)
+     - Map zoom level (`savedZoom`)
+     - Currently selected bin (`selectedBinId`)
+     - Active filters and visible markers
+   - Every recreation checks and logs against `MapLoadBudgetService` (8 reloads per session budget).
+
+3. **Owner Recommendation for Production:**
+   - To achieve full base-tile dark mode in production:
+     1. Open **Google Cloud Console > Google Maps Platform > Map Styles**.
+     2. Create a new style using the **Night** / **Dark** style template.
+     3. Save and link the style to your production Map ID.
+     4. Set your production `mapId` in `public/config.json`.
+

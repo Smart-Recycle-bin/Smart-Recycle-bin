@@ -1,0 +1,190 @@
+<div class="live-map-page">
+  <!-- Screen-reader live updates region -->
+  <div class="sr-only" role="status" aria-live="polite" aria-atomic="true">
+    @for (msg of announcements(); track msg) {
+      <p>{{ msg }}</p>
+    }
+  </div>
+
+  <!-- Mobile toggle bar (<1024px) -->
+  <div class="mobile-toggle-bar">
+    <button
+      type="button"
+      class="mobile-toggle-btn"
+      (click)="toggleMobilePanel()"
+      [attr.aria-expanded]="mobilePanelExpanded()"
+      aria-controls="left-panel-content"
+    >
+      <app-icon [name]="mobilePanelExpanded() ? 'chevron-up' : 'chevron-down'" [size]="18"></app-icon>
+      <span>{{ mobilePanelExpanded() ? 'Hide fleet list & filters' : 'Show fleet list & filters' }}</span>
+      <span class="mobile-badge">{{ displayedBins().length }} bins</span>
+    </button>
+  </div>
+
+  <div class="live-map-layout">
+    <!-- Left panel (per p4) -->
+    <aside
+      id="left-panel-content"
+      class="map-side-panel"
+      [class.mobile-expanded]="mobilePanelExpanded()"
+      role="region"
+      aria-label="Bin fleet filters and list"
+    >
+      <header class="panel-header">
+        <h1 class="panel-title">Live Bin Map</h1>
+        <p class="panel-subtitle">{{ subtitleText() }}</p>
+
+        <!-- Dynamic Region Tabs -->
+        @if (availableRegions().length > 1) {
+          <div class="region-tabs-group" role="tablist" aria-label="Regions">
+            @for (reg of availableRegions(); track reg) {
+              <button
+                type="button"
+                role="tab"
+                class="region-tab"
+                [class.tab-active]="activeRegion().toLowerCase() === reg.toLowerCase()"
+                [attr.aria-selected]="activeRegion().toLowerCase() === reg.toLowerCase()"
+                (click)="onRegionTabClick(reg)"
+              >
+                {{ reg }}
+              </button>
+            }
+          </div>
+        }
+      </header>
+
+      <!-- Status Checkboxes with Counts (counts reflect active region regardless of checkbox) -->
+      <section class="status-filters-section" aria-label="Status filters">
+        @for (opt of statusOptions; track opt.status) {
+          <label class="status-checkbox-row">
+            <input
+              type="checkbox"
+              class="status-checkbox"
+              [checked]="statusFilters()[opt.status]"
+              (change)="onStatusFilterToggle(opt.status)"
+              [attr.aria-label]="opt.label + ' (' + regionStatusCounts()[opt.status] + ' bins)'"
+            />
+            <span class="status-dot-indicator" [class]="opt.cssClass"></span>
+            <span class="status-label">{{ opt.label }}</span>
+            <span class="status-count">{{ regionStatusCounts()[opt.status] }}</span>
+          </label>
+        }
+      </section>
+
+      <!-- Scrollable Bin List (accessible alternative to map) -->
+      <section
+        #binListContainer
+        class="bin-list-scroll-area"
+        role="feed"
+        aria-label="Smart bins fleet list"
+      >
+        @if (displayedBins().length === 0) {
+          <div class="empty-bin-list">
+            <p>No bins match the active filters.</p>
+          </div>
+        } @else {
+          @for (bin of displayedBins(); track bin.binId) {
+            <div
+              class="bin-list-row"
+              [class.row-selected]="selectedBinId() === bin.binId"
+              [attr.data-bin-id]="bin.binId"
+              role="button"
+              tabindex="0"
+              [attr.aria-pressed]="selectedBinId() === bin.binId"
+              [attr.aria-label]="bin.binId + ', ' + bin.name + ', ' + bin.fillLevel + '% full, ' + bin.status"
+              (click)="onBinSelect(bin.binId)"
+              (keydown.enter)="onBinSelect(bin.binId)"
+              (keydown.space)="onBinSelect(bin.binId); $event.preventDefault()"
+            >
+              <span
+                class="list-dot"
+                [class]="getStatusDotClass(bin.status)"
+                aria-hidden="true"
+              ></span>
+
+              <div class="row-details">
+                <div class="row-id-name">
+                  <span class="row-bin-id font-mono">{{ bin.binId }}</span>
+                  <span class="row-bin-area">{{ bin.area || bin.district }}</span>
+                </div>
+              </div>
+
+              <span class="row-fill-percentage">{{ bin.fillLevel }}%</span>
+            </div>
+          }
+        }
+      </section>
+    </aside>
+
+    <!-- Map Canvas on the right -->
+    <main class="map-canvas-wrapper" role="main">
+      <!-- Truncated notification banner -->
+      @if (isTruncated()) {
+        <div class="truncated-banner" role="status">
+          <app-icon name="info" [size]="16"></app-icon>
+          <span>Showing the first 5,000 bins — zoom in to see more</span>
+        </div>
+      }
+
+      <!-- Top Map Overlay Controls -->
+      <div class="map-top-controls" role="toolbar" aria-label="Map view controls">
+        <!-- Freshness chip -->
+        <div
+          class="freshness-chip"
+          [class]="'chip-' + freshnessChip().variant"
+          role="status"
+          aria-live="off"
+        >
+          <span class="chip-dot"></span>
+          <span>{{ freshnessChip().text }}</span>
+        </div>
+
+        <div class="map-action-buttons">
+          <button
+            type="button"
+            class="control-btn"
+            (click)="onResetView()"
+            aria-label="Reset map view"
+            title="Reset map view"
+          >
+            <app-icon name="map" [size]="16"></app-icon>
+            <span class="control-btn-label">Reset view</span>
+          </button>
+
+          <button
+            type="button"
+            class="control-btn"
+            (click)="onRefreshNow()"
+            aria-label="Refresh bin data"
+            title="Refresh bin data"
+          >
+            <app-icon name="refresh" [size]="16"></app-icon>
+            <span class="control-btn-label">Refresh</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Map Canvas Component -->
+      <app-bin-map-canvas
+        #mapCanvas
+        [bins]="displayedBins()"
+        [selectedBinId]="selectedBinId()"
+        [activeRegion]="activeRegion()"
+        [allowedStatuses]="allowedStatusesSet()"
+        (binSelected)="onBinSelect($event)"
+        (emptyMapClicked)="onClearSelection()"
+        (boundsChanged)="onMapBoundsChanged($event)"
+      ></app-bin-map-canvas>
+
+      <!-- Details Card Overlay (Top Right per p4) -->
+      @if (selectedBin(); as currentBin) {
+        <div class="detail-card-overlay">
+          <app-bin-detail-card
+            [bin]="currentBin"
+            (close)="onClearSelection()"
+          ></app-bin-detail-card>
+        </div>
+      }
+    </main>
+  </div>
+</div>

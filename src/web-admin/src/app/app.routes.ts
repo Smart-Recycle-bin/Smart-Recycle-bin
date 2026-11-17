@@ -60,8 +60,8 @@ export const routes: Routes = [
       {
         path: 'bins/map',
         loadComponent: () =>
-          import('./features/placeholders/route-placeholder/route-placeholder').then(
-            (m) => m.RoutePlaceholder
+          import('./features/bin/live-bin-map/live-bin-map').then(
+            (m) => m.LiveBinMap
           ),
         data: { title: 'Live Bin Map' },
       },

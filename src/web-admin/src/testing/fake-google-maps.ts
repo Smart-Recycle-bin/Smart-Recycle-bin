@@ -84,6 +84,10 @@ export class FakeMap {
     this.center = new FakeLatLng(lat, lng);
   }
 
+  panTo(latLng: FakeLatLng | { lat: number; lng: number }): void {
+    this.setCenter(latLng);
+  }
+
   getCenter(): FakeLatLng {
     return this.center;
   }
@@ -199,14 +203,15 @@ export function createFakeGoogleMapsStub() {
 }
 
 export function installFakeGoogleMaps(): () => void {
-  const previousGoogle = (window as unknown as { google?: unknown }).google;
-  (window as unknown as { google?: unknown }).google = createFakeGoogleMapsStub();
+  const globalObj = (typeof window !== 'undefined' ? window : (globalThis as unknown as Window)) as unknown as { google?: unknown };
+  const previousGoogle = globalObj.google;
+  globalObj.google = createFakeGoogleMapsStub();
 
   return () => {
     if (previousGoogle !== undefined) {
-      (window as unknown as { google?: unknown }).google = previousGoogle;
+      globalObj.google = previousGoogle;
     } else {
-      delete (window as unknown as { google?: unknown }).google;
+      delete globalObj.google;
     }
   };
 }

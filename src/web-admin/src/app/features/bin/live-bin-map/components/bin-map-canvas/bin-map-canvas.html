@@ -1,0 +1,45 @@
+<div class="map-canvas-container" role="region" aria-label="Interactive smart bin map">
+  @if (showTilesWarning()) {
+    <div class="tiles-warning-banner" role="status">
+      <span>Map tiles are taking longer than usual to load. Check your network connection.</span>
+      <button
+        type="button"
+        class="warning-dismiss-btn"
+        (click)="showTilesWarning.set(false)"
+        aria-label="Dismiss warning"
+      >
+        &times;
+      </button>
+    </div>
+  }
+
+  @if (loaderState() === 'ready' && hasBudget() && mapRendered()) {
+    <!-- Google Map instance; key ensures clean recreation on theme toggle only -->
+    @let k = mapKey();
+    <div class="google-map-wrapper" [attr.data-map-key]="k">
+      <google-map
+        #googleMapComponent
+        [height]="'100%'"
+        [width]="'100%'"
+        [options]="mapOptions()"
+        (mapInitialized)="onMapInitialized($event)"
+        (mapClick)="onMapClick()"
+        (idle)="onMapIdle()"
+        (tilesloaded)="onTilesLoaded()"
+      >
+      </google-map>
+    </div>
+  } @else if (unavailableVariant()) {
+    <div class="map-fallback-wrapper">
+      <app-map-unavailable
+        [variant]="unavailableVariant()!"
+        (retry)="onRetry()"
+      ></app-map-unavailable>
+    </div>
+  } @else {
+    <div class="map-loading-wrapper" role="status" aria-label="Loading map">
+      <div class="map-spinner"></div>
+      <p class="loading-label">Loading Google Maps...</p>
+    </div>
+  }
+</div>

@@ -1,0 +1,82 @@
+<article class="detail-card" role="region" [attr.aria-label]="'Details for bin ' + bin().binId">
+  <header class="card-header">
+    <div class="header-titles">
+      <span class="bin-id font-mono">{{ bin().binId }}</span>
+      <h3 class="bin-name">{{ bin().name }}</h3>
+    </div>
+    <button
+      type="button"
+      class="close-button"
+      (click)="onClose()"
+      aria-label="Close bin details"
+    >
+      <app-icon name="x" [size]="18"></app-icon>
+    </button>
+  </header>
+
+  <div class="card-body">
+    <!-- Fill level progress -->
+    <div class="fill-section">
+      <div class="fill-bar-wrapper">
+        <div
+          class="fill-bar-track"
+          role="progressbar"
+          [attr.aria-valuenow]="bin().fillLevel"
+          aria-valuemin="0"
+          aria-valuemax="100"
+          [attr.aria-label]="'Fill level: ' + bin().fillLevel + '%'"
+        >
+          <div
+            class="fill-bar-indicator"
+            [class]="fillBarClass()"
+            [style.width.%]="bin().fillLevel"
+          ></div>
+        </div>
+        <span class="fill-percentage">{{ bin().fillLevel }}%</span>
+      </div>
+    </div>
+
+    <!-- Status badge -->
+    <div class="status-badge-row">
+      <app-badge
+        [variant]="badgeVariant()"
+        [dot]="true"
+        [label]="statusLabel()"
+      ></app-badge>
+    </div>
+
+    <!-- Details list -->
+    <dl class="card-meta">
+      <div class="meta-row">
+        <dt class="meta-term">Collector:</dt>
+        <dd class="meta-desc">{{ bin().collectorName || 'Unassigned' }}</dd>
+      </div>
+      <div class="meta-row">
+        <dt class="meta-term">Last serviced:</dt>
+        <dd class="meta-desc">{{ bin().lastServicedAt | dateTime }}</dd>
+      </div>
+    </dl>
+
+    <!-- Actions -->
+    <div class="card-actions">
+      <a
+        [href]="googleMapsDirectionsUrl()"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="btn-directions"
+      >
+        <app-icon name="external-link" [size]="16"></app-icon>
+        <span>Open in Google Maps</span>
+      </a>
+
+      <button
+        type="button"
+        class="btn-view-details"
+        disabled
+        [appTooltip]="'Coming soon'"
+      >
+        View details
+      </button>
+    </div>
+  </div>
+</article>

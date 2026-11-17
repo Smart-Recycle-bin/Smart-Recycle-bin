@@ -1,0 +1,206 @@
+:host {
+  display: block;
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.map-canvas-container {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  background-color: var(--surface-muted);
+}
+
+.google-map-wrapper {
+  width: 100%;
+  height: 100%;
+}
+
+.tiles-warning-banner {
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px;
+  background-color: var(--surface-raised);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md, 8px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.warning-dismiss-btn {
+  background: transparent;
+  border: none;
+  font-size: 18px;
+  line-height: 1;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.map-fallback-wrapper,
+.map-loading-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 24px;
+}
+
+.map-spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid var(--border);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.loading-label {
+  margin-top: 12px;
+  font-size: 14px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ==========================================================================
+   Advanced Markers Styling (Themed through CSS Variables)
+   ========================================================================== */
+.bin-marker {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background-color: var(--surface);
+  border: 2.5px solid var(--primary);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
+  outline: none;
+}
+
+.bin-marker-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--primary);
+}
+
+/* Status variants */
+.bin-marker.marker-success {
+  border-color: var(--primary);
+}
+.bin-marker.marker-success .bin-marker-dot {
+  background-color: var(--primary);
+}
+
+.bin-marker.marker-warning {
+  border-color: var(--warning);
+}
+.bin-marker.marker-warning .bin-marker-dot {
+  background-color: var(--warning);
+}
+
+.bin-marker.marker-danger {
+  border-color: var(--danger);
+}
+.bin-marker.marker-danger .bin-marker-dot {
+  background-color: var(--danger);
+}
+
+.bin-marker.marker-neutral {
+  border-color: var(--text-muted);
+}
+.bin-marker.marker-neutral .bin-marker-dot {
+  background-color: var(--text-muted);
+}
+
+/* Selected state: larger + ring */
+.bin-marker.marker-selected {
+  width: 28px;
+  height: 28px;
+  transform: scale(1.15);
+  box-shadow: 0 0 0 3px var(--surface), 0 0 0 6px var(--primary), 0 4px 12px rgba(0, 0, 0, 0.35);
+  z-index: 1000 !important;
+}
+
+.bin-marker.marker-selected.marker-danger {
+  box-shadow: 0 0 0 3px var(--surface), 0 0 0 6px var(--danger), 0 4px 12px rgba(0, 0, 0, 0.35);
+}
+
+.bin-marker.marker-selected.marker-warning {
+  box-shadow: 0 0 0 3px var(--surface), 0 0 0 6px var(--warning), 0 4px 12px rgba(0, 0, 0, 0.35);
+}
+
+.bin-marker:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 3px;
+}
+
+/* ==========================================================================
+   Cluster Markers
+   ========================================================================== */
+.bin-cluster-pin {
+  min-width: 34px;
+  height: 34px;
+  padding: 0 6px;
+  border-radius: 9999px;
+  background-color: var(--primary);
+  color: var(--text-inverse);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  box-shadow: 0 0 0 3px var(--surface), 0 3px 8px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.bin-cluster-pin:hover {
+  transform: scale(1.08);
+}
+
+.bin-cluster-pin.cluster-danger {
+  background-color: var(--danger);
+}
+
+.bin-cluster-pin.cluster-warning {
+  background-color: var(--warning);
+}
+
+.bin-cluster-pin.cluster-neutral {
+  background-color: var(--text-muted);
+}
+
+.bin-cluster-pin.cluster-success {
+  background-color: var(--primary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bin-marker,
+  .bin-cluster-pin,
+  .map-spinner {
+    transition: none !important;
+    animation: none !important;
+  }
+}
