@@ -55,3 +55,9 @@ cmds.ps1
 smart waste bins.pdf
 
 /docs
+
+# Runtime configuration with Google Maps API key (never commit real keys)
+public/config.json
+/public/config.json
+config.json
+

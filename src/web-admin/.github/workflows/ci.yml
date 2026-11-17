@@ -39,6 +39,9 @@ jobs:
       - name: Build production bundle
         run: npx ng build --configuration=production
 
+      - name: Scan repository for secrets
+        run: node scripts/check-no-secrets.mjs
+
       - name: Check production bundle
         run: npm run check:prod-bundle
 

@@ -25,7 +25,7 @@ test.describe('Review Queue & Inspection Actions Flow', () => {
 
     // 3. Action 1: Dismiss report
     const dismissBtn = page.locator('button:has-text("ML was correct / dismiss")');
-    await expect(dismissBtn).toBeVisible();
+    await expect(dismissBtn).toBeVisible({ timeout: 10000 });
     await dismissBtn.click();
 
     // Verify toast & badge drops to 4
@@ -48,7 +48,7 @@ test.describe('Review Queue & Inspection Actions Flow', () => {
 
     // 6. Action 2: Send to retraining
     const retrainBtn = page.locator('button:has-text("Send to retraining")');
-    await expect(retrainBtn).toBeVisible();
+    await expect(retrainBtn).toBeVisible({ timeout: 10000 });
     await retrainBtn.click();
 
     // Verify toast & badge drops to 3

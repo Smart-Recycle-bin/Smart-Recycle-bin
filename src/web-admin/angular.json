@@ -19,10 +19,6 @@
           "options": {
             "browser": "src/main.ts",
             "tsConfig": "tsconfig.app.json",
-            "allowedCommonJsDependencies": [
-              "leaflet",
-              "leaflet.markercluster"
-            ],
             "assets": [
               {
                 "glob": "**/*",
@@ -31,14 +27,18 @@
             ],
             "styles": [
               "@fontsource-variable/inter/index.css",
-              "node_modules/leaflet/dist/leaflet.css",
-              "node_modules/leaflet.markercluster/dist/MarkerCluster.css",
-              "node_modules/leaflet.markercluster/dist/MarkerCluster.Default.css",
               "src/styles.css"
             ]
           },
           "configurations": {
             "production": {
+              "assets": [
+                {
+                  "glob": "**/*",
+                  "input": "public",
+                  "ignore": ["config.json"]
+                }
+              ],
               "budgets": [
                 {
                   "type": "initial",
@@ -110,6 +110,12 @@
             },
             "e2e": {
               "buildTarget": "ecobin-admin:build:e2e"
+            },
+            "csp": {
+              "buildTarget": "ecobin-admin:build:development",
+              "headers": {
+                "Content-Security-Policy": "default-src 'self'; script-src 'self' https://maps.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https: blob: https://maps.gstatic.com https://*.googleapis.com https://*.ggpht.com; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https: https://maps.googleapis.com https://*.googleapis.com; worker-src 'self' blob:; frame-ancestors 'none'; base-uri 'self'; form-action 'self';"
+              }
             }
           },
           "defaultConfiguration": "development"

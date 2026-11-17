@@ -970,14 +970,21 @@
           <div class="category-group">
             <h2 class="category-title">6. IoT Schematics &amp; Navigation</h2>
 
-            <!-- 27. Map View -->
-            <app-card title="27. Clustered Leaflet Map View" subtitle="OpenStreetMap tiles, marker clustering, status pins, and bin detail popup">
-              <app-map-view
-                [markers]="mapMarkers"
-                [height]="420"
-                (markerClicked)="handleMapMarkerClick($event)"
-                (detailsClicked)="handleMapDetailsClick($event)"
-              />
+            <!-- 27. Map State Handling -->
+            <app-card title="27. Map State Handling (app-map-unavailable)" subtitle="Error, budget, and configuration state indicators for Google Maps loader">
+              <div class="space-y-4">
+                <div class="flex flex-wrap gap-2 mb-4">
+                  <app-button size="sm" [variant]="selectedMapUnavailableVariant() === 'not-configured' ? 'primary' : 'secondary'" (clicked)="selectedMapUnavailableVariant.set('not-configured')">Not Configured</app-button>
+                  <app-button size="sm" [variant]="selectedMapUnavailableVariant() === 'auth-failed' ? 'primary' : 'secondary'" (clicked)="selectedMapUnavailableVariant.set('auth-failed')">Auth Failed</app-button>
+                  <app-button size="sm" [variant]="selectedMapUnavailableVariant() === 'network-error' ? 'primary' : 'secondary'" (clicked)="selectedMapUnavailableVariant.set('network-error')">Network Error</app-button>
+                  <app-button size="sm" [variant]="selectedMapUnavailableVariant() === 'timeout' ? 'primary' : 'secondary'" (clicked)="selectedMapUnavailableVariant.set('timeout')">Timeout</app-button>
+                  <app-button size="sm" [variant]="selectedMapUnavailableVariant() === 'budget-exceeded' ? 'primary' : 'secondary'" (clicked)="selectedMapUnavailableVariant.set('budget-exceeded')">Budget Exceeded</app-button>
+                </div>
+                <app-map-unavailable
+                  [variant]="selectedMapUnavailableVariant()"
+                  (retry)="lastActionMessage.set('Map retry requested')"
+                />
+              </div>
             </app-card>
 
             <!-- 28. Sidebar & 29. Topbar -->

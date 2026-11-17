@@ -1,0 +1,50 @@
+<div
+  class="map-unavailable-container"
+  [attr.role]="info().role"
+  [attr.data-variant]="variant()"
+>
+  <div class="icon-circle" [class.icon-circle-error]="info().role === 'alert'">
+    <app-icon [name]="info().icon" size="lg" />
+  </div>
+
+  <h2 class="unavailable-title">{{ info().title }}</h2>
+  <p class="unavailable-desc">{{ info().description }}</p>
+
+  @if (info().docLink) {
+    <div class="runbook-link-wrapper">
+      <a
+        [href]="info().docLink"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="runbook-link"
+      >
+        <app-icon name="file-text" size="xs" />
+        <span>{{ info().docLinkLabel }}</span>
+      </a>
+    </div>
+  }
+
+  <div class="actions-wrapper">
+    @if (info().canRetry) {
+      <app-button
+        variant="secondary"
+        size="md"
+        (clicked)="retry.emit()"
+      >
+        <app-icon name="refresh-cw" size="xs" />
+        <span>Retry loading map</span>
+      </app-button>
+    }
+
+    @if (info().canReload) {
+      <app-button
+        variant="primary"
+        size="md"
+        (clicked)="handleReload()"
+      >
+        <app-icon name="rotate-ccw" size="xs" />
+        <span>Reload page</span>
+      </app-button>
+    }
+  </div>
+</div>

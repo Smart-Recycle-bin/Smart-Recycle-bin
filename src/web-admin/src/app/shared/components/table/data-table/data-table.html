@@ -17,7 +17,9 @@
           @for (col of columns(); track col.key) {
             <th
               scope="col"
-              [class]="'th-cell align-' + (col.align || 'left') + (col.sortable ? ' is-sortable' : '')"
+              [class]="
+                'th-cell align-' + (col.align || 'left') + (col.sortable ? ' is-sortable' : '')
+              "
               [style.width]="col.width || 'auto'"
               [attr.aria-sort]="getAriaSort(col)"
             >
@@ -26,7 +28,16 @@
                   type="button"
                   class="th-sort-btn"
                   (click)="handleSort(col)"
-                  [attr.aria-label]="'Sort by ' + col.label + ', ' + (internalSortColumn() === col.key && internalSortDir() === 'asc' ? 'sorted ascending' : (internalSortColumn() === col.key && internalSortDir() === 'desc' ? 'sorted descending' : 'not sorted'))"
+                  [attr.aria-label]="
+                    'Sort by ' +
+                    col.label +
+                    ', ' +
+                    (internalSortColumn() === col.key && internalSortDir() === 'asc'
+                      ? 'sorted ascending'
+                      : internalSortColumn() === col.key && internalSortDir() === 'desc'
+                        ? 'sorted descending'
+                        : 'not sorted')
+                  "
                 >
                   <span>{{ col.label }}</span>
                   <span class="sort-indicator" aria-hidden="true">
@@ -58,13 +69,17 @@
           @for (i of [1, 2, 3, 4]; track i) {
             <tr class="tr-loading">
               @if (selectable()) {
-                <td class="td-cell"><app-skeleton variant="rectangular" width="16px" height="16px" /></td>
+                <td class="td-cell">
+                  <app-skeleton variant="rectangular" width="16px" height="16px" />
+                </td>
               }
               @for (col of columns(); track col.key) {
                 <td class="td-cell"><app-skeleton variant="text" width="80%" height="1rem" /></td>
               }
               @if (actions().length > 0) {
-                <td class="td-cell"><app-skeleton variant="rectangular" width="48px" height="24px" /></td>
+                <td class="td-cell">
+                  <app-skeleton variant="rectangular" width="48px" height="24px" />
+                </td>
               }
             </tr>
           }
@@ -104,7 +119,9 @@
 
               @for (col of columns(); track col.key) {
                 <td
-                  [class]="'td-cell align-' + (col.align || 'left') + (col.nowrap ? ' is-nowrap' : '')"
+                  [class]="
+                    'td-cell align-' + (col.align || 'left') + (col.nowrap ? ' is-nowrap' : '')
+                  "
                 >
                   @if (templateMap().get(col.key); as customTpl) {
                     <ng-container
@@ -113,7 +130,7 @@
                         $implicit: row,
                         row: row,
                         column: col.key,
-                        index: $index
+                        index: $index,
                       }"
                     />
                   } @else if (col.type === 'badge') {

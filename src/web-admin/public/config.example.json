@@ -1,0 +1,12 @@
+{
+  "googleMaps": {
+    "apiKey": "",
+    "mapId": "DEMO_MAP_ID",
+    "version": "quarterly",
+    "language": "en",
+    "region": "EG"
+  },
+  "map": {
+    "refreshSeconds": 30
+  }
+}

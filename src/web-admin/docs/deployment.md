@@ -91,8 +91,8 @@ server {
     # -------------------------------------------------------------
     # HTTP Security Headers
     # -------------------------------------------------------------
-    # Content Security Policy (Angular compatible)
-    add_header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: https: blob:; connect-src 'self' https:; frame-ancestors 'none'; base-uri 'self'; form-action 'self';" always;
+    # Content Security Policy (Google Maps & Angular compatible)
+    add_header Content-Security-Policy "default-src 'self'; script-src 'self' https://maps.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: https: blob: https://maps.gstatic.com https://*.googleapis.com https://*.ggpht.com; connect-src 'self' https: https://maps.googleapis.com https://*.googleapis.com; worker-src 'self' blob:; frame-ancestors 'none'; base-uri 'self'; form-action 'self';" always;
 
     # HTTP Strict Transport Security (HSTS)
     add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
@@ -194,4 +194,95 @@ For enhanced security in high-trust production environments, the backend team sh
 The project includes automated CI verification via GitHub Actions (`.github/workflows/ci.yml`) and local scripts:
 - **Unit Tests:** `npm run test -- --watch=false`
 - **Production Build:** `npm run build`
+- **Secret Scanning Guard:** `node scripts/check-no-secrets.mjs` (scans all tracked repository files and `dist/` for Google API keys, blocking accidental leaks).
 - **Mock Leak Validation:** `npm run check:prod-bundle` (scans generated bundles to verify no mock data or mock interceptors leak into production output).
+
+---
+
+## 5. Google Maps Production Configuration & Security
+
+The EcoBin Web Admin uses `@angular/google-maps` to render IoT fleet distribution across Cairo and Alexandria. To maintain strict separation between development demo keys and production infrastructure, runtime configuration and production security boundaries are enforced as follows:
+
+### 5.1 Runtime Configuration & Exclusion from Build Artifacts
+
+1. **Decoupled Runtime Configuration:**
+   - The application does not compile API keys into environment TypeScript files (`environment.ts` or `environment.production.ts`).
+   - Instead, `AppConfigService` fetches `/config.json` at runtime only when a map route is activated.
+   - Developers copy `public/config.example.json` to `public/config.json` and insert their demo key (`YOUR_KEY`).
+2. **Production Asset Exclusion in `angular.json`:**
+   - In `angular.json`, the production configuration overrides the asset globs to explicitly ignore `config.json`:
+     ```json
+     "configurations": {
+       "production": {
+         "assets": [
+           {
+             "glob": "**/*",
+             "input": "public",
+             "ignore": ["config.json"]
+           }
+         ]
+       }
+     }
+     ```
+   - This ensures that a developer's local `public/config.json` is **never copied** to `dist/ecobin-admin/browser/` during `ng build`.
+3. **Production Deployment Delivery:**
+   - In production environments (e.g. Kubernetes, Docker, Nginx), `config.json` is injected at deployment time as a mounted volume, environment template, or dedicated static file served at `/config.json`:
+     ```json
+     {
+       "googleMaps": {
+         "apiKey": "YOUR_KEY",
+         "mapId": "PROD_MAP_ID",
+         "version": "quarterly",
+         "language": "en",
+         "region": "EG"
+       },
+       "map": {
+         "refreshSeconds": 30
+       }
+     }
+     ```
+
+### 5.2 Production Content Security Policy (CSP)
+
+Google Maps JavaScript API requires specific external origins for bootstrapping, tile assets, vector data, fonts, and Web Workers. The production CSP directive is defined as:
+
+```http
+Content-Security-Policy:
+  default-src 'self';
+  script-src 'self' https://maps.googleapis.com;
+  style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+  img-src 'self' data: https: blob: https://maps.gstatic.com https://*.googleapis.com https://*.ggpht.com;
+  font-src 'self' data: https://fonts.gstatic.com;
+  connect-src 'self' https: https://maps.googleapis.com https://*.googleapis.com;
+  worker-src 'self' blob:;
+  frame-ancestors 'none';
+  base-uri 'self';
+  form-action 'self';
+```
+
+#### Directive Breakdown
+- `script-src`: Authorizes Google Maps bootstrap from `https://maps.googleapis.com`.
+- `img-src`: Allows map tiles, marker pins, satellite imagery, and Street View previews from `https://maps.gstatic.com`, `https://*.googleapis.com`, and `https://*.ggpht.com`.
+- `connect-src`: Permits API telemetry, geocoding requests, vector tile downloads, and viewport metadata via `https://maps.googleapis.com` and `https://*.googleapis.com`.
+- `font-src`: Authorizes Roboto typography delivered from `https://fonts.gstatic.com`.
+- `style-src`: Requires `'unsafe-inline'` and `https://fonts.googleapis.com` because Google Maps injects dynamic DOM styles for UI controls, street attribution, and copyright disclaimers.
+- `worker-src`: Google Maps compiles worker threads on-the-fly for client-side vector tile rendering and geometry maths using `blob:` URLs.
+
+### 5.3 Third-Party Script Threat Model & Safeguards
+
+Loading any external JavaScript (`maps.googleapis.com`) introduces third-party script risks because external code executes in the same DOM origin:
+
+1. **Credential Isolation:**
+   - Google Maps scripts running in the page can theoretically inspect DOM contents and global JavaScript scope.
+   - To prevent token theft, authentication tokens should be handled via `HttpOnly`, `SameSite=Strict` cookies (as detailed in Section 3), entirely inaccessible to JavaScript.
+2. **Quota & Denial-of-Service Defense:**
+   - A runaway component re-render or reactive loop could trigger dozens of Map instantiations, burning Google Cloud quota.
+   - The frontend implements `MapLoadBudgetService`, restricting Map creations to 8 per tab session. Attempts beyond this quota are blocked and trigger an alert requiring a full page refresh.
+3. **Restricted Domain Allowlist:**
+   - CSP prevents scripts from calling unauthorized third-party domains or exfiltrating data outside Google Maps endpoints.
+4. **Local CSP Validation:**
+   - Developers can test the strict CSP locally without Nginx by running:
+     ```bash
+     ng serve --configuration=csp
+     ```
+
