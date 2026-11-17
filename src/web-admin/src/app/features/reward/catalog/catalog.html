@@ -20,6 +20,7 @@
           [options]="statusFilterOptions"
           [value]="selectedStatus()"
           placeholder="All statuses"
+          ariaLabel="Filter rewards by status"
           (valueChange)="handleStatusChange($event)"
         />
       </div>
@@ -101,9 +102,9 @@
                   {{ getCategoryLabel(item.category) }} · {{ getCodeTypeLabel(item.voucherCodeType) }}
                 </div>
 
-                <h3 class="reward-title" [title]="item.title">
+                <h2 class="reward-title" [title]="item.title">
                   {{ item.title }}
-                </h3>
+                </h2>
 
                 <div class="reward-price">
                   {{ item.pointsCost | number }} pts
@@ -125,8 +126,8 @@
                   icon="pencil"
                   size="sm"
                   variant="ghost"
-                  ariaLabel="Edit reward"
-                  title="Edit reward"
+                  [ariaLabel]="'Edit ' + item.title"
+                  [title]="'Edit ' + item.title"
                   (clicked)="openEditDrawer(item)"
                 />
                 @if (item.status !== RewardStatus.Archived) {
@@ -134,8 +135,8 @@
                     icon="archive"
                     size="sm"
                     variant="ghost"
-                    ariaLabel="Archive reward"
-                    title="Archive reward"
+                    [ariaLabel]="'Archive ' + item.title"
+                    [title]="'Archive ' + item.title"
                     (clicked)="openArchiveDialog(item)"
                   />
                 }

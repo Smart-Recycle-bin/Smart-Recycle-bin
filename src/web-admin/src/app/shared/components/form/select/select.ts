@@ -33,6 +33,7 @@ export class Select implements ControlValueAccessor, OnInit {
   private readonly destroyRef = inject(DestroyRef);
 
   readonly label = input<string>('');
+  readonly ariaLabel = input<string>('');
   readonly placeholder = input<string>('Select an option...');
   readonly value = input<string | number>('');
   readonly options = input<SelectOption[]>([]);
@@ -57,6 +58,14 @@ export class Select implements ControlValueAccessor, OnInit {
 
   readonly effectiveError = computed(() => this.error() || this.controlError());
   readonly isEmptyAllowed = computed(() => this.compact() || this.allowEmpty());
+
+  readonly effectiveAriaLabel = computed(() => {
+    if (this.ariaLabel()) return this.ariaLabel();
+    if (this.compact() || !this.label()) {
+      return this.label() || this.placeholder() || 'Select option';
+    }
+    return null;
+  });
 
   constructor() {
     if (this.ngControl) {

@@ -47,6 +47,7 @@ export class DateInput implements ControlValueAccessor, OnInit {
   private readonly destroyRef = inject(DestroyRef);
 
   readonly label = input<string>('');
+  readonly ariaLabel = input<string>('');
   readonly value = input<string | null>(null);
   readonly displayFormat = input<DateDisplayFormat>('dd/mm/yyyy');
   readonly placeholder = input<string>('');

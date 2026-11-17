@@ -21,6 +21,7 @@
       <div class="filter-item search-filter">
         <app-search-input
           placeholder="Search by ID, name, area, or collector..."
+          ariaLabel="Search smart bins"
           [value]="pagedList.filters().search || ''"
           (valueChange)="handleSearch($event)"
           (search)="handleSearch($event)"
@@ -32,6 +33,7 @@
           [options]="districtOptions()"
           [value]="pagedList.filters().district || ''"
           placeholder="All districts"
+          ariaLabel="Filter by district"
           (valueChange)="handleDistrictChange($event)"
         />
       </div>
@@ -41,6 +43,7 @@
           [options]="statusOptions()"
           [value]="pagedList.filters().status || ''"
           placeholder="All statuses"
+          ariaLabel="Filter by status"
           (valueChange)="handleStatusChange($event)"
         />
       </div>
@@ -50,6 +53,7 @@
           [options]="collectorOptions()"
           [value]="pagedList.filters().collectorId || ''"
           placeholder="All collectors"
+          ariaLabel="Filter by collector"
           (valueChange)="handleCollectorChange($event)"
         />
       </div>
@@ -67,6 +71,7 @@
   } @else {
     <div class="table-container">
       <app-data-table
+        ariaLabel="Smart bins list"
         [columns]="tableColumns"
         [data]="pagedList.items()"
         [loading]="pagedList.refreshing() || pagedList.loading()"

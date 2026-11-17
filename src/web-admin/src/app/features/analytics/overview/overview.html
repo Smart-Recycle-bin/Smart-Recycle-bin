@@ -314,10 +314,10 @@
           <div class="attention-columns">
             <!-- Urgent Bins List -->
             <div class="attention-subcol">
-              <h4 class="attention-subheading">
+              <h3 class="attention-subheading">
                 <app-icon name="trash-2" size="sm" />
                 <span>Critical Bins (≥95% Full)</span>
-              </h4>
+              </h3>
 
               <div class="attention-items-list">
                 @for (bin of data.urgentBins; track bin.binId) {
@@ -338,10 +338,10 @@
 
             <!-- Urgent Reviews List -->
             <div class="attention-subcol">
-              <h4 class="attention-subheading">
+              <h3 class="attention-subheading">
                 <app-icon name="shield-alert" size="sm" />
                 <span>Pending AI Verification</span>
-              </h4>
+              </h3>
 
               <div class="attention-items-list">
                 @for (rev of data.urgentReviews; track rev.reportId) {

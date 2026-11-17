@@ -41,7 +41,7 @@
         class="topbar-action-btn notif-btn"
         appTooltip="Notifications"
         tooltipPosition="bottom"
-        aria-label="View notifications"
+        [attr.aria-label]="notifAriaLabel()"
         [attr.aria-expanded]="notificationsOpen()"
         (click)="handleNotification()"
       >
@@ -77,9 +77,11 @@
         menu-trigger
         type="button"
         class="user-trigger-btn"
-        aria-label="User menu"
+        aria-haspopup="menu"
+        [attr.aria-expanded]="userMenuOpen()"
       >
         <app-avatar
+          aria-hidden="true"
           [name]="userName() || 'User'"
           [imageUrl]="userAvatar()"
           size="sm"

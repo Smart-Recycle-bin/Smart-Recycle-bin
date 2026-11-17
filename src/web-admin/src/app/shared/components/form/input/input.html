@@ -26,6 +26,7 @@
       [required]="required()"
       [attr.autocomplete]="autocomplete() || null"
       [autofocus]="autofocus()"
+      [attr.aria-describedby]="effectiveError() ? (id() + '-error') : (hint() ? (id() + '-hint') : null)"
       [attr.aria-invalid]="!!effectiveError()"
       (input)="handleInput($event)"
       (blur)="handleBlur()"

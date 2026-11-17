@@ -1,3 +1,6 @@
+<a href="#main-content" class="skip-to-content">Skip to main content</a>
+<div class="sr-only" aria-live="polite" aria-atomic="true">{{ routeAnnouncement() }}</div>
+
 <div class="admin-shell">
   <!-- Sidebar Container -->
   <div
@@ -42,7 +45,7 @@
     />
 
     <!-- Main Content -->
-    <main class="admin-content">
+    <main id="main-content" tabindex="-1" class="admin-content">
       <router-outlet />
     </main>
   </div>

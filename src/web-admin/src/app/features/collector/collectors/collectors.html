@@ -24,6 +24,7 @@
       <div class="filter-item search-filter">
         <app-search-input
           placeholder="Search by name, email, or phone..."
+          ariaLabel="Search collectors"
           [value]="pagedList.filters().search || ''"
           (valueChange)="handleSearch($event)"
           (search)="handleSearch($event)"
@@ -43,6 +44,7 @@
   } @else {
     <div class="table-container">
       <app-data-table
+        ariaLabel="Collectors list"
         [columns]="tableColumns"
         [data]="pagedList.items()"
         [loading]="pagedList.refreshing() || pagedList.loading()"
@@ -76,8 +78,8 @@
               icon="eye"
               size="sm"
               variant="ghost"
-              title="View assigned bins"
-              ariaLabel="View assigned bins"
+              [title]="'View bins assigned to ' + row.name"
+              [ariaLabel]="'View bins assigned to ' + row.name"
               (clicked)="openAssignedBinsDrawer(row)"
             />
           </div>

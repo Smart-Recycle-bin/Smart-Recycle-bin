@@ -2,17 +2,24 @@
   <div
     class="drawer-backdrop"
     (click)="handleBackdropClick($event)"
-    role="dialog"
-    aria-modal="true"
   >
-    <div [class]="'drawer-panel position-' + position() + ' size-' + size()">
+    <div
+      [class]="'drawer-panel position-' + position() + ' size-' + size()"
+      role="dialog"
+      aria-modal="true"
+      [attr.aria-label]="ariaLabel() || (title() ? null : 'Drawer')"
+      [attr.aria-labelledby]="title() ? titleId : null"
+      [attr.aria-describedby]="description() ? descId : null"
+      [appFocusTrap]="true"
+      (escapePressed)="close()"
+    >
       <div class="drawer-header">
         <div class="drawer-titles">
           @if (title()) {
-            <h3 class="drawer-title">{{ title() }}</h3>
+            <h3 class="drawer-title" [id]="titleId">{{ title() }}</h3>
           }
           @if (description()) {
-            <p class="drawer-desc">{{ description() }}</p>
+            <p class="drawer-desc" [id]="descId">{{ description() }}</p>
           }
         </div>
 

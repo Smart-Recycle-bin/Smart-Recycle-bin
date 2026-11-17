@@ -1,7 +1,8 @@
 import { ApplicationConfig, inject, provideAppInitializer, provideBrowserGlobalErrorListeners } from '@angular/core';
-import { provideRouter } from '@angular/router';
+import { TitleStrategy, provideRouter } from '@angular/router';
 import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
 import { routes } from './app.routes';
+import { AppTitleStrategy } from './core/routing/title-strategy';
 import { AuthService } from './core/services/auth/auth.service';
 import {
   authInterceptor,
@@ -20,6 +21,7 @@ export const appConfig: ApplicationConfig = {
     provideBrowserGlobalErrorListeners(),
     provideAppErrorHandling(),
     provideRouter(routes),
+    { provide: TitleStrategy, useClass: AppTitleStrategy },
     provideHttpClient(
       withFetch(),
       withInterceptors([

@@ -39,6 +39,7 @@ export interface TableAction<T = unknown> {
   id: string;
   icon: string;
   label: string;
+  ariaLabel?: string | ((row: T) => string);
   variant?: 'ghost' | 'primary' | 'danger';
   disabled?: (row: T) => boolean;
   visible?: (row: T) => boolean;
@@ -76,6 +77,7 @@ export class DataTable<T = unknown> {
   readonly loading = input<boolean>(false);
   readonly actions = input<TableAction<T>[]>([]);
   readonly actionsLabel = input<string>('Actions');
+  readonly ariaLabel = input<string>('Data table');
   readonly stickyHeader = input<boolean>(false);
   readonly showPagination = input<boolean>(true);
   readonly page = input<number>(1);
@@ -263,6 +265,29 @@ export class DataTable<T = unknown> {
       return mapper[raw] ?? 'neutral';
     }
     return 'neutral';
+  }
+
+  resolveActionAriaLabel(act: TableAction<T>, row: T): string {
+    if (act.ariaLabel) {
+      if (typeof act.ariaLabel === 'function') {
+        return act.ariaLabel(row);
+      }
+      return act.ariaLabel;
+    }
+    const anyRow = row as Record<string, unknown>;
+    const rowContext =
+      anyRow['name'] ||
+      anyRow['displayName'] ||
+      anyRow['title'] ||
+      anyRow['deviceSerial'] ||
+      anyRow['serialNumber'] ||
+      anyRow['reportId'] ||
+      anyRow['userId'] ||
+      anyRow['id'];
+    if (rowContext) {
+      return `${act.label} ${rowContext}`;
+    }
+    return act.label;
   }
 
   getAriaSort(col: TableColumn<T>): 'ascending' | 'descending' | 'none' | null {

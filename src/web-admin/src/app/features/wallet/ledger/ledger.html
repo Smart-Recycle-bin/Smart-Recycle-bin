@@ -30,6 +30,7 @@
       <div class="filter-item search-filter">
         <app-search-input
           placeholder="Search by ID, user, or reason..."
+          ariaLabel="Search ledger records"
           [value]="pagedList.filters().search || ''"
           (valueChange)="handleSearch($event)"
           (search)="handleSearch($event)"
@@ -41,6 +42,7 @@
           [options]="typeOptions"
           [value]="pagedList.filters().source || ''"
           placeholder="All transaction types"
+          ariaLabel="Filter by transaction type"
           (valueChange)="handleSourceChange($event)"
         />
       </div>
@@ -65,6 +67,7 @@
   } @else {
     <div class="table-container">
       <app-data-table
+        ariaLabel="Ledger transactions list"
         [columns]="tableColumns"
         [data]="pagedList.items()"
         [loading]="pagedList.refreshing() || pagedList.loading()"

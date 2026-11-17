@@ -65,9 +65,13 @@
   justify-content: center;
   border-radius: inherit;
   background-color: var(--primary-soft);
-  color: var(--primary);
+  color: var(--primary-strong);
   font-weight: 600;
   border: 1px solid var(--border);
+}
+
+:host-context(.dark) .avatar-placeholder {
+  color: var(--primary);
 }
 
 .avatar-initials {

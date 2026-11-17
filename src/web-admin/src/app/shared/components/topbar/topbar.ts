@@ -3,6 +3,7 @@ import {
   Component,
   ElementRef,
   HostListener,
+  computed,
   inject,
   input,
   output,
@@ -56,6 +57,16 @@ export class Topbar {
 
   readonly isDarkMode = this.themeService.isDark;
   readonly notificationsOpen = signal<boolean>(false);
+  readonly userMenuOpen = signal<boolean>(false);
+
+  readonly notifAriaLabel = computed(() => {
+    const count = this.unreadNotifications();
+    if (count > 0) {
+      const display = count > 9 ? '9+' : `${count}`;
+      return `Notifications, ${display} unread`;
+    }
+    return 'Notifications';
+  });
 
   readonly notifWrapper = viewChild<ElementRef<HTMLElement>>('notifWrapper');
 
@@ -97,6 +108,7 @@ export class Topbar {
   }
 
   handleMenuOpened(open: boolean): void {
+    this.userMenuOpen.set(open);
     if (open) {
       this.notificationsOpen.set(false);
       this.userMenuClicked.emit();

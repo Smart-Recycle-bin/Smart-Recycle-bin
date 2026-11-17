@@ -7,7 +7,8 @@ import {
   OnInit,
   signal,
 } from '@angular/core';
-import { Router, RouterOutlet } from '@angular/router';
+import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
+import { filter } from 'rxjs';
 import { ADMIN_NAV_SECTIONS } from '../../core/navigation/admin-nav';
 import { CurrentUser, CurrentUserService } from '../../core/services/user/current-user.service';
 import { AuthService } from '../../core/services/auth/auth.service';
@@ -43,6 +44,33 @@ export class AdminLayout implements OnInit {
   readonly mobileSidebarOpen = signal<boolean>(false);
 
   readonly isOffline = computed(() => !this.onlineService.isOnline());
+  readonly routeAnnouncement = signal<string>('');
+
+  constructor() {
+    this.router.events
+      .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
+      .subscribe(() => {
+        let route = this.router.routerState.root;
+        while (route.firstChild) {
+          route = route.firstChild;
+        }
+        const title = route.snapshot.data?.['title'];
+        if (title) {
+          this.routeAnnouncement.set(`${title} loaded`);
+        }
+        setTimeout(() => {
+          if (typeof document !== 'undefined') {
+            const h1 = document.querySelector<HTMLElement>('main h1, h1');
+            if (h1) {
+              if (!h1.hasAttribute('tabindex')) {
+                h1.setAttribute('tabindex', '-1');
+              }
+              h1.focus();
+            }
+          }
+        }, 100);
+      });
+  }
 
   readonly activeUser = computed(() => this.currentUser() ?? this.currentUserService.user());
 

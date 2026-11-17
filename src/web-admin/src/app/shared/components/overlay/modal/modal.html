@@ -2,18 +2,25 @@
   <div
     class="modal-backdrop"
     (click)="handleBackdropClick($event)"
-    role="dialog"
-    aria-modal="true"
   >
-    <div [class]="'modal-dialog size-' + size() + ' slide-in'">
+    <div
+      [class]="'modal-dialog size-' + size() + ' slide-in'"
+      role="dialog"
+      aria-modal="true"
+      [attr.aria-label]="ariaLabel() || (title() ? null : 'Dialog')"
+      [attr.aria-labelledby]="title() ? titleId : null"
+      [attr.aria-describedby]="description() ? descId : null"
+      [appFocusTrap]="true"
+      (escapePressed)="close()"
+    >
       @if (title() || showCloseButton()) {
         <div class="modal-header">
           <div class="modal-titles">
             @if (title()) {
-              <h3 class="modal-title">{{ title() }}</h3>
+              <h3 class="modal-title" [id]="titleId">{{ title() }}</h3>
             }
             @if (description()) {
-              <p class="modal-desc">{{ description() }}</p>
+              <p class="modal-desc" [id]="descId">{{ description() }}</p>
             }
           </div>
 

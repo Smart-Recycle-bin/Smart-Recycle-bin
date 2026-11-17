@@ -79,6 +79,7 @@
       <div class="filter-item search-filter">
         <app-search-input
           placeholder="Search by AIR ID, bin, waste category..."
+          ariaLabel="Search inspection reports"
           [value]="pagedList.filters().search || ''"
           (valueChange)="handleSearch($event)"
           (search)="handleSearch($event)"
@@ -90,6 +91,7 @@
           [options]="statusOptions"
           [value]="pagedList.filters().status || ''"
           placeholder="All statuses"
+          ariaLabel="Filter by status"
           (valueChange)="handleStatusChange($event)"
         />
       </div>
@@ -107,6 +109,7 @@
   } @else {
     <div class="table-container">
       <app-data-table
+        ariaLabel="Inspection reports review queue"
         [columns]="tableColumns"
         [data]="pagedList.items()"
         [loading]="pagedList.refreshing() || pagedList.loading()"
@@ -130,7 +133,7 @@
             <div class="thumb-container">
               <img
                 [src]="row.imageThumbnailUrl"
-                alt="Frame"
+                [alt]="'Thumbnail for report ' + row.reportId"
                 class="report-thumb"
                 loading="lazy"
                 (error)="$any($event.target).style.display='none'"

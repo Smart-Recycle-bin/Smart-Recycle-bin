@@ -8,7 +8,6 @@
   flex-direction: column;
   gap: 1.25rem;
   width: 100%;
-  animation: loginFadeIn 0.25s ease-out;
 }
 
 .login-notice-wrapper {
@@ -149,6 +148,11 @@
   border-radius: 0.375rem;
   background-color: var(--surface-raised);
   border: 1px solid var(--border);
+  color: var(--primary-strong);
+}
+
+:host-context(.dark) .mock-chip-badge,
+.dark .mock-chip-badge {
   color: var(--primary);
 }
 

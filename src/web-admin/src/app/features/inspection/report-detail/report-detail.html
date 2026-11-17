@@ -46,7 +46,7 @@
           <div class="card-header">
             <div class="header-with-icon">
               <app-icon name="camera" size="sm" />
-              <h3 class="card-title">Captured frames</h3>
+              <h2 class="card-title">Captured frames</h2>
             </div>
             <span class="card-helper-tag">{{ d.capturedFrames.length }} frames · click to enlarge</span>
           </div>
@@ -85,7 +85,7 @@
           <div class="card-header">
             <div class="header-with-icon">
               <app-icon name="alert-circle" size="sm" />
-              <h3 class="card-title">User rejection feedback</h3>
+              <h2 class="card-title">User rejection feedback</h2>
             </div>
             <span class="rejection-badge">Survey disputed</span>
           </div>
@@ -109,7 +109,7 @@
           <div class="card-header">
             <div class="header-with-icon">
               <app-icon name="cpu" size="sm" />
-              <h3 class="card-title">ML inference output</h3>
+              <h2 class="card-title">ML inference output</h2>
             </div>
             <span class="model-tag">{{ d.mlModelVersion }}</span>
           </div>
@@ -126,7 +126,7 @@
           </div>
 
           <div class="confidence-section">
-            <h4 class="confidence-title">Classification confidence</h4>
+            <h3 class="confidence-title">Classification confidence</h3>
             <div class="confidence-list">
               @for (entry of confidenceEntries(); track entry.className) {
                 <div class="confidence-row">
@@ -151,7 +151,7 @@
           <div class="card-header">
             <div class="header-with-icon">
               <app-icon name="shield" size="sm" />
-              <h3 class="card-title">Admin actions</h3>
+              <h2 class="card-title">Admin actions</h2>
             </div>
             @if (!isPending()) {
               <span class="resolved-note">Resolved</span>
@@ -167,12 +167,14 @@
           <div class="actions-body">
             <!-- Action 1: Correct Category -->
             <div class="action-section">
-              <label class="action-label">Set correct category</label>
+              <label class="action-label" for="report-correct-category-select">Set correct category</label>
               <div class="correct-category-row">
                 <app-select
+                  id="report-correct-category-select"
                   [options]="wasteTypeOptions()"
                   [value]="selectedWasteType()"
                   placeholder="Select waste category..."
+                  ariaLabel="Set correct category"
                   [disabled]="!isPending() || isSubmittingAction()"
                   (valueChange)="handleWasteTypeChange($event)"
                 />

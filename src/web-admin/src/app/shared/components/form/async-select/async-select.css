@@ -2,7 +2,8 @@
   display: block;
 }
 
-.async-select-container {
+.async-select-container,
+.async-select-wrapper {
   position: relative;
   width: 100%;
 }

@@ -7,18 +7,20 @@
         { "name": "Primary Text on Muted Surface", "foreground": "#0F172A", "background": "#F1F5F9", "minRatio": 4.5 },
         { "name": "Muted Text on Raised Surface", "foreground": "#475569", "background": "#FFFFFF", "minRatio": 4.5 },
         { "name": "Muted Text on Page Surface", "foreground": "#475569", "background": "#F8FAFC", "minRatio": 4.5 },
-        { "name": "Primary Button Text on Primary Fill", "foreground": "#FFFFFF", "background": "#008556", "minRatio": 4.5 },
+        { "name": "Primary Button Text on Primary Fill", "foreground": "#FFFFFF", "background": "#007A4D", "minRatio": 4.5 },
         { "name": "Success Badge Text on Success Fill", "foreground": "#047857", "background": "#ECFDF5", "minRatio": 4.5 },
         { "name": "Warning Badge Text on Warning Fill", "foreground": "#B45309", "background": "#FFFBEB", "minRatio": 4.5 },
         { "name": "Danger Badge Text on Danger Fill", "foreground": "#B91C1C", "background": "#FEF2F2", "minRatio": 4.5 },
         { "name": "Info Badge Text on Info Fill", "foreground": "#0369A1", "background": "#F0F9FF", "minRatio": 4.5 },
-        { "name": "Purple Badge Text on Purple Fill", "foreground": "#6D28D9", "background": "#F5F3FF", "minRatio": 4.5 }
+        { "name": "Purple Badge Text on Purple Fill", "foreground": "#6D28D9", "background": "#F5F3FF", "minRatio": 4.5 },
+        { "name": "Sidebar Nav Label on Sidebar Fill", "foreground": "#FFFFFF", "background": "#064E3B", "minRatio": 4.5 },
+        { "name": "Sidebar Section Title on Sidebar Fill", "foreground": "#CBD5E1", "background": "#064E3B", "minRatio": 4.5 }
       ],
       "boundaries": [
         { "name": "Strong Border on Raised Surface", "foreground": "#64748B", "background": "#FFFFFF", "minRatio": 3.0 },
         { "name": "Strong Border on Page Surface", "foreground": "#64748B", "background": "#F8FAFC", "minRatio": 3.0 },
-        { "name": "Primary Action Element on Raised Surface", "foreground": "#008556", "background": "#FFFFFF", "minRatio": 3.0 },
-        { "name": "Focus Ring on Page Surface", "foreground": "#008556", "background": "#F8FAFC", "minRatio": 3.0 }
+        { "name": "Primary Action Element on Raised Surface", "foreground": "#007A4D", "background": "#FFFFFF", "minRatio": 3.0 },
+        { "name": "Focus Ring on Page Surface", "foreground": "#007A4D", "background": "#F8FAFC", "minRatio": 3.0 }
       ]
     },
     "dark": {
@@ -33,7 +35,9 @@
         { "name": "Warning Badge Text on Warning Fill", "foreground": "#FCD34D", "background": "#342106", "minRatio": 4.5 },
         { "name": "Danger Badge Text on Danger Fill", "foreground": "#FCA5A5", "background": "#3B1214", "minRatio": 4.5 },
         { "name": "Info Badge Text on Info Fill", "foreground": "#38BDF8", "background": "#0C2B40", "minRatio": 4.5 },
-        { "name": "Purple Badge Text on Purple Fill", "foreground": "#C084FC", "background": "#2E1848", "minRatio": 4.5 }
+        { "name": "Purple Badge Text on Purple Fill", "foreground": "#C084FC", "background": "#2E1848", "minRatio": 4.5 },
+        { "name": "Sidebar Nav Label on Sidebar Fill", "foreground": "#F8FAFC", "background": "#064E3B", "minRatio": 4.5 },
+        { "name": "Sidebar Section Title on Sidebar Fill", "foreground": "#CBD5E1", "background": "#064E3B", "minRatio": 4.5 }
       ],
       "boundaries": [
         { "name": "Strong Border on Raised Surface", "foreground": "#64748B", "background": "#111A2E", "minRatio": 3.0 },

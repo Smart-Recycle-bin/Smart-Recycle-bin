@@ -1,6 +1,6 @@
 <div class="table-container" [class.has-sticky-header]="stickyHeader()">
   <div class="table-scroll">
-    <table class="data-table">
+    <table class="data-table" [attr.aria-label]="ariaLabel()">
       <thead [class.is-sticky]="stickyHeader()">
         <tr>
           @if (selectable()) {
@@ -20,13 +20,15 @@
               [class]="'th-cell align-' + (col.align || 'left') + (col.sortable ? ' is-sortable' : '')"
               [style.width]="col.width || 'auto'"
               [attr.aria-sort]="getAriaSort(col)"
-              [attr.tabindex]="col.sortable ? 0 : null"
-              (click)="handleSort(col)"
-              (keydown)="handleSortKeyDown($event, col)"
             >
-              <div class="th-content">
-                <span>{{ col.label }}</span>
-                @if (col.sortable) {
+              @if (col.sortable) {
+                <button
+                  type="button"
+                  class="th-sort-btn"
+                  (click)="handleSort(col)"
+                  [attr.aria-label]="'Sort by ' + col.label + ', ' + (internalSortColumn() === col.key && internalSortDir() === 'asc' ? 'sorted ascending' : (internalSortColumn() === col.key && internalSortDir() === 'desc' ? 'sorted descending' : 'not sorted'))"
+                >
+                  <span>{{ col.label }}</span>
                   <span class="sort-indicator" aria-hidden="true">
                     @if (internalSortColumn() === col.key && internalSortDir() === 'asc') {
                       <app-icon name="arrow-up" size="xs" />
@@ -36,8 +38,12 @@
                       <app-icon name="chevron-down" size="xs" class="sort-inactive" />
                     }
                   </span>
-                }
-              </div>
+                </button>
+              } @else {
+                <div class="th-content">
+                  <span>{{ col.label }}</span>
+                </div>
+              }
             </th>
           }
 
@@ -135,8 +141,8 @@
                           [icon]="act.icon"
                           [variant]="act.variant || 'ghost'"
                           size="sm"
-                          [title]="act.label"
-                          [ariaLabel]="act.label"
+                          [title]="resolveActionAriaLabel(act, row)"
+                          [ariaLabel]="resolveActionAriaLabel(act, row)"
                           [disabled]="isActionDisabled(act, row)"
                           (clicked)="handleAction(act.id, row)"
                         />

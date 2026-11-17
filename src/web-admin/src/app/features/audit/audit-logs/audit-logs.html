@@ -103,6 +103,7 @@
       } @else {
         <!-- Data Table (p16: Page size 8 -> "Showing 1–8 of 10") -->
         <app-data-table
+          ariaLabel="Audit logs"
           [columns]="columns"
           [data]="pagedList.items()"
           [loading]="pagedList.refreshing() || pagedList.loading()"

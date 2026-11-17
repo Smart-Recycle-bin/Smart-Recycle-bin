@@ -169,6 +169,7 @@
           />
         } @else {
           <app-data-table
+            ariaLabel="Recent surveys"
             [columns]="columns"
             [data]="pagedList.items()"
             [loading]="pagedList.refreshing() || pagedList.loading()"

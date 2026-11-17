@@ -15,7 +15,7 @@
     @for (sec of sections(); track sec.title || $index) {
       <div class="nav-section">
         @if (sec.title && !collapsed()) {
-          <h3 class="section-title">{{ sec.title }}</h3>
+          <h2 class="section-title">{{ sec.title }}</h2>
         }
 
         <ul class="nav-list">
@@ -25,6 +25,8 @@
                 class="nav-link"
                 [routerLink]="item.route"
                 routerLinkActive="is-active"
+                #rla="routerLinkActive"
+                [attr.aria-current]="rla.isActive ? 'page' : null"
                 [routerLinkActiveOptions]="{ exact: !!item.exact }"
                 [attr.title]="collapsed() ? item.label : null"
                 [attr.aria-label]="collapsed() ? item.label : null"

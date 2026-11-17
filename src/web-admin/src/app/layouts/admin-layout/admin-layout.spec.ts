@@ -224,4 +224,17 @@ describe('AdminLayout', () => {
     expect(banner).toBeTruthy();
     expect(banner.textContent).toContain("You are offline — changes can't be saved");
   });
+
+  it('renders skip link targeting main-content with correct attributes', () => {
+    fixture.detectChanges();
+    const el = fixture.nativeElement as HTMLElement;
+    const skipLink = el.querySelector<HTMLAnchorElement>('a.skip-to-content');
+    expect(skipLink).toBeTruthy();
+    expect(skipLink?.getAttribute('href')).toBe('#main-content');
+    expect(skipLink?.textContent?.trim()).toBe('Skip to main content');
+
+    const main = el.querySelector('main#main-content');
+    expect(main).toBeTruthy();
+    expect(main?.getAttribute('tabindex')).toBe('-1');
+  });
 });

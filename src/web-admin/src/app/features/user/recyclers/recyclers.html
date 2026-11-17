@@ -11,6 +11,7 @@
       <div class="filter-item search-filter">
         <app-search-input
           placeholder="Search by name, email, phone, or ID..."
+          ariaLabel="Search recyclers"
           [value]="pagedList.filters().search || ''"
           (valueChange)="handleSearch($event)"
           (search)="handleSearch($event)"
@@ -22,6 +23,7 @@
           [options]="statusOptions"
           [value]="pagedList.filters().status || ''"
           placeholder="All statuses"
+          ariaLabel="Filter by status"
           (valueChange)="handleStatusChange($event)"
         />
       </div>
@@ -39,6 +41,7 @@
   } @else {
     <div class="table-container">
       <app-data-table
+        ariaLabel="Recycler accounts list"
         [columns]="tableColumns"
         [data]="pagedList.items()"
         [loading]="pagedList.refreshing() || pagedList.loading()"
