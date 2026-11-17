@@ -58,6 +58,11 @@ export class Select implements ControlValueAccessor, OnInit {
 
   readonly effectiveError = computed(() => this.error() || this.controlError());
   readonly isEmptyAllowed = computed(() => this.compact() || this.allowEmpty());
+  readonly hasEmptyOption = computed(() =>
+    this.options().some(
+      (opt) => opt.value === '' || opt.value === null || opt.value === undefined
+    )
+  );
 
   readonly effectiveAriaLabel = computed(() => {
     if (this.ariaLabel()) return this.ariaLabel();

@@ -24,7 +24,7 @@
       (blur)="handleBlur()"
       class="select-field"
     >
-      @if (placeholder()) {
+      @if (placeholder() && !hasEmptyOption()) {
         <option
           value=""
           [disabled]="!isEmptyAllowed()"

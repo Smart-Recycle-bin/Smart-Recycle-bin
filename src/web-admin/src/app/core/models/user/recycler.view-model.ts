@@ -19,6 +19,7 @@ export interface RecyclerListItem {
   name: string;
   initials: string;
   email: string;
+  phoneNumber?: string; // Enriched field for backend search (gap_api.md)
   availablePoints: number;
   lifetimePoints: number;
   sessions: number;

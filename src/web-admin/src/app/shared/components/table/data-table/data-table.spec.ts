@@ -318,6 +318,7 @@ describe('DataTable', () => {
       await fixture.whenStable();
       fixture.detectChanges();
       expect((fixture.nativeElement as HTMLElement).querySelector('app-empty-state')).toBeTruthy();
+      expect((fixture.nativeElement as HTMLElement).querySelector('.table-footer')).toBeNull();
     });
   });
 

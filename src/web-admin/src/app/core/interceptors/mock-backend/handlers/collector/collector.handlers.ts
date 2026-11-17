@@ -21,6 +21,14 @@ export function registerCollectorHandlers(router: MockRouter): void {
     }
 
     const db = getMockDb();
+
+    // Derived from data (single source of truth): assignedBinsCount comes from actual bins data
+    for (const c of db.collectors) {
+      c.assignedBinsCount = db.bins.filter(
+        (b) => b.collectorId === c.collectorId || b.collectorName === c.name
+      ).length;
+    }
+
     const search = ctx.query.get('search')?.toLowerCase();
     const district = ctx.query.get('district')?.toLowerCase();
     const status = ctx.query.get('status')?.toLowerCase();
@@ -188,7 +196,7 @@ export function registerCollectorHandlers(router: MockRouter): void {
       return errorResponse(404, ApiErrorCode.NotFound, `Collector ${collectorId} not found`);
     }
 
-    collector.status = AccountStatus.Suspended;
+    collector.status = AccountStatus.Inactive;
 
     appendAuditLog(
       AuditActionType.FleetUpdate,
@@ -199,7 +207,7 @@ export function registerCollectorHandlers(router: MockRouter): void {
 
     const response: DeactivateCollectorResponse = {
       collectorId,
-      status: AccountStatus.Suspended,
+      status: AccountStatus.Inactive,
       deactivatedAt: new Date().toISOString(),
     };
 

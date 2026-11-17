@@ -36,11 +36,16 @@ export function registerUserHandlers(router: MockRouter): void {
     }
 
     if (searchFilter) {
+      const cleanFilter = searchFilter.replace(/[\s\-\+\(\)]/g, '');
       result = result.filter(
         (r) =>
           r.name.toLowerCase().includes(searchFilter) ||
           r.email.toLowerCase().includes(searchFilter) ||
-          r.userId.toLowerCase().includes(searchFilter)
+          r.userId.toLowerCase().includes(searchFilter) ||
+          (!!r.phoneNumber &&
+            (r.phoneNumber.toLowerCase().includes(searchFilter) ||
+              (cleanFilter.length > 0 &&
+                r.phoneNumber.replace(/[\s\-\+\(\)]/g, '').includes(cleanFilter))))
       );
     }
 

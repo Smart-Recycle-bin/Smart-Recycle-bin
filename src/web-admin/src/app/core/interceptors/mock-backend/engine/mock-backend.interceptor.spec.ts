@@ -446,4 +446,164 @@ describe('mockBackendInterceptor', () => {
       expect(res.data[0].displayName).toBeTruthy();
     });
   });
+
+  describe('Prompt 10 Regression Tests: Mock Handlers 1-4', () => {
+    let adminToken: string;
+
+    beforeEach(() => {
+      adminToken = generateMockAccessToken(
+        { userId: 'ADM-001', role: UserRole.Admin, displayName: 'Laila Hamdy' },
+        3600
+      );
+    });
+
+    it('1. Review queue counters: derives pending and reviewed from reports, updates on dismiss, correct, and retrain', async () => {
+      // 1. Initial summary: 5 pending, 3 reviewed (2 reviewed + 1 sent to retrain)
+      const initialSummary = await new Promise<ApiResponse<{ pendingReviewCount: number; reviewedCount: number; labelledImagesCount: number; remainingUntilRetrain: number }>>((resolve, reject) => {
+        http
+          .get<ApiResponse<any>>('/api/v1/admin/inspections/summary', {
+            headers: { Authorization: `Bearer ${adminToken}` },
+          })
+          .subscribe({ next: resolve, error: reject });
+      });
+
+      expect(initialSummary.data.pendingReviewCount).toBe(5);
+      expect(initialSummary.data.reviewedCount).toBe(3);
+      expect(initialSummary.data.labelledImagesCount).toBe(1285);
+      expect(initialSummary.data.remainingUntilRetrain).toBe(215);
+
+      // 2. Action: Dismiss AIR-2048
+      await new Promise<any>((resolve, reject) => {
+        http
+          .post<any>('/api/v1/admin/inspections/AIR-2048/dismiss', {}, {
+            headers: { Authorization: `Bearer ${adminToken}` },
+          })
+          .subscribe({ next: resolve, error: reject });
+      });
+
+      const summaryAfterDismiss = await new Promise<ApiResponse<any>>((resolve, reject) => {
+        http
+          .get<ApiResponse<any>>('/api/v1/admin/inspections/summary', {
+            headers: { Authorization: `Bearer ${adminToken}` },
+          })
+          .subscribe({ next: resolve, error: reject });
+      });
+      expect(summaryAfterDismiss.data.pendingReviewCount).toBe(4);
+      expect(summaryAfterDismiss.data.reviewedCount).toBe(4);
+
+      // 3. Action: Correct category on AIR-2047
+      await new Promise<any>((resolve, reject) => {
+        http
+          .post<any>(
+            '/api/v1/admin/inspections/AIR-2047/correct',
+            { wasteTypeId: 'Glass', adminJustification: 'Corrected' },
+            { headers: { Authorization: `Bearer ${adminToken}` } }
+          )
+          .subscribe({ next: resolve, error: reject });
+      });
+
+      const summaryAfterCorrect = await new Promise<ApiResponse<any>>((resolve, reject) => {
+        http
+          .get<ApiResponse<any>>('/api/v1/admin/inspections/summary', {
+            headers: { Authorization: `Bearer ${adminToken}` },
+          })
+          .subscribe({ next: resolve, error: reject });
+      });
+      expect(summaryAfterCorrect.data.pendingReviewCount).toBe(3);
+      expect(summaryAfterCorrect.data.reviewedCount).toBe(5);
+
+      // 4. Action: Retrain AIR-2046
+      await new Promise<any>((resolve, reject) => {
+        http
+          .post<any>(
+            '/api/v1/admin/inspections/AIR-2046/retrain',
+            { confirmedCategory: 'Metal' },
+            { headers: { Authorization: `Bearer ${adminToken}` } }
+          )
+          .subscribe({ next: resolve, error: reject });
+      });
+
+      const summaryAfterRetrain = await new Promise<ApiResponse<any>>((resolve, reject) => {
+        http
+          .get<ApiResponse<any>>('/api/v1/admin/inspections/summary', {
+            headers: { Authorization: `Bearer ${adminToken}` },
+          })
+          .subscribe({ next: resolve, error: reject });
+      });
+      expect(summaryAfterRetrain.data.pendingReviewCount).toBe(2);
+      expect(summaryAfterRetrain.data.reviewedCount).toBe(6);
+      expect(summaryAfterRetrain.data.labelledImagesCount).toBe(1286);
+      expect(summaryAfterRetrain.data.remainingUntilRetrain).toBe(214);
+    });
+
+    it('2. Collector deactivate: sets status to inactive (not suspended)', async () => {
+      const res = await new Promise<ApiResponse<any>>((resolve, reject) => {
+        http
+          .post<ApiResponse<any>>('/api/v1/admin/collectors/C-001/deactivate', {}, {
+            headers: { Authorization: `Bearer ${adminToken}` },
+          })
+          .subscribe({ next: resolve, error: reject });
+      });
+
+      expect(res.success).toBe(true);
+      expect(res.data.status).toBe(AccountStatus.Inactive);
+      expect(res.data.status).toBe('inactive');
+
+      const db = getMockDb();
+      const collector = db.collectors.find((c) => c.collectorId === 'C-001');
+      expect(collector?.status).toBe(AccountStatus.Inactive);
+    });
+
+    it('3. Collector assign: moving a bin updates both collectors counts and derives counts from data', async () => {
+      const db = getMockDb();
+      const bin0007 = db.bins.find((b) => b.binId === 'BIN-0007')!;
+      const prevCollectorId = bin0007.collectorId; // C-002
+      expect(prevCollectorId).toBe('C-002');
+
+      const prevCollectorBefore = db.collectors.find((c) => c.collectorId === 'C-002')!.assignedBinsCount;
+      const newCollectorBefore = db.collectors.find((c) => c.collectorId === 'C-001')!.assignedBinsCount;
+
+      // Assign BIN-0007 to C-001
+      await new Promise<any>((resolve, reject) => {
+        http
+          .post<any>(
+            '/api/v1/admin/bins/BIN-0007/assignment',
+            { collectorId: 'C-001' },
+            { headers: { Authorization: `Bearer ${adminToken}` } }
+          )
+          .subscribe({ next: resolve, error: reject });
+      });
+
+      // Verify list returns derived counts
+      const collectorsList = await new Promise<any>((resolve, reject) => {
+        http
+          .get<any>('/api/v1/admin/collectors', {
+            headers: { Authorization: `Bearer ${adminToken}` },
+          })
+          .subscribe({ next: resolve, error: reject });
+      });
+
+      const items = collectorsList.data.items ?? collectorsList.data;
+      const c002 = items.find((c: any) => c.collectorId === 'C-002');
+      const c001 = items.find((c: any) => c.collectorId === 'C-001');
+
+      expect(c002.assignedBinsCount).toBe(prevCollectorBefore - 1);
+      expect(c001.assignedBinsCount).toBe(newCollectorBefore + 1);
+    });
+
+    it('4. Recyclers search: searches phoneNumber in user handler', async () => {
+      const res = await new Promise<any>((resolve, reject) => {
+        http
+          .get<any>('/api/v1/admin/users?search=+20 100 234 5671', {
+            headers: { Authorization: `Bearer ${adminToken}` },
+          })
+          .subscribe({ next: resolve, error: reject });
+      });
+
+      const items = res.data.items ?? res.data;
+      expect(items.length).toBe(1);
+      expect(items[0].userId).toBe('U-10021');
+      expect(items[0].name).toBe('Nour El-Sayed');
+    });
+  });
 });

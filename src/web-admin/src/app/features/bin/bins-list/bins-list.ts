@@ -52,6 +52,7 @@ import { ResourceState } from '../../../shared/components/resource-state/resourc
 import { Icon } from '../../../shared/components/icon/icon';
 import { DateTimePipe } from '../../../shared/pipes';
 import { createPagedList } from '../../../shared/utils/paged-list';
+import { pluralNoun } from '../../../shared/utils/format';
 
 @Component({
   selector: 'app-bins-list',
@@ -138,7 +139,9 @@ export class BinsList {
   readonly headerSubtitle = computed(() => {
     const count = this.pagedList.total();
     const districtsCount = Math.max(0, this.districtOptions().length - 1);
-    return `${count} registered smart bins across ${districtsCount} districts`;
+    const binWord = pluralNoun(count, 'smart bin', 'smart bins');
+    const districtWord = pluralNoun(districtsCount, 'district', 'districts');
+    return `${count} registered ${binWord} across ${districtsCount} ${districtWord}`;
   });
 
   /**

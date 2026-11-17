@@ -84,10 +84,9 @@ export class ReviewQueue implements OnInit {
 
   loadSummary(): void {
     this.isLoadingSummary.set(true);
-    this.inspectionReportsService.getSummary().subscribe({
+    this.reviewQueueState.refresh().subscribe({
       next: (summary) => {
         this.summary.set(summary);
-        this.reviewQueueState.setPendingCount(summary.pendingReviewCount);
         this.isLoadingSummary.set(false);
       },
       error: () => {

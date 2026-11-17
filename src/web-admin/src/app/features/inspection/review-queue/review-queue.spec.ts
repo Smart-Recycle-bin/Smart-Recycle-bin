@@ -22,6 +22,7 @@ describe('ReviewQueue Component', () => {
   };
   let reviewQueueStateSpy: {
     setPendingCount: ReturnType<typeof vi.fn>;
+    refresh: ReturnType<typeof vi.fn>;
   };
 
   beforeEach(async () => {
@@ -42,6 +43,7 @@ describe('ReviewQueue Component', () => {
 
     reviewQueueStateSpy = {
       setPendingCount: vi.fn(),
+      refresh: vi.fn().mockReturnValue(of(MOCK_INSPECTION_SUMMARY)),
     };
 
     await TestBed.configureTestingModule({
@@ -67,13 +69,10 @@ describe('ReviewQueue Component', () => {
 
   it('should initialize and load summary and inspection reports on mount via pagedList', () => {
     expect(component).toBeTruthy();
-    expect(inspectionReportsServiceSpy.getSummary).toHaveBeenCalledTimes(1);
+    expect(reviewQueueStateSpy.refresh).toHaveBeenCalledTimes(1);
     expect(inspectionReportsServiceSpy.getReports).toHaveBeenCalledTimes(1);
     expect(component.summary()).toEqual(MOCK_INSPECTION_SUMMARY);
     expect(component.pagedList.items().length).toBe(MOCK_INSPECTION_REPORTS.length);
-    expect(reviewQueueStateSpy.setPendingCount).toHaveBeenCalledWith(
-      MOCK_INSPECTION_SUMMARY.pendingReviewCount
-    );
     expect(component.pagedList.loading()).toBe(false);
   });
 

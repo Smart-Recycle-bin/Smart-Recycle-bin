@@ -2,7 +2,7 @@
   <!-- Page Header -->
   <app-page-header
     title="Operational overview"
-    subtitle="Real-time telemetry, fleet health, and material recovery metrics."
+    subtitle="Network-wide analytics for the Smart Waste Bin System."
   >
     <div page-actions class="header-actions">
       <div class="period-controls">
@@ -152,7 +152,7 @@
 
       <!-- 2. Points Activity Main Area Chart -->
       <section class="main-chart-section">
-        <app-card title="Points Activity" subtitle="Points issued vs redeemed over the selected period">
+        <app-card title="Points issued vs. redeemed" subtitle="Issued from disposals; redeemed against vouchers">
           <app-area-chart
             [series]="pointsComparisonSeries()"
             [height]="250"
@@ -167,7 +167,7 @@
         <!-- Fleet Health Card per p17 -->
         <app-card
           title="Fleet Health"
-          [subtitle]="'Real-time status across ' + data.fleetHealth.totalBins + ' smart bins'"
+          [subtitle]="data.fleetHealth.totalBins + ' registered bins'"
           class="fleet-health-card"
         >
           <div card-actions>
@@ -207,7 +207,7 @@
               <div class="status-row">
                 <div class="status-info">
                   <span class="status-dot dot-available"></span>
-                  <span class="status-name">Available (&lt;80%)</span>
+                  <span class="status-name">AVAILABLE</span>
                 </div>
                 <div class="status-metrics">
                   <span class="status-count">{{ data.fleetHealth.available }}</span>
@@ -219,7 +219,7 @@
               <div class="status-row">
                 <div class="status-info">
                   <span class="status-dot dot-eighty"></span>
-                  <span class="status-name">High fill (≥80%)</span>
+                  <span class="status-name">≥80% FULL</span>
                 </div>
                 <div class="status-metrics">
                   <span class="status-count">{{ data.fleetHealth.eightyPercentFull }}</span>
@@ -231,7 +231,7 @@
               <div class="status-row">
                 <div class="status-info">
                   <span class="status-dot dot-needs-service"></span>
-                  <span class="status-name">Needs servicing (≥95%)</span>
+                  <span class="status-name">≥95% FULL</span>
                 </div>
                 <div class="status-metrics">
                   <span class="status-count">{{ data.fleetHealth.needsServicing }}</span>
@@ -329,7 +329,7 @@
                     </div>
                     <div class="item-badges">
                       <app-badge [label]="bin.fillLevel + '%'" variant="danger" />
-                      <app-badge label="Needs servicing" variant="danger" />
+                      <app-badge label="≥95% FULL" variant="danger" />
                     </div>
                   </a>
                 }

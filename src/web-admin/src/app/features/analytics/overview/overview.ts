@@ -111,12 +111,12 @@ export class Overview implements OnInit {
     const data = this.overviewData()?.pointsComparisonSeries ?? [];
     return [
       {
-        name: 'Points Issued',
+        name: 'Issued',
         color: 'var(--chart-1)',
         points: data.map((p) => ({ label: formatShortDate(p.date), value: p.issued })),
       },
       {
-        name: 'Points Redeemed',
+        name: 'Redeemed',
         color: 'var(--chart-3)',
         points: data.map((p) => ({ label: formatShortDate(p.date), value: p.redeemed })),
       },

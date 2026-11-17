@@ -139,8 +139,12 @@ export function registerBinHandlers(router: MockRouter): void {
     bin.collectorId = collector.collectorId;
     bin.collectorName = collector.name;
 
-    // Recalculate collector assigned bins count
-    collector.assignedBinsCount = db.bins.filter((b) => b.collectorId === collector.collectorId).length;
+    // Move bin: Recalculate all collectors' assigned bins counts from actual bins data
+    for (const c of db.collectors) {
+      c.assignedBinsCount = db.bins.filter(
+        (b) => b.collectorId === c.collectorId || b.collectorName === c.name
+      ).length;
+    }
 
     appendAuditLog(
       AuditActionType.BinAssignment,

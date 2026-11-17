@@ -90,8 +90,8 @@ describe('Overview Component', () => {
   it('should compute and render points comparison series', () => {
     const series = component.pointsComparisonSeries();
     expect(series.length).toBe(2);
-    expect(series[0].name).toBe('Points Issued');
-    expect(series[1].name).toBe('Points Redeemed');
+    expect(series[0].name).toBe('Issued');
+    expect(series[1].name).toBe('Redeemed');
     expect(series[0].points.length).toBe(MOCK_OVERVIEW_7D.pointsComparisonSeries.length);
   });
 

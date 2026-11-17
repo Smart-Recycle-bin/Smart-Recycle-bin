@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { formatSignedPoints, initials } from './format';
+import { formatSignedPoints, initials, pluralize, pluralNoun } from './format';
 
 describe('format utilities', () => {
   describe('formatSignedPoints', () => {
@@ -38,6 +38,34 @@ describe('format utilities', () => {
       expect(initials('   ')).toBe('');
       expect(initials(null)).toBe('');
       expect(initials(undefined)).toBe('');
+    });
+  });
+
+  describe('pluralize', () => {
+    it('pluralizes nouns with count 1 correctly', () => {
+      expect(pluralize(1, 'item')).toBe('1 item');
+      expect(pluralize(1, 'bin')).toBe('1 bin');
+      expect(pluralize(1, 'district', 'districts')).toBe('1 district');
+    });
+
+    it('pluralizes nouns with count 0 or >1 correctly', () => {
+      expect(pluralize(0, 'item')).toBe('0 items');
+      expect(pluralize(2, 'item')).toBe('2 items');
+      expect(pluralize(23, 'smart bin')).toBe('23 smart bins');
+      expect(pluralize(4, 'district', 'districts')).toBe('4 districts');
+    });
+  });
+
+  describe('pluralNoun', () => {
+    it('returns singular form when count is 1', () => {
+      expect(pluralNoun(1, 'bin')).toBe('bin');
+      expect(pluralNoun(1, 'item')).toBe('item');
+    });
+
+    it('returns plural form when count is 0 or >1', () => {
+      expect(pluralNoun(0, 'bin')).toBe('bins');
+      expect(pluralNoun(2, 'bin')).toBe('bins');
+      expect(pluralNoun(4, 'category', 'categories')).toBe('categories');
     });
   });
 });

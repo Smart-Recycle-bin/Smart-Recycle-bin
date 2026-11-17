@@ -146,10 +146,14 @@ export class Collectors {
    */
   readonly fetchAvailableBins = (term: string) => {
     const collector = this.selectedCollector();
-    return this.binsService.getBins({ search: term, pageSize: 20 }).pipe(
+    return this.binsService.getBins({ search: term, pageSize: 50 }).pipe(
       map((page) =>
         page.items
-          .filter((b) => b.collectorId !== collector?.collectorId)
+          .filter(
+            (b) =>
+              b.collectorId !== collector?.collectorId &&
+              b.collectorName !== collector?.name
+          )
           .map((b) => ({
             label: `${b.name} (${b.binId}) · ${b.district} [${b.fillLevel}%]`,
             value: b.binId,

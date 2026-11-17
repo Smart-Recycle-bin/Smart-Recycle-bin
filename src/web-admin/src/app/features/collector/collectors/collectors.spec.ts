@@ -405,7 +405,7 @@ describe('Collectors Component', () => {
       resultOptions = opts;
     });
 
-    expect(binsServiceSpy.getBins).toHaveBeenCalledWith({ search: 'term', pageSize: 20 });
+    expect(binsServiceSpy.getBins).toHaveBeenCalledWith({ search: 'term', pageSize: 50 });
     // BIN-1001 had collectorId == activeCollector.collectorId, so it must be excluded!
     expect(resultOptions.length).toBe(1);
     expect(resultOptions[0].value).toBe('BIN-1002');

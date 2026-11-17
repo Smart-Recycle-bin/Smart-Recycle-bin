@@ -33,6 +33,7 @@ import {
   VoucherCodeType,
   VOUCHER_CODE_TYPE_LABELS,
 } from '../../../core/models/reward/voucher-code-type.enum';
+import { pluralize } from '../../../shared/utils/format';
 import {
   CreateRewardRequest,
   UpdateRewardRequest,
@@ -40,6 +41,7 @@ import {
 import { PageHeader } from '../../../shared/components/page-header/page-header';
 import { Button } from '../../../shared/components/button/button';
 import { IconButton } from '../../../shared/components/button/icon-button/icon-button';
+import { Icon } from '../../../shared/components/icon/icon';
 import { Badge, BadgeVariant } from '../../../shared/components/badge/badge';
 import { SegmentedControl } from '../../../shared/components/segmented-control/segmented-control';
 import { Select } from '../../../shared/components/form/select/select';
@@ -72,6 +74,7 @@ import {
   STATUS_FILTER_OPTIONS,
   VIEW_MODE_OPTIONS,
   VOUCHER_CODE_TYPE_OPTIONS,
+  getRewardCuratedGradient,
 } from './catalog.config';
 
 @Component({
@@ -82,6 +85,7 @@ import {
     PageHeader,
     Button,
     IconButton,
+    Icon,
     Badge,
     SegmentedControl,
     Select,
@@ -114,6 +118,7 @@ export class Catalog implements OnInit {
   readonly tableColumns = REWARD_TABLE_COLUMNS;
   readonly tableActions = REWARD_TABLE_ACTIONS;
   readonly RewardStatus = RewardStatus;
+  readonly getRewardGradient = getRewardCuratedGradient;
 
   readonly rewards = signal<AdminRewardItem[]>([]);
   readonly isLoading = signal<boolean>(true);
@@ -140,7 +145,7 @@ export class Catalog implements OnInit {
 
   // Derived subtitle per p12
   readonly subtitle = computed(
-    () => `${this.rewards().length} items · stock reaching zero is flagged automatically`
+    () => `${pluralize(this.rewards().length, 'item')} · stock reaching zero is flagged automatically`
   );
 
   readonly rewardForm: FormGroup = this.fb.group(

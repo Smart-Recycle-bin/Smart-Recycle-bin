@@ -116,6 +116,11 @@ describe('Theme Tokens and Color Policy Guard', () => {
             continue;
           }
 
+          // C: Curated reward card gradient pairs (p12 fallback: green, cyan, teal, amber, purple, rose, slate, bronze)
+          if (normalizedPath.endsWith('features/reward/catalog/catalog.config.ts')) {
+            continue;
+          }
+
           violations.push({
             file: path.relative(cwd, file).replace(/\\/g, '/'),
             line: lineIdx + 1,

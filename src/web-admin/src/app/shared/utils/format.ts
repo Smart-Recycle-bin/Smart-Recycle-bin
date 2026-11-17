@@ -43,3 +43,21 @@ export function initials(name: string | null | undefined): string {
   const second = parts[1]?.[0] ?? '';
   return `${first}${second}`.toUpperCase();
 }
+
+/**
+ * Formats a count and noun with correct grammatical pluralization.
+ * Example: pluralize(1, 'item') => '1 item'
+ *          pluralize(5, 'item') => '5 items'
+ */
+export function pluralize(count: number, singular: string, plural = `${singular}s`): string {
+  return `${count} ${count === 1 ? singular : plural}`;
+}
+
+/**
+ * Returns either singular or plural noun without prepending the count number.
+ * Example: pluralNoun(1, 'bin') => 'bin'
+ *          pluralNoun(2, 'bin') => 'bins'
+ */
+export function pluralNoun(count: number, singular: string, plural = `${singular}s`): string {
+  return count === 1 ? singular : plural;
+}

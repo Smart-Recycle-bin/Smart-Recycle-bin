@@ -77,12 +77,16 @@ export function getCollectorStatusBadgeVariant(status: unknown): BadgeVariant {
     case AccountStatus.Active:
       return 'success';
     case AccountStatus.Inactive:
+    case AccountStatus.Suspended:
     default:
       return 'neutral';
   }
 }
 
 export function getCollectorStatusLabel(status: unknown): string {
+  if (status === AccountStatus.Inactive || status === AccountStatus.Suspended || status === 'suspended') {
+    return 'Inactive';
+  }
   if (typeof status === 'string' && Object.prototype.hasOwnProperty.call(ACCOUNT_STATUS_LABELS, status)) {
     return ACCOUNT_STATUS_LABELS[status as AccountStatus];
   }

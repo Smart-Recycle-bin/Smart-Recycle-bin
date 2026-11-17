@@ -114,6 +114,18 @@ describe('Catalog', () => {
     expect(compiled.querySelector('[data-testid="rewards-grid"]')).toBeTruthy();
   });
 
+  it('renders curated gradients and centered gift icons on reward cards in grid view', () => {
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+    const cards = compiled.querySelectorAll('.reward-card');
+    expect(cards.length).toBe(8);
+
+    const firstBanner = cards[0].querySelector('.card-banner') as HTMLElement;
+    expect(firstBanner).toBeTruthy();
+    expect(firstBanner.style.background).toContain('linear-gradient');
+    expect(firstBanner.querySelector('.banner-gift-icon')).toBeTruthy();
+  });
+
   it('should toggle between grid and table view while preserving loaded data', () => {
     expect(component.viewMode()).toBe('grid');
     const compiled = fixture.nativeElement as HTMLElement;

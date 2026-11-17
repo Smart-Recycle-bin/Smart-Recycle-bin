@@ -37,7 +37,7 @@ export const ADMIN_NAV_SECTIONS: AdminNavSection[] = [
   {
     items: [
       { id: 'wallet', label: 'Wallet & Ledger', icon: 'wallet', route: '/wallet' },
-      { id: 'review-queue', label: 'AI Review Queue', icon: 'file-text', route: '/review-queue' },
+      { id: 'review-queue', label: 'Reports', icon: 'file-text', route: '/review-queue' },
       { id: 'survey-qa', label: 'Survey QA', icon: 'clipboard-check', route: '/survey-qa' },
       { id: 'rewards', label: 'Rewards Catalog', icon: 'gift', route: '/rewards' },
       { id: 'leaderboards', label: 'Leaderboards & Badges', icon: 'trophy', route: '/leaderboards' },

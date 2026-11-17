@@ -158,7 +158,7 @@
     </table>
   </div>
 
-  @if (showPagination()) {
+  @if (showPagination() && totalCount() !== 0) {
     <div class="table-footer">
       <app-pagination
         [page]="internalPage()"

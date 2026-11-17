@@ -73,18 +73,24 @@
         <div class="rewards-grid" data-testid="rewards-grid">
           @for (item of rewards(); track item.itemId) {
             <div class="reward-card" [attr.data-testid]="'reward-card-' + item.itemId">
-              <!-- Card Banner Header with Image / Gradient and Status Badge -->
-              <div class="card-banner" [class.has-image]="!!item.imageUrl">
+              <!-- Card Banner Header with Curated Gradient, Centered Gift Icon, and Status Badge -->
+              <div
+                class="card-banner"
+                [class.has-image]="!!item.imageUrl"
+                [style.background]="getRewardGradient(item.itemId)"
+              >
                 @if (item.imageUrl) {
                   <img
                     [src]="item.imageUrl"
                     [alt]="item.title"
                     class="banner-image"
                     loading="lazy"
+                    (error)="$any($event.target).style.display='none'"
                   />
-                } @else {
-                  <div class="banner-gradient"></div>
                 }
+                <div class="banner-gift-icon" aria-hidden="true">
+                  <app-icon name="gift" size="lg" />
+                </div>
                 <div class="banner-badge-overlay">
                   <app-badge
                     [variant]="getStatusBadgeVariant(item.status)"

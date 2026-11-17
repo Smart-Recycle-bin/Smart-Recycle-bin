@@ -116,7 +116,7 @@ describe('App Routes', () => {
         ['/recyclers', 'Recyclers'],
         ['/collectors', 'Collectors'],
         ['/wallet', 'Wallet & Ledger'],
-        ['/review-queue', 'AI Review Queue'],
+        ['/review-queue', 'Reports'],
         ['/survey-qa', 'Survey QA'],
         ['/rewards', 'Rewards Catalog'],
         ['/leaderboards', 'Leaderboards & Badges'],

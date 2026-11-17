@@ -8,6 +8,34 @@ import {
   CorrectCategoryRequest,
   InspectionActionResponse,
 } from '../../../../models/inspection/inspection.dto';
+import { InspectionSummary } from '../../../../models/inspection/inspection.view-model';
+
+/**
+ * Derives and synchronizes all inspection summary counters directly from
+ * the reports list (single source of truth).
+ * - Pending: reports with status Pending
+ * - Reviewed: reports with status Reviewed or Sent to Retraining (matching card label)
+ * - Remaining until retrain: target threshold minus labelled images count
+ */
+export function syncInspectionSummary(db: ReturnType<typeof getMockDb>): InspectionSummary {
+  const pending = db.inspectionReports.filter(
+    (r) => r.status === InspectionReportStatus.Pending
+  ).length;
+  const reviewed = db.inspectionReports.filter(
+    (r) =>
+      r.status === InspectionReportStatus.Reviewed ||
+      r.status === InspectionReportStatus.SentToRetraining
+  ).length;
+
+  db.inspectionSummary.pendingReviewCount = pending;
+  db.inspectionSummary.reviewedCount = reviewed;
+  db.inspectionSummary.remainingUntilRetrain = Math.max(
+    0,
+    db.inspectionSummary.targetImagesThreshold - db.inspectionSummary.labelledImagesCount
+  );
+
+  return db.inspectionSummary;
+}
 
 export function registerInspectionHandlers(router: MockRouter): void {
   // 1. Dataset retraining summary metrics
@@ -18,7 +46,7 @@ export function registerInspectionHandlers(router: MockRouter): void {
     }
 
     const db = getMockDb();
-    return okResponse(db.inspectionSummary);
+    return okResponse(syncInspectionSummary(db));
   });
 
   // 2. Inspection reports review queue
@@ -104,6 +132,8 @@ export function registerInspectionHandlers(router: MockRouter): void {
       }
     }
 
+    syncInspectionSummary(db);
+
     const response: InspectionActionResponse = {
       reportId,
       status: newStatus,
@@ -137,6 +167,8 @@ export function registerInspectionHandlers(router: MockRouter): void {
     if (detail) {
       detail.status = newStatus;
     }
+
+    syncInspectionSummary(db);
 
     const response: InspectionActionResponse = {
       reportId,
@@ -172,12 +204,8 @@ export function registerInspectionHandlers(router: MockRouter): void {
       detail.status = newStatus;
     }
 
-    db.inspectionSummary.pendingReviewCount = Math.max(0, db.inspectionSummary.pendingReviewCount - 1);
     db.inspectionSummary.labelledImagesCount += 1;
-    db.inspectionSummary.remainingUntilRetrain = Math.max(
-      0,
-      db.inspectionSummary.targetImagesThreshold - db.inspectionSummary.labelledImagesCount
-    );
+    syncInspectionSummary(db);
 
     const response: InspectionActionResponse = {
       reportId,
