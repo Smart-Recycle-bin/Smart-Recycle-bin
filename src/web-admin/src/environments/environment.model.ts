@@ -10,4 +10,7 @@ export interface Environment {
   manualAdjustmentMaxPoints: number;
   appVersion: string;
   e2e?: boolean;
+  mockBinCount?: number;
+  mockLiveDrift?: boolean;
+  mockXssBinSeed?: boolean;
 }

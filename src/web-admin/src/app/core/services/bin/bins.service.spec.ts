@@ -58,4 +58,34 @@ describe('BinsService', () => {
     expect(req.request.body).toEqual(payload);
     req.flush({ success: true, data: { binId: 'BIN-0007', assignedCollectorId: 'C-002' } });
   });
+
+  it('should query live map bins with bounding box and region filters', () => {
+    service
+      .getMapBins({ region: 'Greater Cairo', bbox: '29.9,31.1,30.2,31.4' })
+      .subscribe((res) => {
+        expect(res.items).toEqual([]);
+        expect(res.meta.totalItems).toBe(0);
+        expect(res.meta.truncated).toBe(false);
+      });
+
+    const req = httpMock.expectOne(
+      (r) =>
+        r.url === `${environment.apiBaseUrl}/admin/bins/map` &&
+        r.params.get('region') === 'Greater Cairo' &&
+        r.params.get('bbox') === '29.9,31.1,30.2,31.4'
+    );
+    expect(req.request.method).toBe('GET');
+    req.flush({
+      success: true,
+      data: {
+        items: [],
+        meta: {
+          totalItems: 0,
+          returned: 0,
+          truncated: false,
+          generatedAt: '2026-11-17T12:00:00Z',
+        },
+      },
+    });
+  });
 });

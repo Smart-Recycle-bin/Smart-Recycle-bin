@@ -16,6 +16,11 @@ export function assertEnvironment(env: Environment): void {
         'Production environment assertion failed: useMockBackend cannot be enabled in production.'
       );
     }
+    if (env.mockLiveDrift || env.mockXssBinSeed || (env.mockBinCount && env.mockBinCount > 0)) {
+      throw new Error(
+        'Production environment assertion failed: mock testing flags cannot be active in production.'
+      );
+    }
     if (!env.apiBaseUrl || env.apiBaseUrl.trim() === '') {
       throw new Error(
         'Production environment assertion failed: apiBaseUrl cannot be empty in production.'

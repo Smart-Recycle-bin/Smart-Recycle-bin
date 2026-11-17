@@ -13,4 +13,7 @@ export const environment: Environment = {
   manualAdjustmentMaxPoints: 10000,
   appVersion: '1.0.0',
   e2e: false,
+  mockBinCount: undefined,
+  mockLiveDrift: false,
+  mockXssBinSeed: false,
 };

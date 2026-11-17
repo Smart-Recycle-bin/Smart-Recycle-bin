@@ -35,8 +35,10 @@ export const API_ENDPOINTS = {
     deactivate: (collectorId: string) => `/admin/collectors/${collectorId}/deactivate`,
   },
   bin: {
-    // PROPOSED (gap_api.md 1.3): Admin smart bins fleet list and map data
+    // PROPOSED (gap_api.md 1.3): Admin smart bins fleet list
     list: '/admin/bins',
+    // PROPOSED (gap_api.md 1.3): Live bin map data feed
+    map: '/admin/bins/map',
     // APIs.md 7.1: Register new smart bin
     register: '/admin/bins',
     // APIs.md 7.3: Assign collector to smart bin

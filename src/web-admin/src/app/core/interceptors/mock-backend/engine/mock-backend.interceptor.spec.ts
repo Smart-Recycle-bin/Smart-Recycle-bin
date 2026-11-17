@@ -605,5 +605,81 @@ describe('mockBackendInterceptor', () => {
       expect(items[0].userId).toBe('U-10021');
       expect(items[0].name).toBe('Nour El-Sayed');
     });
+
+    it('5. Live map bins: returns unpaginated bins with metadata and filters by region and bbox', async () => {
+      const allBinsRes = await new Promise<any>((resolve, reject) => {
+        http
+          .get<any>('/api/v1/admin/bins/map', {
+            headers: { Authorization: `Bearer ${adminToken}` },
+          })
+          .subscribe({ next: resolve, error: reject });
+      });
+
+      expect(allBinsRes.success).toBe(true);
+      expect(allBinsRes.data.items.length).toBe(23);
+      expect(allBinsRes.data.meta.totalItems).toBe(23);
+      expect(allBinsRes.data.meta.returned).toBe(23);
+      expect(allBinsRes.data.meta.truncated).toBe(false);
+
+      // Filter by region: Alexandria (7 bins)
+      const alexRes = await new Promise<any>((resolve, reject) => {
+        http
+          .get<any>('/api/v1/admin/bins/map?region=Alexandria', {
+            headers: { Authorization: `Bearer ${adminToken}` },
+          })
+          .subscribe({ next: resolve, error: reject });
+      });
+      expect(alexRes.data.items.length).toBe(7);
+
+      // Filter by bounding box around Downtown Cairo
+      const bboxRes = await new Promise<any>((resolve, reject) => {
+        http
+          .get<any>('/api/v1/admin/bins/map?bbox=30.040,31.230,30.050,31.240', {
+            headers: { Authorization: `Bearer ${adminToken}` },
+          })
+          .subscribe({ next: resolve, error: reject });
+      });
+      expect(bboxRes.data.items.length).toBeGreaterThan(0);
+      expect(bboxRes.data.items.some((b: any) => b.binId === 'BIN-0007')).toBe(true);
+    });
+
+    it('6. Live map scale & truncation: enforces 5,000 hard cap and sets truncated flag', async () => {
+      (environment as any).mockBinCount = 5200;
+
+      const scaleRes = await new Promise<any>((resolve, reject) => {
+        http
+          .get<any>('/api/v1/admin/bins/map', {
+            headers: { Authorization: `Bearer ${adminToken}` },
+          })
+          .subscribe({ next: resolve, error: reject });
+      });
+
+      expect(scaleRes.data.meta.totalItems).toBe(5200);
+      expect(scaleRes.data.meta.returned).toBe(5000);
+      expect(scaleRes.data.meta.truncated).toBe(true);
+      expect(scaleRes.data.items.length).toBe(5000);
+
+      (environment as any).mockBinCount = undefined;
+    });
+
+    it('7. Live map XSS and live drift: injects XSS seed bin and drifts values when enabled', async () => {
+      (environment as any).mockXssBinSeed = true;
+      (environment as any).mockLiveDrift = true;
+
+      const res = await new Promise<any>((resolve, reject) => {
+        http
+          .get<any>('/api/v1/admin/bins/map', {
+            headers: { Authorization: `Bearer ${adminToken}` },
+          })
+          .subscribe({ next: resolve, error: reject });
+      });
+
+      const xssBin = res.data.items.find((b: any) => b.binId === 'BIN-XSS-TEST');
+      expect(xssBin).toBeDefined();
+      expect(xssBin.name).toContain('<img src=x');
+
+      (environment as any).mockXssBinSeed = false;
+      (environment as any).mockLiveDrift = false;
+    });
   });
 });
