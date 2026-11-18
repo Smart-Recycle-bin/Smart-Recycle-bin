@@ -1,10 +1,200 @@
-<main class="not-found-shell">
-  <div class="not-found-card">
-    <span class="not-found-code">404</span>
-    <h1 class="not-found-title">Page not found</h1>
-    <p class="not-found-desc">
-      The page you requested could not be found. Return to the dashboard overview.
+<main class="not-found-main">
+  <div class="not-found-container">
+    <!-- Inline SVG Illustration (4 [Bin Character] 4) -->
+    <div class="illustration-wrapper">
+      <svg
+        class="not-found-illustration"
+        viewBox="0 0 280 160"
+        width="280"
+        height="160"
+        aria-hidden="true"
+        focusable="false"
+      >
+        <!-- Floating Eco Elements (Leaves & Sparkles) -->
+        <g class="floating-elements">
+          <path
+            class="floating-item leaf-1"
+            d="M 0 0 C 4 -6 12 -4 12 5 C 6 7 0 5 0 0 Z"
+            fill="var(--primary)"
+            fill-opacity="0.45"
+          />
+          <path
+            class="floating-item leaf-2"
+            d="M 0 0 C 5 -5 11 -3 11 5 C 6 6 0 4 0 0 Z"
+            fill="var(--primary)"
+            fill-opacity="0.4"
+          />
+          <path
+            class="floating-item sparkle-1"
+            d="M 0 -4 Q 0 0 4 0 Q 0 0 0 4 Q 0 0 -4 0 Q 0 0 0 -4 Z"
+            fill="var(--primary)"
+            fill-opacity="0.55"
+          />
+          <path
+            class="floating-item sparkle-2"
+            d="M 0 -3.5 Q 0 0 3.5 0 Q 0 0 0 3.5 Q 0 0 -3.5 0 Q 0 0 0 -3.5 Z"
+            fill="var(--primary)"
+            fill-opacity="0.5"
+          />
+          <path
+            class="floating-item sparkle-3"
+            d="M 0 -3 Q 0 0 3 0 Q 0 0 0 3 Q 0 0 -3 0 Q 0 0 0 -3 Z"
+            fill="var(--primary)"
+            fill-opacity="0.45"
+          />
+        </g>
+
+        <!-- The "4" Digits Flanking the Bin "0" -->
+        <text x="46" y="112" class="numeral-four" text-anchor="middle">4</text>
+        <text x="234" y="112" class="numeral-four" text-anchor="middle">4</text>
+
+        <!-- Ground Shadow -->
+        <ellipse
+          class="bin-ground-shadow"
+          cx="140"
+          cy="133"
+          rx="34"
+          ry="5"
+          fill="var(--text)"
+        />
+
+        <!-- Smiling Smart Bin Character (acting as the '0') -->
+        <g class="bin-character">
+          <!-- Bin Body with Rounded Taper -->
+          <path
+            class="bin-body"
+            d="M 110 50 L 115 116 Q 116 124 123 124 L 157 124 Q 164 124 165 116 L 170 50 Z"
+            fill="var(--primary)"
+          />
+
+          <!-- Upper Rim & Sensor LED -->
+          <rect
+            x="107"
+            y="44"
+            width="66"
+            height="8"
+            rx="4"
+            fill="var(--primary-strong)"
+          />
+          <circle
+            cx="140"
+            cy="48"
+            r="1.75"
+            fill="var(--surface-raised)"
+            opacity="0.9"
+          />
+
+          <!-- Tilted Lid (Slightly Open) -->
+          <g class="bin-lid" transform="rotate(-12 108 42)">
+            <rect
+              x="106"
+              y="34"
+              width="68"
+              height="9"
+              rx="4.5"
+              fill="var(--primary)"
+            />
+            <rect
+              x="133"
+              y="29"
+              width="14"
+              height="6"
+              rx="3"
+              fill="var(--primary-strong)"
+            />
+          </g>
+
+          <!-- Rosy Cheeks -->
+          <circle
+            class="bin-cheek"
+            cx="123"
+            cy="80"
+            r="4"
+            fill="var(--danger-border)"
+          />
+          <circle
+            class="bin-cheek"
+            cx="157"
+            cy="80"
+            r="4"
+            fill="var(--danger-border)"
+          />
+
+          <!-- Eyes -->
+          <g class="bin-eyes">
+            <ellipse cx="129" cy="73" rx="3.2" ry="3.8" fill="var(--primary-fg)" />
+            <ellipse cx="151" cy="73" rx="3.2" ry="3.8" fill="var(--primary-fg)" />
+            <circle cx="130" cy="71.5" r="1.2" fill="var(--primary)" />
+            <circle cx="152" cy="71.5" r="1.2" fill="var(--primary)" />
+          </g>
+
+          <!-- Wide Happy Smile -->
+          <path
+            class="bin-smile"
+            d="M 133 79 Q 140 88 147 79"
+            stroke="var(--primary-fg)"
+            stroke-width="2.4"
+            stroke-linecap="round"
+            fill="none"
+          />
+
+          <!-- Recycle Emblem on Body -->
+          <g
+            class="bin-recycle"
+            transform="translate(140, 104) scale(0.65)"
+            stroke="var(--primary-fg)"
+            stroke-width="2"
+            fill="none"
+            opacity="0.85"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M -7 -7 L 0 -13 L 7 -7 M 0 -13 L 0 -2" />
+            <path d="M 11 0 L 15 8 L 6 10 M 15 8 L 4 4" />
+            <path d="M -4 11 L -12 6 L -9 -2 M -12 6 L -3 3" />
+          </g>
+        </g>
+      </svg>
+    </div>
+
+    <!-- Eyebrow Chip -->
+    <span class="not-found-eyebrow">404 · Page not found</span>
+
+    <!-- Page Title & Friendly Message -->
+    <h1 class="not-found-heading">Oops! This page took a day off</h1>
+    <p class="not-found-body">
+      We couldn't find what you were looking for — but don't worry, nothing was thrown away. Let's get you back on track.
     </p>
-    <a class="not-found-link" routerLink="/overview">Back to Overview</a>
+
+    <!-- Optional Request Pathline -->
+    @if (requestedPath(); as path) {
+      <div class="not-found-tried">
+        <span class="tried-label">You tried:</span>
+        <code class="tried-path" [title]="path">{{ path }}</code>
+      </div>
+    }
+
+    <!-- Action Buttons -->
+    <div class="not-found-actions">
+      <a
+        class="not-found-btn not-found-btn-primary"
+        [routerLink]="primaryLink()"
+        role="button"
+      >
+        <app-icon [name]="isAuthenticated() ? 'home' : 'log-in'" size="sm" aria-hidden="true" />
+        <span>{{ primaryActionLabel() }}</span>
+      </a>
+
+      @if (canGoBack()) {
+        <button
+          type="button"
+          class="not-found-btn not-found-btn-ghost"
+          (click)="goBack()"
+        >
+          <app-icon name="arrow-left" size="sm" aria-hidden="true" />
+          <span>Go back</span>
+        </button>
+      }
+    </div>
   </div>
 </main>

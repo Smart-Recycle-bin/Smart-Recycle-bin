@@ -48,7 +48,7 @@ The EcoBin `web-admin` portal is an enterprise operations console for smart wast
 | `/leaderboards` | `Leaderboards` (`AdminLayout`) | Top community recyclers ranking, milestone achievement badges, weekly/all-time scopes | `authGuard`, `roleGuard` (`Admin`) |
 | `/audit-logs` | `AuditLogs` (`AdminLayout`) | Security and compliance audit log, administrator mutating actions, actor filtering | `authGuard`, `roleGuard` (`Admin`) |
 | `/dev/components` | `ComponentsShowcase` | Isolated design system primitive preview (active only during `ngDevMode`) | Dev Mode Only |
-| `**` | `NotFound` | Accessible 404 error page with navigation fallback | Public |
+| `**` | `NotFound` | Friendly branded 404 recovery page with smiling smart bin illustration and context-aware navigation | Public |
 
 ---
 

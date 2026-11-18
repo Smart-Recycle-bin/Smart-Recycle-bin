@@ -352,3 +352,96 @@ Rewrote `README.md` from scratch into an exhaustive 13-section technical manual:
    - However, no clustering library (such as `@googlemaps/markerclusterer`) is present in `package.json`.
    - As mandated by Rule 1 and Rule 2 ("no new dependencies"), marker labels and styling were designed to remain legible and usable without clustering.
 
+---
+
+# Part 3 — Friendly 404 (Not Found) Page Redesign
+
+## 1. Overview & Goals
+The 404 Not Found experience was redesigned from a generic card into a warm, playful, and on-brand page featuring a smiling smart bin character integrated directly into the "4 0 4" digits ("4 😊 4"). It delivers a delightful recovery experience for lost visitors while maintaining professional enterprise standards.
+
+---
+
+## 2. Implementation Summary
+
+### 2.1 Component Architecture & Routing
+- **Component:** `NotFound` (`src/app/features/errors/not-found/not-found.ts`, `.html`, `.css`)
+- **Selector:** `app-not-found` (preserved)
+- **Change Detection:** `OnPush`
+- **Route:** Top-level wildcard `**` route in `app.routes.ts` with route title `Page not found` (resolves via `AppTitleStrategy` to `EcoBin Admin | Page not found`).
+- **Dependencies:** Zero new runtime or dev dependencies, zero external images/fonts, zero network calls.
+
+### 2.2 Inline SVG Character Illustration
+- Custom inline SVG (`aria-hidden="true"`, `focusable="false"`, responsive width 220–280 px).
+- Composed as "4 😊 4": Two bold numeral **4**s framing the smiling smart bin character acting as the central **0**.
+- Features:
+  - Bin body rendered with `var(--primary)`.
+  - Playfully tilted open lid.
+  - Embossed recycling arrow emblem on the body.
+  - Expressive eyes with rounded caps and a wide cheerful smile (`var(--text)` / white stroke).
+  - Soft rosy cheeks (`fill="currentColor" opacity="0.18"`).
+  - Floating eco sparkles and leaves around the bin.
+- **Motion & Accessibility:**
+  - CSS keyframe animations: Gentle bin bobbing (~3s ease-in-out), periodic eye blinking (~5s), floating leaves drifting slowly.
+  - All animations strictly enclosed in `@media (prefers-reduced-motion: no-preference)`.
+  - When `prefers-reduced-motion: reduce` is active, all movement stops completely while preserving the smiling visual.
+
+### 2.3 UX, Copy & Contextual Recovery Actions
+- **Eyebrow:** `404 · Page not found` (preserves existing spec & test contracts).
+- **Heading:** `<h1>Oops! This page took a day off</h1>`.
+- **Friendly Body:** *"Even the smartest bins need a quick break now and then. The page you're looking for doesn't exist, has been recycled, or was moved to another location."*
+- **XSS-Safe Requested Path:**
+  - Displays `You tried: /some/path` using Angular interpolation only (zero `innerHTML`).
+  - Strips query parameters and hash fragments using `url.split(/[?#]/)[0]`.
+  - Automatically hidden if empty or root `/`.
+- **Dynamic Action Buttons:**
+  - **Primary CTA:** Automatically links to `/overview` ("Back to Overview") when authenticated, or `/login` ("Go to sign in") when logged out, reacting to `AuthService.currentUser`.
+  - **Secondary Action:** "Go back" button calling `Location.back()`, conditionally rendered only when `window.history.length > 1` (SSR-guarded).
+
+### 2.4 Layout & Theme Token Compliance
+- Full-page viewport layout using `min-height: 100vh; min-height: 100dvh;`.
+- Subtle radial gradient background using `var(--primary-soft)`.
+- Fluid clamp typography and compact vertical rhythm: total content height is ~420 px, ensuring zero vertical scroll on small mobile viewports (360×640).
+- 100% theme token compliance (`var(--primary)`, `var(--primary-soft)`, `var(--surface)`, `var(--surface-raised)`, `var(--text)`, `var(--text-muted)`, `var(--border)`, `var(--focus-ring)`). Zero unauthorized raw hex/rgb literals.
+- Component CSS budget: **5.52 kB** (within the 6 kB warning budget and 10 kB error budget).
+
+---
+
+## 3. Visual Verification
+
+Visual review was conducted across viewports and color schemes using Playwright on Chrome:
+- **1280×800 Desktop (Light & Dark):** Perfectly centered layout, crisp SVG illustration, high-contrast readable typography, soft atmospheric radial gradient.
+- **768×1024 Tablet (Light & Dark):** Well-balanced proportions, responsive button grouping, centered text flow.
+- **360×640 Mobile (Light & Dark):** Exactly zero vertical scrollbar, touch-friendly tap targets (>44 px), perfectly scaled illustration and typography.
+
+*All screenshot artifacts were generated in `/tmp` and kept uncommitted in adherence to project rules.*
+
+---
+
+## 4. Part 3 Verification Results
+
+| Verification Check | Target Command | Result |
+| :--- | :--- | :--- |
+| **All Unit & Integration Tests** | `npx ng test --watch=false` | **121 test files passed, 711 tests passed, 0 failures** |
+| **NotFound Spec Suite** | `not-found.spec.ts` | **9 passed, 0 failures** |
+| **Development Build Configuration** | `npx ng build --configuration=development` | **PASSED: 0 errors** |
+| **Production Build & Bundle Leak Check** | `npm run check:prod-bundle` | **PASSED: 0 mock leaks, 0 secrets, 99.76 kB transfer size** |
+| **Secret Scanner** | `node scripts/check-no-secrets.mjs` | **PASSED: No secrets detected** |
+| **Theme & Color Token Compliance** | `theme-tokens.spec.ts` | **PASSED: 0 unauthorized color literals** |
+| **WCAG AA Contrast Audit** | `npm run check:contrast` | **PASSED: 34 checked, 0 failures** |
+
+---
+
+## 5. Needs Your Decision
+
+1. **Top-Level vs Nested 404 Route:**
+   - **Current:** The `**` route is top-level (`AppComponent` root router outlet), rendering as a dedicated full-page screen without the admin sidebar and topbar. This ensures logged-out users do not see shell chrome and provides a distraction-free recovery experience.
+   - **Alternative:** If you prefer authenticated users to keep the admin sidebar/topbar shell when hitting an invalid URL within the admin section, the wildcard can be split into a child route under the dashboard layout alongside the top-level fallback.
+
+---
+
+## 6. Found But Not Changed (Part 3)
+
+1. **Browser Native History Truncation:**
+   - On cold opens or when opening a bad URL in a brand new tab, `window.history.length` can equal 1 or 2 depending on the browser vendor's internal blank page tracking. The `canGoBack()` signal safely checks `history.length > 1` and falls back cleanly to the primary action if history is unavailable.
+
+

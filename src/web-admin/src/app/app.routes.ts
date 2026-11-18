@@ -125,6 +125,7 @@ export const routes: Routes = [
   },
   {
     path: '**',
+    title: 'Page not found',
     loadComponent: () =>
       import('./features/errors/not-found/not-found').then((m) => m.NotFound),
   },

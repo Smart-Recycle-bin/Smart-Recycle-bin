@@ -145,6 +145,17 @@ Mutating requests (POST, PUT, PATCH, DELETE) support the `Idempotency-Key` heade
 - **`AdminLayout`:** The primary workspace shell featuring a responsive sidebar with smooth 0.34s collapse transition, a mobile slide-out drawer with backdrop, a topbar with notifications and profile menu, an offline banner, and a main content outlet with `scrollbar-gutter: stable`.
 - **`AuthLayout`:** A clean split-screen layout with `BrandLogo`, theme toggle, and centered card panel.
 
+### 6.3 Not Found (404) Route & Resilient Recovery
+The catch-all route (`**`) is configured as a top-level route outside the authenticated workspace shell:
+- **Title Strategy Integration:** Configured with `title: 'Page not found'`, which `AppTitleStrategy` resolves to `EcoBin Admin | Page not found`.
+- **Top-Level Accessibility:** Positioned at the root routing level so that both unauthenticated visitors and logged-in administrators can access it seamlessly without guard interference.
+- **Context-Aware Navigation Actions:**
+  - When authenticated: Primary action routes to `/overview` ("Back to Overview").
+  - When unauthenticated: Primary action routes to `/login` ("Go to sign in").
+  - Secondary action: "Go back" triggers `Location.back()`, dynamically rendered only when browser history is available (`window.history.length > 1`).
+- **XSS-Safe Requested Path Inspection:** Extracts `Router.url` pathname (stripping query parameters and hash fragments) and displays it in a sanitized monospace chip via Angular interpolation (`{{ requestedPath() }}`).
+- **Zero-Dependency Brand Illustration:** Features an inline SVG illustration of a friendly smiling smart bin character acting as the "0" in "4 😊 4", using theme CSS tokens and `@media (prefers-reduced-motion: no-preference)` subtle animations.
+
 ---
 
 ## 7. Dual-Mode Backend Architecture (Mock vs. Real API)
