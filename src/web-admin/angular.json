@@ -101,6 +101,17 @@
                   "with": "src/environments/environment.e2e.ts"
                 }
               ]
+            },
+            "local-api": {
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true,
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.local-api.ts"
+                }
+              ]
             }
           },
           "defaultConfiguration": "production"
@@ -113,6 +124,10 @@
             },
             "development": {
               "buildTarget": "ecobin-admin:build:development",
+              "proxyConfig": "proxy.conf.json"
+            },
+            "local-api": {
+              "buildTarget": "ecobin-admin:build:local-api",
               "proxyConfig": "proxy.conf.json"
             },
             "e2e": {

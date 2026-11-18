@@ -23,6 +23,8 @@ import { Notice } from '@shared/components/notice/notice';
 import { Modal } from '@shared/components/overlay/modal/modal';
 import { Icon } from '@shared/components/icon/icon';
 
+declare const ngDevMode: boolean | undefined;
+
 @Component({
   selector: 'app-login',
   imports: [
@@ -45,14 +47,11 @@ export class Login {
 
   /**
    * Prototype note display controlled by active environment configuration.
+   * Gated by ngDevMode and useMockBackend so credentials are eliminated in production.
    */
-  readonly isMockBackend = environment.useMockBackend;
-  readonly prototypeErrorKeyword = environment.useMockBackend
-    ? atob('d3JvbmdwYXNz')
-    : '';
-  readonly mockCredentials = environment.useMockBackend
-    ? { email: 'admin@ecobin.eg', password: 'password123' }
-    : null;
+  readonly isMockBackend: boolean;
+  readonly prototypeErrorKeyword: string;
+  readonly mockCredentials: { email: string; password: string } | null;
 
   /**
    * State signals for authentication request and error handling.
@@ -85,6 +84,18 @@ export class Login {
   readonly forgotForm = this.fb.nonNullable.group({
     email: ['', [Validators.required, Validators.email]],
   });
+
+  constructor() {
+    if ((typeof ngDevMode === 'undefined' || ngDevMode) && environment.useMockBackend) {
+      this.isMockBackend = true;
+      this.prototypeErrorKeyword = 'wrongpass';
+      this.mockCredentials = { email: 'admin@ecobin.eg', password: 'password123' };
+    } else {
+      this.isMockBackend = false;
+      this.prototypeErrorKeyword = '';
+      this.mockCredentials = null;
+    }
+  }
 
   togglePasswordVisibility(): void {
     this.showPassword.update((v) => !v);
