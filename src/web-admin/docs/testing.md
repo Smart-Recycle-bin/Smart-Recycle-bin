@@ -11,9 +11,10 @@ The repository maintains two primary automated testing layers:
    - Located alongside source code (`*.spec.ts`).
    - Validates components, services, pipes, guards, forms, error handling, and mock backend handlers.
 2. **End-to-End & Audit Tests (Playwright + Axe-core):**
-   - Located in `e2e/`.
+   - Located in `e2e/` (local-only, ignored in git alongside `playwright-report/` and `test-results/`).
    - Uses an isolated Angular `e2e` build configuration with real browser automation (Chromium & Firefox).
    - Validates session security, routing responsiveness, paged list race conditions, complex form workflows, focus traps, accessibility (WCAG AA), and dark mode surface theming.
+   - Preserved for developer machine validation via `npm run e2e`. CI runs only the unit tests, production build, secret checks, and prod bundle leak verifier.
 
 ---
 
@@ -76,5 +77,5 @@ When introducing a new feature route (e.g. `/analytics/reports`):
 ## 6. Continuous Integration (GitHub Actions)
 
 The `.github/workflows/ci.yml` workflow includes:
-- **web-admin-ci:** Installs dependencies, runs unit tests, verifies production bundle leaks, and compiles production artifacts.
-- **web-admin-e2e:** Installs Playwright browser dependencies and runs the E2E and accessibility test suite on Chromium.
+- **web-admin-ci:** Installs dependencies, runs unit tests, compiles production bundle, scans repository for secrets, and asserts zero mock leaks via `npm run check:prod-bundle`.
+*(Note: E2E testing is configured for local execution only to avoid heavy headless browser dependencies in standard CI runs).*

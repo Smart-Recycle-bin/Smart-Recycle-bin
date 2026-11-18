@@ -46,18 +46,13 @@ __screenshots__/
 .DS_Store
 Thumbs.db
 
-# Playwright
+# Playwright (local-only, ignored)
 .playwright-browsers/
-test-results/
-playwright-report/
-
-cmds.ps1
-smart waste bins.pdf
-
-/docs
+/playwright-report/
+/test-results/
+/e2e/
 
 # Runtime configuration with Google Maps API key (never commit real keys)
-public/config.json
 /public/config.json
-config.json
+
 

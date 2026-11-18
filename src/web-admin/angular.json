@@ -36,7 +36,7 @@
                 {
                   "glob": "**/*",
                   "input": "public",
-                  "ignore": ["config.json"]
+                  "ignore": ["config.json", "config.example.json"]
                 }
               ],
               "budgets": [
@@ -54,6 +54,13 @@
               "outputHashing": "all"
             },
             "production-sourcemaps": {
+              "assets": [
+                {
+                  "glob": "**/*",
+                  "input": "public",
+                  "ignore": ["config.json", "config.example.json"]
+                }
+              ],
               "budgets": [
                 {
                   "type": "initial",
