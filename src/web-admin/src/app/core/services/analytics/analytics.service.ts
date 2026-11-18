@@ -2,7 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiClientService } from '../api/api-client.service';
 import { API_ENDPOINTS } from '../api/api-endpoints';
-import { DashboardOverview, OverviewQuery } from '../../models/analytics/analytics.view-model';
+import { DashboardOverview, OverviewQuery } from '@models/analytics/analytics.view-model';
 
 @Injectable({
   providedIn: 'root',

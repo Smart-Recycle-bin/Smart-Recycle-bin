@@ -2,19 +2,19 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { Subject } from 'rxjs';
 import { LiveBinMap } from './live-bin-map';
-import { BIN_LIVE_FEED, BinLiveFeed } from '../../../core/services/bin/bin-live-feed.interface';
-import { BinMapItem, BinMapResponse } from '../../../core/models/bin/bin-map.model';
-import { BinStatus } from '../../../core/models/bin/bin-status.enum';
-import { GoogleMapsLoaderService } from '../../../core/services/maps/google-maps-loader.service';
-import { MapLoadBudgetService } from '../../../core/services/maps/map-load-budget.service';
-import { AppConfigService } from '../../../core/services/config/app-config.service';
-import { ThemeService } from '../../../core/services/theme/theme.service';
+import { BIN_LIVE_FEED, BinLiveFeed } from '@services/bin/bin-live-feed.interface';
+import { BinMapItem, BinMapResponse } from '@models/bin/bin-map.model';
+import { BinStatus } from '@models/bin/bin-status.enum';
+import { GoogleMapsLoaderService } from '@services/maps/google-maps-loader.service';
+import { MapLoadBudgetService } from '@services/maps/map-load-budget.service';
+import { AppConfigService } from '@services/config/app-config.service';
+import { ThemeService } from '@services/theme/theme.service';
 import {
   installFakeGoogleMaps,
   resetFakeGoogleMapsCounters,
   FakeMap,
   FakeAdvancedMarkerElement,
-} from '../../../../testing/fake-google-maps';
+} from '@testing/fake-google-maps';
 import {
   BinClusterRenderer,
   getWorstStatus,

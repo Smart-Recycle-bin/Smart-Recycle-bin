@@ -1,6 +1,6 @@
 import { cairoLocalToIso } from '../_dates';
-import { AccountStatus } from '../../../models/user/account-status.enum';
-import { CollectorListItem } from '../../../models/collector/collector.view-model';
+import { AccountStatus } from '@models/user/account-status.enum';
+import { CollectorListItem } from '@models/collector/collector.view-model';
 
 export const MOCK_COLLECTORS: CollectorListItem[] = [
   {

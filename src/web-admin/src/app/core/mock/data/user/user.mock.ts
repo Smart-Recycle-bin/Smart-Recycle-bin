@@ -1,8 +1,8 @@
 import { cairoLocalToIso } from '../_dates';
-import { UserRole } from '../../../models/user/user-role.enum';
-import { AccountStatus } from '../../../models/user/account-status.enum';
-import { RecyclerListItem } from '../../../models/user/recycler.view-model';
-import { MockAdminAccount } from '../../db/mock-db.types';
+import { UserRole } from '@models/user/user-role.enum';
+import { AccountStatus } from '@models/user/account-status.enum';
+import { RecyclerListItem } from '@models/user/recycler.view-model';
+import { MockAdminAccount } from '@core/mock/db/mock-db.types';
 
 export const MOCK_ADMINS: MockAdminAccount[] = [
   {

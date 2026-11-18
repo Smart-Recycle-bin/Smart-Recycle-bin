@@ -7,14 +7,14 @@ import {
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { CommonModule, DecimalPipe } from '@angular/common';
-import { DateOnlyPipe } from '../../../shared/pipes';
+import { DateOnlyPipe } from '@shared/pipes';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { AccountStatus } from '../../../core/models/user/account-status.enum';
-import { RecyclerListItem, RecyclerQuery } from '../../../core/models/user/recycler.view-model';
-import { RecyclersService } from '../../../core/services/user/recyclers.service';
-import { ToastService } from '../../../core/services/toast/toast.service';
-import { getErrorMessage, getFieldErrors } from '../../../core/errors/error-message';
-import { trimmedRequired, maxLen } from '../../../shared/validators';
+import { AccountStatus } from '@models/user/account-status.enum';
+import { RecyclerListItem, RecyclerQuery } from '@models/user/recycler.view-model';
+import { RecyclersService } from '@services/user/recyclers.service';
+import { ToastService } from '@services/toast/toast.service';
+import { getErrorMessage, getFieldErrors } from '@core/errors/error-message';
+import { trimmedRequired, maxLen } from '@shared/validators';
 import {
   RECYCLER_TABLE_COLUMNS,
   RECYCLER_TABLE_ACTIONS,
@@ -22,20 +22,20 @@ import {
   getRecyclerStatusBadgeVariant,
   getRecyclerStatusLabel,
 } from './recyclers.config';
-import { PageHeader } from '../../../shared/components/page-header/page-header';
-import { SearchInput } from '../../../shared/components/form/search-input/search-input';
-import { Select } from '../../../shared/components/form/select/select';
-import { DataTable } from '../../../shared/components/table/data-table/data-table';
-import { CellTemplateDirective } from '../../../shared/components/table/data-table/cell-template.directive';
-import { UserCell } from '../../../shared/components/table/cells/user-cell/user-cell';
-import { NumberCell } from '../../../shared/components/table/cells/number-cell/number-cell';
-import { Badge } from '../../../shared/components/badge/badge';
-import { ResourceState } from '../../../shared/components/resource-state/resource-state';
-import { Modal } from '../../../shared/components/overlay/modal/modal';
-import { ConfirmDialog } from '../../../shared/components/overlay/confirm-dialog/confirm-dialog';
-import { Textarea } from '../../../shared/components/form/textarea/textarea';
-import { Button } from '../../../shared/components/button/button';
-import { createPagedList } from '../../../shared/utils/paged-list';
+import { PageHeader } from '@shared/components/page-header/page-header';
+import { SearchInput } from '@shared/components/form/search-input/search-input';
+import { Select } from '@shared/components/form/select/select';
+import { DataTable } from '@shared/components/table/data-table/data-table';
+import { CellTemplateDirective } from '@shared/components/table/data-table/cell-template.directive';
+import { UserCell } from '@shared/components/table/cells/user-cell/user-cell';
+import { NumberCell } from '@shared/components/table/cells/number-cell/number-cell';
+import { Badge } from '@shared/components/badge/badge';
+import { ResourceState } from '@shared/components/resource-state/resource-state';
+import { Modal } from '@shared/components/overlay/modal/modal';
+import { ConfirmDialog } from '@shared/components/overlay/confirm-dialog/confirm-dialog';
+import { Textarea } from '@shared/components/form/textarea/textarea';
+import { Button } from '@shared/components/button/button';
+import { createPagedList } from '@shared/utils/paged-list';
 
 @Component({
   selector: 'app-recyclers',

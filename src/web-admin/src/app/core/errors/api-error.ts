@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { ApiErrorCode } from '../models/common/api-error-code.enum';
+import { ApiErrorCode } from '@models/common/api-error-code.enum';
 
 export type ExtendedApiErrorCode = ApiErrorCode | 'NETWORK_ERROR' | 'TIMEOUT' | 'UNKNOWN';
 

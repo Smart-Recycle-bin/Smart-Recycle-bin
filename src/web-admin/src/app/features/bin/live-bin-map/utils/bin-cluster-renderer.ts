@@ -1,4 +1,4 @@
-import { BinStatus } from '../../../../core/models/bin/bin-status.enum';
+import { BinStatus } from '@models/bin/bin-status.enum';
 
 export type StatusSeverity = 'danger' | 'warning' | 'neutral' | 'success';
 

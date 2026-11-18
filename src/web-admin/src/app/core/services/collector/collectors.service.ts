@@ -6,14 +6,14 @@ import {
   CollectorAssignedBin,
   CollectorListItem,
   CollectorQuery,
-} from '../../models/collector/collector.view-model';
-import { Page } from '../../models/common/page.model';
+} from '@models/collector/collector.view-model';
+import { Page } from '@models/common/page.model';
 import {
   CreateCollectorRequest,
   CreateCollectorResponse,
   DeactivateCollectorResponse,
   UpdateCollectorRequest,
-} from '../../models/collector/collector.dto';
+} from '@models/collector/collector.dto';
 
 @Injectable({
   providedIn: 'root',

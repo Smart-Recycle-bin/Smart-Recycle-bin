@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { sanitizeMapBins } from './bin-map-sanitizer';
-import { BinStatus } from '../models/bin/bin-status.enum';
+import { BinStatus } from '@models/bin/bin-status.enum';
 
 describe('bin-map-sanitizer', () => {
   let warnSpy: ReturnType<typeof vi.spyOn>;

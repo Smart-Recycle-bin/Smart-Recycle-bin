@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
-import { Icon, IconName, IconSize } from '../../icon/icon';
-import { TooltipDirective, TooltipPosition } from '../../tooltip/tooltip.directive';
+import { Icon, IconName, IconSize } from '@shared/components/icon/icon';
+import { TooltipDirective, TooltipPosition } from '@shared/components/tooltip/tooltip.directive';
 import { ButtonSize, ButtonVariant } from '../button';
 
 @Component({

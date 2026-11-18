@@ -1,6 +1,6 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { MockRouter } from '../../engine/mock-router';
-import { getMockDb } from '../../../../mock/db/mock-db';
+import { MockRouter } from '@core/interceptors/mock-backend/engine/mock-router';
+import { getMockDb } from '@core/mock/db/mock-db';
 import { okResponse, requireSysAdmin, paginate } from '../handler-utils';
 
 export function registerGamificationHandlers(router: MockRouter): void {

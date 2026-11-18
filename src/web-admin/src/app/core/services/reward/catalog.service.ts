@@ -1,15 +1,15 @@
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { HttpContext } from '@angular/common/http';
-import { REQUEST_TIMEOUT } from '../../interceptors/shared/http-context-tokens';
+import { REQUEST_TIMEOUT } from '@core/interceptors/shared/http-context-tokens';
 import { ApiClientService } from '../api/api-client.service';
 import { API_ENDPOINTS } from '../api/api-endpoints';
-import { AdminRewardItem, RewardQuery } from '../../models/reward/reward.view-model';
+import { AdminRewardItem, RewardQuery } from '@models/reward/reward.view-model';
 import {
   ArchiveRewardResponse,
   CreateRewardRequest,
   UpdateRewardRequest,
-} from '../../models/reward/reward.dto';
+} from '@models/reward/reward.dto';
 
 @Injectable({
   providedIn: 'root',

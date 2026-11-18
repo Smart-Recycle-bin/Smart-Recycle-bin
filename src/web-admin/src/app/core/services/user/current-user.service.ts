@@ -1,6 +1,6 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { AuthService } from '../auth/auth.service';
-import { initials } from '../../../shared/utils/format';
+import { initials } from '@shared/utils/format';
 
 export interface CurrentUser {
   id: string;

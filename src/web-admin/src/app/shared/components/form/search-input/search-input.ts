@@ -1,5 +1,5 @@
 import { Component, input, output } from '@angular/core';
-import { Icon } from '../../icon/icon';
+import { Icon } from '@shared/components/icon/icon';
 
 @Component({
   selector: 'app-search-input',

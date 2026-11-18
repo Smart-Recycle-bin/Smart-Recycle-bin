@@ -1,6 +1,6 @@
 import { HttpErrorResponse, HttpRequest } from '@angular/common/http';
-import { ApiErrorCode } from '../../../models/common/api-error-code.enum';
-import { UserRole } from '../../../models/user/user-role.enum';
+import { ApiErrorCode } from '@models/common/api-error-code.enum';
+import { UserRole } from '@models/user/user-role.enum';
 
 export interface MockTokenPayload {
   userId: string;

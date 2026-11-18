@@ -1,13 +1,13 @@
-import { MockRouter } from '../../engine/mock-router';
-import { getMockDb } from '../../../../mock/db/mock-db';
+import { MockRouter } from '@core/interceptors/mock-backend/engine/mock-router';
+import { getMockDb } from '@core/mock/db/mock-db';
 import { okResponse, requireSysAdmin } from '../handler-utils';
 import {
   AdminLookupItem,
   CollectorLookupItem,
   DistrictLookupItem,
-} from '../../../../models/lookup/lookup.model';
-import { CollectorListItem } from '../../../../models/collector/collector.view-model';
-import { MockAdminAccount } from '../../../../mock/db/mock-db.types';
+} from '@models/lookup/lookup.model';
+import { CollectorListItem } from '@models/collector/collector.view-model';
+import { MockAdminAccount } from '@core/mock/db/mock-db.types';
 
 export function registerLookupHandlers(router: MockRouter): void {
   // 1. Districts Lookup

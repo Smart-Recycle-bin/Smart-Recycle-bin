@@ -2,9 +2,9 @@ import { TestBed } from '@angular/core/testing';
 import { ActivatedRouteSnapshot, Router, RouterStateSnapshot, UrlTree, provideRouter } from '@angular/router';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { roleGuard } from './role.guard';
-import { AuthService } from '../../services/auth/auth.service';
-import { ToastService } from '../../services/toast/toast.service';
-import { UserRole } from '../../models/user/user-role.enum';
+import { AuthService } from '@services/auth/auth.service';
+import { ToastService } from '@services/toast/toast.service';
+import { UserRole } from '@models/user/user-role.enum';
 
 describe('roleGuard', () => {
   let router: Router;

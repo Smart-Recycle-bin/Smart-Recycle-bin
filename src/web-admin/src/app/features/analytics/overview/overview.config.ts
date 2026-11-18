@@ -1,6 +1,6 @@
-import { AnalyticsPeriod } from '../../../core/models/analytics/analytics-period.enum';
-import { SegmentedOption } from '../../../shared/components/segmented-control/segmented-control';
-import { BarListThresholds } from '../../../shared/components/charts/bar-list/bar-list';
+import { AnalyticsPeriod } from '@models/analytics/analytics-period.enum';
+import { SegmentedOption } from '@shared/components/segmented-control/segmented-control';
+import { BarListThresholds } from '@shared/components/charts/bar-list/bar-list';
 
 export const PERIOD_OPTIONS: SegmentedOption<AnalyticsPeriod>[] = [
   { label: 'Today', value: AnalyticsPeriod.Today },

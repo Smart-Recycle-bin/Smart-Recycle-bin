@@ -3,9 +3,9 @@ import { provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { Overview } from './overview';
-import { AnalyticsService } from '../../../core/services/analytics/analytics.service';
-import { AnalyticsPeriod } from '../../../core/models/analytics/analytics-period.enum';
-import { MOCK_OVERVIEW_7D } from '../../../core/mock/data/analytics/analytics.mock';
+import { AnalyticsService } from '@services/analytics/analytics.service';
+import { AnalyticsPeriod } from '@models/analytics/analytics-period.enum';
+import { MOCK_OVERVIEW_7D } from '@core/mock/data/analytics/analytics.mock';
 
 describe('Overview Component', () => {
   let component: Overview;

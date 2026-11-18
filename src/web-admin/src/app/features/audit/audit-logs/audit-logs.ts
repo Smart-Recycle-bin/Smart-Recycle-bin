@@ -5,35 +5,35 @@ import {
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
-import { AuditLogService } from '../../../core/services/audit/audit-log.service';
-import { LookupsService } from '../../../core/services/lookup/lookups.service';
+import { AuditLogService } from '@services/audit/audit-log.service';
+import { LookupsService } from '@services/lookup/lookups.service';
 import {
   AuditLogQuery,
   AuditLogRow,
-} from '../../../core/models/audit/audit.view-model';
+} from '@models/audit/audit.view-model';
 import {
   AuditActionType,
   AUDIT_ACTION_TYPE_LABELS,
-} from '../../../core/models/audit/audit-action-type.enum';
-import { PageHeader } from '../../../shared/components/page-header/page-header';
-import { Notice } from '../../../shared/components/notice/notice';
-import { Button } from '../../../shared/components/button/button';
-import { Badge, BadgeVariant } from '../../../shared/components/badge/badge';
-import { Select, SelectOption } from '../../../shared/components/form/select/select';
-import { Input } from '../../../shared/components/form/input/input';
+} from '@models/audit/audit-action-type.enum';
+import { PageHeader } from '@shared/components/page-header/page-header';
+import { Notice } from '@shared/components/notice/notice';
+import { Button } from '@shared/components/button/button';
+import { Badge, BadgeVariant } from '@shared/components/badge/badge';
+import { Select, SelectOption } from '@shared/components/form/select/select';
+import { Input } from '@shared/components/form/input/input';
 import {
   DateRangeInput,
   DateRangeValue,
-} from '../../../shared/components/form/date-range-input/date-range-input';
-import { DataTable } from '../../../shared/components/table/data-table/data-table';
-import { CellTemplateDirective } from '../../../shared/components/table/data-table/cell-template.directive';
-import { UserCell } from '../../../shared/components/table/cells/user-cell/user-cell';
-import { MonoIdCell } from '../../../shared/components/table/cells/mono-id-cell/mono-id-cell';
-import { ResourceState } from '../../../shared/components/resource-state/resource-state';
-import { Skeleton } from '../../../shared/components/skeleton/skeleton';
-import { TooltipDirective } from '../../../shared/components/tooltip/tooltip.directive';
-import { DateTimePipe } from '../../../shared/pipes';
-import { createPagedList } from '../../../shared/utils/paged-list';
+} from '@shared/components/form/date-range-input/date-range-input';
+import { DataTable } from '@shared/components/table/data-table/data-table';
+import { CellTemplateDirective } from '@shared/components/table/data-table/cell-template.directive';
+import { UserCell } from '@shared/components/table/cells/user-cell/user-cell';
+import { MonoIdCell } from '@shared/components/table/cells/mono-id-cell/mono-id-cell';
+import { ResourceState } from '@shared/components/resource-state/resource-state';
+import { Skeleton } from '@shared/components/skeleton/skeleton';
+import { TooltipDirective } from '@shared/components/tooltip/tooltip.directive';
+import { DateTimePipe } from '@shared/pipes';
+import { createPagedList } from '@shared/utils/paged-list';
 import {
   ACTION_TYPE_FILTER_OPTIONS,
   AUDIT_ACTION_BADGE_VARIANTS,

@@ -22,10 +22,10 @@ import {
   LogoutRequest,
   RefreshTokenResponse,
   StoredSession,
-} from '../../models/auth/auth.dto';
-import { UserRole } from '../../models/user/user-role.enum';
-import { SKIP_AUTH, SKIP_ERROR_HANDLING } from '../../interceptors/shared/http-context-tokens';
-import { AuthError } from '../../errors/auth-error';
+} from '@models/auth/auth.dto';
+import { UserRole } from '@models/user/user-role.enum';
+import { SKIP_AUTH, SKIP_ERROR_HANDLING } from '@core/interceptors/shared/http-context-tokens';
+import { AuthError } from '@core/errors/auth-error';
 
 @Injectable({
   providedIn: 'root',

@@ -12,7 +12,7 @@ import {
   signal,
 } from '@angular/core';
 import { ControlValueAccessor, NgControl } from '@angular/forms';
-import { Icon, IconName } from '../../icon/icon';
+import { Icon, IconName } from '@shared/components/icon/icon';
 import { FormField } from '../form-field/form-field';
 import { bindNgControlState, syncNgControlState } from '../form-control.utils';
 

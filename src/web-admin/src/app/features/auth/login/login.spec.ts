@@ -3,13 +3,13 @@ import { ActivatedRoute, Router, provideRouter } from '@angular/router';
 import { of, throwError, Subject } from 'rxjs';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { Login } from './login';
-import { AuthService } from '../../../core/services/auth/auth.service';
-import { ApiError } from '../../../core/errors/api-error';
-import { AuthError } from '../../../core/errors/auth-error';
-import { ApiErrorCode } from '../../../core/models/common/api-error-code.enum';
-import { UserRole } from '../../../core/models/user/user-role.enum';
-import { LoginResponse } from '../../../core/models/auth/auth.dto';
-import { environment } from '../../../../environments/environment';
+import { AuthService } from '@services/auth/auth.service';
+import { ApiError } from '@core/errors/api-error';
+import { AuthError } from '@core/errors/auth-error';
+import { ApiErrorCode } from '@models/common/api-error-code.enum';
+import { UserRole } from '@models/user/user-role.enum';
+import { LoginResponse } from '@models/auth/auth.dto';
+import { environment } from '@env/environment';
 
 describe('Login Component', () => {
   let component: Login;

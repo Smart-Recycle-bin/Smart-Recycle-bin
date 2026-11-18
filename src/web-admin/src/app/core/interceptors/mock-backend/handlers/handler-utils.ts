@@ -1,10 +1,10 @@
 import { HttpErrorResponse, HttpRequest, HttpResponse } from '@angular/common/http';
-import { ApiResponse } from '../../../models/common/api-response.dto';
-import { ApiErrorCode } from '../../../models/common/api-error-code.enum';
-import { PageMeta, PageQuery } from '../../../models/common/page.model';
-import { AuditActionType } from '../../../models/audit/audit-action-type.enum';
-import { AuditLogRow } from '../../../models/audit/audit.view-model';
-import { getMockDb } from '../../../mock/db/mock-db';
+import { ApiResponse } from '@models/common/api-response.dto';
+import { ApiErrorCode } from '@models/common/api-error-code.enum';
+import { PageMeta, PageQuery } from '@models/common/page.model';
+import { AuditActionType } from '@models/audit/audit-action-type.enum';
+import { AuditLogRow } from '@models/audit/audit.view-model';
+import { getMockDb } from '@core/mock/db/mock-db';
 import { authenticateMockRequest, MockTokenPayload } from '../engine/mock-auth';
 
 export function okResponse<T>(data: T, status = 200): HttpResponse<ApiResponse<T>> {

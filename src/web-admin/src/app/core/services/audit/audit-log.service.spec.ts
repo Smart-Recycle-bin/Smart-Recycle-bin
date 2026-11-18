@@ -3,8 +3,8 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { AuditLogService } from './audit-log.service';
 import { ApiClientService } from '../api/api-client.service';
-import { environment } from '../../../../environments/environment';
-import { AuditActionType } from '../../models/audit/audit-action-type.enum';
+import { environment } from '@env/environment';
+import { AuditActionType } from '@models/audit/audit-action-type.enum';
 
 describe('AuditLogService', () => {
   let service: AuditLogService;

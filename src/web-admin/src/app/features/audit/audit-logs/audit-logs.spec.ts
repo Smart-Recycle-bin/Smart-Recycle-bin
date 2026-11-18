@@ -2,10 +2,10 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, Subject, throwError } from 'rxjs';
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import { AuditLogs } from './audit-logs';
-import { AuditLogService } from '../../../core/services/audit/audit-log.service';
-import { LookupsService } from '../../../core/services/lookup/lookups.service';
-import { MOCK_AUDIT_LOGS } from '../../../core/mock/data/audit/audit.mock';
-import { AuditActionType } from '../../../core/models/audit/audit-action-type.enum';
+import { AuditLogService } from '@services/audit/audit-log.service';
+import { LookupsService } from '@services/lookup/lookups.service';
+import { MOCK_AUDIT_LOGS } from '@core/mock/data/audit/audit.mock';
+import { AuditActionType } from '@models/audit/audit-action-type.enum';
 
 describe('AuditLogs', () => {
   let component: AuditLogs;

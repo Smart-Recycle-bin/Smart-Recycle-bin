@@ -1,20 +1,6 @@
-import { IconName } from '../../shared/components/icon/icon';
+import { SidebarNavItem, SidebarSection } from '@shared/components/sidebar/sidebar';
 
-export interface AdminNavItem {
-  id: string;
-  label: string;
-  icon: IconName | string;
-  route: string;
-  exact?: boolean;
-  badge?: string | number;
-}
-
-export interface AdminNavSection {
-  title?: string;
-  items: AdminNavItem[];
-}
-
-export const ADMIN_NAV_SECTIONS: AdminNavSection[] = [
+export const ADMIN_NAV_SECTIONS: SidebarSection[] = [
   {
     items: [
       { id: 'overview', label: 'Overview', icon: 'dashboard', route: '/overview', exact: true },

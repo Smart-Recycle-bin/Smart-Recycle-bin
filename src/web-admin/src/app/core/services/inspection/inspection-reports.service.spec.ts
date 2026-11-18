@@ -3,8 +3,8 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { InspectionReportsService } from './inspection-reports.service';
 import { ApiClientService } from '../api/api-client.service';
-import { environment } from '../../../../environments/environment';
-import { InspectionReportStatus } from '../../models/inspection/inspection-report-status.enum';
+import { environment } from '@env/environment';
+import { InspectionReportStatus } from '@models/inspection/inspection-report-status.enum';
 
 describe('InspectionReportsService', () => {
   let service: InspectionReportsService;

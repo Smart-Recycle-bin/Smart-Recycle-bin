@@ -4,11 +4,11 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { Router } from '@angular/router';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { errorInterceptor } from './error.interceptor';
-import { AuthService } from '../../services/auth/auth.service';
-import { ToastService } from '../../services/toast/toast.service';
+import { AuthService } from '@services/auth/auth.service';
+import { ToastService } from '@services/toast/toast.service';
 import { SKIP_ERROR_HANDLING } from '../shared/http-context-tokens';
-import { ApiError } from '../../errors/api-error';
-import { ApiErrorCode } from '../../models/common/api-error-code.enum';
+import { ApiError } from '@core/errors/api-error';
+import { ApiErrorCode } from '@models/common/api-error-code.enum';
 
 describe('errorInterceptor', () => {
   let httpClient: HttpClient;

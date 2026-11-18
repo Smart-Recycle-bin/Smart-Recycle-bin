@@ -6,8 +6,8 @@ import {
   RecentSurveyRow,
   SurveyQaQuery,
   SurveyQaSummary,
-} from '../../models/survey/survey.view-model';
-import { Page } from '../../models/common/page.model';
+} from '@models/survey/survey.view-model';
+import { Page } from '@models/common/page.model';
 
 @Injectable({
   providedIn: 'root',

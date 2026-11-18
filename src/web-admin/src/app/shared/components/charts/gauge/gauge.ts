@@ -1,5 +1,5 @@
 import { Component, computed, inject, input } from '@angular/core';
-import { ThemeService } from '../../../../core/services/theme/theme.service';
+import { ThemeService } from '@services/theme/theme.service';
 
 @Component({
   selector: 'app-gauge',

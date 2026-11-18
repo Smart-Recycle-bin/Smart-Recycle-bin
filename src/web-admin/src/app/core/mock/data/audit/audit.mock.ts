@@ -1,5 +1,5 @@
-import { AuditActionType } from '../../../models/audit/audit-action-type.enum';
-import { AuditLogRow } from '../../../models/audit/audit.view-model';
+import { AuditActionType } from '@models/audit/audit-action-type.enum';
+import { AuditLogRow } from '@models/audit/audit.view-model';
 import { cairoLocalToIso } from '../_dates';
 
 export const MOCK_AUDIT_LOGS: AuditLogRow[] = [

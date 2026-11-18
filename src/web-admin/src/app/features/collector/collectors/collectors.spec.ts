@@ -3,18 +3,18 @@ import { provideRouter } from '@angular/router';
 import { of, throwError, Subject } from 'rxjs';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { Collectors } from './collectors';
-import { CollectorsService } from '../../../core/services/collector/collectors.service';
-import { BinsService } from '../../../core/services/bin/bins.service';
-import { LookupsService } from '../../../core/services/lookup/lookups.service';
-import { ToastService } from '../../../core/services/toast/toast.service';
-import { AccountStatus } from '../../../core/models/user/account-status.enum';
-import { CollectorCredentialsMode } from '../../../core/models/collector/collector-credentials-mode.enum';
-import { CollectorAssignedBin, CollectorListItem } from '../../../core/models/collector/collector.view-model';
-import { BinStatus } from '../../../core/models/bin/bin-status.enum';
-import { ApiErrorCode } from '../../../core/models/common/api-error-code.enum';
-import { ApiError } from '../../../core/errors/api-error';
-import { MOCK_COLLECTORS } from '../../../core/mock/data/collector/collector.mock';
-import { MOCK_BINS } from '../../../core/mock/data/bin/bin.mock';
+import { CollectorsService } from '@services/collector/collectors.service';
+import { BinsService } from '@services/bin/bins.service';
+import { LookupsService } from '@services/lookup/lookups.service';
+import { ToastService } from '@services/toast/toast.service';
+import { AccountStatus } from '@models/user/account-status.enum';
+import { CollectorCredentialsMode } from '@models/collector/collector-credentials-mode.enum';
+import { CollectorAssignedBin, CollectorListItem } from '@models/collector/collector.view-model';
+import { BinStatus } from '@models/bin/bin-status.enum';
+import { ApiErrorCode } from '@models/common/api-error-code.enum';
+import { ApiError } from '@core/errors/api-error';
+import { MOCK_COLLECTORS } from '@core/mock/data/collector/collector.mock';
+import { MOCK_BINS } from '@core/mock/data/bin/bin.mock';
 import {
   COLLECTOR_TABLE_ACTIONS,
   getCollectorStatusBadgeVariant,

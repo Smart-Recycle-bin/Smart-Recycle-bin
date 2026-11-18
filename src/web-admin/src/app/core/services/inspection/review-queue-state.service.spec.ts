@@ -3,7 +3,7 @@ import { of } from 'rxjs';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { ReviewQueueStateService } from './review-queue-state.service';
 import { InspectionReportsService } from './inspection-reports.service';
-import { InspectionSummary } from '../../models/inspection/inspection.view-model';
+import { InspectionSummary } from '@models/inspection/inspection.view-model';
 
 describe('ReviewQueueStateService', () => {
   let service: ReviewQueueStateService;

@@ -1,5 +1,5 @@
-import { BinMapItem } from '../models/bin/bin-map.model';
-import { BinStatus } from '../models/bin/bin-status.enum';
+import { BinMapItem } from '@models/bin/bin-map.model';
+import { BinStatus } from '@models/bin/bin-status.enum';
 
 export interface SanitizeResult {
   items: BinMapItem[];

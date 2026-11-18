@@ -5,8 +5,8 @@ import {
   input,
   output,
 } from '@angular/core';
-import { Button } from '../../button/button';
-import { Icon } from '../../icon/icon';
+import { Button } from '@shared/components/button/button';
+import { Icon } from '@shared/components/icon/icon';
 
 export type MapUnavailableVariant =
   | 'not-configured'

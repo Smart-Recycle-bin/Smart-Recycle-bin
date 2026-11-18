@@ -5,10 +5,10 @@ import { vi } from 'vitest';
 import { AuthService } from './auth.service';
 import { TokenStorageService } from './token-storage.service';
 import { ApiClientService } from '../api/api-client.service';
-import { UserRole } from '../../models/user/user-role.enum';
-import { LoginResponse, StoredSession } from '../../models/auth/auth.dto';
-import { environment } from '../../../../environments/environment';
-import { AuthError } from '../../errors/auth-error';
+import { UserRole } from '@models/user/user-role.enum';
+import { LoginResponse, StoredSession } from '@models/auth/auth.dto';
+import { environment } from '@env/environment';
+import { AuthError } from '@core/errors/auth-error';
 
 describe('AuthService', () => {
   let service: AuthService;

@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ApiClientService } from './api-client.service';
-import { environment } from '../../../../environments/environment';
+import { environment } from '@env/environment';
 
 describe('ApiClientService', () => {
   let service: ApiClientService;

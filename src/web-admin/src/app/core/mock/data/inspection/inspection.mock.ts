@@ -1,12 +1,12 @@
 import { MOCK_IMAGE_URL } from '../_assets';
 import { cairoLocalToIso } from '../_dates';
-import { InspectionReportStatus } from '../../../models/inspection/inspection-report-status.enum';
+import { InspectionReportStatus } from '@models/inspection/inspection-report-status.enum';
 import {
   InspectionReportListItem,
   InspectionReportDetail,
   InspectionSummary,
   WasteTypeOption,
-} from '../../../models/inspection/inspection.view-model';
+} from '@models/inspection/inspection.view-model';
 
 export const MOCK_INSPECTION_REPORTS: InspectionReportListItem[] = [
   // 8 rows from PDF p9 (Pending: 5, Reviewed: 2, Sent to Retraining: 1)

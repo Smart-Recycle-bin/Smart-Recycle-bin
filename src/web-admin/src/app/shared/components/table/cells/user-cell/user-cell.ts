@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
-import { Avatar } from '../../../avatar/avatar';
+import { Avatar } from '@shared/components/avatar/avatar';
 
 @Component({
   selector: 'app-user-cell',

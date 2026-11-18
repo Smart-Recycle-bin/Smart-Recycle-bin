@@ -3,7 +3,7 @@ import { ActivatedRouteSnapshot, Router, RouterStateSnapshot, UrlTree, provideRo
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { of, throwError, Subject, firstValueFrom, isObservable } from 'rxjs';
 import { authGuard } from './auth.guard';
-import { AuthService } from '../../services/auth/auth.service';
+import { AuthService } from '@services/auth/auth.service';
 
 describe('authGuard', () => {
   let router: Router;

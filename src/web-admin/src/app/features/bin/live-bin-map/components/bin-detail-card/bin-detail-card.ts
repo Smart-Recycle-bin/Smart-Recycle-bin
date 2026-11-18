@@ -6,12 +6,12 @@ import {
   output,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { BinMapItem } from '../../../../../core/models/bin/bin-map.model';
-import { BinStatus, BIN_STATUS_LABELS } from '../../../../../core/models/bin/bin-status.enum';
-import { Badge, BadgeVariant } from '../../../../../shared/components/badge/badge';
-import { TooltipDirective } from '../../../../../shared/components/tooltip/tooltip.directive';
-import { DateTimePipe } from '../../../../../shared/pipes/date-time.pipe';
-import { Icon } from '../../../../../shared/components/icon/icon';
+import { BinMapItem } from '@models/bin/bin-map.model';
+import { BinStatus, BIN_STATUS_LABELS } from '@models/bin/bin-status.enum';
+import { Badge, BadgeVariant } from '@shared/components/badge/badge';
+import { TooltipDirective } from '@shared/components/tooltip/tooltip.directive';
+import { DateTimePipe } from '@shared/pipes/date-time.pipe';
+import { Icon } from '@shared/components/icon/icon';
 
 @Component({
   selector: 'app-bin-detail-card',

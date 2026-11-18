@@ -2,7 +2,7 @@ import { DestroyRef, inject, Signal, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { defer, of, Subject, timer } from 'rxjs';
 import { catchError, map, switchMap, tap } from 'rxjs/operators';
-import { Page, PageQuery } from '../../core/models/common/page.model';
+import { Page, PageQuery } from '@models/common/page.model';
 import { SortDirection } from '../components/table/data-table/data-table';
 
 export interface PagedListOptions<T, F extends object = Record<string, unknown>> {

@@ -3,13 +3,13 @@ import { provideRouter } from '@angular/router';
 import { of, throwError, Subject } from 'rxjs';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { BinsList } from './bins-list';
-import { BinsService } from '../../../core/services/bin/bins.service';
-import { LookupsService } from '../../../core/services/lookup/lookups.service';
-import { ToastService } from '../../../core/services/toast/toast.service';
-import { BinStatus } from '../../../core/models/bin/bin-status.enum';
-import { ApiErrorCode } from '../../../core/models/common/api-error-code.enum';
-import { ApiError } from '../../../core/errors/api-error';
-import { MOCK_BINS } from '../../../core/mock/data/bin/bin.mock';
+import { BinsService } from '@services/bin/bins.service';
+import { LookupsService } from '@services/lookup/lookups.service';
+import { ToastService } from '@services/toast/toast.service';
+import { BinStatus } from '@models/bin/bin-status.enum';
+import { ApiErrorCode } from '@models/common/api-error-code.enum';
+import { ApiError } from '@core/errors/api-error';
+import { MOCK_BINS } from '@core/mock/data/bin/bin.mock';
 
 describe('BinsList Component', () => {
   let component: BinsList;

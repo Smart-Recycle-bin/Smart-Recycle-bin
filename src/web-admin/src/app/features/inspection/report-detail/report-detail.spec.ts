@@ -3,16 +3,16 @@ import { provideRouter, ActivatedRoute } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { ReportDetail } from './report-detail';
-import { InspectionReportsService } from '../../../core/services/inspection/inspection-reports.service';
-import { ReviewQueueStateService } from '../../../core/services/inspection/review-queue-state.service';
-import { ToastService } from '../../../core/services/toast/toast.service';
-import { InspectionReportStatus } from '../../../core/models/inspection/inspection-report-status.enum';
-import { formatDateTime } from '../../../shared/utils/datetime';
+import { InspectionReportsService } from '@services/inspection/inspection-reports.service';
+import { ReviewQueueStateService } from '@services/inspection/review-queue-state.service';
+import { ToastService } from '@services/toast/toast.service';
+import { InspectionReportStatus } from '@models/inspection/inspection-report-status.enum';
+import { formatDateTime } from '@shared/utils/datetime';
 import {
   MOCK_INSPECTION_DETAILS,
   MOCK_INSPECTION_SUMMARY,
   MOCK_WASTE_TYPE_OPTIONS,
-} from '../../../core/mock/data/inspection/inspection.mock';
+} from '@core/mock/data/inspection/inspection.mock';
 
 describe('ReportDetail Component', () => {
   let component: ReportDetail;

@@ -1,8 +1,8 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { MockRouter } from '../../engine/mock-router';
-import { getMockDb } from '../../../../mock/db/mock-db';
+import { MockRouter } from '@core/interceptors/mock-backend/engine/mock-router';
+import { getMockDb } from '@core/mock/db/mock-db';
 import { okResponse, requireSysAdmin } from '../handler-utils';
-import { NotificationsResponse } from '../../../../models/notification/notification.view-model';
+import { NotificationsResponse } from '@models/notification/notification.view-model';
 
 export function registerNotificationHandlers(router: MockRouter): void {
   // 1. List notifications

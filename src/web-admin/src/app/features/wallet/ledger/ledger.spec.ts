@@ -3,15 +3,15 @@ import { provideRouter } from '@angular/router';
 import { of, throwError, Subject } from 'rxjs';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { Ledger } from './ledger';
-import { LedgerService } from '../../../core/services/wallet/ledger.service';
-import { RecyclersService } from '../../../core/services/user/recyclers.service';
-import { ToastService } from '../../../core/services/toast/toast.service';
-import { LedgerEntryType } from '../../../core/models/wallet/ledger-entry-type.enum';
-import { LedgerSource } from '../../../core/models/wallet/ledger-source.enum';
-import { ApiErrorCode } from '../../../core/models/common/api-error-code.enum';
-import { ApiError } from '../../../core/errors/api-error';
-import { MOCK_LEDGER_ROWS } from '../../../core/mock/data/wallet/wallet.mock';
-import { MOCK_RECYCLERS } from '../../../core/mock/data/user/user.mock';
+import { LedgerService } from '@services/wallet/ledger.service';
+import { RecyclersService } from '@services/user/recyclers.service';
+import { ToastService } from '@services/toast/toast.service';
+import { LedgerEntryType } from '@models/wallet/ledger-entry-type.enum';
+import { LedgerSource } from '@models/wallet/ledger-source.enum';
+import { ApiErrorCode } from '@models/common/api-error-code.enum';
+import { ApiError } from '@core/errors/api-error';
+import { MOCK_LEDGER_ROWS } from '@core/mock/data/wallet/wallet.mock';
+import { MOCK_RECYCLERS } from '@core/mock/data/user/user.mock';
 import {
   formatSignedPoints,
   getPointsTone,

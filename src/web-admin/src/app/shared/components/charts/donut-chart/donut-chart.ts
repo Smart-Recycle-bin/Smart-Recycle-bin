@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
-import { ThemeService } from '../../../../core/services/theme/theme.service';
+import { ThemeService } from '@services/theme/theme.service';
 
 export interface DonutSegment {
   label: string;

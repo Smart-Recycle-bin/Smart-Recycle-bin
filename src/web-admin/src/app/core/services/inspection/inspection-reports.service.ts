@@ -8,12 +8,12 @@ import {
   InspectionReportQuery,
   InspectionSummary,
   WasteTypeOption,
-} from '../../models/inspection/inspection.view-model';
-import { Page } from '../../models/common/page.model';
+} from '@models/inspection/inspection.view-model';
+import { Page } from '@models/common/page.model';
 import {
   CorrectCategoryRequest,
   InspectionActionResponse,
-} from '../../models/inspection/inspection.dto';
+} from '@models/inspection/inspection.dto';
 
 @Injectable({
   providedIn: 'root',

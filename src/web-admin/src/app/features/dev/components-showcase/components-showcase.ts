@@ -2,70 +2,70 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 import { RouterLink } from '@angular/router';
 
 // Core Services
-import { ThemeService } from '../../../core/services/theme/theme.service';
-import { ToastService } from '../../../core/services/toast/toast.service';
+import { ThemeService } from '@services/theme/theme.service';
+import { ToastService } from '@services/toast/toast.service';
 
 // 1. Foundational
-import { Button } from '../../../shared/components/button/button';
-import { IconButton } from '../../../shared/components/button/icon-button/icon-button';
-import { Avatar } from '../../../shared/components/avatar/avatar';
-import { Badge } from '../../../shared/components/badge/badge';
-import { Card } from '../../../shared/components/card/card';
-import { Icon, IconName } from '../../../shared/components/icon/icon';
+import { Button } from '@shared/components/button/button';
+import { IconButton } from '@shared/components/button/icon-button/icon-button';
+import { Avatar } from '@shared/components/avatar/avatar';
+import { Badge } from '@shared/components/badge/badge';
+import { Card } from '@shared/components/card/card';
+import { Icon, IconName } from '@shared/components/icon/icon';
 
 // 2. Feedback & States
-import { Stat } from '../../../shared/components/stat/stat';
-import { Progress } from '../../../shared/components/progress/progress';
-import { Skeleton } from '../../../shared/components/skeleton/skeleton';
-import { Notice } from '../../../shared/components/notice/notice';
-import { EmptyState } from '../../../shared/components/empty-state/empty-state';
-import { ErrorState } from '../../../shared/components/error-state/error-state';
-import { PageHeader } from '../../../shared/components/page-header/page-header';
-import { SegmentedControl, SegmentedOption } from '../../../shared/components/segmented-control/segmented-control';
-import { Tabs, TabItem } from '../../../shared/components/tabs/tabs';
-import { DropdownMenu, DropdownMenuItem } from '../../../shared/components/overlay/dropdown-menu/dropdown-menu';
-import { NotificationsPanel, NotificationItem } from '../../../shared/components/notifications-panel/notifications-panel';
-import { TooltipDirective } from '../../../shared/components/tooltip/tooltip.directive';
+import { Stat } from '@shared/components/stat/stat';
+import { Progress } from '@shared/components/progress/progress';
+import { Skeleton } from '@shared/components/skeleton/skeleton';
+import { Notice } from '@shared/components/notice/notice';
+import { EmptyState } from '@shared/components/empty-state/empty-state';
+import { ErrorState } from '@shared/components/error-state/error-state';
+import { PageHeader } from '@shared/components/page-header/page-header';
+import { SegmentedControl, SegmentedOption } from '@shared/components/segmented-control/segmented-control';
+import { Tabs, TabItem } from '@shared/components/tabs/tabs';
+import { DropdownMenu, DropdownMenuItem } from '@shared/components/overlay/dropdown-menu/dropdown-menu';
+import { NotificationsPanel, NotificationItem } from '@shared/components/notifications-panel/notifications-panel';
+import { TooltipDirective } from '@shared/components/tooltip/tooltip.directive';
 
 // 3. Form Controls
-import { Input } from '../../../shared/components/form/input/input';
-import { SearchInput } from '../../../shared/components/form/search-input/search-input';
-import { Select, SelectOption } from '../../../shared/components/form/select/select';
-import { Checkbox } from '../../../shared/components/form/checkbox/checkbox';
-import { Toggle } from '../../../shared/components/form/toggle/toggle';
-import { Textarea } from '../../../shared/components/form/textarea/textarea';
-import { NumberInput } from '../../../shared/components/form/number-input/number-input';
-import { DateInput } from '../../../shared/components/form/date-input/date-input';
-import { DateRangeInput, DateRangeValue } from '../../../shared/components/form/date-range-input/date-range-input';
-import { FileUpload } from '../../../shared/components/form/file-upload/file-upload';
+import { Input } from '@shared/components/form/input/input';
+import { SearchInput } from '@shared/components/form/search-input/search-input';
+import { Select, SelectOption } from '@shared/components/form/select/select';
+import { Checkbox } from '@shared/components/form/checkbox/checkbox';
+import { Toggle } from '@shared/components/form/toggle/toggle';
+import { Textarea } from '@shared/components/form/textarea/textarea';
+import { NumberInput } from '@shared/components/form/number-input/number-input';
+import { DateInput } from '@shared/components/form/date-input/date-input';
+import { DateRangeInput, DateRangeValue } from '@shared/components/form/date-range-input/date-range-input';
+import { FileUpload } from '@shared/components/form/file-upload/file-upload';
 
 // 4. Overlays
-import { Modal } from '../../../shared/components/overlay/modal/modal';
-import { Drawer } from '../../../shared/components/overlay/drawer/drawer';
-import { ConfirmDialog } from '../../../shared/components/overlay/confirm-dialog/confirm-dialog';
+import { Modal } from '@shared/components/overlay/modal/modal';
+import { Drawer } from '@shared/components/overlay/drawer/drawer';
+import { ConfirmDialog } from '@shared/components/overlay/confirm-dialog/confirm-dialog';
 
 // 5. Data & Charts
-import { BadgeVariant } from '../../../shared/components/badge/badge';
-import { DataTable, TableAction, TableColumn } from '../../../shared/components/table/data-table/data-table';
-import { CellTemplateDirective } from '../../../shared/components/table/data-table/cell-template.directive';
-import { UserCell } from '../../../shared/components/table/cells/user-cell/user-cell';
-import { FillLevelCell } from '../../../shared/components/table/cells/fill-level-cell/fill-level-cell';
-import { MonoIdCell } from '../../../shared/components/table/cells/mono-id-cell/mono-id-cell';
-import { NumberCell } from '../../../shared/components/table/cells/number-cell/number-cell';
-import { Pagination } from '../../../shared/components/table/pagination/pagination';
-import { AreaChart, AreaChartPoint, AreaChartSeries } from '../../../shared/components/charts/area-chart/area-chart';
-import { BarList, BarListItem } from '../../../shared/components/charts/bar-list/bar-list';
-import { DonutChart, DonutSegment } from '../../../shared/components/charts/donut-chart/donut-chart';
-import { Gauge } from '../../../shared/components/charts/gauge/gauge';
+import { BadgeVariant } from '@shared/components/badge/badge';
+import { DataTable, TableAction, TableColumn } from '@shared/components/table/data-table/data-table';
+import { CellTemplateDirective } from '@shared/components/table/data-table/cell-template.directive';
+import { UserCell } from '@shared/components/table/cells/user-cell/user-cell';
+import { FillLevelCell } from '@shared/components/table/cells/fill-level-cell/fill-level-cell';
+import { MonoIdCell } from '@shared/components/table/cells/mono-id-cell/mono-id-cell';
+import { NumberCell } from '@shared/components/table/cells/number-cell/number-cell';
+import { Pagination } from '@shared/components/table/pagination/pagination';
+import { AreaChart, AreaChartPoint, AreaChartSeries } from '@shared/components/charts/area-chart/area-chart';
+import { BarList, BarListItem } from '@shared/components/charts/bar-list/bar-list';
+import { DonutChart, DonutSegment } from '@shared/components/charts/donut-chart/donut-chart';
+import { Gauge } from '@shared/components/charts/gauge/gauge';
 
 // 6. IoT & Navigation
-import { MapUnavailable, MapUnavailableVariant } from '../../../shared/components/map/map-unavailable/map-unavailable';
-import { Sidebar, SidebarSection } from '../../../shared/components/sidebar/sidebar';
-import { Topbar } from '../../../shared/components/topbar/topbar';
+import { MapUnavailable, MapUnavailableVariant } from '@shared/components/map/map-unavailable/map-unavailable';
+import { Sidebar, SidebarSection } from '@shared/components/sidebar/sidebar';
+import { Topbar } from '@shared/components/topbar/topbar';
 
 // 7. Layouts
-import { AdminLayout } from '../../../layouts/admin-layout/admin-layout';
-import { AuthLayout } from '../../../layouts/auth-layout/auth-layout';
+import { AdminLayout } from '@layouts/admin-layout/admin-layout';
+import { AuthLayout } from '@layouts/auth-layout/auth-layout';
 
 interface ShowcaseBinRow {
   id: string;

@@ -1,10 +1,10 @@
-import { TableColumn } from '../../../shared/components/table/data-table/data-table';
-import { LeaderboardRow } from '../../../core/models/gamification/gamification.view-model';
+import { TableColumn } from '@shared/components/table/data-table/data-table';
+import { LeaderboardRow } from '@models/gamification/gamification.view-model';
 import {
   LeaderboardScope,
   LEADERBOARD_SCOPE_LABELS,
-} from '../../../core/models/gamification/leaderboard-scope.enum';
-import { TabItem } from '../../../shared/components/tabs/tabs';
+} from '@models/gamification/leaderboard-scope.enum';
+import { TabItem } from '@shared/components/tabs/tabs';
 
 export const LEADERBOARD_TABS: TabItem[] = [
   { id: LeaderboardScope.Weekly, label: LEADERBOARD_SCOPE_LABELS[LeaderboardScope.Weekly] },

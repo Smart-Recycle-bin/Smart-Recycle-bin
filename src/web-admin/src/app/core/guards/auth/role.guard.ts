@@ -1,8 +1,8 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router, UrlTree } from '@angular/router';
-import { AuthService } from '../../services/auth/auth.service';
-import { ToastService } from '../../services/toast/toast.service';
-import { UserRole } from '../../models/user/user-role.enum';
+import { AuthService } from '@services/auth/auth.service';
+import { ToastService } from '@services/toast/toast.service';
+import { UserRole } from '@models/user/user-role.enum';
 
 /**
  * Functional role guard enforcing role-based access control.

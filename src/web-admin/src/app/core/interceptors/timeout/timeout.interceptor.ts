@@ -1,8 +1,8 @@
 import { HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { TimeoutError, catchError, throwError, timeout } from 'rxjs';
-import { ApiError } from '../../errors/api-error';
-import { ToastService } from '../../services/toast/toast.service';
+import { ApiError } from '@core/errors/api-error';
+import { ToastService } from '@services/toast/toast.service';
 import { REQUEST_TIMEOUT, SKIP_ERROR_HANDLING } from '../shared/http-context-tokens';
 
 /**

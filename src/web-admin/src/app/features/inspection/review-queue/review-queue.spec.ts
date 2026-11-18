@@ -3,10 +3,10 @@ import { provideRouter, Router } from '@angular/router';
 import { of, Subject } from 'rxjs';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { ReviewQueue } from './review-queue';
-import { InspectionReportsService } from '../../../core/services/inspection/inspection-reports.service';
-import { ReviewQueueStateService } from '../../../core/services/inspection/review-queue-state.service';
-import { InspectionReportStatus } from '../../../core/models/inspection/inspection-report-status.enum';
-import { MOCK_INSPECTION_REPORTS, MOCK_INSPECTION_SUMMARY } from '../../../core/mock/data/inspection/inspection.mock';
+import { InspectionReportsService } from '@services/inspection/inspection-reports.service';
+import { ReviewQueueStateService } from '@services/inspection/review-queue-state.service';
+import { InspectionReportStatus } from '@models/inspection/inspection-report-status.enum';
+import { MOCK_INSPECTION_REPORTS, MOCK_INSPECTION_SUMMARY } from '@core/mock/data/inspection/inspection.mock';
 import {
   getInspectionReportStatusBadgeVariant,
   getInspectionReportStatusLabel,

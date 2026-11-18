@@ -12,7 +12,7 @@ import {
 } from './core/interceptors';
 import { mockBackendInterceptor } from './core/interceptors/mock-backend/engine/mock-backend.interceptor';
 import { provideAppErrorHandling } from './core/errors/global-error-handler';
-import { environment } from '../environments/environment';
+import { environment } from '@env/environment';
 
 declare const ngDevMode: boolean | undefined;
 

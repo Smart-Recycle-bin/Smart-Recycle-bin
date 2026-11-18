@@ -2,7 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiClientService } from '../api/api-client.service';
 import { API_ENDPOINTS } from '../api/api-endpoints';
-import { NotificationsResponse } from '../../models/notification/notification.view-model';
+import { NotificationsResponse } from '@models/notification/notification.view-model';
 
 @Injectable({
   providedIn: 'root',

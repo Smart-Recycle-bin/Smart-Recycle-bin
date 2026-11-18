@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { GoogleMapsLoaderService } from './google-maps-loader.service';
 import { AppConfigService } from '../config/app-config.service';
-import { installFakeGoogleMaps } from '../../../../testing/fake-google-maps';
+import { installFakeGoogleMaps } from '@testing/fake-google-maps';
 
 describe('GoogleMapsLoaderService', () => {
   let service: GoogleMapsLoaderService;

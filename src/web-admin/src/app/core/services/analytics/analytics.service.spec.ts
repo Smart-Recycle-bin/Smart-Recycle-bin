@@ -3,8 +3,8 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { AnalyticsService } from './analytics.service';
 import { ApiClientService } from '../api/api-client.service';
-import { environment } from '../../../../environments/environment';
-import { AnalyticsPeriod } from '../../models/analytics/analytics-period.enum';
+import { environment } from '@env/environment';
+import { AnalyticsPeriod } from '@models/analytics/analytics-period.enum';
 
 describe('AnalyticsService', () => {
   let service: AnalyticsService;

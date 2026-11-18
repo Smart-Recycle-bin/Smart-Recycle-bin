@@ -10,18 +10,18 @@ import {
   Validators,
 } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { AuthService } from '../../../core/services/auth/auth.service';
-import { safeReturnUrl } from '../../../core/guards/auth/return-url';
-import { ApiError } from '../../../core/errors/api-error';
-import { AuthError } from '../../../core/errors/auth-error';
-import { isApiErrorCode } from '../../../core/errors/error-message';
-import { ApiErrorCode } from '../../../core/models/common/api-error-code.enum';
-import { environment } from '../../../../environments/environment';
-import { Input } from '../../../shared/components/form/input/input';
-import { Button } from '../../../shared/components/button/button';
-import { Notice } from '../../../shared/components/notice/notice';
-import { Modal } from '../../../shared/components/overlay/modal/modal';
-import { Icon } from '../../../shared/components/icon/icon';
+import { AuthService } from '@services/auth/auth.service';
+import { safeReturnUrl } from '@core/guards/auth/return-url';
+import { ApiError } from '@core/errors/api-error';
+import { AuthError } from '@core/errors/auth-error';
+import { isApiErrorCode } from '@core/errors/error-message';
+import { ApiErrorCode } from '@models/common/api-error-code.enum';
+import { environment } from '@env/environment';
+import { Input } from '@shared/components/form/input/input';
+import { Button } from '@shared/components/button/button';
+import { Notice } from '@shared/components/notice/notice';
+import { Modal } from '@shared/components/overlay/modal/modal';
+import { Icon } from '@shared/components/icon/icon';
 
 @Component({
   selector: 'app-login',

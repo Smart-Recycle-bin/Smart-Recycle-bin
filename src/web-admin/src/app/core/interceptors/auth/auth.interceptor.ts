@@ -1,9 +1,9 @@
 import { HttpErrorResponse, HttpInterceptorFn, HttpRequest } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { catchError, switchMap, throwError } from 'rxjs';
-import { environment } from '../../../../environments/environment';
-import { AuthService } from '../../services/auth/auth.service';
-import { API_ENDPOINTS } from '../../services/api/api-endpoints';
+import { environment } from '@env/environment';
+import { AuthService } from '@services/auth/auth.service';
+import { API_ENDPOINTS } from '@services/api/api-endpoints';
 import { RETRIED, SKIP_AUTH } from '../shared/http-context-tokens';
 
 /**

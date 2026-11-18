@@ -8,27 +8,27 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
-import { InspectionReportDetail, WasteTypeOption } from '../../../core/models/inspection/inspection.view-model';
-import { InspectionReportStatus } from '../../../core/models/inspection/inspection-report-status.enum';
-import { InspectionReportsService } from '../../../core/services/inspection/inspection-reports.service';
-import { ReviewQueueStateService } from '../../../core/services/inspection/review-queue-state.service';
-import { ToastService } from '../../../core/services/toast/toast.service';
-import { getErrorMessage, isNotFoundError } from '../../../core/errors';
+import { InspectionReportDetail, WasteTypeOption } from '@models/inspection/inspection.view-model';
+import { InspectionReportStatus } from '@models/inspection/inspection-report-status.enum';
+import { InspectionReportsService } from '@services/inspection/inspection-reports.service';
+import { ReviewQueueStateService } from '@services/inspection/review-queue-state.service';
+import { ToastService } from '@services/toast/toast.service';
+import { getErrorMessage, isNotFoundError } from '@core/errors';
 import {
   getInspectionReportStatusBadgeVariant,
   getInspectionReportStatusLabel,
 } from '../review-queue/review-queue.config';
-import { PageHeader } from '../../../shared/components/page-header/page-header';
-import { Badge } from '../../../shared/components/badge/badge';
-import { Button } from '../../../shared/components/button/button';
-import { Select, SelectOption } from '../../../shared/components/form/select/select';
-import { Progress, ProgressColor } from '../../../shared/components/progress/progress';
-import { Modal } from '../../../shared/components/overlay/modal/modal';
-import { ResourceState } from '../../../shared/components/resource-state/resource-state';
-import { EmptyState } from '../../../shared/components/empty-state/empty-state';
-import { Icon } from '../../../shared/components/icon/icon';
-import { formatDateTime } from '../../../shared/utils/datetime';
-import { DateTimePipe } from '../../../shared/pipes';
+import { PageHeader } from '@shared/components/page-header/page-header';
+import { Badge } from '@shared/components/badge/badge';
+import { Button } from '@shared/components/button/button';
+import { Select, SelectOption } from '@shared/components/form/select/select';
+import { Progress, ProgressColor } from '@shared/components/progress/progress';
+import { Modal } from '@shared/components/overlay/modal/modal';
+import { ResourceState } from '@shared/components/resource-state/resource-state';
+import { EmptyState } from '@shared/components/empty-state/empty-state';
+import { Icon } from '@shared/components/icon/icon';
+import { formatDateTime } from '@shared/utils/datetime';
+import { DateTimePipe } from '@shared/pipes';
 
 @Component({
   selector: 'app-report-detail',

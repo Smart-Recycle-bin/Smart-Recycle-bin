@@ -1,7 +1,7 @@
 import { inject, Injectable, signal } from '@angular/core';
 import { Observable, tap } from 'rxjs';
 import { InspectionReportsService } from './inspection-reports.service';
-import { InspectionSummary } from '../../models/inspection/inspection.view-model';
+import { InspectionSummary } from '@models/inspection/inspection.view-model';
 
 @Injectable({
   providedIn: 'root',

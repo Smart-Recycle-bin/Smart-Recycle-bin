@@ -17,15 +17,15 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { GoogleMap, GoogleMapsModule } from '@angular/google-maps';
-import { BinMapItem } from '../../../../../core/models/bin/bin-map.model';
-import { BinStatus } from '../../../../../core/models/bin/bin-status.enum';
-import { GoogleMapsLoaderService, GoogleMapsLoaderState } from '../../../../../core/services/maps/google-maps-loader.service';
-import { MapLoadBudgetService } from '../../../../../core/services/maps/map-load-budget.service';
-import { AppConfigService } from '../../../../../core/services/config/app-config.service';
-import { ThemeService } from '../../../../../core/services/theme/theme.service';
-import { MapUnavailable, MapUnavailableVariant } from '../../../../../shared/components/map/map-unavailable/map-unavailable';
-import { diffBins } from '../../../../../core/utils/bin-diff';
-import { BinClusterRenderer, getStatusSeverity } from '../../utils/bin-cluster-renderer';
+import { BinMapItem } from '@models/bin/bin-map.model';
+import { BinStatus } from '@models/bin/bin-status.enum';
+import { GoogleMapsLoaderService, GoogleMapsLoaderState } from '@services/maps/google-maps-loader.service';
+import { MapLoadBudgetService } from '@services/maps/map-load-budget.service';
+import { AppConfigService } from '@services/config/app-config.service';
+import { ThemeService } from '@services/theme/theme.service';
+import { MapUnavailable, MapUnavailableVariant } from '@shared/components/map/map-unavailable/map-unavailable';
+import { diffBins } from '@features/bin/live-bin-map/utils/bin-diff';
+import { BinClusterRenderer, getStatusSeverity } from '@features/bin/live-bin-map/utils/bin-cluster-renderer';
 
 export interface MarkerRecord {
   bin: BinMapItem;

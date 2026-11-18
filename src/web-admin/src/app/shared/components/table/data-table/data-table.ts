@@ -12,12 +12,12 @@ import {
   output,
   signal,
 } from '@angular/core';
-import { Icon } from '../../icon/icon';
-import { Badge, BadgeVariant } from '../../badge/badge';
-import { IconButton } from '../../button/icon-button/icon-button';
-import { Checkbox } from '../../form/checkbox/checkbox';
-import { Skeleton } from '../../skeleton/skeleton';
-import { EmptyState } from '../../empty-state/empty-state';
+import { Icon } from '@shared/components/icon/icon';
+import { Badge, BadgeVariant } from '@shared/components/badge/badge';
+import { IconButton } from '@shared/components/button/icon-button/icon-button';
+import { Checkbox } from '@shared/components/form/checkbox/checkbox';
+import { Skeleton } from '@shared/components/skeleton/skeleton';
+import { EmptyState } from '@shared/components/empty-state/empty-state';
 import { Pagination } from '../pagination/pagination';
 import { CellTemplateContext, CellTemplateDirective } from './cell-template.directive';
 

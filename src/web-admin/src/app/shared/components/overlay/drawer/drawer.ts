@@ -3,8 +3,8 @@ import {
   input,
   output,
 } from '@angular/core';
-import { IconButton } from '../../button/icon-button/icon-button';
-import { FocusTrapDirective } from '../../../directives/focus-trap.directive';
+import { IconButton } from '@shared/components/button/icon-button/icon-button';
+import { FocusTrapDirective } from '@shared/directives/focus-trap.directive';
 
 export type DrawerPosition = 'left' | 'right';
 export type DrawerSize = 'sm' | 'md' | 'lg';

@@ -14,7 +14,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { timeoutInterceptor } from './timeout/timeout.interceptor';
 import { retryInterceptor } from './retry/retry.interceptor';
 import { REQUEST_TIMEOUT } from './shared/http-context-tokens';
-import { ToastService } from '../services/toast/toast.service';
+import { ToastService } from '@services/toast/toast.service';
 import { ApiError } from '../errors/api-error';
 
 describe('Timeout & Retry Interceptors', () => {

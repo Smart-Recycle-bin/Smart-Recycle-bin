@@ -1,7 +1,7 @@
 import { Injectable, OnDestroy } from '@angular/core';
 import { Observable, Subject } from 'rxjs';
-import { environment } from '../../../../environments/environment';
-import { StoredSession } from '../../models/auth/auth.dto';
+import { environment } from '@env/environment';
+import { StoredSession } from '@models/auth/auth.dto';
 
 export interface TokenStorage {
   getSession(): StoredSession | null;

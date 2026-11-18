@@ -7,7 +7,7 @@ import {
   AdminLookupItem,
   CollectorLookupItem,
   DistrictLookupItem,
-} from '../../models/lookup/lookup.model';
+} from '@models/lookup/lookup.model';
 
 describe('LookupsService', () => {
   let service: LookupsService;

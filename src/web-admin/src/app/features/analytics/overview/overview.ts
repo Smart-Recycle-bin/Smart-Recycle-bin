@@ -8,49 +8,49 @@ import {
 } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { AnalyticsService } from '../../../core/services/analytics/analytics.service';
+import { AnalyticsService } from '@services/analytics/analytics.service';
 import {
   AnalyticsPeriod,
-} from '../../../core/models/analytics/analytics-period.enum';
+} from '@models/analytics/analytics-period.enum';
 import {
   DashboardOverview,
   OverviewQuery,
-} from '../../../core/models/analytics/analytics.view-model';
+} from '@models/analytics/analytics.view-model';
 import {
   HOTSPOT_THRESHOLDS,
   PERIOD_OPTIONS,
   getMaterialColor,
 } from './overview.config';
-import { PageHeader } from '../../../shared/components/page-header/page-header';
-import { Button } from '../../../shared/components/button/button';
-import { Stat, StatTrend } from '../../../shared/components/stat/stat';
-import { SegmentedControl } from '../../../shared/components/segmented-control/segmented-control';
+import { PageHeader } from '@shared/components/page-header/page-header';
+import { Button } from '@shared/components/button/button';
+import { Stat, StatTrend } from '@shared/components/stat/stat';
+import { SegmentedControl } from '@shared/components/segmented-control/segmented-control';
 import {
   DateRangeInput,
   DateRangeValue,
-} from '../../../shared/components/form/date-range-input/date-range-input';
+} from '@shared/components/form/date-range-input/date-range-input';
 import {
   AreaChart,
   AreaChartPoint,
   AreaChartSeries,
-} from '../../../shared/components/charts/area-chart/area-chart';
+} from '@shared/components/charts/area-chart/area-chart';
 import {
   DonutChart,
   DonutSegment,
-} from '../../../shared/components/charts/donut-chart/donut-chart';
+} from '@shared/components/charts/donut-chart/donut-chart';
 import {
   BarList,
   BarListItem,
-} from '../../../shared/components/charts/bar-list/bar-list';
-import { Progress } from '../../../shared/components/progress/progress';
-import { Badge } from '../../../shared/components/badge/badge';
-import { Card } from '../../../shared/components/card/card';
-import { Icon } from '../../../shared/components/icon/icon';
-import { Skeleton } from '../../../shared/components/skeleton/skeleton';
-import { ResourceState } from '../../../shared/components/resource-state/resource-state';
-import { TooltipDirective } from '../../../shared/components/tooltip/tooltip.directive';
+} from '@shared/components/charts/bar-list/bar-list';
+import { Progress } from '@shared/components/progress/progress';
+import { Badge } from '@shared/components/badge/badge';
+import { Card } from '@shared/components/card/card';
+import { Icon } from '@shared/components/icon/icon';
+import { Skeleton } from '@shared/components/skeleton/skeleton';
+import { ResourceState } from '@shared/components/resource-state/resource-state';
+import { TooltipDirective } from '@shared/components/tooltip/tooltip.directive';
 
-import { environment } from '../../../../environments/environment';
+import { environment } from '@env/environment';
 
 function formatShortDate(dateStr: string): string {
   if (!dateStr) return '';

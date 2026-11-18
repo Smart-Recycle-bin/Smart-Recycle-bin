@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { ThemeService } from '../../core/services/theme/theme.service';
-import { Icon } from '../../shared/components/icon/icon';
-import { TooltipDirective } from '../../shared/components/tooltip/tooltip.directive';
+import { ThemeService } from '@services/theme/theme.service';
+import { Icon } from '@shared/components/icon/icon';
+import { TooltipDirective } from '@shared/components/tooltip/tooltip.directive';
 
 @Component({
   selector: 'app-auth-layout',

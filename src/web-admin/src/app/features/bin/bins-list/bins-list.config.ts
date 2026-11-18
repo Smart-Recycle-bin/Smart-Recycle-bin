@@ -1,7 +1,7 @@
-import { TableColumn } from '../../../shared/components/table/data-table/data-table';
-import { BinListItem } from '../../../core/models/bin/bin.view-model';
-import { BinStatus, BIN_STATUS_LABELS } from '../../../core/models/bin/bin-status.enum';
-import { BadgeVariant } from '../../../shared/components/badge/badge';
+import { TableColumn } from '@shared/components/table/data-table/data-table';
+import { BinListItem } from '@models/bin/bin.view-model';
+import { BinStatus, BIN_STATUS_LABELS } from '@models/bin/bin-status.enum';
+import { BadgeVariant } from '@shared/components/badge/badge';
 
 export const BIN_TABLE_COLUMNS: TableColumn<BinListItem>[] = [
   {

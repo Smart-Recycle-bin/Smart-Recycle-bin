@@ -126,6 +126,6 @@ export const routes: Routes = [
   {
     path: '**',
     loadComponent: () =>
-      import('./features/placeholders/not-found/not-found').then((m) => m.NotFound),
+      import('./features/errors/not-found/not-found').then((m) => m.NotFound),
   },
 ];

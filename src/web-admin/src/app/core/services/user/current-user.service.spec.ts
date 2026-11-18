@@ -4,8 +4,8 @@ import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { CurrentUserService } from './current-user.service';
 import { AuthService } from '../auth/auth.service';
 import { TokenStorageService } from '../auth/token-storage.service';
-import { UserRole } from '../../models/user/user-role.enum';
-import { environment } from '../../../../environments/environment';
+import { UserRole } from '@models/user/user-role.enum';
+import { environment } from '@env/environment';
 
 describe('CurrentUserService', () => {
   let service: CurrentUserService;

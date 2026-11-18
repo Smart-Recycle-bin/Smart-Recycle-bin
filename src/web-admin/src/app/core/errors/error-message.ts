@@ -1,6 +1,6 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { ApiError } from './api-error';
-import { ApiErrorCode } from '../models/common/api-error-code.enum';
+import { ApiErrorCode } from '@models/common/api-error-code.enum';
 
 /**
  * Extracts a human-readable error message from an unknown error value.

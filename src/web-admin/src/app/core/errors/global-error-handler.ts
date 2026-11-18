@@ -6,7 +6,7 @@ import {
   makeEnvironmentProviders,
 } from '@angular/core';
 import { LoggerService, ERROR_REPORTER, ErrorReporter } from './logger.service';
-import { ToastService } from '../services/toast/toast.service';
+import { ToastService } from '@services/toast/toast.service';
 
 export const CHUNK_RELOAD_SESSION_KEY = 'chunk_reload_attempted';
 

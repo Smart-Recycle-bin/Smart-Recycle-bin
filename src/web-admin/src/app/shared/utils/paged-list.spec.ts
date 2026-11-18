@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { of, throwError, Subject } from 'rxjs';
 import { createPagedList } from './paged-list';
-import { Page } from '../../core/models/common/page.model';
+import { Page } from '@models/common/page.model';
 
 interface TestItem {
   id: string;

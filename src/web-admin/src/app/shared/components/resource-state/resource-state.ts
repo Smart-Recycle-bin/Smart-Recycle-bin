@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, input, output } from '@an
 import { Skeleton, SkeletonVariant } from '../skeleton/skeleton';
 import { ErrorState } from '../error-state/error-state';
 import { EmptyState } from '../empty-state/empty-state';
-import { getErrorMessage } from '../../../core/errors/error-message';
+import { getErrorMessage } from '@core/errors/error-message';
 
 @Component({
   selector: 'app-resource-state',

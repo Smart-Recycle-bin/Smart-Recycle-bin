@@ -2,12 +2,12 @@ import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { catchError, throwError } from 'rxjs';
-import { ApiError } from '../../errors/api-error';
-import { AuthService } from '../../services/auth/auth.service';
-import { ToastService } from '../../services/toast/toast.service';
-import { API_ENDPOINTS } from '../../services/api/api-endpoints';
+import { ApiError } from '@core/errors/api-error';
+import { AuthService } from '@services/auth/auth.service';
+import { ToastService } from '@services/toast/toast.service';
+import { API_ENDPOINTS } from '@services/api/api-endpoints';
 import { SKIP_ERROR_HANDLING } from '../shared/http-context-tokens';
-import { ApiErrorCode } from '../../models/common/api-error-code.enum';
+import { ApiErrorCode } from '@models/common/api-error-code.enum';
 
 // In-memory timestamp cache to deduplicate identical toasts within 1500ms
 const lastToastTimes = new Map<string, number>();

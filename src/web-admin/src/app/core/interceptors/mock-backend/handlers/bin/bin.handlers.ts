@@ -1,19 +1,19 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { MockRouter } from '../../engine/mock-router';
-import { getMockDb } from '../../../../mock/db/mock-db';
-import { BinStatus } from '../../../../models/bin/bin-status.enum';
-import { AuditActionType } from '../../../../models/audit/audit-action-type.enum';
-import { ApiErrorCode } from '../../../../models/common/api-error-code.enum';
+import { MockRouter } from '@core/interceptors/mock-backend/engine/mock-router';
+import { getMockDb } from '@core/mock/db/mock-db';
+import { BinStatus } from '@models/bin/bin-status.enum';
+import { AuditActionType } from '@models/audit/audit-action-type.enum';
+import { ApiErrorCode } from '@models/common/api-error-code.enum';
 import { okResponse, errorResponse, requireSysAdmin, appendAuditLog, paginate } from '../handler-utils';
 import {
   RegisterBinRequest,
   RegisterBinResponse,
   AssignBinRequest,
   AssignBinResponse,
-} from '../../../../models/bin/bin.dto';
-import { BinListItem } from '../../../../models/bin/bin.view-model';
-import { BinMapItem } from '../../../../models/bin/bin-map.model';
-import { environment } from '../../../../../../environments/environment';
+} from '@models/bin/bin.dto';
+import { BinListItem } from '@models/bin/bin.view-model';
+import { BinMapItem } from '@models/bin/bin-map.model';
+import { environment } from '@env/environment';
 
 let mockDriftTick = 0;
 

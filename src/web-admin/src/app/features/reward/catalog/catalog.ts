@@ -15,56 +15,56 @@ import {
   Validators,
 } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { CatalogService } from '../../../core/services/reward/catalog.service';
-import { ToastService } from '../../../core/services/toast/toast.service';
+import { CatalogService } from '@services/reward/catalog.service';
+import { ToastService } from '@services/toast/toast.service';
 import {
   AdminRewardItem,
   RewardQuery,
-} from '../../../core/models/reward/reward.view-model';
+} from '@models/reward/reward.view-model';
 import {
   RewardStatus,
   REWARD_STATUS_LABELS,
-} from '../../../core/models/reward/reward-status.enum';
+} from '@models/reward/reward-status.enum';
 import {
   RewardCategory,
   REWARD_CATEGORY_LABELS,
-} from '../../../core/models/reward/reward-category.enum';
+} from '@models/reward/reward-category.enum';
 import {
   VoucherCodeType,
   VOUCHER_CODE_TYPE_LABELS,
-} from '../../../core/models/reward/voucher-code-type.enum';
-import { pluralize } from '../../../shared/utils/format';
+} from '@models/reward/voucher-code-type.enum';
+import { pluralize } from '@shared/utils/format';
 import {
   CreateRewardRequest,
   UpdateRewardRequest,
-} from '../../../core/models/reward/reward.dto';
-import { PageHeader } from '../../../shared/components/page-header/page-header';
-import { Button } from '../../../shared/components/button/button';
-import { IconButton } from '../../../shared/components/button/icon-button/icon-button';
-import { Icon } from '../../../shared/components/icon/icon';
-import { Badge, BadgeVariant } from '../../../shared/components/badge/badge';
-import { SegmentedControl } from '../../../shared/components/segmented-control/segmented-control';
-import { Select } from '../../../shared/components/form/select/select';
-import { Input } from '../../../shared/components/form/input/input';
-import { Textarea } from '../../../shared/components/form/textarea/textarea';
-import { NumberInput } from '../../../shared/components/form/number-input/number-input';
-import { DateInput } from '../../../shared/components/form/date-input/date-input';
-import { FileUpload } from '../../../shared/components/form/file-upload/file-upload';
-import { Drawer } from '../../../shared/components/overlay/drawer/drawer';
-import { ConfirmDialog } from '../../../shared/components/overlay/confirm-dialog/confirm-dialog';
-import { DataTable } from '../../../shared/components/table/data-table/data-table';
-import { CellTemplateDirective } from '../../../shared/components/table/data-table/cell-template.directive';
-import { ResourceState } from '../../../shared/components/resource-state/resource-state';
-import { formatDate } from '../../../shared/utils/datetime';
-import { Skeleton } from '../../../shared/components/skeleton/skeleton';
-import { getErrorMessage, getFieldErrors } from '../../../core/errors/error-message';
+} from '@models/reward/reward.dto';
+import { PageHeader } from '@shared/components/page-header/page-header';
+import { Button } from '@shared/components/button/button';
+import { IconButton } from '@shared/components/button/icon-button/icon-button';
+import { Icon } from '@shared/components/icon/icon';
+import { Badge, BadgeVariant } from '@shared/components/badge/badge';
+import { SegmentedControl } from '@shared/components/segmented-control/segmented-control';
+import { Select } from '@shared/components/form/select/select';
+import { Input } from '@shared/components/form/input/input';
+import { Textarea } from '@shared/components/form/textarea/textarea';
+import { NumberInput } from '@shared/components/form/number-input/number-input';
+import { DateInput } from '@shared/components/form/date-input/date-input';
+import { FileUpload } from '@shared/components/form/file-upload/file-upload';
+import { Drawer } from '@shared/components/overlay/drawer/drawer';
+import { ConfirmDialog } from '@shared/components/overlay/confirm-dialog/confirm-dialog';
+import { DataTable } from '@shared/components/table/data-table/data-table';
+import { CellTemplateDirective } from '@shared/components/table/data-table/cell-template.directive';
+import { ResourceState } from '@shared/components/resource-state/resource-state';
+import { formatDate } from '@shared/utils/datetime';
+import { Skeleton } from '@shared/components/skeleton/skeleton';
+import { getErrorMessage, getFieldErrors } from '@core/errors/error-message';
 import {
   trimmedRequired,
   maxLen,
   positiveInt,
   nonNegativeInt,
   dateOrder,
-} from '../../../shared/validators';
+} from '@shared/validators';
 import {
   CATEGORY_FORM_OPTIONS,
   CatalogViewMode,

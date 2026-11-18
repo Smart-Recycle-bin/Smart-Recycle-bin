@@ -9,24 +9,24 @@ import {
 } from '@angular/core';
 import { DecimalPipe, NgClass } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { LeaderboardService } from '../../../core/services/gamification/leaderboard.service';
+import { LeaderboardService } from '@services/gamification/leaderboard.service';
 import {
   LeaderboardQuery,
   LeaderboardRow,
   MilestoneBadge,
-} from '../../../core/models/gamification/gamification.view-model';
-import { LeaderboardScope } from '../../../core/models/gamification/leaderboard-scope.enum';
-import { PageHeader } from '../../../shared/components/page-header/page-header';
-import { Badge } from '../../../shared/components/badge/badge';
-import { Tabs } from '../../../shared/components/tabs/tabs';
-import { Card } from '../../../shared/components/card/card';
-import { DataTable } from '../../../shared/components/table/data-table/data-table';
-import { CellTemplateDirective } from '../../../shared/components/table/data-table/cell-template.directive';
-import { UserCell } from '../../../shared/components/table/cells/user-cell/user-cell';
-import { ResourceState } from '../../../shared/components/resource-state/resource-state';
-import { Skeleton } from '../../../shared/components/skeleton/skeleton';
-import { Icon } from '../../../shared/components/icon/icon';
-import { createPagedList } from '../../../shared/utils/paged-list';
+} from '@models/gamification/gamification.view-model';
+import { LeaderboardScope } from '@models/gamification/leaderboard-scope.enum';
+import { PageHeader } from '@shared/components/page-header/page-header';
+import { Badge } from '@shared/components/badge/badge';
+import { Tabs } from '@shared/components/tabs/tabs';
+import { Card } from '@shared/components/card/card';
+import { DataTable } from '@shared/components/table/data-table/data-table';
+import { CellTemplateDirective } from '@shared/components/table/data-table/cell-template.directive';
+import { UserCell } from '@shared/components/table/cells/user-cell/user-cell';
+import { ResourceState } from '@shared/components/resource-state/resource-state';
+import { Skeleton } from '@shared/components/skeleton/skeleton';
+import { Icon } from '@shared/components/icon/icon';
+import { createPagedList } from '@shared/utils/paged-list';
 import {
   getRankBadgeClass,
   LEADERBOARD_TABLE_COLUMNS,

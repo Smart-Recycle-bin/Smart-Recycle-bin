@@ -2,7 +2,7 @@ import { inject, Injectable, OnDestroy, signal } from '@angular/core';
 import { EMPTY, Observable, Subject, Subscription } from 'rxjs';
 import { catchError, switchMap } from 'rxjs/operators';
 import { BinLiveFeed, BinLiveFeedStatus } from './bin-live-feed.interface';
-import { BinMapQuery, BinMapResponse } from '../../models/bin/bin-map.model';
+import { BinMapQuery, BinMapResponse } from '@models/bin/bin-map.model';
 import { BinsService } from './bins.service';
 import { AppConfigService } from '../config/app-config.service';
 

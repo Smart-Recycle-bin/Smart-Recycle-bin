@@ -2,15 +2,15 @@ import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiClientService } from '../api/api-client.service';
 import { API_ENDPOINTS } from '../api/api-endpoints';
-import { BinListItem, BinQuery } from '../../models/bin/bin.view-model';
-import { BinMapQuery, BinMapResponse } from '../../models/bin/bin-map.model';
-import { Page } from '../../models/common/page.model';
+import { BinListItem, BinQuery } from '@models/bin/bin.view-model';
+import { BinMapQuery, BinMapResponse } from '@models/bin/bin-map.model';
+import { Page } from '@models/common/page.model';
 import {
   AssignBinRequest,
   AssignBinResponse,
   RegisterBinRequest,
   RegisterBinResponse,
-} from '../../models/bin/bin.dto';
+} from '@models/bin/bin.dto';
 
 @Injectable({
   providedIn: 'root',

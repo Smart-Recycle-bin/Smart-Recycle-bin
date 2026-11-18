@@ -1,4 +1,4 @@
-import { BinMapItem } from '../models/bin/bin-map.model';
+import { BinMapItem } from '@models/bin/bin-map.model';
 
 export interface BinChange {
   item: BinMapItem;

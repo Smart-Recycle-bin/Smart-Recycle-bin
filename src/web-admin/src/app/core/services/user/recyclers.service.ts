@@ -2,14 +2,14 @@ import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiClientService } from '../api/api-client.service';
 import { API_ENDPOINTS } from '../api/api-endpoints';
-import { RecyclerListItem, RecyclerQuery } from '../../models/user/recycler.view-model';
-import { Page } from '../../models/common/page.model';
+import { RecyclerListItem, RecyclerQuery } from '@models/user/recycler.view-model';
+import { Page } from '@models/common/page.model';
 import {
   SuspendUserRequest,
   SuspendUserResponse,
   UnsuspendUserRequest,
   UnsuspendUserResponse,
-} from '../../models/user/user.dto';
+} from '@models/user/user.dto';
 
 @Injectable({
   providedIn: 'root',

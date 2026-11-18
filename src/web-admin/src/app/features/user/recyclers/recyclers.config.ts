@@ -1,8 +1,8 @@
-import { TableAction, TableColumn } from '../../../shared/components/table/data-table/data-table';
-import { RecyclerListItem } from '../../../core/models/user/recycler.view-model';
-import { AccountStatus, ACCOUNT_STATUS_LABELS } from '../../../core/models/user/account-status.enum';
-import { BadgeVariant } from '../../../shared/components/badge/badge';
-import { SelectOption } from '../../../shared/components/form/select/select';
+import { TableAction, TableColumn } from '@shared/components/table/data-table/data-table';
+import { RecyclerListItem } from '@models/user/recycler.view-model';
+import { AccountStatus, ACCOUNT_STATUS_LABELS } from '@models/user/account-status.enum';
+import { BadgeVariant } from '@shared/components/badge/badge';
+import { SelectOption } from '@shared/components/form/select/select';
 
 export const RECYCLER_TABLE_COLUMNS: TableColumn<RecyclerListItem>[] = [
   {

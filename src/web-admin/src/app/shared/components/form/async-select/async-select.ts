@@ -16,7 +16,7 @@ import { ControlValueAccessor, NgControl } from '@angular/forms';
 import { Subject, of } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap, tap } from 'rxjs/operators';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Icon } from '../../icon/icon';
+import { Icon } from '@shared/components/icon/icon';
 import { FormField } from '../form-field/form-field';
 import { SelectOption } from '../select/select';
 import { bindNgControlState } from '../form-control.utils';

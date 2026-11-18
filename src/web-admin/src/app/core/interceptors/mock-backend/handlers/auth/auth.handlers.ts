@@ -1,9 +1,9 @@
-import { MockRouter } from '../../engine/mock-router';
-import { getMockDb } from '../../../../mock/db/mock-db';
-import { generateMockAccessToken, generateMockRefreshToken } from '../../engine/mock-auth';
-import { environment } from '../../../../../../environments/environment';
-import { LoginRequest, LoginResponse, RefreshTokenRequest } from '../../../../models/auth/auth.dto';
-import { ApiErrorCode } from '../../../../models/common/api-error-code.enum';
+import { MockRouter } from '@core/interceptors/mock-backend/engine/mock-router';
+import { getMockDb } from '@core/mock/db/mock-db';
+import { generateMockAccessToken, generateMockRefreshToken } from '@core/interceptors/mock-backend/engine/mock-auth';
+import { environment } from '@env/environment';
+import { LoginRequest, LoginResponse, RefreshTokenRequest } from '@models/auth/auth.dto';
+import { ApiErrorCode } from '@models/common/api-error-code.enum';
 import { okResponse, errorResponse } from '../handler-utils';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

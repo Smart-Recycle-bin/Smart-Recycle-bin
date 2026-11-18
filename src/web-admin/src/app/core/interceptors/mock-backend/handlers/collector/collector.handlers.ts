@@ -1,16 +1,16 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { MockRouter } from '../../engine/mock-router';
-import { getMockDb } from '../../../../mock/db/mock-db';
-import { AccountStatus } from '../../../../models/user/account-status.enum';
-import { AuditActionType } from '../../../../models/audit/audit-action-type.enum';
-import { ApiErrorCode } from '../../../../models/common/api-error-code.enum';
+import { MockRouter } from '@core/interceptors/mock-backend/engine/mock-router';
+import { getMockDb } from '@core/mock/db/mock-db';
+import { AccountStatus } from '@models/user/account-status.enum';
+import { AuditActionType } from '@models/audit/audit-action-type.enum';
+import { ApiErrorCode } from '@models/common/api-error-code.enum';
 import { okResponse, errorResponse, requireSysAdmin, appendAuditLog, paginate } from '../handler-utils';
 import {
   CreateCollectorRequest,
   UpdateCollectorRequest,
   DeactivateCollectorResponse,
-} from '../../../../models/collector/collector.dto';
-import { CollectorListItem, CollectorAssignedBin } from '../../../../models/collector/collector.view-model';
+} from '@models/collector/collector.dto';
+import { CollectorListItem, CollectorAssignedBin } from '@models/collector/collector.view-model';
 
 export function registerCollectorHandlers(router: MockRouter): void {
   // 1. List collectors with filtering

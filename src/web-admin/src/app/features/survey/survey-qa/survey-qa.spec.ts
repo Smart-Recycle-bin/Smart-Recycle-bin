@@ -2,12 +2,12 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, Subject, throwError } from 'rxjs';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { SurveyQa } from './survey-qa';
-import { SurveyQaService } from '../../../core/services/survey/survey-qa.service';
+import { SurveyQaService } from '@services/survey/survey-qa.service';
 import {
   MOCK_RECENT_SURVEYS,
   MOCK_SURVEY_QA_SUMMARY,
-} from '../../../core/mock/data/survey/survey.mock';
-import { SurveyOutcome } from '../../../core/models/survey/survey-outcome.enum';
+} from '@core/mock/data/survey/survey.mock';
+import { SurveyOutcome } from '@models/survey/survey-outcome.enum';
 import {
   formatSignedPp,
   getCategoryColor,

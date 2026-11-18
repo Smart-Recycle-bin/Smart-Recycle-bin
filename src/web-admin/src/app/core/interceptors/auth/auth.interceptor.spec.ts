@@ -2,11 +2,11 @@ import { TestBed } from '@angular/core/testing';
 import { HttpClient, HttpContext, provideHttpClient, withInterceptors } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { authInterceptor } from './auth.interceptor';
-import { AuthService } from '../../services/auth/auth.service';
-import { TokenStorageService } from '../../services/auth/token-storage.service';
-import { environment } from '../../../../environments/environment';
+import { AuthService } from '@services/auth/auth.service';
+import { TokenStorageService } from '@services/auth/token-storage.service';
+import { environment } from '@env/environment';
 import { SKIP_AUTH } from '../shared/http-context-tokens';
-import { UserRole } from '../../models/user/user-role.enum';
+import { UserRole } from '@models/user/user-role.enum';
 import { of, throwError, Subject } from 'rxjs';
 
 describe('authInterceptor', () => {

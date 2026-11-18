@@ -6,8 +6,8 @@ import {
   LeaderboardQuery,
   LeaderboardRow,
   MilestoneBadge,
-} from '../../models/gamification/gamification.view-model';
-import { Page } from '../../models/common/page.model';
+} from '@models/gamification/gamification.view-model';
+import { Page } from '@models/common/page.model';
 
 @Injectable({
   providedIn: 'root',

@@ -1,5 +1,5 @@
-import { NotificationType } from '../../../models/notification/notification-type.enum';
-import { NotificationItem } from '../../../models/notification/notification.view-model';
+import { NotificationType } from '@models/notification/notification-type.enum';
+import { NotificationItem } from '@models/notification/notification.view-model';
 
 export const MOCK_NOTIFICATIONS: NotificationItem[] = [
   // 9 unread notifications matching the topbar bell badge count (9) on all PDF screens

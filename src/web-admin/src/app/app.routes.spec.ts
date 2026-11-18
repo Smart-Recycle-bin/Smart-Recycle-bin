@@ -24,7 +24,7 @@ describe('App Routes', () => {
     await Promise.all([
       import('./layouts/admin-layout/admin-layout'),
       import('./layouts/auth-layout/auth-layout'),
-      import('./features/placeholders/not-found/not-found'),
+      import('./features/errors/not-found/not-found'),
     ]);
   }, 60000);
 

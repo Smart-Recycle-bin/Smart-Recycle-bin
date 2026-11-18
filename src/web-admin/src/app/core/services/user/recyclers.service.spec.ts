@@ -3,8 +3,8 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { RecyclersService } from './recyclers.service';
 import { ApiClientService } from '../api/api-client.service';
-import { environment } from '../../../../environments/environment';
-import { AccountStatus } from '../../models/user/account-status.enum';
+import { environment } from '@env/environment';
+import { AccountStatus } from '@models/user/account-status.enum';
 
 describe('RecyclersService', () => {
   let service: RecyclersService;

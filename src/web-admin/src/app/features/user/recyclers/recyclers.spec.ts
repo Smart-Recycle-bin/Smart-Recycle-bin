@@ -3,11 +3,11 @@ import { provideRouter } from '@angular/router';
 import { of, Subject } from 'rxjs';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { Recyclers } from './recyclers';
-import { RecyclersService } from '../../../core/services/user/recyclers.service';
-import { ToastService } from '../../../core/services/toast/toast.service';
-import { AccountStatus } from '../../../core/models/user/account-status.enum';
-import { RecyclerListItem } from '../../../core/models/user/recycler.view-model';
-import { MOCK_RECYCLERS } from '../../../core/mock/data/user/user.mock';
+import { RecyclersService } from '@services/user/recyclers.service';
+import { ToastService } from '@services/toast/toast.service';
+import { AccountStatus } from '@models/user/account-status.enum';
+import { RecyclerListItem } from '@models/user/recycler.view-model';
+import { MOCK_RECYCLERS } from '@core/mock/data/user/user.mock';
 import {
   getRecyclerStatusBadgeVariant,
   getRecyclerStatusLabel,

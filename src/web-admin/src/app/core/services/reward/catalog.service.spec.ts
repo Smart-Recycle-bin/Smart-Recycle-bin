@@ -3,9 +3,9 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { CatalogService } from './catalog.service';
 import { ApiClientService } from '../api/api-client.service';
-import { environment } from '../../../../environments/environment';
-import { RewardCategory } from '../../models/reward/reward-category.enum';
-import { RewardStatus } from '../../models/reward/reward-status.enum';
+import { environment } from '@env/environment';
+import { RewardCategory } from '@models/reward/reward-category.enum';
+import { RewardStatus } from '@models/reward/reward-status.enum';
 
 describe('CatalogService', () => {
   let service: CatalogService;

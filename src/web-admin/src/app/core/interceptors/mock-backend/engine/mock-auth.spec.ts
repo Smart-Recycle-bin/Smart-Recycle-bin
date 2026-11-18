@@ -6,8 +6,8 @@ import {
   parseMockToken,
   authenticateMockRequest,
 } from './mock-auth';
-import { UserRole } from '../../../models/user/user-role.enum';
-import { ApiErrorCode } from '../../../models/common/api-error-code.enum';
+import { UserRole } from '@models/user/user-role.enum';
+import { ApiErrorCode } from '@models/common/api-error-code.enum';
 
 describe('mock-auth', () => {
   it('generates a valid mock access token with expected payload', () => {

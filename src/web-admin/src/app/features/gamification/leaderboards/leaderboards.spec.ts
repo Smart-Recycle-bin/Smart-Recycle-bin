@@ -2,12 +2,12 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, Subject, throwError } from 'rxjs';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { Leaderboards } from './leaderboards';
-import { LeaderboardService } from '../../../core/services/gamification/leaderboard.service';
+import { LeaderboardService } from '@services/gamification/leaderboard.service';
 import {
   MOCK_LEADERBOARD_WEEKLY,
   MOCK_MILESTONE_BADGES,
-} from '../../../core/mock/data/gamification/gamification.mock';
-import { LeaderboardScope } from '../../../core/models/gamification/leaderboard-scope.enum';
+} from '@core/mock/data/gamification/gamification.mock';
+import { LeaderboardScope } from '@models/gamification/leaderboard-scope.enum';
 import { getRankBadgeClass } from './leaderboards.config';
 
 describe('Leaderboards', () => {

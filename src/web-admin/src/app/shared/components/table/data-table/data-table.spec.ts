@@ -1,7 +1,7 @@
 import { Component, signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { vi } from 'vitest';
-import { BadgeVariant } from '../../badge/badge';
+import { BadgeVariant } from '@shared/components/badge/badge';
 import { CellTemplateDirective } from './cell-template.directive';
 import { DataTable, TableAction, TableColumn, TableSort } from './data-table';
 import { MonoIdCell } from '../cells/mono-id-cell/mono-id-cell';

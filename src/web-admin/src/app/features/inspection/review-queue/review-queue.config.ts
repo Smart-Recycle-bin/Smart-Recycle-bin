@@ -1,8 +1,8 @@
-import { TableColumn } from '../../../shared/components/table/data-table/data-table';
-import { InspectionReportListItem } from '../../../core/models/inspection/inspection.view-model';
-import { InspectionReportStatus, INSPECTION_REPORT_STATUS_LABELS } from '../../../core/models/inspection/inspection-report-status.enum';
-import { BadgeVariant } from '../../../shared/components/badge/badge';
-import { SelectOption } from '../../../shared/components/form/select/select';
+import { TableColumn } from '@shared/components/table/data-table/data-table';
+import { InspectionReportListItem } from '@models/inspection/inspection.view-model';
+import { InspectionReportStatus, INSPECTION_REPORT_STATUS_LABELS } from '@models/inspection/inspection-report-status.enum';
+import { BadgeVariant } from '@shared/components/badge/badge';
+import { SelectOption } from '@shared/components/form/select/select';
 
 export const REVIEW_QUEUE_TABLE_COLUMNS: TableColumn<InspectionReportListItem>[] = [
   {

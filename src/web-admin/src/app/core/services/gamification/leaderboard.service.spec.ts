@@ -3,8 +3,8 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { LeaderboardService } from './leaderboard.service';
 import { ApiClientService } from '../api/api-client.service';
-import { environment } from '../../../../environments/environment';
-import { LeaderboardScope } from '../../models/gamification/leaderboard-scope.enum';
+import { environment } from '@env/environment';
+import { LeaderboardScope } from '@models/gamification/leaderboard-scope.enum';
 
 describe('LeaderboardService', () => {
   let service: LeaderboardService;

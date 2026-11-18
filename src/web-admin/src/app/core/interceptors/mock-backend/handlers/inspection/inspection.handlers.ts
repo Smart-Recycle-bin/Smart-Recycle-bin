@@ -1,14 +1,14 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { MockRouter } from '../../engine/mock-router';
-import { getMockDb } from '../../../../mock/db/mock-db';
-import { InspectionReportStatus } from '../../../../models/inspection/inspection-report-status.enum';
-import { ApiErrorCode } from '../../../../models/common/api-error-code.enum';
+import { MockRouter } from '@core/interceptors/mock-backend/engine/mock-router';
+import { getMockDb } from '@core/mock/db/mock-db';
+import { InspectionReportStatus } from '@models/inspection/inspection-report-status.enum';
+import { ApiErrorCode } from '@models/common/api-error-code.enum';
 import { okResponse, errorResponse, requireSysAdmin, paginate } from '../handler-utils';
 import {
   CorrectCategoryRequest,
   InspectionActionResponse,
-} from '../../../../models/inspection/inspection.dto';
-import { InspectionSummary } from '../../../../models/inspection/inspection.view-model';
+} from '@models/inspection/inspection.dto';
+import { InspectionSummary } from '@models/inspection/inspection.view-model';
 
 /**
  * Derives and synchronizes all inspection summary counters directly from

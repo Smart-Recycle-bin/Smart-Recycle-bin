@@ -9,8 +9,8 @@ import {
   sanitizeLogValue,
 } from './logger.service';
 import { GlobalErrorHandler, CHUNK_RELOAD_SESSION_KEY } from './global-error-handler';
-import { ToastService } from '../services/toast/toast.service';
-import { environment } from '../../../environments/environment';
+import { ToastService } from '@services/toast/toast.service';
+import { environment } from '@env/environment';
 
 describe('LoggerService & GlobalErrorHandler', () => {
   let loggerService: LoggerService;

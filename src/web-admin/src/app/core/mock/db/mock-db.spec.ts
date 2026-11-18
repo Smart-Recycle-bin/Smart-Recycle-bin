@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { BinStatus } from '../../models/bin/bin-status.enum';
-import { InspectionReportStatus } from '../../models/inspection/inspection-report-status.enum';
+import { BinStatus } from '@models/bin/bin-status.enum';
+import { InspectionReportStatus } from '@models/inspection/inspection-report-status.enum';
 import { getMockDb, resetMockDb } from './mock-db';
 
 describe('Mock Database (mock-db)', () => {

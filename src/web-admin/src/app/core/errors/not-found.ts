@@ -1,4 +1,4 @@
-import { ApiErrorCode } from '../models/common/api-error-code.enum';
+import { ApiErrorCode } from '@models/common/api-error-code.enum';
 
 /**
  * Checks if an error represents an HTTP 404 or NOT_FOUND application error.

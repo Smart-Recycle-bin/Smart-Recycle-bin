@@ -1,8 +1,8 @@
 import { TestBed } from '@angular/core/testing';
 import { TokenStorageService } from './token-storage.service';
-import { StoredSession } from '../../models/auth/auth.dto';
-import { UserRole } from '../../models/user/user-role.enum';
-import { environment } from '../../../../environments/environment';
+import { StoredSession } from '@models/auth/auth.dto';
+import { UserRole } from '@models/user/user-role.enum';
+import { environment } from '@env/environment';
 
 describe('TokenStorageService', () => {
   let service: TokenStorageService;

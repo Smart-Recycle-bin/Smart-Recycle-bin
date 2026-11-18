@@ -9,16 +9,16 @@ import {
 } from '@angular/core';
 import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { filter } from 'rxjs';
-import { ADMIN_NAV_SECTIONS } from '../../core/navigation/admin-nav';
-import { CurrentUser, CurrentUserService } from '../../core/services/user/current-user.service';
-import { AuthService } from '../../core/services/auth/auth.service';
-import { NotificationsService } from '../../core/services/notification/notifications.service';
-import { ReviewQueueStateService } from '../../core/services/inspection/review-queue-state.service';
-import { NotificationItem } from '../../core/models/notification/notification.view-model';
-import { Sidebar, SidebarSection } from '../../shared/components/sidebar/sidebar';
-import { Topbar, TopbarMenuItem } from '../../shared/components/topbar/topbar';
-import { Icon } from '../../shared/components/icon/icon';
-import { OnlineService } from '../../core/services/online/online.service';
+import { ADMIN_NAV_SECTIONS } from './admin-nav';
+import { CurrentUser, CurrentUserService } from '@services/user/current-user.service';
+import { AuthService } from '@services/auth/auth.service';
+import { NotificationsService } from '@services/notification/notifications.service';
+import { ReviewQueueStateService } from '@services/inspection/review-queue-state.service';
+import { NotificationItem } from '@models/notification/notification.view-model';
+import { Sidebar, SidebarSection } from '@shared/components/sidebar/sidebar';
+import { Topbar, TopbarMenuItem } from '@shared/components/topbar/topbar';
+import { Icon } from '@shared/components/icon/icon';
+import { OnlineService } from '@services/online/online.service';
 
 @Component({
   selector: 'app-admin-layout',

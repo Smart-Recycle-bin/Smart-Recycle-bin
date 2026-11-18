@@ -1,6 +1,6 @@
 import { inject, Injectable, InjectionToken } from '@angular/core';
 import { Router } from '@angular/router';
-import { environment } from '../../../environments/environment';
+import { environment } from '@env/environment';
 
 export type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 

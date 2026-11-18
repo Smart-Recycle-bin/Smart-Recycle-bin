@@ -9,7 +9,7 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import { Icon, IconName } from '../../icon/icon';
+import { Icon, IconName } from '@shared/components/icon/icon';
 
 export interface DropdownMenuItem {
   id: string;

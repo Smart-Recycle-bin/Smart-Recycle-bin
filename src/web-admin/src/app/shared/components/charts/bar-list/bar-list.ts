@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
-import { ThemeService } from '../../../../core/services/theme/theme.service';
+import { ThemeService } from '@services/theme/theme.service';
 
 export type BarListTone = 'brand' | 'info' | 'warning' | 'danger' | 'purple';
 

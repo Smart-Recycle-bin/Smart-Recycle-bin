@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { HttpErrorResponse } from '@angular/common/http';
 import { getErrorMessage, getFieldErrors, isApiErrorCode } from './error-message';
 import { ApiError } from './api-error';
-import { ApiErrorCode } from '../models/common/api-error-code.enum';
+import { ApiErrorCode } from '@models/common/api-error-code.enum';
 
 describe('error-message utilities', () => {
   describe('getErrorMessage', () => {

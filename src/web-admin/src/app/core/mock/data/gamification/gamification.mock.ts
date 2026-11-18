@@ -1,4 +1,4 @@
-import { LeaderboardRow, MilestoneBadge } from '../../../models/gamification/gamification.view-model';
+import { LeaderboardRow, MilestoneBadge } from '@models/gamification/gamification.view-model';
 
 export const MOCK_LEADERBOARD_WEEKLY: LeaderboardRow[] = [
   // 10 visible rows from PDF p15 (Showing 1-10 of 12)

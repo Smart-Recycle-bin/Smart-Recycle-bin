@@ -2,12 +2,12 @@ import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ApiClientService } from '../api/api-client.service';
 import { API_ENDPOINTS } from '../api/api-endpoints';
-import { LedgerQuery, LedgerRow } from '../../models/wallet/ledger.view-model';
-import { Page } from '../../models/common/page.model';
+import { LedgerQuery, LedgerRow } from '@models/wallet/ledger.view-model';
+import { Page } from '@models/common/page.model';
 import {
   ManualAdjustmentRequest,
   ManualAdjustmentResponse,
-} from '../../models/wallet/ledger.dto';
+} from '@models/wallet/ledger.dto';
 
 @Injectable({
   providedIn: 'root',

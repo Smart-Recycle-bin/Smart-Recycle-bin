@@ -2,13 +2,13 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { Catalog } from './catalog';
-import { CatalogService } from '../../../core/services/reward/catalog.service';
-import { ToastService } from '../../../core/services/toast/toast.service';
-import { MOCK_REWARDS } from '../../../core/mock/data/reward/reward.mock';
-import { formatDate } from '../../../shared/utils/datetime';
-import { RewardStatus } from '../../../core/models/reward/reward-status.enum';
-import { RewardCategory } from '../../../core/models/reward/reward-category.enum';
-import { VoucherCodeType } from '../../../core/models/reward/voucher-code-type.enum';
+import { CatalogService } from '@services/reward/catalog.service';
+import { ToastService } from '@services/toast/toast.service';
+import { MOCK_REWARDS } from '@core/mock/data/reward/reward.mock';
+import { formatDate } from '@shared/utils/datetime';
+import { RewardStatus } from '@models/reward/reward-status.enum';
+import { RewardCategory } from '@models/reward/reward-category.enum';
+import { VoucherCodeType } from '@models/reward/voucher-code-type.enum';
 
 describe('Catalog', () => {
   let component: Catalog;

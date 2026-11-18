@@ -10,7 +10,7 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import { ThemeService } from '../../../core/services/theme/theme.service';
+import { ThemeService } from '@services/theme/theme.service';
 import { Icon } from '../icon/icon';
 import { Avatar } from '../avatar/avatar';
 import { SearchInput } from '../form/search-input/search-input';

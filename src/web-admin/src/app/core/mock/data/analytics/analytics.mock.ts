@@ -1,5 +1,5 @@
-import { BinStatus } from '../../../models/bin/bin-status.enum';
-import { DashboardOverview } from '../../../models/analytics/analytics.view-model';
+import { BinStatus } from '@models/bin/bin-status.enum';
+import { DashboardOverview } from '@models/analytics/analytics.view-model';
 
 export const MOCK_OVERVIEW_7D: DashboardOverview = {
   // Exact values from PDF p2 & p17

@@ -1,6 +1,6 @@
 import { cairoLocalToIso } from '../_dates';
-import { BinStatus } from '../../../models/bin/bin-status.enum';
-import { BinListItem } from '../../../models/bin/bin.view-model';
+import { BinStatus } from '@models/bin/bin-status.enum';
+import { BinListItem } from '@models/bin/bin.view-model';
 
 export const MOCK_BINS: BinListItem[] = [
   // --- Greater Cairo Region (16 bins: 10 Available, 3 ≥80%, 3 ≥95%, 0 Offline) ---

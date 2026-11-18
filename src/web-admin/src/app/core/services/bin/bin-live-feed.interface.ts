@@ -1,6 +1,6 @@
 import { InjectionToken, Signal } from '@angular/core';
 import { Observable } from 'rxjs';
-import { BinMapQuery, BinMapResponse } from '../../models/bin/bin-map.model';
+import { BinMapQuery, BinMapResponse } from '@models/bin/bin-map.model';
 
 export type BinLiveFeedStatus = 'live' | 'stale' | 'paused' | 'error';
 

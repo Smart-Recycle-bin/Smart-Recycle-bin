@@ -3,8 +3,8 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { CollectorsService } from './collectors.service';
 import { ApiClientService } from '../api/api-client.service';
-import { environment } from '../../../../environments/environment';
-import { CollectorCredentialsMode } from '../../models/collector/collector-credentials-mode.enum';
+import { environment } from '@env/environment';
+import { CollectorCredentialsMode } from '@models/collector/collector-credentials-mode.enum';
 
 describe('CollectorsService', () => {
   let service: CollectorsService;

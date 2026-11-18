@@ -13,7 +13,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { ControlValueAccessor, NgControl } from '@angular/forms';
-import { Icon } from '../../icon/icon';
+import { Icon } from '@shared/components/icon/icon';
 import { FormField } from '../form-field/form-field';
 import { bindNgControlState, syncNgControlState } from '../form-control.utils';
 

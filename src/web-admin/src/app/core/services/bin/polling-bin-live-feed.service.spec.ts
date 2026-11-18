@@ -4,8 +4,8 @@ import { of, throwError, Subject } from 'rxjs';
 import { PollingBinLiveFeed } from './polling-bin-live-feed.service';
 import { BinsService } from './bins.service';
 import { AppConfigService } from '../config/app-config.service';
-import { BinMapResponse } from '../../models/bin/bin-map.model';
-import { BinStatus } from '../../models/bin/bin-status.enum';
+import { BinMapResponse } from '@models/bin/bin-map.model';
+import { BinStatus } from '@models/bin/bin-status.enum';
 
 describe('PollingBinLiveFeed', () => {
   let feed: PollingBinLiveFeed;

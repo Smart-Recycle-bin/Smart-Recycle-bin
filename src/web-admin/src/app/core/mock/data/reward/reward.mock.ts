@@ -1,9 +1,9 @@
 import { MOCK_IMAGE_URL } from '../_assets';
 import { cairoLocalToIso } from '../_dates';
-import { RewardCategory } from '../../../models/reward/reward-category.enum';
-import { RewardStatus } from '../../../models/reward/reward-status.enum';
-import { VoucherCodeType } from '../../../models/reward/voucher-code-type.enum';
-import { AdminRewardItem } from '../../../models/reward/reward.view-model';
+import { RewardCategory } from '@models/reward/reward-category.enum';
+import { RewardStatus } from '@models/reward/reward-status.enum';
+import { VoucherCodeType } from '@models/reward/voucher-code-type.enum';
+import { AdminRewardItem } from '@models/reward/reward.view-model';
 
 export const MOCK_REWARDS: AdminRewardItem[] = [
   // 8 items from PDF p12 & p14 (RWD-001 ... RWD-008)

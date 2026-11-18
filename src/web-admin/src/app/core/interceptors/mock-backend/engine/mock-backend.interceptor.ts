@@ -4,10 +4,10 @@ import {
   HttpResponse,
 } from '@angular/common/http';
 import { timer, switchMap, throwError, of } from 'rxjs';
-import { environment } from '../../../../../environments/environment';
+import { environment } from '@env/environment';
 import { MockRouter } from './mock-router';
 import { registerAllMockHandlers } from '../handlers';
-import { ApiErrorCode } from '../../../models/common/api-error-code.enum';
+import { ApiErrorCode } from '@models/common/api-error-code.enum';
 
 let mockRouterInstance: MockRouter | null = null;
 

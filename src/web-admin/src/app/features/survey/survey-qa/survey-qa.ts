@@ -9,38 +9,38 @@ import {
 } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { SurveyQaService } from '../../../core/services/survey/survey-qa.service';
+import { SurveyQaService } from '@services/survey/survey-qa.service';
 import {
   RecentSurveyRow,
   SurveyQaQuery,
   SurveyQaSummary,
-} from '../../../core/models/survey/survey.view-model';
+} from '@models/survey/survey.view-model';
 import {
   SurveyOutcome,
   SURVEY_OUTCOME_LABELS,
-} from '../../../core/models/survey/survey-outcome.enum';
-import { PageHeader } from '../../../shared/components/page-header/page-header';
-import { Stat } from '../../../shared/components/stat/stat';
+} from '@models/survey/survey-outcome.enum';
+import { PageHeader } from '@shared/components/page-header/page-header';
+import { Stat } from '@shared/components/stat/stat';
 import {
   DonutChart,
   DonutSegment,
-} from '../../../shared/components/charts/donut-chart/donut-chart';
+} from '@shared/components/charts/donut-chart/donut-chart';
 import {
   AreaChart,
   AreaChartPoint,
-} from '../../../shared/components/charts/area-chart/area-chart';
+} from '@shared/components/charts/area-chart/area-chart';
 import {
   BarList,
   BarListItem,
-} from '../../../shared/components/charts/bar-list/bar-list';
-import { Card } from '../../../shared/components/card/card';
-import { Badge, BadgeVariant } from '../../../shared/components/badge/badge';
-import { DataTable } from '../../../shared/components/table/data-table/data-table';
-import { CellTemplateDirective } from '../../../shared/components/table/data-table/cell-template.directive';
-import { MonoIdCell } from '../../../shared/components/table/cells/mono-id-cell/mono-id-cell';
-import { ResourceState } from '../../../shared/components/resource-state/resource-state';
-import { Skeleton } from '../../../shared/components/skeleton/skeleton';
-import { createPagedList } from '../../../shared/utils/paged-list';
+} from '@shared/components/charts/bar-list/bar-list';
+import { Card } from '@shared/components/card/card';
+import { Badge, BadgeVariant } from '@shared/components/badge/badge';
+import { DataTable } from '@shared/components/table/data-table/data-table';
+import { CellTemplateDirective } from '@shared/components/table/data-table/cell-template.directive';
+import { MonoIdCell } from '@shared/components/table/cells/mono-id-cell/mono-id-cell';
+import { ResourceState } from '@shared/components/resource-state/resource-state';
+import { Skeleton } from '@shared/components/skeleton/skeleton';
+import { createPagedList } from '@shared/utils/paged-list';
 import {
   BIN_REJECTION_THRESHOLDS,
   formatShortDate,

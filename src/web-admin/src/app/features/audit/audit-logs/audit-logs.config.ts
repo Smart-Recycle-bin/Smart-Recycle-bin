@@ -1,11 +1,11 @@
-import { TableColumn } from '../../../shared/components/table/data-table/data-table';
-import { AuditLogRow } from '../../../core/models/audit/audit.view-model';
+import { TableColumn } from '@shared/components/table/data-table/data-table';
+import { AuditLogRow } from '@models/audit/audit.view-model';
 import {
   AuditActionType,
   AUDIT_ACTION_TYPE_LABELS,
-} from '../../../core/models/audit/audit-action-type.enum';
-import { BadgeVariant } from '../../../shared/components/badge/badge';
-import { SelectOption } from '../../../shared/components/form/select/select';
+} from '@models/audit/audit-action-type.enum';
+import { BadgeVariant } from '@shared/components/badge/badge';
+import { SelectOption } from '@shared/components/form/select/select';
 
 export const AUDIT_ACTION_BADGE_VARIANTS: Record<AuditActionType, BadgeVariant> = {
   [AuditActionType.BinAssignment]: 'info',

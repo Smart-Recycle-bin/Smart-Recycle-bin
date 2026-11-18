@@ -2,14 +2,14 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { signal } from '@angular/core';
 import { AdminLayout } from './admin-layout';
-import { AuthService } from '../../core/services/auth/auth.service';
-import { NotificationsService } from '../../core/services/notification/notifications.service';
-import { ReviewQueueStateService } from '../../core/services/inspection/review-queue-state.service';
-import { OnlineService } from '../../core/services/online/online.service';
+import { AuthService } from '@services/auth/auth.service';
+import { NotificationsService } from '@services/notification/notifications.service';
+import { ReviewQueueStateService } from '@services/inspection/review-queue-state.service';
+import { OnlineService } from '@services/online/online.service';
 import {
   NotificationItem,
   NotificationsResponse,
-} from '../../core/models/notification/notification.view-model';
+} from '@models/notification/notification.view-model';
 import { of } from 'rxjs';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 

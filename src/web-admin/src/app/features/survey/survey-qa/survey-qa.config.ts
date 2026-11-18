@@ -1,9 +1,9 @@
-import { TableColumn } from '../../../shared/components/table/data-table/data-table';
-import { RecentSurveyRow } from '../../../core/models/survey/survey.view-model';
-import { SurveyOutcome } from '../../../core/models/survey/survey-outcome.enum';
-import { BadgeVariant } from '../../../shared/components/badge/badge';
-import { StatTrend } from '../../../shared/components/stat/stat';
-import { BarListThresholds } from '../../../shared/components/charts/bar-list/bar-list';
+import { TableColumn } from '@shared/components/table/data-table/data-table';
+import { RecentSurveyRow } from '@models/survey/survey.view-model';
+import { SurveyOutcome } from '@models/survey/survey-outcome.enum';
+import { BadgeVariant } from '@shared/components/badge/badge';
+import { StatTrend } from '@shared/components/stat/stat';
+import { BarListThresholds } from '@shared/components/charts/bar-list/bar-list';
 
 export const RECENT_SURVEY_COLUMNS: TableColumn<RecentSurveyRow>[] = [
   {
@@ -93,7 +93,7 @@ export function getRejectRateTrend(delta: number): StatTrend {
   return 'neutral';
 }
 
-import { environment } from '../../../../environments/environment';
+import { environment } from '@env/environment';
 
 export function formatShortDate(dateStr: string): string {
   if (!dateStr) return '';

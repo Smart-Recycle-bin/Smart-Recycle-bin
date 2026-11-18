@@ -1,5 +1,5 @@
-import { SurveyOutcome } from '../../../models/survey/survey-outcome.enum';
-import { RecentSurveyRow, SurveyQaSummary } from '../../../models/survey/survey.view-model';
+import { SurveyOutcome } from '@models/survey/survey-outcome.enum';
+import { RecentSurveyRow, SurveyQaSummary } from '@models/survey/survey.view-model';
 
 export const MOCK_RECENT_SURVEYS: RecentSurveyRow[] = [
   // 6 visible rows from PDF p11 (Showing 1-6 of 9)

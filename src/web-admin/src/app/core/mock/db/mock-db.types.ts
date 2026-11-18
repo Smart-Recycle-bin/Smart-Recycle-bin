@@ -1,20 +1,20 @@
-import { AuthUser } from '../../models/auth/auth.dto';
-import { RecyclerListItem } from '../../models/user/recycler.view-model';
-import { CollectorListItem } from '../../models/collector/collector.view-model';
-import { BinListItem } from '../../models/bin/bin.view-model';
+import { AuthUser } from '@models/auth/auth.dto';
+import { RecyclerListItem } from '@models/user/recycler.view-model';
+import { CollectorListItem } from '@models/collector/collector.view-model';
+import { BinListItem } from '@models/bin/bin.view-model';
 import {
   InspectionReportListItem,
   InspectionReportDetail,
   InspectionSummary,
   WasteTypeOption,
-} from '../../models/inspection/inspection.view-model';
-import { SurveyQaSummary, RecentSurveyRow } from '../../models/survey/survey.view-model';
-import { LedgerRow } from '../../models/wallet/ledger.view-model';
-import { AdminRewardItem } from '../../models/reward/reward.view-model';
-import { LeaderboardRow, MilestoneBadge } from '../../models/gamification/gamification.view-model';
-import { NotificationItem } from '../../models/notification/notification.view-model';
-import { AuditLogRow } from '../../models/audit/audit.view-model';
-import { DashboardOverview } from '../../models/analytics/analytics.view-model';
+} from '@models/inspection/inspection.view-model';
+import { SurveyQaSummary, RecentSurveyRow } from '@models/survey/survey.view-model';
+import { LedgerRow } from '@models/wallet/ledger.view-model';
+import { AdminRewardItem } from '@models/reward/reward.view-model';
+import { LeaderboardRow, MilestoneBadge } from '@models/gamification/gamification.view-model';
+import { NotificationItem } from '@models/notification/notification.view-model';
+import { AuditLogRow } from '@models/audit/audit.view-model';
+import { DashboardOverview } from '@models/analytics/analytics.view-model';
 
 /**
  * Mock administrator credentials record for mock auth validation.

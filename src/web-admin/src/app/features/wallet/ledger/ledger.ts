@@ -8,21 +8,21 @@ import {
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { map } from 'rxjs/operators';
-import { environment } from '../../../../environments/environment';
-import { LedgerRow, LedgerQuery } from '../../../core/models/wallet/ledger.view-model';
-import { LedgerSource } from '../../../core/models/wallet/ledger-source.enum';
-import { LedgerEntryType } from '../../../core/models/wallet/ledger-entry-type.enum';
-import { ManualAdjustmentRequest } from '../../../core/models/wallet/ledger.dto';
-import { LedgerService } from '../../../core/services/wallet/ledger.service';
-import { RecyclersService } from '../../../core/services/user/recyclers.service';
-import { ToastService } from '../../../core/services/toast/toast.service';
-import { ApiErrorCode } from '../../../core/models/common/api-error-code.enum';
-import { isApiErrorCode, getErrorMessage, getFieldErrors } from '../../../core/errors/error-message';
+import { environment } from '@env/environment';
+import { LedgerRow, LedgerQuery } from '@models/wallet/ledger.view-model';
+import { LedgerSource } from '@models/wallet/ledger-source.enum';
+import { LedgerEntryType } from '@models/wallet/ledger-entry-type.enum';
+import { ManualAdjustmentRequest } from '@models/wallet/ledger.dto';
+import { LedgerService } from '@services/wallet/ledger.service';
+import { RecyclersService } from '@services/user/recyclers.service';
+import { ToastService } from '@services/toast/toast.service';
+import { ApiErrorCode } from '@models/common/api-error-code.enum';
+import { isApiErrorCode, getErrorMessage, getFieldErrors } from '@core/errors/error-message';
 import {
   trimmedRequired,
   maxLen,
   positiveInt,
-} from '../../../shared/validators';
+} from '@shared/validators';
 import {
   LEDGER_TABLE_COLUMNS,
   LEDGER_TYPE_OPTIONS,
@@ -32,28 +32,28 @@ import {
   getLedgerSourceBadgeVariant,
   getLedgerSourceLabel,
 } from './ledger.config';
-import { PageHeader } from '../../../shared/components/page-header/page-header';
-import { Notice } from '../../../shared/components/notice/notice';
-import { SearchInput } from '../../../shared/components/form/search-input/search-input';
-import { Select } from '../../../shared/components/form/select/select';
-import { AsyncSelect } from '../../../shared/components/form/async-select/async-select';
-import { DateRangeInput, DateRangeValue } from '../../../shared/components/form/date-range-input/date-range-input';
-import { DataTable } from '../../../shared/components/table/data-table/data-table';
-import { CellTemplateDirective } from '../../../shared/components/table/data-table/cell-template.directive';
-import { UserCell } from '../../../shared/components/table/cells/user-cell/user-cell';
-import { MonoIdCell } from '../../../shared/components/table/cells/mono-id-cell/mono-id-cell';
-import { NumberCell } from '../../../shared/components/table/cells/number-cell/number-cell';
-import { Badge } from '../../../shared/components/badge/badge';
-import { ResourceState } from '../../../shared/components/resource-state/resource-state';
-import { Drawer } from '../../../shared/components/overlay/drawer/drawer';
-import { ConfirmDialog } from '../../../shared/components/overlay/confirm-dialog/confirm-dialog';
-import { SegmentedControl } from '../../../shared/components/segmented-control/segmented-control';
-import { Input } from '../../../shared/components/form/input/input';
-import { NumberInput } from '../../../shared/components/form/number-input/number-input';
-import { Textarea } from '../../../shared/components/form/textarea/textarea';
-import { Button } from '../../../shared/components/button/button';
-import { DateTimePipe } from '../../../shared/pipes';
-import { createPagedList } from '../../../shared/utils/paged-list';
+import { PageHeader } from '@shared/components/page-header/page-header';
+import { Notice } from '@shared/components/notice/notice';
+import { SearchInput } from '@shared/components/form/search-input/search-input';
+import { Select } from '@shared/components/form/select/select';
+import { AsyncSelect } from '@shared/components/form/async-select/async-select';
+import { DateRangeInput, DateRangeValue } from '@shared/components/form/date-range-input/date-range-input';
+import { DataTable } from '@shared/components/table/data-table/data-table';
+import { CellTemplateDirective } from '@shared/components/table/data-table/cell-template.directive';
+import { UserCell } from '@shared/components/table/cells/user-cell/user-cell';
+import { MonoIdCell } from '@shared/components/table/cells/mono-id-cell/mono-id-cell';
+import { NumberCell } from '@shared/components/table/cells/number-cell/number-cell';
+import { Badge } from '@shared/components/badge/badge';
+import { ResourceState } from '@shared/components/resource-state/resource-state';
+import { Drawer } from '@shared/components/overlay/drawer/drawer';
+import { ConfirmDialog } from '@shared/components/overlay/confirm-dialog/confirm-dialog';
+import { SegmentedControl } from '@shared/components/segmented-control/segmented-control';
+import { Input } from '@shared/components/form/input/input';
+import { NumberInput } from '@shared/components/form/number-input/number-input';
+import { Textarea } from '@shared/components/form/textarea/textarea';
+import { Button } from '@shared/components/button/button';
+import { DateTimePipe } from '@shared/pipes';
+import { createPagedList } from '@shared/utils/paged-list';
 
 @Component({
   selector: 'app-ledger',

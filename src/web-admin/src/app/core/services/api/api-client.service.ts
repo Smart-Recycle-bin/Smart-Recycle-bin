@@ -1,9 +1,9 @@
 import { HttpClient, HttpContext, HttpHeaders, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { map, Observable } from 'rxjs';
-import { environment } from '../../../../environments/environment';
-import { ApiResponse } from '../../models/common/api-response.dto';
-import { Page, PageQuery } from '../../models/common/page.model';
+import { environment } from '@env/environment';
+import { ApiResponse } from '@models/common/api-response.dto';
+import { Page, PageQuery } from '@models/common/page.model';
 
 export interface RequestOptions {
   params?: Record<string, unknown> | HttpParams;

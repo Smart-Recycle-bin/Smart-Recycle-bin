@@ -1,20 +1,20 @@
-import { TableAction, TableColumn } from '../../../shared/components/table/data-table/data-table';
-import { AdminRewardItem } from '../../../core/models/reward/reward.view-model';
+import { TableAction, TableColumn } from '@shared/components/table/data-table/data-table';
+import { AdminRewardItem } from '@models/reward/reward.view-model';
 import {
   RewardStatus,
   REWARD_STATUS_LABELS,
-} from '../../../core/models/reward/reward-status.enum';
+} from '@models/reward/reward-status.enum';
 import {
   RewardCategory,
   REWARD_CATEGORY_LABELS,
-} from '../../../core/models/reward/reward-category.enum';
+} from '@models/reward/reward-category.enum';
 import {
   VoucherCodeType,
   VOUCHER_CODE_TYPE_LABELS,
-} from '../../../core/models/reward/voucher-code-type.enum';
-import { BadgeVariant } from '../../../shared/components/badge/badge';
-import { SegmentedOption } from '../../../shared/components/segmented-control/segmented-control';
-import { SelectOption } from '../../../shared/components/form/select/select';
+} from '@models/reward/voucher-code-type.enum';
+import { BadgeVariant } from '@shared/components/badge/badge';
+import { SegmentedOption } from '@shared/components/segmented-control/segmented-control';
+import { SelectOption } from '@shared/components/form/select/select';
 
 export type CatalogViewMode = 'grid' | 'table';
 

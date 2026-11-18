@@ -12,15 +12,15 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { BinMapItem, BinMapQuery } from '../../../core/models/bin/bin-map.model';
-import { BinStatus, BIN_STATUS_LABELS } from '../../../core/models/bin/bin-status.enum';
-import { BIN_LIVE_FEED } from '../../../core/services/bin/bin-live-feed.interface';
-import { PollingBinLiveFeed } from '../../../core/services/bin/polling-bin-live-feed.service';
-import { sanitizeMapBins } from '../../../core/utils/bin-map-sanitizer';
-import { diffBins } from '../../../core/utils/bin-diff';
+import { BinMapItem, BinMapQuery } from '@models/bin/bin-map.model';
+import { BinStatus, BIN_STATUS_LABELS } from '@models/bin/bin-status.enum';
+import { BIN_LIVE_FEED } from '@services/bin/bin-live-feed.interface';
+import { PollingBinLiveFeed } from '@services/bin/polling-bin-live-feed.service';
+import { sanitizeMapBins } from './utils/bin-map-sanitizer';
+import { diffBins } from './utils/bin-diff';
 import { BinMapCanvas } from './components/bin-map-canvas/bin-map-canvas';
 import { BinDetailCard } from './components/bin-detail-card/bin-detail-card';
-import { Icon } from '../../../shared/components/icon/icon';
+import { Icon } from '@shared/components/icon/icon';
 
 export interface StatusFilterOption {
   status: BinStatus;

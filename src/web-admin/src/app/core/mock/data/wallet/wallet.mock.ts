@@ -1,7 +1,7 @@
 import { cairoLocalToIso } from '../_dates';
-import { LedgerEntryType } from '../../../models/wallet/ledger-entry-type.enum';
-import { LedgerSource } from '../../../models/wallet/ledger-source.enum';
-import { LedgerRow } from '../../../models/wallet/ledger.view-model';
+import { LedgerEntryType } from '@models/wallet/ledger-entry-type.enum';
+import { LedgerSource } from '@models/wallet/ledger-source.enum';
+import { LedgerRow } from '@models/wallet/ledger.view-model';
 
 export const MOCK_LEDGER_ROWS: LedgerRow[] = [
   // 10 visible rows from PDF p8 (Showing 1-10 of 15)

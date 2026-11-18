@@ -1,9 +1,9 @@
-import { TableAction, TableColumn } from '../../../shared/components/table/data-table/data-table';
-import { CollectorListItem } from '../../../core/models/collector/collector.view-model';
-import { AccountStatus, ACCOUNT_STATUS_LABELS } from '../../../core/models/user/account-status.enum';
-import { BadgeVariant } from '../../../shared/components/badge/badge';
-import { CollectorCredentialsMode } from '../../../core/models/collector/collector-credentials-mode.enum';
-import { SegmentedOption } from '../../../shared/components/segmented-control/segmented-control';
+import { TableAction, TableColumn } from '@shared/components/table/data-table/data-table';
+import { CollectorListItem } from '@models/collector/collector.view-model';
+import { AccountStatus, ACCOUNT_STATUS_LABELS } from '@models/user/account-status.enum';
+import { BadgeVariant } from '@shared/components/badge/badge';
+import { CollectorCredentialsMode } from '@models/collector/collector-credentials-mode.enum';
+import { SegmentedOption } from '@shared/components/segmented-control/segmented-control';
 
 export const COLLECTOR_TABLE_COLUMNS: TableColumn<CollectorListItem>[] = [
   {

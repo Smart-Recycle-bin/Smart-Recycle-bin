@@ -7,28 +7,28 @@ import {
 } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { Router } from '@angular/router';
-import { InspectionReportListItem, InspectionReportQuery, InspectionSummary } from '../../../core/models/inspection/inspection.view-model';
-import { InspectionReportStatus } from '../../../core/models/inspection/inspection-report-status.enum';
-import { InspectionReportsService } from '../../../core/services/inspection/inspection-reports.service';
-import { ReviewQueueStateService } from '../../../core/services/inspection/review-queue-state.service';
+import { InspectionReportListItem, InspectionReportQuery, InspectionSummary } from '@models/inspection/inspection.view-model';
+import { InspectionReportStatus } from '@models/inspection/inspection-report-status.enum';
+import { InspectionReportsService } from '@services/inspection/inspection-reports.service';
+import { ReviewQueueStateService } from '@services/inspection/review-queue-state.service';
 import {
   REVIEW_QUEUE_TABLE_COLUMNS,
   INSPECTION_STATUS_OPTIONS,
   getInspectionReportStatusBadgeVariant,
   getInspectionReportStatusLabel,
 } from './review-queue.config';
-import { PageHeader } from '../../../shared/components/page-header/page-header';
-import { SearchInput } from '../../../shared/components/form/search-input/search-input';
-import { Select } from '../../../shared/components/form/select/select';
-import { DataTable } from '../../../shared/components/table/data-table/data-table';
-import { CellTemplateDirective } from '../../../shared/components/table/data-table/cell-template.directive';
-import { MonoIdCell } from '../../../shared/components/table/cells/mono-id-cell/mono-id-cell';
-import { Badge } from '../../../shared/components/badge/badge';
-import { Progress, ProgressColor } from '../../../shared/components/progress/progress';
-import { ResourceState } from '../../../shared/components/resource-state/resource-state';
-import { Icon } from '../../../shared/components/icon/icon';
-import { DateTimePipe } from '../../../shared/pipes';
-import { createPagedList } from '../../../shared/utils/paged-list';
+import { PageHeader } from '@shared/components/page-header/page-header';
+import { SearchInput } from '@shared/components/form/search-input/search-input';
+import { Select } from '@shared/components/form/select/select';
+import { DataTable } from '@shared/components/table/data-table/data-table';
+import { CellTemplateDirective } from '@shared/components/table/data-table/cell-template.directive';
+import { MonoIdCell } from '@shared/components/table/cells/mono-id-cell/mono-id-cell';
+import { Badge } from '@shared/components/badge/badge';
+import { Progress, ProgressColor } from '@shared/components/progress/progress';
+import { ResourceState } from '@shared/components/resource-state/resource-state';
+import { Icon } from '@shared/components/icon/icon';
+import { DateTimePipe } from '@shared/pipes';
+import { createPagedList } from '@shared/utils/paged-list';
 
 @Component({
   selector: 'app-review-queue',

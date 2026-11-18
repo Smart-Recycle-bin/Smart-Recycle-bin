@@ -9,21 +9,21 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs/operators';
-import { CollectorListItem, CollectorQuery, CollectorAssignedBin } from '../../../core/models/collector/collector.view-model';
-import { CollectorCredentialsMode } from '../../../core/models/collector/collector-credentials-mode.enum';
-import { CreateCollectorRequest, UpdateCollectorRequest } from '../../../core/models/collector/collector.dto';
-import { CollectorsService } from '../../../core/services/collector/collectors.service';
-import { BinsService } from '../../../core/services/bin/bins.service';
-import { LookupsService } from '../../../core/services/lookup/lookups.service';
-import { ToastService } from '../../../core/services/toast/toast.service';
-import { ApiErrorCode } from '../../../core/models/common/api-error-code.enum';
-import { isApiErrorCode, getErrorMessage, getFieldErrors } from '../../../core/errors/error-message';
+import { CollectorListItem, CollectorQuery, CollectorAssignedBin } from '@models/collector/collector.view-model';
+import { CollectorCredentialsMode } from '@models/collector/collector-credentials-mode.enum';
+import { CreateCollectorRequest, UpdateCollectorRequest } from '@models/collector/collector.dto';
+import { CollectorsService } from '@services/collector/collectors.service';
+import { BinsService } from '@services/bin/bins.service';
+import { LookupsService } from '@services/lookup/lookups.service';
+import { ToastService } from '@services/toast/toast.service';
+import { ApiErrorCode } from '@models/common/api-error-code.enum';
+import { isApiErrorCode, getErrorMessage, getFieldErrors } from '@core/errors/error-message';
 import {
   trimmedRequired,
   maxLen,
   phone,
   strongTempPassword,
-} from '../../../shared/validators';
+} from '@shared/validators';
 import {
   COLLECTOR_TABLE_COLUMNS,
   COLLECTOR_TABLE_ACTIONS,
@@ -31,27 +31,27 @@ import {
   getCollectorStatusBadgeVariant,
   getCollectorStatusLabel,
 } from './collectors.config';
-import { getBinStatusBadgeVariant, getBinStatusLabel } from '../../bin/bins-list/bins-list.config';
-import { PageHeader } from '../../../shared/components/page-header/page-header';
-import { SearchInput } from '../../../shared/components/form/search-input/search-input';
-import { Select, SelectOption } from '../../../shared/components/form/select/select';
-import { AsyncSelect } from '../../../shared/components/form/async-select/async-select';
-import { DataTable } from '../../../shared/components/table/data-table/data-table';
-import { CellTemplateDirective } from '../../../shared/components/table/data-table/cell-template.directive';
-import { UserCell } from '../../../shared/components/table/cells/user-cell/user-cell';
-import { FillLevelCell } from '../../../shared/components/table/cells/fill-level-cell/fill-level-cell';
-import { Badge } from '../../../shared/components/badge/badge';
-import { ResourceState } from '../../../shared/components/resource-state/resource-state';
-import { Drawer } from '../../../shared/components/overlay/drawer/drawer';
-import { Modal } from '../../../shared/components/overlay/modal/modal';
-import { ConfirmDialog } from '../../../shared/components/overlay/confirm-dialog/confirm-dialog';
-import { SegmentedControl } from '../../../shared/components/segmented-control/segmented-control';
-import { Input } from '../../../shared/components/form/input/input';
-import { Button } from '../../../shared/components/button/button';
-import { IconButton } from '../../../shared/components/button/icon-button/icon-button';
-import { Icon } from '../../../shared/components/icon/icon';
-import { DateTimePipe } from '../../../shared/pipes';
-import { createPagedList } from '../../../shared/utils/paged-list';
+import { getBinStatusBadgeVariant, getBinStatusLabel } from '@features/bin/bins-list/bins-list.config';
+import { PageHeader } from '@shared/components/page-header/page-header';
+import { SearchInput } from '@shared/components/form/search-input/search-input';
+import { Select, SelectOption } from '@shared/components/form/select/select';
+import { AsyncSelect } from '@shared/components/form/async-select/async-select';
+import { DataTable } from '@shared/components/table/data-table/data-table';
+import { CellTemplateDirective } from '@shared/components/table/data-table/cell-template.directive';
+import { UserCell } from '@shared/components/table/cells/user-cell/user-cell';
+import { FillLevelCell } from '@shared/components/table/cells/fill-level-cell/fill-level-cell';
+import { Badge } from '@shared/components/badge/badge';
+import { ResourceState } from '@shared/components/resource-state/resource-state';
+import { Drawer } from '@shared/components/overlay/drawer/drawer';
+import { Modal } from '@shared/components/overlay/modal/modal';
+import { ConfirmDialog } from '@shared/components/overlay/confirm-dialog/confirm-dialog';
+import { SegmentedControl } from '@shared/components/segmented-control/segmented-control';
+import { Input } from '@shared/components/form/input/input';
+import { Button } from '@shared/components/button/button';
+import { IconButton } from '@shared/components/button/icon-button/icon-button';
+import { Icon } from '@shared/components/icon/icon';
+import { DateTimePipe } from '@shared/pipes';
+import { createPagedList } from '@shared/utils/paged-list';
 
 @Component({
   selector: 'app-collectors',

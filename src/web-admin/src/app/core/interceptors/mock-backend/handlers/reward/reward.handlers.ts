@@ -1,19 +1,19 @@
-import { MOCK_IMAGE_URL } from '../../../../mock/data/_assets';
+import { MOCK_IMAGE_URL } from '@core/mock/data/_assets';
 import { HttpErrorResponse } from '@angular/common/http';
-import { MockRouter } from '../../engine/mock-router';
-import { getMockDb } from '../../../../mock/db/mock-db';
-import { RewardStatus } from '../../../../models/reward/reward-status.enum';
-import { RewardCategory } from '../../../../models/reward/reward-category.enum';
-import { VoucherCodeType } from '../../../../models/reward/voucher-code-type.enum';
-import { AuditActionType } from '../../../../models/audit/audit-action-type.enum';
-import { ApiErrorCode } from '../../../../models/common/api-error-code.enum';
+import { MockRouter } from '@core/interceptors/mock-backend/engine/mock-router';
+import { getMockDb } from '@core/mock/db/mock-db';
+import { RewardStatus } from '@models/reward/reward-status.enum';
+import { RewardCategory } from '@models/reward/reward-category.enum';
+import { VoucherCodeType } from '@models/reward/voucher-code-type.enum';
+import { AuditActionType } from '@models/audit/audit-action-type.enum';
+import { ApiErrorCode } from '@models/common/api-error-code.enum';
 import { okResponse, errorResponse, requireSysAdmin, appendAuditLog } from '../handler-utils';
 import {
   CreateRewardRequest,
   UpdateRewardRequest,
   ArchiveRewardResponse,
-} from '../../../../models/reward/reward.dto';
-import { AdminRewardItem } from '../../../../models/reward/reward.view-model';
+} from '@models/reward/reward.dto';
+import { AdminRewardItem } from '@models/reward/reward.view-model';
 
 export function registerRewardHandlers(router: MockRouter): void {
   // 1. List catalog items with filters

@@ -1,11 +1,11 @@
-import { TableColumn } from '../../../shared/components/table/data-table/data-table';
-import { LedgerRow } from '../../../core/models/wallet/ledger.view-model';
-import { LedgerSource, LEDGER_SOURCE_LABELS } from '../../../core/models/wallet/ledger-source.enum';
-import { LedgerEntryType } from '../../../core/models/wallet/ledger-entry-type.enum';
-import { BadgeVariant } from '../../../shared/components/badge/badge';
-import { SelectOption } from '../../../shared/components/form/select/select';
-import { SegmentedOption } from '../../../shared/components/segmented-control/segmented-control';
-import { NumberCellTone } from '../../../shared/components/table/cells/number-cell/number-cell';
+import { TableColumn } from '@shared/components/table/data-table/data-table';
+import { LedgerRow } from '@models/wallet/ledger.view-model';
+import { LedgerSource, LEDGER_SOURCE_LABELS } from '@models/wallet/ledger-source.enum';
+import { LedgerEntryType } from '@models/wallet/ledger-entry-type.enum';
+import { BadgeVariant } from '@shared/components/badge/badge';
+import { SelectOption } from '@shared/components/form/select/select';
+import { SegmentedOption } from '@shared/components/segmented-control/segmented-control';
+import { NumberCellTone } from '@shared/components/table/cells/number-cell/number-cell';
 
 export const LEDGER_TABLE_COLUMNS: TableColumn<LedgerRow>[] = [
   {

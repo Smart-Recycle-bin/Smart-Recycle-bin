@@ -3,8 +3,8 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { BinsService } from './bins.service';
 import { ApiClientService } from '../api/api-client.service';
-import { environment } from '../../../../environments/environment';
-import { BinStatus } from '../../models/bin/bin-status.enum';
+import { environment } from '@env/environment';
+import { BinStatus } from '@models/bin/bin-status.enum';
 
 describe('BinsService', () => {
   let service: BinsService;
