@@ -1,0 +1,16 @@
+@if (canRenderImage()) {
+  <img
+    [src]="src()!"
+    [alt]="alt()"
+    [class]="imageClass()"
+    [loading]="loading()"
+    (error)="onImageError()"
+  />
+} @else {
+  <div class="safe-fallback" [class]="imageClass()" aria-label="Image preview unavailable">
+    <app-icon [name]="fallbackIcon()" size="md" />
+    @if (fallbackLabel()) {
+      <span class="safe-fallback-label">{{ fallbackLabel() }}</span>
+    }
+  </div>
+}

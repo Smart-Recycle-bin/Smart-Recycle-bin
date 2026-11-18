@@ -314,7 +314,17 @@
             @if (uploadedImageUrl()) {
               <div class="current-image-preview">
                 <span class="preview-label">Current image asset:</span>
-                <img [src]="uploadedImageUrl()!" alt="Uploaded preview" class="preview-thumbnail" />
+                <div class="preview-thumbnail-container">
+                  <img
+                    [src]="uploadedImageUrl()!"
+                    alt="Uploaded preview"
+                    class="preview-thumbnail"
+                    (error)="$any($event.target).style.display='none'"
+                  />
+                  <div class="preview-thumbnail-fallback">
+                    <app-icon name="gift" size="md" />
+                  </div>
+                </div>
               </div>
             }
           </div>

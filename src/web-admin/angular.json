@@ -36,7 +36,7 @@
                 {
                   "glob": "**/*",
                   "input": "public",
-                  "ignore": ["config.json", "config.example.json"]
+                  "ignore": ["config.json", "config.example.json", "mock/**"]
                 }
               ],
               "budgets": [
@@ -58,7 +58,7 @@
                 {
                   "glob": "**/*",
                   "input": "public",
-                  "ignore": ["config.json", "config.example.json"]
+                  "ignore": ["config.json", "config.example.json", "mock/**"]
                 }
               ],
               "budgets": [

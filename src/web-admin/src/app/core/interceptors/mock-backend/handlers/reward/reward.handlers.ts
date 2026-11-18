@@ -1,3 +1,4 @@
+import { MOCK_IMAGE_URL } from '../../../../mock/data/_assets';
 import { HttpErrorResponse } from '@angular/common/http';
 import { MockRouter } from '../../engine/mock-router';
 import { getMockDb } from '../../../../mock/db/mock-db';
@@ -191,7 +192,7 @@ export function registerRewardHandlers(router: MockRouter): void {
     }
 
     return okResponse({
-      imageUrl: 'https://images.unsplash.com/photo-1544816155-12df9643f363?w=300',
+      imageUrl: MOCK_IMAGE_URL,
     });
   });
 }
