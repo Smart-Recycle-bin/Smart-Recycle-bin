@@ -251,6 +251,7 @@ The standalone `BrandLogo` component (`<app-brand-logo>`) renders an inline SVG 
 | :--- | :--- |
 | `npm start` | Run local dev server with Mock Backend (`http://localhost:4200`) |
 | `npm run start:api` | Run local dev server with Real API Proxy to `:5000` |
+| `npm run start:csp` | Run local dev server enforcing strict production CSP headers |
 | `npm run build` | Compile optimized production bundle to `dist/ecobin-admin` |
 | `npm test` | Run Vitest unit test suite (119 files, 687 tests) |
 | `npm run check:prod-bundle` | Build and verify production bundle has zero mock/credential leaks |

@@ -109,8 +109,9 @@ This runs `ng serve --configuration=local-api`, which disables the in-memory moc
 
 | npm Script | Terminal Command | Purpose & Description |
 | :--- | :--- | :--- |
-| `npm start` | `ng serve` | Runs local dev server on `http://localhost:4200` with mock backend enabled. |
+| `npm start` | `ng serve --configuration=development` | Runs local dev server on `http://localhost:4200` with mock backend enabled. |
 | `npm run start:api` | `ng serve --configuration=local-api` | Runs dev server proxying `/api/v1` to `http://localhost:5000` with mock disabled. |
+| `npm run start:csp` | `ng serve --configuration=csp` | Runs dev server enforcing production Content-Security-Policy headers. |
 | `npm run build` | `ng build` | Compiles an optimized, tree-shaken production bundle into `dist/ecobin-admin`. |
 | `npm run watch` | `ng build --watch --configuration development` | Incremental development build watching for file changes. |
 | `npm test` | `ng test` | Runs the full Vitest unit and integration test suite (`*.spec.ts`). |
