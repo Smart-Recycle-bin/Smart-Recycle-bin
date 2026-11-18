@@ -140,6 +140,14 @@
   --brand-mark-bg: #009966;
   --brand-mark-fg: #FFFFFF;
   --brand-mark-accent: #A7F3D0;
+
+  /* Bin marker tokens */
+  --marker-glyph: var(--text-inverse);
+  --marker-glyph-light: #FFFFFF;
+  --marker-glyph-dark: #0F172A;
+  --marker-pin-outline: rgba(15, 23, 42, 0.45);
+  --marker-pin-shadow: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+  --marker-shadow-accent: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.4));
 }
 
 .dark {
@@ -233,6 +241,14 @@
   --brand-mark-bg: #009966;
   --brand-mark-fg: #FFFFFF;
   --brand-mark-accent: #A7F3D0;
+
+  /* Bin marker tokens */
+  --marker-glyph: var(--text-inverse);
+  --marker-glyph-light: #FFFFFF;
+  --marker-glyph-dark: #0F172A;
+  --marker-pin-outline: rgba(15, 23, 42, 0.7);
+  --marker-pin-shadow: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+  --marker-shadow-accent: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.6));
 }
 
 @layer base {

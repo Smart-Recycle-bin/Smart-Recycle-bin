@@ -487,4 +487,36 @@ describe('LiveBinMap', () => {
     vi.advanceTimersByTime(550);
     expect(mockLiveFeed.refreshNow).toHaveBeenCalled();
   });
+
+  it('12. bin marker DOM structure: renders teardrop pin SVG, recycle glyph, and label above pin', () => {
+    fixture.detectChanges();
+    feedSubject.next({
+      items: [sampleBins[0]],
+      meta: { totalItems: 1, returned: 1, truncated: false, generatedAt: '' },
+    });
+    fixture.detectChanges();
+
+    const markers = FakeAdvancedMarkerElement.instances;
+    expect(markers.length).toBeGreaterThanOrEqual(1);
+
+    const markerEl = markers[0].content as HTMLElement;
+    expect(markerEl).toBeTruthy();
+    expect(markerEl.classList.contains('bin-marker')).toBe(true);
+    expect(markerEl.classList.contains('marker-success')).toBe(true);
+
+    // Label above pin
+    const labelEl = markerEl.querySelector('.bin-marker-label');
+    expect(labelEl).toBeTruthy();
+    expect(labelEl?.textContent).toBe('BIN-0001');
+
+    // SVG Pin
+    const svgEl = markerEl.querySelector('svg.bin-marker-pin');
+    expect(svgEl).toBeTruthy();
+
+    // Shape & Glyph
+    const shapeEl = svgEl?.querySelector('.bin-marker-shape');
+    expect(shapeEl).toBeTruthy();
+    const glyphEl = svgEl?.querySelector('.bin-marker-glyph');
+    expect(glyphEl).toBeTruthy();
+  });
 });

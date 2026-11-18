@@ -16,7 +16,11 @@
   @if (loaderState() === 'ready' && hasBudget() && mapRendered()) {
     <!-- Google Map instance; key ensures clean recreation on theme toggle only -->
     @let k = mapKey();
-    <div class="google-map-wrapper" [attr.data-map-key]="k">
+    <div
+      class="google-map-wrapper"
+      [class.labels-visible]="labelsVisible()"
+      [attr.data-map-key]="k"
+    >
       <google-map
         #googleMapComponent
         [height]="'100%'"

@@ -115,6 +115,7 @@ export class FakeMap {
 
 export class FakeAdvancedMarkerElement {
   static instancesCreated = 0;
+  static instances: FakeAdvancedMarkerElement[] = [];
   private readonly listeners = new Map<string, Set<Function>>();
 
   map: unknown = null;
@@ -124,6 +125,7 @@ export class FakeAdvancedMarkerElement {
 
   constructor(options?: Record<string, unknown>) {
     FakeAdvancedMarkerElement.instancesCreated++;
+    FakeAdvancedMarkerElement.instances.push(this);
     if (options) {
       this.map = options['map'] ?? null;
       this.position = options['position'] ?? null;
@@ -219,4 +221,5 @@ export function installFakeGoogleMaps(): () => void {
 export function resetFakeGoogleMapsCounters(): void {
   FakeMap.instancesCreated = 0;
   FakeAdvancedMarkerElement.instancesCreated = 0;
+  FakeAdvancedMarkerElement.instances = [];
 }

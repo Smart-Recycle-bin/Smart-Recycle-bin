@@ -107,6 +107,12 @@ readonly pagedList = createPagedList<BinListItem, BinListQuery>({
 - **Debounced Inputs:** Search inputs are automatically debounced (default 300ms) while sort and pagination actions execute immediately.
 - **Clamping & Resilience:** Resets `page` to 1 on filter changes. Preserves previous rows during background refreshes to eliminate UI flicker.
 
+### 4.3 Live Maps & Custom Advanced Markers
+Live bin tracking integrates Google Maps with fine-grained Angular signals:
+- **Diff-Based Marker Reconciliation:** `diffBins` calculates added, removed, and updated bins across polling ticks, performing in-place DOM updates without re-instantiating `AdvancedMarkerElement`.
+- **View Encapsulation & Pure DOM:** `BinMapCanvas` uses `ViewEncapsulation.None` with namespaced selectors (`app-bin-map-canvas .bin-marker`) to style custom DOM nodes rendered inside Google Maps' external overlay. Markers are built via pure DOM (`createElementNS`, Lucide `Recycle` icon) without `innerHTML`.
+- **Zoom-Aware Density:** Bin labels are positioned above teardrop pins and visibility is coordinated with map zoom (hidden at zoom < 14, shown at zoom >= 14 or on hover/focus/selection).
+
 ---
 
 ## 5. Data Flow & Networking

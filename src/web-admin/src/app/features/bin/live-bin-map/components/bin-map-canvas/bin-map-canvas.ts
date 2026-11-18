@@ -7,6 +7,7 @@ import {
   NgZone,
   OnDestroy,
   OnInit,
+  ViewEncapsulation,
   computed,
   effect,
   inject,
@@ -26,6 +27,11 @@ import { ThemeService } from '@services/theme/theme.service';
 import { MapUnavailable, MapUnavailableVariant } from '@shared/components/map/map-unavailable/map-unavailable';
 import { diffBins } from '@features/bin/live-bin-map/utils/bin-diff';
 import { BinClusterRenderer, getStatusSeverity } from '@features/bin/live-bin-map/utils/bin-cluster-renderer';
+import {
+  createBinMarkerElement,
+  updateBinMarkerElement,
+  buildAccessibleTitle,
+} from '@features/bin/live-bin-map/utils/bin-marker-element';
 
 export interface MarkerRecord {
   bin: BinMapItem;
@@ -40,6 +46,7 @@ export interface MarkerRecord {
   templateUrl: './bin-map-canvas.html',
   styleUrl: './bin-map-canvas.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  encapsulation: ViewEncapsulation.None,
 })
 export class BinMapCanvas implements OnInit, OnDestroy {
   readonly googleMapComponent = viewChild<GoogleMap>('googleMapComponent');
@@ -65,6 +72,8 @@ export class BinMapCanvas implements OnInit, OnDestroy {
   readonly unavailableVariant = signal<MapUnavailableVariant | null>(null);
   readonly tilesLoaded = signal<boolean>(false);
   readonly showTilesWarning = signal<boolean>(false);
+  readonly currentZoom = signal<number>(12);
+  readonly labelsVisible = computed(() => this.currentZoom() >= 14);
 
   // Map state preservation across theme recreations
   private savedCenter: { lat: number; lng: number } | null = null;
@@ -199,6 +208,19 @@ export class BinMapCanvas implements OnInit, OnDestroy {
     this.googleMapInstance = map;
     this.budgetService.recordInit();
 
+    const initialZoom = map.getZoom();
+    if (typeof initialZoom === 'number') {
+      this.currentZoom.set(initialZoom);
+    }
+    map.addListener('zoom_changed', () => {
+      const nextZoom = map.getZoom();
+      if (typeof nextZoom === 'number') {
+        this.ngZone.run(() => {
+          this.currentZoom.set(nextZoom);
+        });
+      }
+    });
+
     // Start 10s tilesloaded watchdog
     this.tilesLoaded.set(false);
     this.showTilesWarning.set(false);
@@ -243,6 +265,9 @@ export class BinMapCanvas implements OnInit, OnDestroy {
     const z = this.googleMapInstance.getZoom();
     if (typeof z === 'number') {
       this.savedZoom = z;
+      if (this.currentZoom() !== z) {
+        this.currentZoom.set(z);
+      }
     }
 
     // Emit bounding box string for truncated refetches
@@ -351,34 +376,16 @@ export class BinMapCanvas implements OnInit, OnDestroy {
   private createMarkerForBin(bin: BinMapItem): void {
     if (!this.googleMapInstance) return;
 
-    const el = document.createElement('div');
-    el.className = `bin-marker marker-${getStatusSeverity(bin.status)}`;
-    el.setAttribute('role', 'button');
-    el.setAttribute('tabindex', '0');
-    el.setAttribute('data-bin-id', bin.binId);
-
-    const title = this.buildAccessibleTitle(bin);
-    el.setAttribute('aria-label', title);
-    el.title = title;
-
-    // Inner pin dot
-    const dot = document.createElement('span');
-    dot.className = 'bin-marker-dot';
-    el.appendChild(dot);
-
-    // Click & Keyboard handlers
-    el.addEventListener('click', (e) => {
-      e.stopPropagation();
-      this.selectBin(bin.binId);
+    const el = createBinMarkerElement(bin, {
+      selected: this.selectedBinId() === bin.binId,
+      onSelect: (binId) => {
+        this.ngZone.run(() => {
+          this.selectBin(binId);
+        });
+      },
     });
 
-    el.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        e.stopPropagation();
-        this.selectBin(bin.binId);
-      }
-    });
+    const title = buildAccessibleTitle(bin);
 
     let markerInstance: google.maps.marker.AdvancedMarkerElement;
     if (
@@ -411,25 +418,9 @@ export class BinMapCanvas implements OnInit, OnDestroy {
   }
 
   private updateMarkerElement(el: HTMLElement, bin: BinMapItem): void {
-    const sev = getStatusSeverity(bin.status);
-    el.className = `bin-marker marker-${sev}${
-      this.selectedBinId() === bin.binId ? ' marker-selected' : ''
-    }`;
-    const title = this.buildAccessibleTitle(bin);
-    el.setAttribute('aria-label', title);
-    el.title = title;
-  }
-
-  private buildAccessibleTitle(bin: BinMapItem): string {
-    const statusText =
-      bin.status === BinStatus.NeedsServicing
-        ? 'needs servicing'
-        : bin.status === BinStatus.EightyPercentFull
-          ? '80% full'
-          : bin.status === BinStatus.Offline
-            ? 'offline'
-            : 'available';
-    return `${bin.binId}, ${bin.name}, ${bin.fillLevel}% full, ${statusText}`;
+    updateBinMarkerElement(el, bin, {
+      selected: this.selectedBinId() === bin.binId,
+    });
   }
 
   private selectBin(binId: string): void {

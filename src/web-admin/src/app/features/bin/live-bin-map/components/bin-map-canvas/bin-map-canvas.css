@@ -80,86 +80,135 @@
 }
 
 /* ==========================================================================
-   Advanced Markers Styling (Themed through CSS Variables)
+   Advanced Bin Markers Styling (ViewEncapsulation.None)
    ========================================================================== */
-.bin-marker {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  display: flex;
+app-bin-map-canvas .bin-marker {
+  display: inline-flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-end;
   cursor: pointer;
-  background-color: var(--surface);
-  border: 2.5px solid var(--primary);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  position: relative;
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
   outline: none;
+  transition: transform 0.15s ease-out;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
-.bin-marker-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background-color: var(--primary);
+app-bin-map-canvas .bin-marker:hover {
+  transform: scale(1.08);
+}
+
+/* 1. Label above pin */
+app-bin-map-canvas .bin-marker .bin-marker-label {
+  display: none;
+  margin-bottom: 4px;
+  padding: 2px 6px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+  color: var(--text);
+  background-color: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm, 4px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.18);
+  pointer-events: none;
+}
+
+/* Zoom density rule: show labels when zoom >= 14 (.labels-visible on wrapper) */
+app-bin-map-canvas .google-map-wrapper.labels-visible .bin-marker .bin-marker-label {
+  display: block;
+}
+
+/* Always show label on hover, focus, or selection regardless of zoom */
+app-bin-map-canvas .bin-marker:hover .bin-marker-label,
+app-bin-map-canvas .bin-marker:focus-visible .bin-marker-label,
+app-bin-map-canvas .bin-marker.marker-selected .bin-marker-label {
+  display: block;
+}
+
+/* 2. Teardrop Pin SVG */
+app-bin-map-canvas .bin-marker .bin-marker-pin {
+  display: block;
+  width: 32px;
+  height: 38px;
+  overflow: visible;
+  filter: var(--marker-pin-shadow);
+  transition: filter 0.15s ease-out;
+}
+
+/* Pin Shape */
+app-bin-map-canvas .bin-marker .bin-marker-shape {
+  fill: var(--primary);
+  stroke: var(--marker-pin-outline);
+  stroke-width: 1.5;
+  transition: fill 0.15s ease-out;
+}
+
+/* Glyph: Recycle icon inside pin */
+app-bin-map-canvas .bin-marker .bin-marker-glyph {
+  stroke: var(--marker-glyph);
 }
 
 /* Status variants */
-.bin-marker.marker-success {
-  border-color: var(--primary);
-}
-.bin-marker.marker-success .bin-marker-dot {
-  background-color: var(--primary);
+app-bin-map-canvas .bin-marker.marker-success .bin-marker-shape {
+  fill: var(--primary);
 }
 
-.bin-marker.marker-warning {
-  border-color: var(--warning);
-}
-.bin-marker.marker-warning .bin-marker-dot {
-  background-color: var(--warning);
+app-bin-map-canvas .bin-marker.marker-warning .bin-marker-shape {
+  fill: var(--warning);
 }
 
-.bin-marker.marker-danger {
-  border-color: var(--danger);
-}
-.bin-marker.marker-danger .bin-marker-dot {
-  background-color: var(--danger);
+app-bin-map-canvas .bin-marker.marker-danger .bin-marker-shape {
+  fill: var(--danger);
 }
 
-.bin-marker.marker-neutral {
-  border-color: var(--text-muted);
-}
-.bin-marker.marker-neutral .bin-marker-dot {
-  background-color: var(--text-muted);
+app-bin-map-canvas .bin-marker.marker-neutral .bin-marker-shape {
+  fill: var(--text-muted);
 }
 
-/* Selected state: larger + ring */
-.bin-marker.marker-selected {
-  width: 28px;
-  height: 28px;
-  transform: scale(1.15);
-  box-shadow: 0 0 0 3px var(--surface), 0 0 0 6px var(--primary), 0 4px 12px rgba(0, 0, 0, 0.35);
+/* Selected state */
+app-bin-map-canvas .bin-marker.marker-selected {
+  transform: scale(1.18);
   z-index: 1000 !important;
 }
 
-.bin-marker.marker-selected.marker-danger {
-  box-shadow: 0 0 0 3px var(--surface), 0 0 0 6px var(--danger), 0 4px 12px rgba(0, 0, 0, 0.35);
+app-bin-map-canvas .bin-marker.marker-selected .bin-marker-pin {
+  filter: drop-shadow(0 0 6px var(--primary)) var(--marker-shadow-accent);
 }
 
-.bin-marker.marker-selected.marker-warning {
-  box-shadow: 0 0 0 3px var(--surface), 0 0 0 6px var(--warning), 0 4px 12px rgba(0, 0, 0, 0.35);
+app-bin-map-canvas .bin-marker.marker-selected.marker-warning .bin-marker-pin {
+  filter: drop-shadow(0 0 6px var(--warning)) var(--marker-shadow-accent);
 }
 
-.bin-marker:focus-visible {
+app-bin-map-canvas .bin-marker.marker-selected.marker-danger .bin-marker-pin {
+  filter: drop-shadow(0 0 6px var(--danger)) var(--marker-shadow-accent);
+}
+
+app-bin-map-canvas .bin-marker.marker-selected.marker-neutral .bin-marker-pin {
+  filter: drop-shadow(0 0 6px var(--text-muted)) var(--marker-shadow-accent);
+}
+
+app-bin-map-canvas .bin-marker.marker-selected .bin-marker-shape {
+  stroke: var(--surface-raised);
+  stroke-width: 2;
+}
+
+/* Focus visible state */
+app-bin-map-canvas .bin-marker:focus-visible {
   outline: 2px solid var(--text);
-  outline-offset: 3px;
+  outline-offset: 2px;
+  border-radius: 4px;
 }
 
 /* ==========================================================================
    Cluster Markers
    ========================================================================== */
-.bin-cluster-pin {
+app-bin-map-canvas .bin-cluster-pin {
   min-width: 34px;
   height: 34px;
   padding: 0 6px;
@@ -176,30 +225,30 @@
   transition: transform 0.15s ease;
 }
 
-.bin-cluster-pin:hover {
+app-bin-map-canvas .bin-cluster-pin:hover {
   transform: scale(1.08);
 }
 
-.bin-cluster-pin.cluster-danger {
+app-bin-map-canvas .bin-cluster-pin.cluster-danger {
   background-color: var(--danger);
 }
 
-.bin-cluster-pin.cluster-warning {
+app-bin-map-canvas .bin-cluster-pin.cluster-warning {
   background-color: var(--warning);
 }
 
-.bin-cluster-pin.cluster-neutral {
+app-bin-map-canvas .bin-cluster-pin.cluster-neutral {
   background-color: var(--text-muted);
 }
 
-.bin-cluster-pin.cluster-success {
+app-bin-map-canvas .bin-cluster-pin.cluster-success {
   background-color: var(--primary);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .bin-marker,
-  .bin-cluster-pin,
-  .map-spinner {
+  app-bin-map-canvas .bin-marker,
+  app-bin-map-canvas .bin-cluster-pin,
+  app-bin-map-canvas .map-spinner {
     transition: none !important;
     animation: none !important;
   }

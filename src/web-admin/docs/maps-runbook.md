@@ -114,3 +114,28 @@ npm run check:prod-bundle
 ```
 
 `scripts/check-no-secrets.mjs` scans all tracked files and the `dist/` directory for the Google API key pattern (`AIza...`). Any match will cause the command to fail.
+
+---
+
+## 7. Marker Rendering, View Encapsulation & Zoom Density
+
+### 7.1 Pure DOM Construction & XSS Protection
+Bin markers are created dynamically using `createBinMarkerElement(bin, opts)` (`@features/bin/live-bin-map/utils/bin-marker-element.ts`):
+- Pure DOM construction (`document.createElement` and `document.createElementNS('http://www.w3.org/2000/svg', ...)`).
+- Zero `innerHTML` to strictly prevent XSS from untrusted bin names or identifiers.
+- Uses the `Recycle` icon node data directly from `lucide` without additional dependencies.
+
+### 7.2 View Encapsulation
+Because Google Maps `AdvancedMarkerElement` renders marker elements inside Google Maps' external overlay DOM (outside Angular's component tree), Angular's default emulated view encapsulation attributes (`_ngcontent-*`) do not match these elements.
+- `BinMapCanvas` uses `encapsulation: ViewEncapsulation.None`.
+- Marker CSS rules are strictly namespaced under `app-bin-map-canvas .bin-marker`.
+
+### 7.3 Anchor Alignment & Label Positioning
+- `AdvancedMarkerElement` aligns the bottom-center of its `content` container directly over the coordinate.
+- The marker layout is a flex column with `align-items: center`: the text label sits on top, and the 32×38 teardrop SVG pin sits on the bottom. The teardrop tip is centered at x=16, y=37, ensuring the pin tip sits precisely on the bin's physical coordinates regardless of label width.
+
+### 7.4 Zoom-Aware Label Density
+To prevent visual clutter across dense urban clusters:
+- When map zoom < 14: Labels are hidden by default (`display: none`).
+- When map zoom >= 14: Labels are automatically revealed (`.google-map-wrapper.labels-visible .bin-marker .bin-marker-label { display: block; }`).
+- Individual labels are always revealed upon hover, focus-visible, or selection (`.marker-selected`).
