@@ -259,80 +259,17 @@
     </div>
   </app-drawer>
 
-  <!-- Assigned Bins Drawer -->
-  <app-drawer
+  <!-- Assigned Smart Bins Drawer Component (Phase 12) -->
+  <app-assigned-bins-drawer
     [open]="isAssignedBinsDrawerOpen()"
-    [title]="'Assigned Smart Bins - ' + (selectedCollector()?.name || '')"
-    [description]="(selectedCollector()?.collectorId || '') + ' · ' + (selectedCollector()?.district || '')"
-    size="lg"
+    [collector]="selectedCollector()"
+    [bins]="assignedBins()"
+    [loading]="isLoadingAssignedBins()"
+    [error]="assignedBinsError()"
     (closed)="closeAssignedBinsDrawer()"
-  >
-    <div class="assigned-bins-drawer-content">
-      @if (isLoadingAssignedBins()) {
-        <div class="loading-bins-state">
-          <app-resource-state [loading]="true" />
-        </div>
-      } @else if (assignedBins().length === 0) {
-        <div class="empty-assigned-bins">
-          <p class="empty-bins-title">No smart bins assigned</p>
-          <p class="empty-bins-subtitle">
-            This collector currently has no active smart bins allocated for daily collection routes.
-          </p>
-        </div>
-      } @else {
-        <div class="assigned-bins-table-wrapper">
-          <table class="assigned-bins-table">
-            <thead>
-              <tr>
-                <th>Bin ID</th>
-                <th>Name / Area</th>
-                <th>Fill Level</th>
-                <th>Status</th>
-                <th>District</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (bin of assignedBins(); track bin.binId) {
-                <tr>
-                  <td class="bin-id-cell">{{ bin.binId }}</td>
-                  <td>
-                    <div class="bin-name-info">
-                      <span class="bin-name">{{ bin.name }}</span>
-                      <span class="bin-area">{{ bin.area }}</span>
-                    </div>
-                  </td>
-                  <td>
-                    <app-fill-level-cell
-                      [value]="bin.fillLevel"
-                      [warningThreshold]="80"
-                      [dangerThreshold]="95"
-                    />
-                  </td>
-                  <td>
-                    <app-badge
-                      [label]="getBinLabel(bin.status)"
-                      [variant]="getBinBadgeVariant(bin.status)"
-                      [dot]="true"
-                    />
-                  </td>
-                  <td class="district-cell">{{ bin.district }}</td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        </div>
-      }
-    </div>
-
-    <div drawer-footer class="drawer-footer-actions">
-      <app-button
-        variant="ghost"
-        (clicked)="closeAssignedBinsDrawer()"
-      >
-        Close
-      </app-button>
-    </div>
-  </app-drawer>
+    (retry)="retryLoadAssignedBins()"
+    (assignBin)="onDrawerAssignBin()"
+  />
 
   <!-- Assign Smart Bin Modal -->
   <app-modal

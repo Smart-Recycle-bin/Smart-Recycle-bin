@@ -1,0 +1,176 @@
+<app-drawer
+  [open]="open()"
+  title="Assigned Smart Bins"
+  [description]="collector() ? (collector()!.name + ' · ' + collector()!.district) : ''"
+  size="lg"
+  (closed)="closed.emit()"
+>
+  <div class="assigned-bins-drawer-body">
+    <!-- 1. Collector Header Profile -->
+    @if (collector(); as c) {
+      <div class="collector-profile-header">
+        <app-avatar [name]="c.name" size="md" />
+        <div class="profile-details">
+          <div class="profile-name-row">
+            <h3 class="profile-name">{{ c.name }}</h3>
+            <app-badge
+              [label]="c.status === 'active' ? 'Active' : 'Inactive'"
+              [variant]="getCollectorBadgeVariant(c.status)"
+              [dot]="true"
+            />
+          </div>
+          <div class="profile-meta-row">
+            <span class="collector-id-chip">{{ c.collectorId }}</span>
+            <span class="meta-dot">·</span>
+            <span class="profile-district">{{ c.district }}</span>
+            @if (c.phone) {
+              <span class="meta-dot">·</span>
+              <span class="profile-phone">{{ c.phone }}</span>
+            }
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- 2. Loading State -->
+    @if (loading()) {
+      <div class="drawer-loading-skeleton" aria-busy="true" aria-label="Loading assigned smart bins">
+        <div class="skeleton-summary-strip">
+          @for (i of [1, 2, 3, 4]; track i) {
+            <div class="skeleton-stat-card">
+              <app-skeleton width="60px" height="12px" />
+              <app-skeleton width="36px" height="24px" />
+            </div>
+          }
+        </div>
+        <div class="skeleton-cards-list">
+          @for (i of [1, 2, 3]; track i) {
+            <div class="skeleton-bin-card">
+              <div class="skeleton-card-top">
+                <app-skeleton width="140px" height="16px" />
+                <app-skeleton width="70px" height="20px" />
+              </div>
+              <app-skeleton width="90px" height="12px" />
+              <div class="skeleton-card-bottom">
+                <app-skeleton width="100px" height="14px" />
+                <app-skeleton width="80px" height="14px" />
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- 3. Error State with Retry -->
+    @else if (error()) {
+      <div class="drawer-error-state">
+        <app-error-state
+          title="Failed to load assigned smart bins"
+          [description]="error()!"
+          retryText="Retry"
+          (retryClicked)="retry.emit()"
+        />
+      </div>
+    }
+
+    <!-- 4. Empty State -->
+    @else if (bins().length === 0) {
+      <div class="drawer-empty-state">
+        <app-empty-state
+          icon="trash-2"
+          title="No smart bins assigned"
+          description="This collector currently has no active smart bins allocated for daily collection routes."
+          actionText="Assign smart bin"
+          actionIcon="plus"
+          (actionClicked)="assignBin.emit()"
+        />
+      </div>
+    }
+
+    <!-- 5. Loaded Bins with Summary Strip & Cards -->
+    @else {
+      <!-- Summary Strip -->
+      <div class="summary-strip" role="region" aria-label="Assigned bins summary">
+        <div class="summary-metric">
+          <span class="metric-label">Total Bins</span>
+          <span class="metric-value">{{ summary().total }}</span>
+        </div>
+        <div class="summary-metric" [class.metric-warning]="summary().needAttention > 0">
+          <span class="metric-label">Need Attention</span>
+          <span class="metric-value">{{ summary().needAttention }}</span>
+        </div>
+        <div class="summary-metric" [class.metric-danger]="summary().offline > 0">
+          <span class="metric-label">Offline</span>
+          <span class="metric-value">{{ summary().offline }}</span>
+        </div>
+        <div class="summary-metric">
+          <span class="metric-label">Avg Fill Level</span>
+          <span class="metric-value">{{ summary().avgFill }}%</span>
+        </div>
+      </div>
+
+      <!-- Sorted Bin Cards List -->
+      <div class="assigned-bins-list" role="list" aria-label="Assigned bins list">
+        @for (bin of sortedBins(); track bin.binId) {
+          <div
+            class="assigned-bin-card edge-{{ getBinBadgeVariant(bin.status) }}"
+            role="listitem"
+            [attr.data-bin-id]="bin.binId"
+          >
+            <div class="bin-card-header">
+              <div class="bin-card-identity">
+                <span class="bin-card-title">{{ bin.name }}</span>
+                <span class="bin-id-chip">{{ bin.binId }}</span>
+              </div>
+              <app-badge
+                [label]="getBinStatusLabel(bin.status)"
+                [variant]="getBinBadgeVariant(bin.status)"
+                [dot]="true"
+              />
+            </div>
+
+            <div class="bin-card-subline">
+              <app-icon name="map-pin" size="xs" />
+              <span>{{ bin.area }} · {{ bin.district }}</span>
+            </div>
+
+            <div class="bin-card-metrics">
+              <div class="metric-col fill-col">
+                <span class="metric-col-label">Fill Level</span>
+                <app-fill-level-cell
+                  [value]="bin.fillLevel"
+                  [warningThreshold]="80"
+                  [dangerThreshold]="95"
+                />
+              </div>
+              <div class="metric-col service-col">
+                <span class="metric-col-label">Last Serviced</span>
+                <div class="service-time-display">
+                  <app-icon name="clock" size="xs" />
+                  <span>{{ formatServicedTime(bin.lastServicedAt) }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+  <!-- Footer Actions -->
+  <div drawer-footer class="drawer-footer-actions">
+    <app-button
+      variant="ghost"
+      (clicked)="closed.emit()"
+    >
+      Close
+    </app-button>
+    <app-button
+      variant="primary"
+      leadingIcon="plus"
+      (clicked)="assignBin.emit()"
+    >
+      Assign Smart Bin
+    </app-button>
+  </div>
+</app-drawer>

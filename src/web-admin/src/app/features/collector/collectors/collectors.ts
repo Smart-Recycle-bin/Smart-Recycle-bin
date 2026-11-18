@@ -39,7 +39,6 @@ import { AsyncSelect } from '@shared/components/form/async-select/async-select';
 import { DataTable } from '@shared/components/table/data-table/data-table';
 import { CellTemplateDirective } from '@shared/components/table/data-table/cell-template.directive';
 import { UserCell } from '@shared/components/table/cells/user-cell/user-cell';
-import { FillLevelCell } from '@shared/components/table/cells/fill-level-cell/fill-level-cell';
 import { Badge } from '@shared/components/badge/badge';
 import { ResourceState } from '@shared/components/resource-state/resource-state';
 import { Drawer } from '@shared/components/overlay/drawer/drawer';
@@ -52,6 +51,7 @@ import { IconButton } from '@shared/components/button/icon-button/icon-button';
 import { Icon } from '@shared/components/icon/icon';
 import { DateTimePipe } from '@shared/pipes';
 import { createPagedList } from '@shared/utils/paged-list';
+import { AssignedBinsDrawer } from './assigned-bins-drawer/assigned-bins-drawer';
 
 @Component({
   selector: 'app-collectors',
@@ -66,7 +66,6 @@ import { createPagedList } from '@shared/utils/paged-list';
     DataTable,
     CellTemplateDirective,
     UserCell,
-    FillLevelCell,
     Badge,
     ResourceState,
     Drawer,
@@ -78,6 +77,7 @@ import { createPagedList } from '@shared/utils/paged-list';
     IconButton,
     Icon,
     DateTimePipe,
+    AssignedBinsDrawer,
   ],
   templateUrl: './collectors.html',
   styleUrl: './collectors.css',
@@ -123,6 +123,7 @@ export class Collectors {
   readonly selectedCollector = signal<CollectorListItem | null>(null);
   readonly assignedBins = signal<CollectorAssignedBin[]>([]);
   readonly isLoadingAssignedBins = signal<boolean>(false);
+  readonly assignedBinsError = signal<string | null>(null);
 
   /**
    * Create Collector Credentials Mode
@@ -380,16 +381,23 @@ export class Collectors {
   openAssignedBinsDrawer(collector: CollectorListItem): void {
     this.selectedCollector.set(collector);
     this.isAssignedBinsDrawerOpen.set(true);
-    this.isLoadingAssignedBins.set(true);
+    this.loadAssignedBins(collector.collectorId);
+  }
 
-    this.collectorsService.getAssignedBins(collector.collectorId).subscribe({
+  loadAssignedBins(collectorId: string): void {
+    this.isLoadingAssignedBins.set(true);
+    this.assignedBinsError.set(null);
+
+    this.collectorsService.getAssignedBins(collectorId).subscribe({
       next: (bins: CollectorAssignedBin[]) => {
         this.assignedBins.set(bins);
         this.isLoadingAssignedBins.set(false);
       },
       error: (err: unknown) => {
         this.isLoadingAssignedBins.set(false);
-        this.toastService.error(getErrorMessage(err));
+        const msg = getErrorMessage(err);
+        this.assignedBinsError.set(msg);
+        this.toastService.error(msg);
       },
     });
   }
@@ -398,6 +406,21 @@ export class Collectors {
     this.isAssignedBinsDrawerOpen.set(false);
     this.selectedCollector.set(null);
     this.assignedBins.set([]);
+    this.assignedBinsError.set(null);
+  }
+
+  retryLoadAssignedBins(): void {
+    const col = this.selectedCollector();
+    if (col) {
+      this.loadAssignedBins(col.collectorId);
+    }
+  }
+
+  onDrawerAssignBin(): void {
+    const col = this.selectedCollector();
+    if (col) {
+      this.openAssignModal(col);
+    }
   }
 
   /**
