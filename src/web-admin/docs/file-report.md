@@ -245,3 +245,110 @@ Audit Complete: 34 checked, 0 failures.
 | Build for production | `npm run build` |
 | Verify prod bundle & secrets | `npm run check:prod-bundle` |
 | Audit WCAG AA contrast | `npm run check:contrast` |
+
+---
+
+# Part 2 — Markers, Collector Drawer, README
+
+## 9. Phase 11 — Bin Map Markers & Encapsulation Hardening
+
+### 9.1 Root Cause of Marker Invisibility
+- **Investigation:** `BinMapCanvas` previously used Angular's default emulated view encapsulation (`ViewEncapsulation.Emulated`).
+- **Root Cause:** Advanced Google Maps markers (`google.maps.marker.AdvancedMarkerElement`) mount marker content elements dynamically into the Google Maps overlay DOM pane (`div.gm-style`), outside Angular's component template hierarchy. Consequently, Angular's scoped `_ngcontent-*` host attributes were absent from the dynamically constructed marker DOM elements, causing all marker CSS rules in `bin-map-canvas.css` (`.bin-marker`, `.bin-marker-dot`, etc.) to never match.
+- **Resolution:** Set `encapsulation: ViewEncapsulation.None` on `BinMapCanvas` and strictly namespaced all marker rules under `app-bin-map-canvas .bin-marker`.
+
+### 9.2 Teardrop Marker & Recycle Glyph Design
+- Extracted pure DOM factory `createBinMarkerElement` and `updateBinMarkerElement` into `src/app/features/bin/live-bin-map/utils/bin-marker-element.ts`:
+  - **Zero `innerHTML`:** Fully compliant with project XSS standards; built strictly via `document.createElement` and `document.createElementNS('http://www.w3.org/2000/svg', ...)`.
+  - **Coordinate Pin Tip:** 32×38 SVG teardrop pin with bottom-center tip centered at `(16, 37)`. Because the marker container is a flex column with `align-items: center` and the pin sits at the bottom, `AdvancedMarkerElement` bottom-center content anchoring places the pin tip precisely on the physical coordinates regardless of label length.
+  - **Recycle Logo:** Parsed Lucide `Recycle` icon node tuples (`[tag, attrs]`) into SVG elements with zero additional dependencies.
+  - **Status Fill & Outlines:** Status severity determines the teardrop fill (`var(--primary)` for success, `var(--warning)` for amber, `var(--danger)` for red, `var(--text-muted)` for neutral), bordered with dark outline token `var(--marker-pin-outline)` and white glyph `var(--marker-glyph)`.
+  - **Bold Label Above Pin:** Rendered via `.bin-marker-label` with `textContent` only.
+
+### 9.3 Zoom-Aware Density Control
+- Implemented `currentZoom = signal<number>(12)` and `labelsVisible = computed(() => this.currentZoom() >= 14)`.
+- Attached Google Maps `zoom_changed` event listener inside `onMapInitialized` to update zoom dynamically.
+- Applied `[class.labels-visible]="labelsVisible()"` on `.google-map-wrapper`.
+- CSS Density Rule:
+  - Zoom < 14: Labels are hidden (`display: none`) to keep the map clean across dense city clusters.
+  - Zoom >= 14: Labels automatically display above pins.
+  - Individual labels always show on hover, focus-visible, or when the marker is selected (`.marker-selected`).
+
+### 9.4 Verification & Unit Tests
+- Created `bin-marker-element.spec.ts` (6 tests covering DOM hierarchy, accessibility, XSS prevention, in-place updates, and keyboard interaction).
+- Added test 12 to `live-bin-map.spec.ts` asserting on SVG pin structure, recycle glyph, and label presence.
+- Updated `docs/architecture.md` and `docs/maps-runbook.md` with encapsulation and density documentation.
+
+---
+
+## 10. Phase 12 — Collector Assigned Smart Bins Drawer Redesign
+
+### 10.1 Discrepancy & Gap Analysis
+- `collectors.html` rendered an unstyled HTML `<table>` with classes (`assigned-bins-table-wrapper`, `assigned-bins-table`) that had zero matching rules in `collectors.css`.
+- `collectors.css` contained 95 lines of orphaned card styles (`.assigned-bin-card`, etc.) that were never referenced in the template.
+- `lastServicedAt` property on `CollectorAssignedBin` was never displayed.
+- On API failure, error was unhandled in the drawer and silently displayed the "No smart bins assigned" empty state.
+
+### 10.2 Standalone Component Architecture
+Created `AssignedBinsDrawer` in `src/app/features/collector/collectors/assigned-bins-drawer/`:
+- **Inputs & Outputs:** `open`, `collector`, `bins`, `loading`, `error`; outputs: `closed`, `retry`, `assignBin`.
+- **Collector Header:** Displays avatar (`app-avatar`), full name, monospace `collectorId` chip, district, phone, and status badge.
+- **Statistical Summary Strip:** Computed metrics for `Total Bins`, `Need Attention` (fill level >= 80% or servicing status), `Offline`, and `Avg Fill Level %`.
+- **Worst-First Sorted Cards:** Bins are sorted by `fillLevel` descending, then by name. Each card displays:
+  - Status accent edge (`edge-danger`, `edge-warning`, `edge-success`, `edge-neutral`)
+  - Title and monospace `binId` chip
+  - Area and district with map-pin icon
+  - Fill level cell (`app-fill-level-cell` with 80% and 95% thresholds)
+  - Last serviced relative time (`formatServicedTime`: e.g. "Just now", "25m ago", "3h ago", "Yesterday", or formatted date)
+- **Responsive Layout:** Stacks cleanly to 1 column at <= 480 px viewports.
+- **Full State Coverage:**
+  - `loading`: 4 stat skeletons + 3 bin card skeletons
+  - `error`: `app-error-state` with Retry action emitting `retry`
+  - `empty`: `app-empty-state` with "Assign smart bin" button emitting `assignBin`
+- **Cleanup:** Purged all 95 orphaned lines from `collectors.css`. Removed unused `FillLevelCell` import in `collectors.ts`.
+- **Unit Tests:** Created `assigned-bins-drawer.spec.ts` with 9 tests covering rendering, sorting, summary calculations, states, and event outputs.
+
+---
+
+## 11. Phase 13 — Comprehensive README Rewrite
+
+Rewrote `README.md` from scratch into an exhaustive 13-section technical manual:
+1. **Arabic Quick-Start Block:** `<div dir="rtl">...</div>` with overview, prerequisites, and quick-start commands.
+2. **Purpose & Real Routes Table:** Complete table mapping all 15 routes, components, descriptions, and role guards.
+3. **Tech Stack Table:** Exact versions from `package.json` (Angular 22.1.0, TypeScript ~6.0.2, Tailwind v4.1.12, Vitest 4.0.8, etc.).
+4. **Quick Start:** Node.js 22+ prerequisites, `npm ci`, `npm start`, `npm run start:api`, and seeded admin credentials.
+5. **Scripts Reference:** Descriptions of all 10 package scripts.
+6. **Configuration & Environments:** Runtime `public/config.json`, Google Maps key masked as `AIza…****`, build configurations.
+7. **Project Structure:** 3-level folder tree with architectural domain guide.
+8. **Application Architecture:** Signals state management, deterministic interceptor pipeline, and `createPagedList` pattern.
+9. **Conventions:** Standalone, OnPush, semantic design tokens, zero `innerHTML`, path aliases.
+10. **Testing Guide:** Vitest runner, fake Google Maps harness, theme token guard, secret scanner.
+11. **Production Build & Deployment:** `check:prod-bundle` pipeline, strict CSP headers.
+12. **Real Backend Integration Checklist:** Proxy configuration, simulator instructions.
+13. **Troubleshooting & FAQ:** Maps loader state reference, common error solutions, documentation index.
+
+---
+
+## 12. Part 2 Verification Results
+
+| Verification Check | Target Command | Result |
+| :--- | :--- | :--- |
+| **All Unit & Integration Tests** | `npm test -- --watch=false` | **121 test files passed, 703 tests passed, 0 failures** |
+| **Production Build** | `npm run build` | **Generated `dist/ecobin-admin` (357 kB raw / 99.7 kB transfer)** |
+| **Prod Bundle Leak & Secret Guard** | `npm run check:prod-bundle` | **PASSED: Zero mock leaks, zero passwords, zero secrets** |
+| **Google Maps Key Leak Scanner** | `node scripts/check-no-secrets.mjs` | **PASSED: No Google API keys detected** |
+| **Theme & Color Policy Guard** | `theme-tokens.spec.ts` | **PASSED: 0 unauthorized literal colors across all files** |
+| **WCAG AA Contrast Audit** | `npm run check:contrast` | **PASSED: 34 color pairs checked, 0 failures** |
+| **Development Build Configuration** | `ng build --configuration=development` | **PASSED: 0 errors** |
+| **Local API Build Configuration** | `ng build --configuration=local-api` | **PASSED: 0 errors** |
+| **E2E Build Configuration** | `ng build --configuration=e2e` | **PASSED: 0 errors** |
+
+---
+
+## 13. Found But Not Changed (Part 2)
+
+1. **`BinClusterRenderer` Marker Clustering:**
+   - Helper `src/app/features/bin/live-bin-map/utils/bin-cluster-renderer.ts` is implemented and unit-tested.
+   - However, no clustering library (such as `@googlemaps/markerclusterer`) is present in `package.json`.
+   - As mandated by Rule 1 and Rule 2 ("no new dependencies"), marker labels and styling were designed to remain legible and usable without clustering.
+
