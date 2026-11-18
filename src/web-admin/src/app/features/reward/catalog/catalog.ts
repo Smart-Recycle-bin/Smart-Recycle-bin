@@ -362,21 +362,7 @@ export class Catalog implements OnInit {
             this.closeDrawer();
             this.loadRewards();
           },
-          error: (err) => {
-            this.isSubmitting.set(false);
-            const fieldErrors = getFieldErrors(err);
-            if (fieldErrors) {
-              Object.entries(fieldErrors).forEach(([field, msg]) => {
-                const ctrl = this.rewardForm.get(field);
-                if (ctrl) {
-                  ctrl.setErrors({ serverError: msg });
-                  ctrl.markAsTouched();
-                }
-              });
-            } else {
-              this.toastService.error(getErrorMessage(err) || 'Failed to update reward item');
-            }
-          },
+          error: (err) => this.handleSaveRewardError(err, 'Failed to update reward item'),
         });
     } else {
       const createReq: CreateRewardRequest = {
@@ -401,22 +387,24 @@ export class Catalog implements OnInit {
             this.closeDrawer();
             this.loadRewards();
           },
-          error: (err) => {
-            this.isSubmitting.set(false);
-            const fieldErrors = getFieldErrors(err);
-            if (fieldErrors) {
-              Object.entries(fieldErrors).forEach(([field, msg]) => {
-                const ctrl = this.rewardForm.get(field);
-                if (ctrl) {
-                  ctrl.setErrors({ serverError: msg });
-                  ctrl.markAsTouched();
-                }
-              });
-            } else {
-              this.toastService.error(getErrorMessage(err) || 'Failed to create reward item');
-            }
-          },
+          error: (err) => this.handleSaveRewardError(err, 'Failed to create reward item'),
         });
+    }
+  }
+
+  private handleSaveRewardError(err: unknown, fallbackMessage: string): void {
+    this.isSubmitting.set(false);
+    const fieldErrors = getFieldErrors(err);
+    if (fieldErrors) {
+      Object.entries(fieldErrors).forEach(([field, msg]) => {
+        const ctrl = this.rewardForm.get(field);
+        if (ctrl) {
+          ctrl.setErrors({ serverError: msg });
+          ctrl.markAsTouched();
+        }
+      });
+    } else {
+      this.toastService.error(getErrorMessage(err) || fallbackMessage);
     }
   }
 

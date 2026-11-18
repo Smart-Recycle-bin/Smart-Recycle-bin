@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { MockRouter } from '@core/interceptors/mock-backend/engine/mock-router';
+import { MockRouter, MockRequestContext } from '@core/interceptors/mock-backend/engine/mock-router';
 import { getMockDb } from '@core/mock/db/mock-db';
 import { InspectionReportStatus } from '@models/inspection/inspection-report-status.enum';
 import { ApiErrorCode } from '@models/common/api-error-code.enum';
@@ -35,6 +35,35 @@ export function syncInspectionSummary(db: ReturnType<typeof getMockDb>): Inspect
   );
 
   return db.inspectionSummary;
+}
+
+function resolveInspectionTarget(ctx: MockRequestContext<unknown>):
+  | { readonly ok: false; readonly error: HttpErrorResponse }
+  | {
+      readonly ok: true;
+      readonly reportId: string;
+      readonly report: ReturnType<typeof getMockDb>['inspectionReports'][number] | undefined;
+      readonly detail: ReturnType<typeof getMockDb>['inspectionDetails'][string] | undefined;
+      readonly db: ReturnType<typeof getMockDb>;
+    } {
+  const auth = requireSysAdmin(ctx.req);
+  if (auth instanceof HttpErrorResponse) {
+    return { ok: false, error: auth };
+  }
+
+  const reportId = ctx.params['reportId'] ?? '';
+  const db = getMockDb();
+  const report = db.inspectionReports.find((r) => r.reportId === reportId || r.airId === reportId);
+  const detail = db.inspectionDetails[reportId];
+
+  if (!report && !detail) {
+    return {
+      ok: false,
+      error: errorResponse(404, ApiErrorCode.NotFound, `Inspection report ${reportId} not found`),
+    };
+  }
+
+  return { ok: true, reportId, report, detail, db };
 }
 
 export function registerInspectionHandlers(router: MockRouter): void {
@@ -102,19 +131,9 @@ export function registerInspectionHandlers(router: MockRouter): void {
 
   // 4. Correct prediction waste category
   router.post<CorrectCategoryRequest>('/api/v1/admin/inspections/:reportId/correct', (ctx) => {
-    const auth = requireSysAdmin(ctx.req);
-    if (auth instanceof HttpErrorResponse) {
-      return auth;
-    }
-
-    const reportId = ctx.params['reportId'] ?? '';
-    const db = getMockDb();
-    const report = db.inspectionReports.find((r) => r.reportId === reportId || r.airId === reportId);
-    const detail = db.inspectionDetails[reportId];
-
-    if (!report && !detail) {
-      return errorResponse(404, ApiErrorCode.NotFound, `Inspection report ${reportId} not found`);
-    }
+    const target = resolveInspectionTarget(ctx);
+    if (!target.ok) return target.error;
+    const { reportId, report, detail, db } = target;
 
     const body = ctx.req.body as CorrectCategoryRequest | null;
     const newStatus = InspectionReportStatus.Reviewed;
@@ -146,19 +165,9 @@ export function registerInspectionHandlers(router: MockRouter): void {
 
   // 5. Dismiss inspection report
   router.post('/api/v1/admin/inspections/:reportId/dismiss', (ctx) => {
-    const auth = requireSysAdmin(ctx.req);
-    if (auth instanceof HttpErrorResponse) {
-      return auth;
-    }
-
-    const reportId = ctx.params['reportId'] ?? '';
-    const db = getMockDb();
-    const report = db.inspectionReports.find((r) => r.reportId === reportId || r.airId === reportId);
-    const detail = db.inspectionDetails[reportId];
-
-    if (!report && !detail) {
-      return errorResponse(404, ApiErrorCode.NotFound, `Inspection report ${reportId} not found`);
-    }
+    const target = resolveInspectionTarget(ctx);
+    if (!target.ok) return target.error;
+    const { reportId, report, detail, db } = target;
 
     const newStatus = InspectionReportStatus.Reviewed;
     if (report) {
@@ -182,19 +191,9 @@ export function registerInspectionHandlers(router: MockRouter): void {
 
   // 6. Send report to retraining dataset
   router.post('/api/v1/admin/inspections/:reportId/retrain', (ctx) => {
-    const auth = requireSysAdmin(ctx.req);
-    if (auth instanceof HttpErrorResponse) {
-      return auth;
-    }
-
-    const reportId = ctx.params['reportId'] ?? '';
-    const db = getMockDb();
-    const report = db.inspectionReports.find((r) => r.reportId === reportId || r.airId === reportId);
-    const detail = db.inspectionDetails[reportId];
-
-    if (!report && !detail) {
-      return errorResponse(404, ApiErrorCode.NotFound, `Inspection report ${reportId} not found`);
-    }
+    const target = resolveInspectionTarget(ctx);
+    if (!target.ok) return target.error;
+    const { reportId, report, detail, db } = target;
 
     const newStatus = InspectionReportStatus.SentToRetraining;
     if (report) {

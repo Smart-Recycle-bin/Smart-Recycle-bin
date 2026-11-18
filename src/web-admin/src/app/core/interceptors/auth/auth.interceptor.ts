@@ -4,14 +4,7 @@ import { catchError, switchMap, throwError } from 'rxjs';
 import { environment } from '@env/environment';
 import { AuthService } from '@services/auth/auth.service';
 import { API_ENDPOINTS } from '@services/api/api-endpoints';
-import { RETRIED, SKIP_AUTH } from '../shared/http-context-tokens';
-
-/**
- * Checks whether a request targets the backend API base URL.
- */
-function isApiUrl(url: string): boolean {
-  return url.startsWith(environment.apiBaseUrl) || url.startsWith('/api/v1');
-}
+import { RETRIED, SKIP_AUTH, isApiUrl } from '../shared';
 
 /**
  * Checks whether the endpoint is public and does not require an Authorization header.

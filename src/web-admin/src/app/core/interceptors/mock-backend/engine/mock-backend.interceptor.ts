@@ -8,6 +8,7 @@ import { environment } from '@env/environment';
 import { MockRouter } from './mock-router';
 import { registerAllMockHandlers } from '../handlers';
 import { ApiErrorCode } from '@models/common/api-error-code.enum';
+import { isApiUrl } from '@core/interceptors/shared';
 
 let mockRouterInstance: MockRouter | null = null;
 
@@ -21,10 +22,6 @@ export function getSharedMockRouter(): MockRouter {
 
 export function resetSharedMockRouter(): void {
   mockRouterInstance = null;
-}
-
-function isApiUrl(url: string): boolean {
-  return url.startsWith(environment.apiBaseUrl) || url.startsWith('/api/v1');
 }
 
 export const mockBackendInterceptor: HttpInterceptorFn = (req, next) => {
