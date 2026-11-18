@@ -24,7 +24,6 @@ describe('App Routes', () => {
     await Promise.all([
       import('./layouts/admin-layout/admin-layout'),
       import('./layouts/auth-layout/auth-layout'),
-      import('./features/placeholders/route-placeholder/route-placeholder'),
       import('./features/placeholders/not-found/not-found'),
     ]);
   }, 60000);
@@ -109,7 +108,7 @@ describe('App Routes', () => {
       expect(harness.routeNativeElement?.textContent).toContain('EcoBin UI Kit & Foundation');
     }, 15000);
 
-    it('should render admin placeholder routes', async () => {
+    it('should render admin feature routes', async () => {
       const adminPaths: [string, string][] = [
         ['/bins', 'Bins List'],
         ['/bins/map', 'Live Bin Map'],

@@ -24,14 +24,12 @@ import {
   Clock,
   Cpu,
   Download,
-  Ellipsis,
   ExternalLink,
   Eye,
   EyeOff,
   FileText,
   Funnel,
   Gift,
-  Home,
   type IconNode,
   Info,
   Layers,
@@ -42,7 +40,6 @@ import {
   Map as MapIcon,
   MapPin,
   Menu,
-  Minus,
   Moon,
   Pencil,
   Plus,
@@ -70,9 +67,7 @@ import {
 } from 'lucide';
 
 export type IconName =
-  | 'home'
   | 'dashboard'
-  | 'layout-dashboard'
   | 'users'
   | 'user'
   | 'settings'
@@ -88,7 +83,6 @@ export type IconName =
   | 'arrow-up'
   | 'arrow-down'
   | 'plus'
-  | 'minus'
   | 'edit'
   | 'pencil'
   | 'trash'
@@ -108,7 +102,6 @@ export type IconName =
   | 'truck'
   | 'battery'
   | 'wifi'
-  | 'more-horizontal'
   | 'sun'
   | 'moon'
   | 'refresh'
@@ -141,9 +134,7 @@ export type IconName =
 export type IconSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | number;
 
 const LUCIDE_ICONS: Record<IconName, IconNode> = {
-  home: Home,
   dashboard: LayoutDashboard,
-  'layout-dashboard': LayoutDashboard,
   users: Users,
   user: User,
   settings: Settings,
@@ -159,7 +150,6 @@ const LUCIDE_ICONS: Record<IconName, IconNode> = {
   'arrow-up': ArrowUp,
   'arrow-down': ArrowDown,
   plus: Plus,
-  minus: Minus,
   edit: SquarePen,
   pencil: Pencil,
   trash: Trash2,
@@ -179,7 +169,6 @@ const LUCIDE_ICONS: Record<IconName, IconNode> = {
   truck: Truck,
   battery: Battery,
   wifi: Wifi,
-  'more-horizontal': Ellipsis,
   sun: Sun,
   moon: Moon,
   refresh: RefreshCw,

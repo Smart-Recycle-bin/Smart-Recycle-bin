@@ -19,6 +19,7 @@ import {
   ForgotPasswordRequest,
   LoginRequest,
   LoginResponse,
+  LogoutRequest,
   RefreshTokenResponse,
   StoredSession,
 } from '../../models/auth/auth.dto';
@@ -179,11 +180,12 @@ export class AuthService implements OnDestroy {
    * always clearing session state locally regardless of network success or error.
    */
   logout(): Observable<void> {
-    const refreshToken = this._session()?.refreshToken;
+    const refreshToken = this._session()?.refreshToken ?? undefined;
+    const body: LogoutRequest = { refreshToken };
     const context = new HttpContext().set(SKIP_AUTH, true);
 
     return this.apiClient
-      .post<void>(API_ENDPOINTS.auth.logout, { refreshToken }, { context })
+      .post<void>(API_ENDPOINTS.auth.logout, body, { context })
       .pipe(
         catchError(() => of(undefined)),
         finalize(() => {

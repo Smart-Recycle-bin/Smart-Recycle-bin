@@ -36,14 +36,3 @@ export interface UnsuspendUserResponse {
   unsuspendedAt: string; // ISO 8601 string
 }
 
-/**
- * Documented response item for GET /api/v1/admin/users (APIs.md 2.11).
- */
-export interface SearchUsersItem {
-  userId: Id;
-  email: string;
-  displayName: string;
-  role: UserRole;
-  status: AccountStatus;
-  createdAt: string; // ISO 8601 string
-}

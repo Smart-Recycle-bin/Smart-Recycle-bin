@@ -47,12 +47,3 @@ export interface BinMapResponse {
   meta: BinMapMeta;
 }
 
-/**
- * Future push channel event payload for real-time status updates (SignalR / SSE ready).
- */
-export interface BinStatusChange {
-  binId: string;
-  status: BinStatus;
-  fillLevel: number;
-  updatedAt: string;
-}

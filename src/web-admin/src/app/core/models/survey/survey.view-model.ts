@@ -12,7 +12,6 @@ export interface SurveyQaQuery extends PageQuery {
   to?: string;   // ISO date string
 }
 
-export type RecentSurveyQuery = SurveyQaQuery;
 
 /**
  * Top-level KPI card values and period deltas (UI p11).
