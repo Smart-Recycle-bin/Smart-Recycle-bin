@@ -3,10 +3,11 @@ import { RouterOutlet } from '@angular/router';
 import { ThemeService } from '@services/theme/theme.service';
 import { Icon } from '@shared/components/icon/icon';
 import { TooltipDirective } from '@shared/components/tooltip/tooltip.directive';
+import { BrandLogo } from '@shared/components/brand-logo/brand-logo';
 
 @Component({
   selector: 'app-auth-layout',
-  imports: [RouterOutlet, Icon, TooltipDirective],
+  imports: [RouterOutlet, Icon, TooltipDirective, BrandLogo],
   templateUrl: './auth-layout.html',
   styleUrl: './auth-layout.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

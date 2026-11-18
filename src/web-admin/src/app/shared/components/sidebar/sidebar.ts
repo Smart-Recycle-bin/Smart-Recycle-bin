@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { Icon, IconName } from '../icon/icon';
+import { BrandLogo } from '../brand-logo/brand-logo';
 
 export interface SidebarNavItem {
   id: string;
@@ -18,7 +19,7 @@ export interface SidebarSection {
 
 @Component({
   selector: 'app-sidebar',
-  imports: [RouterLink, RouterLinkActive, Icon],
+  imports: [RouterLink, RouterLinkActive, Icon, BrandLogo],
   templateUrl: './sidebar.html',
   styleUrl: './sidebar.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

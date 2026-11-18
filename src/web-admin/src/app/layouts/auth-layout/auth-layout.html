@@ -5,9 +5,7 @@
     <header class="auth-card-header">
       <div class="auth-logo-wrap">
         <ng-content select="[auth-logo]">
-          @if (logoSrc()) {
-            <img [src]="logoSrc()" [alt]="logoAlt()" class="auth-logo-img" />
-          }
+          <app-brand-logo size="md" />
         </ng-content>
       </div>
 

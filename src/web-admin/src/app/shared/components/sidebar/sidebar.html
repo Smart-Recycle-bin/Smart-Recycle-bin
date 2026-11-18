@@ -3,9 +3,7 @@
   <div class="sidebar-brand">
     <div class="brand-logo-box">
       <ng-content select="[sidebar-logo]">
-        @if (logoSrc()) {
-          <img [src]="logoSrc()" [alt]="logoAlt()" class="brand-logo-img" />
-        }
+        <app-brand-logo [compact]="collapsed()" size="md" />
       </ng-content>
     </div>
   </div>
@@ -14,8 +12,8 @@
   <nav class="sidebar-nav">
     @for (sec of sections(); track sec.title || $index) {
       <div class="nav-section">
-        @if (sec.title && !collapsed()) {
-          <h2 class="section-title">{{ sec.title }}</h2>
+        @if (sec.title) {
+          <h2 class="section-title" [attr.aria-hidden]="collapsed()">{{ sec.title }}</h2>
         }
 
         <ul class="nav-list">
@@ -36,12 +34,10 @@
                   <app-icon [name]="item.icon" size="sm" />
                 </span>
 
-                @if (!collapsed()) {
-                  <span class="nav-label">{{ item.label }}</span>
+                <span class="nav-label" [attr.aria-hidden]="collapsed()">{{ item.label }}</span>
 
-                  @if (item.badge !== undefined && item.badge !== null && item.badge !== '') {
-                    <span class="nav-count-pill">{{ item.badge }}</span>
-                  }
+                @if (item.badge !== undefined && item.badge !== null && item.badge !== '') {
+                  <span class="nav-count-pill" [attr.aria-hidden]="collapsed()">{{ item.badge }}</span>
                 }
               </a>
             </li>
@@ -62,9 +58,7 @@
       [attr.aria-expanded]="!collapsed()"
     >
       <app-icon [name]="collapsed() ? 'chevron-right' : 'chevron-left'" size="xs" />
-      @if (!collapsed()) {
-        <span>Collapse</span>
-      }
+      <span class="collapse-label" [attr.aria-hidden]="collapsed()">Collapse</span>
     </button>
   </div>
 </aside>

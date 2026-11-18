@@ -128,6 +128,18 @@
   --sidebar-active-bg: rgba(255, 255, 255, 0.22);
   --sidebar-border: rgba(255, 255, 255, 0.16);
   --auth-bg: #EDF9F3;
+
+  /* Scrollbar tokens */
+  --scrollbar-thumb: rgba(100, 116, 139, 0.35);
+  --scrollbar-thumb-hover: rgba(100, 116, 139, 0.6);
+  --scrollbar-track: transparent;
+  --sidebar-scrollbar-thumb: rgba(255, 255, 255, 0.25);
+  --sidebar-scrollbar-thumb-hover: rgba(255, 255, 255, 0.45);
+
+  /* Brand mark logo tokens */
+  --brand-mark-bg: #009966;
+  --brand-mark-fg: #FFFFFF;
+  --brand-mark-accent: #A7F3D0;
 }
 
 .dark {
@@ -209,6 +221,18 @@
   --sidebar-active-bg: rgba(16, 185, 129, 0.28);
   --sidebar-border: rgba(255, 255, 255, 0.1);
   --auth-bg: #0A101F;
+
+  /* Scrollbar tokens */
+  --scrollbar-thumb: rgba(148, 163, 184, 0.35);
+  --scrollbar-thumb-hover: rgba(148, 163, 184, 0.6);
+  --scrollbar-track: transparent;
+  --sidebar-scrollbar-thumb: rgba(255, 255, 255, 0.25);
+  --sidebar-scrollbar-thumb-hover: rgba(255, 255, 255, 0.45);
+
+  /* Brand mark logo tokens */
+  --brand-mark-bg: #009966;
+  --brand-mark-fg: #FFFFFF;
+  --brand-mark-accent: #A7F3D0;
 }
 
 @layer base {
@@ -240,26 +264,29 @@
 
 /* Scrollbars */
 * {
-  scrollbar-color: var(--border-strong) var(--surface-muted);
   scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
 }
 
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--surface-muted);
+  background: var(--scrollbar-track);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--border-strong);
-  border-radius: 4px;
+  background-color: var(--scrollbar-thumb);
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--text-muted);
+  background-color: var(--scrollbar-thumb-hover);
 }
 
 /* Native autofill theme */
