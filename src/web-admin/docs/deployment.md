@@ -6,7 +6,7 @@ This document details the production build, server configuration, security harde
 
 ## 1. Overview & Build Artifacts
 
-The EcoBin Web Admin is built as an Angular 19 Single Page Application (SPA).
+The EcoBin Web Admin is built as an Angular 22 Single Page Application (SPA).
 
 ### Production Build
 ```bash
@@ -92,7 +92,7 @@ server {
     # HTTP Security Headers
     # -------------------------------------------------------------
     # Content Security Policy (Google Maps & Angular compatible)
-    add_header Content-Security-Policy "default-src 'self'; script-src 'self' https://maps.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: https: blob: https://maps.gstatic.com https://*.googleapis.com https://*.ggpht.com; connect-src 'self' https: https://maps.googleapis.com https://*.googleapis.com; worker-src 'self' blob:; frame-ancestors 'none'; base-uri 'self'; form-action 'self';" always;
+    add_header Content-Security-Policy "default-src 'self'; script-src 'self' https://maps.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https: blob: https://maps.gstatic.com https://*.googleapis.com https://*.ggpht.com; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https: https://maps.googleapis.com https://*.googleapis.com; worker-src 'self' blob:; frame-ancestors 'none'; base-uri 'self'; form-action 'self';" always;
 
     # HTTP Strict Transport Security (HSTS)
     add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
@@ -169,8 +169,8 @@ server {
 ## 3. Token Storage Trade-Off & Backend Recommendations
 
 ### Current Client-Side Architecture
-- The SPA stores access tokens and refresh tokens in `sessionStorage` (or `localStorage`) via `TokenStorageService`.
-- **Trade-off:** This provides maximum simplicity for decoupled SPAs without requiring complex cross-domain cookie coordination during initial development. However, tokens stored in `sessionStorage`/`localStorage` are susceptible to exfiltration if an Cross-Site Scripting (XSS) vulnerability exists.
+- The SPA stores access tokens and refresh tokens in `localStorage` via `TokenStorageService` (with cross-tab sync via the `storage` event).
+- **Trade-off:** This provides maximum simplicity for decoupled SPAs without requiring complex cross-domain cookie coordination during initial development. However, tokens stored in `localStorage` are susceptible to exfiltration if an Cross-Site Scripting (XSS) vulnerability exists.
 
 ### Recommended Target Architecture (Backend Migration)
 For enhanced security in high-trust production environments, the backend team should transition token issuance to a hybrid scheme:
@@ -207,10 +207,10 @@ The EcoBin Web Admin uses `@angular/google-maps` to render IoT fleet distributio
 
 1. **Decoupled Runtime Configuration:**
    - The application does not compile API keys into environment TypeScript files (`environment.ts` or `environment.production.ts`).
-   - Instead, `AppConfigService` fetches `/config.json` at runtime only when a map route is activated.
+   - Instead, `AppConfigService` fetches `/config.json` at runtime only when a map route is activated using `fetch('/config.json', { cache: 'no-store' })`.
    - Developers copy `public/config.example.json` to `public/config.json` and insert their demo key (`YOUR_KEY`).
 2. **Production Asset Exclusion in `angular.json`:**
-   - In `angular.json`, the production configuration overrides the asset globs to explicitly ignore `config.json`:
+   - In `angular.json`, the production and production-sourcemaps configurations override the asset globs to explicitly ignore `config.json`, `config.example.json`, and `mock/**`:
      ```json
      "configurations": {
        "production": {
@@ -218,13 +218,13 @@ The EcoBin Web Admin uses `@angular/google-maps` to render IoT fleet distributio
            {
              "glob": "**/*",
              "input": "public",
-             "ignore": ["config.json"]
+             "ignore": ["config.json", "config.example.json", "mock/**"]
            }
          ]
        }
      }
      ```
-   - This ensures that a developer's local `public/config.json` is **never copied** to `dist/ecobin-admin/browser/` during `ng build`.
+   - This ensures that local `public/config.json` and mock assets are **never copied** to `dist/ecobin-admin/browser/` during `ng build`.
 3. **Production Deployment Delivery:**
    - In production environments (e.g. Kubernetes, Docker, Nginx), `config.json` is injected at deployment time as a mounted volume, environment template, or dedicated static file served at `/config.json`:
      ```json

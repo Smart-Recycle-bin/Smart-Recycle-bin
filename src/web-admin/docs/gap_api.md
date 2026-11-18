@@ -190,6 +190,54 @@ Errors return:
   }
   ```
 
+#### `GET /api/v1/admin/bins/map` (PROPOSED — Live Bin Map Data Feed)
+- **Screen(s):** S4 Live Bin Map (p4)
+- **Actor:** `SYS_ADMIN`
+- **Purpose:** High-performance, unpaginated endpoint optimized for map clustering, bounding box viewports, and live polling feeds.
+- **Query Parameters (all optional):**
+  - `region`: string (`Greater Cairo`, `Alexandria`).
+  - `status`: repeatable or comma-separated (`AVAILABLE`, `≥80% FULL`, `≥95% FULL / NEEDS SERVICING`, `offline`).
+  - `bbox`: bounding box formatted as `south,west,north,east` (e.g. `29.9,31.1,30.2,31.4`).
+- **Scale & Limits:**
+  - Hard cap of 5,000 items per response.
+  - When matching records exceed 5,000, `meta.truncated` is `true`, signalling the client map to narrow its viewport bounding box on map idle.
+- **Network & Caching Rules:**
+  - The backend MUST enable Gzip / Brotli compression.
+  - Supports conditional HTTP requests with `ETag` and `If-None-Match`, returning `304 Not Modified` when fleet state is unchanged.
+- **Response Shape:**
+  ```json
+  {
+    "success": true,
+    "data": {
+      "items": [
+        {
+          "binId": "BIN-0001",
+          "name": "Nasr City Mall Entrance",
+          "area": "Nasr City",
+          "district": "Cairo",
+          "region": "Greater Cairo",
+          "latitude": 30.0561,
+          "longitude": 31.3301,
+          "status": "AVAILABLE",
+          "fillLevel": 34,
+          "collectorName": "Mahmoud Fathy",
+          "lastServicedAt": "2025-06-14T12:20:00Z",
+          "updatedAt": "2026-11-17T14:30:00Z"
+        }
+      ],
+      "meta": {
+        "totalItems": 23,
+        "returned": 23,
+        "truncated": false,
+        "generatedAt": "2026-11-17T14:30:00Z"
+      }
+    }
+  }
+  ```
+- **Future Push Channel (SignalR / WebSockets):**
+  - Event: `BinStatusChanged`
+  - Payload: `{ "binId": "BIN-0001", "status": "≥80% FULL", "fillLevel": 82, "updatedAt": "2026-11-17T14:32:00Z" }`
+
 ---
 
 ### 1.4 Recycler Moderation
@@ -712,7 +760,7 @@ Errors return:
 
 ---
 
-### 1.9 Pagination and Lookups (PROPOSED)
+### 1.13 Pagination and Lookups (PROPOSED)
 
 To scale administrative fleet, recycler, audit, and transaction listings, server-side pagination and lightweight lookup endpoints are defined as additive, non-breaking enhancements.
 
@@ -818,7 +866,7 @@ Lightweight lookup endpoints dedicated for dropdowns, filters, and assignment se
 1. **API Error Body Shape:** `APIs.md` does not specify a single canonical JSON error envelope.
    - *Current Assumption:* `{ success: false, error?: { code: string; message?: string }, code?: string, message?: string }`.
 2. **Pagination Strategy:** `APIs.md` lacks pagination query parameters (`page`, `pageSize`, `limit`, `offset`) and pagination envelope metadata across all endpoints.
-   - *Resolution:* Additive, backward-compatible server-side pagination contract defined in Section 1.9 (`page`, `pageSize`, `sortBy`, `sortDir`, `meta` envelope). Unpaged requests without `page` continue returning raw data array for backward compatibility. Dedicated lightweight lookups (`districts`, `collectors`, `admins`) introduced for dropdown filters.
+   - *Resolution:* Additive, backward-compatible server-side pagination contract defined in Section 1.13 (`page`, `pageSize`, `sortBy`, `sortDir`, `meta` envelope). Unpaged requests without `page` continue returning raw data array for backward compatibility. Dedicated lightweight lookups (`districts`, `collectors`, `admins`) introduced for dropdown filters.
 3. **Refresh Token Storage & Schema:** `schema.dbml` has no `refresh_tokens` table.
    - *Recommendation:* Backend needs a `refresh_tokens` table storing `(id, user_id, token_hash, expires_at, revoked_at, replaced_by_token, created_at)`.
 4. **Behavior Undefined in Preliminary UI (Section 4 of `frontend-scope.md`):**
@@ -873,4 +921,9 @@ Lightweight lookup endpoints dedicated for dropdowns, filters, and assignment se
    - **Audit Trail (10 total):** 8 rows visible on p16; 2 synthetic rows added to satisfy "1–8 of 10". Admins strictly mapped to Laila Hamdy (`ADM-001`) and Amr Shawky (`ADM-002`).
 
 
----
+7. **Recycler Phone Number Search Enriched Field:** Added optional `phoneNumber` to `RecyclerListItem` and mock recyclers to fulfill the UI p5 search input placeholder ("Search name, email, phone or ID..."). The phone number is searched in `GET /api/v1/admin/users`, but is not rendered as a table column per p5.
+8. **Inspection Summary Counters Single Source of Truth:** Derived summary counters (`pendingReviewCount`, `reviewedCount`, `labelledImagesCount`, `remainingUntilRetrain`) directly from the reports collection. The reviewed count includes both `Reviewed` and `SentToRetraining` reports (matching the card label "reports resolved or sent to retrain"). Mutating actions (dismiss, correct category, retrain) dynamically update the summary counters and notify frontend state.
+9. **Collector Inactive Status:** Deactivating a field collector sets `status` to `inactive` (`AccountStatus.Inactive`), matching the PDF p6 status column and badge.
+10. **Collector Bin Reassignment & Moving:** Assigning a smart bin dynamically recalculates the assigned bin count for both the new and previous collector directly from `smart_bins`, preventing duplicate counts. Bins already assigned to a collector are excluded from the assignment picker.
+11. **Bin Status Labels Alignment:** Standardized to exact wire/visual labels from the PDF: `AVAILABLE`, `≥80% FULL`, `≥95% FULL`, and `Offline` (with map legend wording `≥95% – needs servicing` retained on p4).
+12. **Google Maps Foundation & Runtime Config Architecture:** Replaced legacy Leaflet mapping stack with `@angular/google-maps`. API key and map parameters are decoupled from build environments into runtime configuration (`/config.json`) fetched by `AppConfigService` on demand. In development, demo keys are configured via gitignored `public/config.json`. Production configurations in `angular.json` strictly exclude `config.json` via asset ignore globs. In-memory `MapLoadBudgetService` enforces an 8-Map per-session cap to protect quotas, and `scripts/check-no-secrets.mjs` prevents credential leaks in CI and build checks.

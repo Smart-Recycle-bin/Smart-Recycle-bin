@@ -4,51 +4,60 @@ Central management portal for the EcoBin smart waste collection and recycling ec
 
 ---
 
-## Run & Development Guide
+## 1. Setup & Configuration
 
-### 1. Development with In-Memory Mock Backend (Default)
-Runs locally with zero external backend dependencies. The in-memory mock engine intercepts all `/api/v1` traffic with realistic seeds, simulated 400ms latency, and JWT refresh token rotation:
+### Runtime Configuration (Google Maps)
+The portal loads Google Maps parameters at runtime without compiling credentials into bundle code:
+1. Copy `public/config.example.json` to `public/config.json`:
+   ```bash
+   cp public/config.example.json public/config.json
+   ```
+2. Insert your Google Maps API key into `public/config.json`.
+3. Note: `public/config.json` is gitignored and excluded from production builds.
+
+---
+
+## 2. Running the Application
+
+### Option A: In-Memory Mock Backend (Default)
+Runs locally with zero external backend dependencies. The in-memory mock engine intercepts `/api/v1` traffic with realistic seeds, simulated 400ms latency, and JWT refresh token rotation:
 
 ```bash
 npm start
 # or
 ng serve
 ```
-Navigate your browser to `http://localhost:4200/`. Seeded admin credentials:
+Navigate to `http://localhost:4200/`. Seeded admin credentials:
 - `admin@ecobin.eg` / `password123` (Laila Hamdy, System Admin)
 - `amr.shawky@ecobin.eg` / `password123` (Amr Shawky, System Admin)
 
-*Note: The mock backend validates email format (returning `400 VALIDATION_ERROR` for malformed emails) and authenticates against seeded admins (returning `401 INVALID_CREDENTIALS` for unknown accounts or incorrect passwords).*
-
-### 2. Development against Real Backend API
-To develop against a live backend service running locally (e.g. at `http://localhost:5000`), update `proxy.conf.json` if needed with your backend host, set `useMockBackend: false` in `src/environments/environment.development.ts`, and run:
+### Option B: Real Backend API
+To run against a live backend service without editing environment files, use the dedicated `local-api` configuration. It proxies `/api/v1` requests through `proxy.conf.json` (defaults to `http://localhost:5000`):
 
 ```bash
-ng serve --proxy-config proxy.conf.json
-```
-All calls to `/api` are automatically proxied to the configured backend target.
-
-### 3. Production Build
-Generates optimized, AOT-compiled production artifacts under `dist/ecobin-admin/browser`. Gated by `ngDevMode`, the mock backend engine and all mock data seeds are completely tree-shaken from production bundles:
-
-```bash
-npm run build
+npm run start:api
 # or
-ng build
+ng serve --configuration=local-api
 ```
 
-### 4. Verify Production Bundle (Zero Mock Leaks)
-Runs a production build and strictly verifies that no mock credentials (`wrongpass`, `mock_jwt`), mock handlers, or sample identities (`Laila Hamdy`) leak into production JavaScript chunks:
+---
 
-```bash
-npm run check:prod-bundle
-```
+## 3. Testing & Verification
 
-### 5. Running Unit Tests
-Executes the comprehensive Vitest test suite covering domain models, services, interceptors, guards, and components:
+| Command | Purpose |
+|---|---|
+| `npm test` | Executes the Vitest unit & integration test suite (`*.spec.ts`). |
+| `npm run check:prod-bundle` | Builds production and strictly asserts zero mock leaks or secret patterns. |
+| `npm run check:contrast` | Verifies WCAG AA color contrast across theme tokens. |
+| `npm run e2e` | Runs local Playwright E2E and accessibility audits (local-only). |
 
-```bash
-npm test
-# or
-ng test
-```
+---
+
+## 4. Documentation & Standards
+
+Authoritative project documentation is maintained in the `docs/` directory:
+- [Architecture & Layers](docs/architecture.md)
+- [Backend Contract & Gap Analysis](docs/gap_api.md)
+- [Production Deployment & Security](docs/deployment.md)
+- [Testing & Quality Assurance](docs/testing.md)
+- [Frontend Scope & Feature Conventions](docs/frontend-scope.md)

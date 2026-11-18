@@ -1,0 +1,250 @@
+Table USER {
+  UserId int [pk]
+  RoleId int
+  Email varchar
+  PasswordHash varchar
+  DisplayName varchar
+  PhoneNumber varchar
+  ProfilePhoto varchar
+  AccountStatus varchar
+  CreatedAt datetime
+}
+
+Table ROLE {
+  RoleId int [pk]
+  RoleName varchar
+}
+
+Table SMART_BIN {
+  BinId int [pk]
+  SerialNumber varchar
+  QRCode varchar
+  Latitude decimal
+  Longitude decimal
+  District varchar
+  FillLevel decimal
+  Status varchar
+  CapacityThreshold decimal
+  CollectorId int
+  CreatedAt datetime
+}
+
+Table WASTE_TYPE {
+  WasteTypeId int [pk]
+  Name varchar
+  Description varchar
+  BasePoints int
+}
+
+Table DISPOSAL_SESSION {
+  SessionId int [pk]
+  StartTime datetime
+  EndTime datetime
+  Status varchar
+  TotalPoints int
+  UserId int
+  BinId int
+}
+
+Table DISPOSAL_ITEM {
+  ItemId int [pk]
+  SessionId int
+  WasteTypeId int
+  Image varchar
+  DetectedAt datetime
+  EstimatedPoints int
+  AIConfidence decimal
+}
+
+Table DISPOSAL_SURVEY {
+  SurveyId int [pk]
+  SessionId int [unique]
+  TotalCalculatedPoints int
+  CreatedAt datetime
+}
+
+Table SURVEY_RESPONSE {
+  ResponseId int [pk]
+  SurveyId int
+  ItemId int [unique]
+  IsCorrect boolean
+  UserSelectedTypeId int
+  CreatedAt datetime
+}
+
+Table INSPECTION_REPORT {
+  ReportId int [pk]
+  SurveyId int
+  DisposalItemId int [unique]
+  Feedback varchar
+  Status varchar
+  CreatedAt datetime
+  ReviewedAt datetime
+  ReviewedByAdminId int
+}
+
+Table WALLET {
+  WalletId int [pk]
+  UserId int [unique]
+  AvailablePoints int
+  LifetimeEarnedPoints int
+}
+
+Table LEDGER_TRANSACTION {
+  TransactionId int [pk]
+  WalletId int
+  SessionId int [unique]
+  VoucherId int [unique]
+  TransactionType varchar
+  PointsDelta int
+  RunningBalance int
+  CreatedAt datetime
+}
+
+Table REWARD {
+  RewardId int [pk]
+  Name varchar
+  Description varchar
+  Category varchar
+  PointsCost int
+  StockQuantity int
+  ImageURL varchar
+  IsActive boolean
+  CreatedAt datetime
+}
+
+Table VOUCHER {
+  VoucherId int [pk]
+  Code varchar
+  UserId int
+  RewardId int
+  IssuedAt datetime
+  ExpiryDate datetime
+  Status varchar
+}
+
+Table ACHIEVEMENT_BADGE {
+  BadgeId int [pk]
+  Name varchar
+  Description varchar
+  RequiredPoints int
+  RequiredRecyclingVolume decimal
+  Icon varchar
+}
+
+Table USER_BADGE {
+  UserId int
+  BadgeId int
+  EarnedAt datetime
+
+  indexes {
+    (UserId, BadgeId) [pk]
+  }
+}
+
+Table SERVICE_RECORD {
+  ServiceId int [pk]
+  BinId int
+  CollectorId int
+  ServicedAt datetime
+  PreviousFillLevel decimal
+  Notes varchar
+}
+
+Table NOTIFICATION {
+  NotificationId int [pk]
+  UserId int
+  Title varchar
+  Message varchar
+  Type varchar
+  IsRead boolean
+  CreatedAt datetime
+}
+
+Table AUDIT_LOG {
+  AuditLogId int [pk]
+  AdminId int
+  ActionType varchar
+  ResourceId int
+  Timestamp datetime
+}
+
+
+// =========================
+// RELATIONSHIPS
+// =========================
+
+// Each User has exactly one Role
+Ref: USER.RoleId > ROLE.RoleId
+
+// One Collector can be responsible for many Smart Bins
+Ref: SMART_BIN.CollectorId > USER.UserId
+
+// One User can have many Disposal Sessions
+Ref: DISPOSAL_SESSION.UserId > USER.UserId
+
+// One Smart Bin can have many Disposal Sessions
+Ref: DISPOSAL_SESSION.BinId > SMART_BIN.BinId
+
+// One Disposal Session contains many Disposal Items
+Ref: DISPOSAL_ITEM.SessionId > DISPOSAL_SESSION.SessionId
+
+// One Waste Type can be assigned to many Disposal Items
+Ref: DISPOSAL_ITEM.WasteTypeId > WASTE_TYPE.WasteTypeId
+
+// One Session has exactly one Survey
+Ref: DISPOSAL_SURVEY.SessionId - DISPOSAL_SESSION.SessionId
+
+// One Survey has many Responses
+Ref: SURVEY_RESPONSE.SurveyId > DISPOSAL_SURVEY.SurveyId
+
+// One Disposal Item can have a Survey Response
+Ref: SURVEY_RESPONSE.ItemId - DISPOSAL_ITEM.ItemId
+
+// One Waste Type can be selected by users in many Survey Responses
+Ref: SURVEY_RESPONSE.UserSelectedTypeId > WASTE_TYPE.WasteTypeId
+
+// One Survey can generate many Inspection Reports
+Ref: INSPECTION_REPORT.SurveyId > DISPOSAL_SURVEY.SurveyId
+
+// One Disposal Item can have one Inspection Reports
+Ref: INSPECTION_REPORT.DisposalItemId - DISPOSAL_ITEM.ItemId
+
+// One Admin can review many Inspection Reports
+Ref: INSPECTION_REPORT.ReviewedByAdminId > USER.UserId
+
+// Each User has exactly one Wallet
+Ref: WALLET.UserId - USER.UserId
+
+// One Wallet has many Ledger Transactions
+Ref: LEDGER_TRANSACTION.WalletId > WALLET.WalletId
+
+// One Disposal Session can be linked to one Ledger Transactions
+Ref: LEDGER_TRANSACTION.SessionId - DISPOSAL_SESSION.SessionId
+
+// One Voucher can be linked to one Ledger Transactions
+Ref: LEDGER_TRANSACTION.VoucherId - VOUCHER.VoucherId
+
+// One User can have many Vouchers
+Ref: VOUCHER.UserId > USER.UserId
+
+// One Reward can have many Vouchers
+Ref: VOUCHER.RewardId > REWARD.RewardId
+
+// Users can earn many Badges
+Ref: USER_BADGE.UserId > USER.UserId
+
+// One Badge can belong to many Users
+Ref: USER_BADGE.BadgeId > ACHIEVEMENT_BADGE.BadgeId
+
+// One Smart Bin can have many Service Records
+Ref: SERVICE_RECORD.BinId > SMART_BIN.BinId
+
+// One Collector can create many Service Records
+Ref: SERVICE_RECORD.CollectorId > USER.UserId
+
+// One User can receive many Notifications
+Ref: NOTIFICATION.UserId > USER.UserId
+
+// One Admin can create many Audit Logs
+Ref: AUDIT_LOG.AdminId > USER.UserId
