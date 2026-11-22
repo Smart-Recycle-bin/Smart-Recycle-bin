@@ -20,7 +20,7 @@
         public DateTime RevokedAt { get; set; }
 
        
-        public int ReplacedByTokenId { get; set; }
+        public int? ReplacedByTokenId { get; set; }
 
         public string CreatedByIp { get; set; }
 

@@ -311,7 +311,7 @@ namespace SmartBin.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("ReplacedByTokenId")
+                    b.Property<int?>("ReplacedByTokenId")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("RevokedAt")
@@ -331,7 +331,8 @@ namespace SmartBin.Migrations
                     b.HasKey("RefreshTokenId");
 
                     b.HasIndex("ReplacedByTokenId")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("[ReplacedByTokenId] IS NOT NULL");
 
                     b.HasIndex("TokenHash")
                         .IsUnique();
@@ -339,6 +340,35 @@ namespace SmartBin.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("RefreshTokens");
+                });
+
+            modelBuilder.Entity("SmartBin.Models.Wallet", b =>
+                {
+                    b.Property<int>("WalletId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("WalletId"));
+
+                    b.Property<int>("AvailablePoints")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.Property<int>("LifetimeEarnedPoints")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("WalletId");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("WALLET", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<int>", b =>
@@ -408,8 +438,7 @@ namespace SmartBin.Migrations
                     b.HasOne("SmartBin.Models.RefreshToken", "ReplacedByToken")
                         .WithOne()
                         .HasForeignKey("SmartBin.Models.RefreshToken", "ReplacedByTokenId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("SmartBin.Models.ApplicationUser", "User")
                         .WithMany()
@@ -418,6 +447,17 @@ namespace SmartBin.Migrations
                         .IsRequired();
 
                     b.Navigation("ReplacedByToken");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("SmartBin.Models.Wallet", b =>
+                {
+                    b.HasOne("SmartBin.Models.ApplicationUser", "User")
+                        .WithOne()
+                        .HasForeignKey("SmartBin.Models.Wallet", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("User");
                 });
