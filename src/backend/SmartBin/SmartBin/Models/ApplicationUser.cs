@@ -5,7 +5,6 @@ namespace SmartBin.Models
 {
     public class ApplicationUser : IdentityUser<int>
     {
-        [Required]
         public string DisplayName { get; set; }
 
         public string? ProfilePhoto { get; set; }
