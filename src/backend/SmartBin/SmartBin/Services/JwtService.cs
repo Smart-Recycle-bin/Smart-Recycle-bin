@@ -32,7 +32,9 @@ namespace SmartBin.Services
                 var claims = new List<Claim>
             {
                 new Claim("id", user.Id.ToString()),
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim("role", role),
+                new Claim(ClaimTypes.Role, role),
                 new Claim(
                     JwtRegisteredClaimNames.Jti,
                     Guid.NewGuid().ToString()
