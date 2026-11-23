@@ -55,9 +55,11 @@ CodeCoverage/
 *.VisualState.xml
 TestResult.xml
 nunit-*.xml
-
 # Missing APIs documentation
 docs/missing_apis.md
 docs/missing_api.md
 missing_apis.md
 missing_api.md
+
+# Visual Studio
+.vs/

@@ -1,0 +1,6 @@
+@SmartBin_HostAddress = http://localhost:5121
+
+GET {{SmartBin_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
