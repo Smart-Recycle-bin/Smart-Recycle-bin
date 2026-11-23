@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:ecobin/core/config/app_config.dart';
 import 'package:ecobin/core/constants/api_endpoints.dart';
 import 'package:ecobin/core/mock/mock_data.dart';
@@ -32,9 +33,10 @@ class BinsRemoteDataSourceImpl implements BinsRemoteDataSource {
         final list = response.data['data'] as List;
         return list.map((e) => BinModel.fromJson(e)).toList();
       }
-      return MockData.getBins();
-    } on DioException catch (_) {
-      return MockData.getBins();
+      return [];
+    } on DioException catch (e) {
+      debugPrint('Error fetching nearby bins: $e');
+      return [];
     }
   }
 
@@ -58,35 +60,21 @@ class BinsRemoteDataSourceImpl implements BinsRemoteDataSource {
         final list = response.data['data'] as List;
         return list.map((e) => BinModel.fromJson(e)).toList();
       }
-      return MockData.getBins();
-    } on DioException catch (_) {
-      return MockData.getBins().where((b) =>
-          b.name.toLowerCase().contains(query.toLowerCase()) ||
-          b.district.toLowerCase().contains(query.toLowerCase())).toList();
+      return [];
+    } on DioException catch (e) {
+      debugPrint('Error searching bins: $e');
+      return [];
     }
   }
 
   @override
   Future<BinModel> getBinDetails(String binId) async {
-    if (AppConfig.useMockData) {
-      await Future.delayed(const Duration(milliseconds: AppConfig.mockLatencyMs));
-      return MockData.getBins().firstWhere(
-        (b) => b.binId == binId,
-        orElse: () => MockData.getBins().first,
-      );
-    }
-
-    try {
-      final response = await apiClient.dio.get(ApiEndpoints.binDetails(binId));
-      if (response.data['success'] == true) {
-        return BinModel.fromJson(response.data['data']);
-      }
-      return MockData.getBins().first;
-    } on DioException catch (_) {
-      return MockData.getBins().firstWhere(
-        (b) => b.binId == binId,
-        orElse: () => MockData.getBins().first,
-      );
-    }
+    // Note: E61 (Bin Details) is reserved for admin dashboard;
+    // mobile relies on the loaded list of nearby bins.
+    final all = MockData.getBins();
+    return all.firstWhere(
+      (b) => b.binId == binId,
+      orElse: () => all.first,
+    );
   }
 }
