@@ -188,6 +188,7 @@ gantt
 ```
 Smart-Recycle-bin/
 ├── docs/                                          # Comprehensive Documentation & Specifications
+│   ├── EcoBinUI Mobile.pdf                        # Mobile Application UI/UX Design Specification & Wireframes
 │   ├── Smart-Waste-Management-Features.md         # Feature Prioritization & Scenarios (Must/Should/Could)
 │   ├── FRD-Smart-Waste-System.md                  # Functional Requirements Document (FRD v2.0)
 │   └── APIs.md                                    # Complete RESTful API Specifications & Contracts
@@ -201,9 +202,11 @@ Smart-Recycle-bin/
 ```
 
 ### 🔗 Project Deliverable Links
-- **Interactive UI/UX Prototype:** [Figma Design Prototype](https://www.figma.com/) *(Add Figma Link)*
+- **Interactive UI/UX Prototype:** [EcoBin Mobile Figma Design Prototype](https://www.figma.com/design/MZPYvOei74jV7NKwTf6vLO/Untitled?node-id=0-1&t=ABeZOigsrJWrVioC-1)
+- **Mobile UI/UX Design Specification (PDF):** [EcoBinUI Mobile.pdf (Main Branch)](https://github.com/Smart-Recycle-bin/Smart-Recycle-bin/blob/main/docs/EcoBinUI%20Mobile.pdf) | [Local File](./docs/EcoBinUI%20Mobile.pdf)
 - **Project Presentation & Cloud Drive:** [Google Drive Folder](https://drive.google.com/) *(Add Google Drive Link)*
 - **Technical Documentation Directory:** [Browse `docs/` Folder](./docs/)
+  - [Mobile UI/UX Design Specification (EcoBinUI Mobile.pdf)](https://github.com/Smart-Recycle-bin/Smart-Recycle-bin/blob/main/docs/EcoBinUI%20Mobile.pdf)
   - [Feature Prioritization & Scenarios (Smart-Waste-Management-Features.md)](./docs/Smart-Waste-Management-Features.md)
   - [Functional Requirements Document (FRD-Smart-Waste-System.md)](./docs/FRD-Smart-Waste-System.md)
   - [RESTful APIs Specification (APIs.md)](./docs/APIs.md)
