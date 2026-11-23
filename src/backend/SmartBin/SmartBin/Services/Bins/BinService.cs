@@ -45,7 +45,8 @@ namespace SmartBin.Services.Bins
                         lat.Value, lng.Value,
                         (double)bin.Latitude.Value, (double)bin.Longitude.Value);
 
-                    if (radiusKm.HasValue && dist > (radiusKm.Value * 1000.0))
+                    double maxDistMeters = (radiusKm ?? 1.0) * 1000.0;
+                    if (dist > maxDistMeters)
                     {
                         continue;
                     }

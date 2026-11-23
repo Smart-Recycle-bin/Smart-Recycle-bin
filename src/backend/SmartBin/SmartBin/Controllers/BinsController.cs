@@ -24,7 +24,7 @@ namespace SmartBin.Controllers
         public async Task<IActionResult> GetNearbyBins(
             [FromQuery] double? lat,
             [FromQuery] double? lng,
-            [FromQuery] double? radiusKm)
+            [FromQuery] double? radiusKm = 1.0)
         {
             try
             {

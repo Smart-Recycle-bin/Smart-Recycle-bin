@@ -172,6 +172,7 @@ class MapBinsViewModel extends ChangeNotifier {
     final result = await binsRepository.getNearbyBins(
       latitude: userLatitude,
       longitude: userLongitude,
+      radiusKm: 1.0,
     );
 
     _isLoading = false;
