@@ -20,6 +20,10 @@ namespace SmartBin.Context
 
         public DbSet<AuthOtp> AuthOtps { get; set; }
 
+        public DbSet<RewardCategory> RewardCategories { get; set; }
+
+        public DbSet<Reward> Rewards { get; set; }
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
@@ -61,6 +65,32 @@ namespace SmartBin.Context
                 entity.HasIndex(otp => new { otp.UserId, otp.Purpose, otp.CreatedAt });
 
                 entity.HasIndex(otp => otp.ExpiresAt);
+            });
+
+            // RewardCategory Configuration
+            builder.Entity<RewardCategory>(entity =>
+            {
+                entity.HasKey(c => c.CategoryId);
+
+                entity.HasIndex(c => c.Name)
+                    .IsUnique();
+
+                entity.Property(c => c.Name)
+                    .IsRequired();
+            });
+
+            // Reward Configuration
+            builder.Entity<Reward>(entity =>
+            {
+                entity.HasKey(r => r.RewardId);
+
+                entity.Property(r => r.Name)
+                    .IsRequired();
+
+                entity.HasOne(r => r.Category)
+                    .WithMany(c => c.Rewards)
+                    .HasForeignKey(r => r.CategoryId)
+                    .OnDelete(DeleteBehavior.Restrict);
             });
         }
     }
