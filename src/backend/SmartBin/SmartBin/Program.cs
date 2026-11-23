@@ -8,7 +8,8 @@ using SmartBin.Context;
 using SmartBin.Models;
 using SmartBin.Repositories;
 using SmartBin.Services;
- using System.Text;
+using SmartBin.Services.Bins;
+using System.Text;
 
 namespace SmartBin
 {
@@ -106,6 +107,14 @@ namespace SmartBin
             builder.Services.AddScoped<AuthService>();
             builder.Services.AddScoped<OtpService>();
             builder.Services.AddScoped<EmailService>();
+
+            // Member 3: Bin Management & E21 Device Ingestion Services
+            builder.Services.AddScoped<IBinService, BinService>();
+            builder.Services.AddScoped<IIngestionService, IngestionService>();
+            builder.Services.AddSingleton<ISessionCoordinationService, SessionCoordinationService>();
+            builder.Services.AddSingleton<IMember5AnalyticsService, Member5AnalyticsService>();
+            builder.Services.AddSingleton<IClassificationAdapter, ClassificationAdapter>();
+            builder.Services.AddHostedService<BinHeartbeatSimulatorService>();
 
 
             var app = builder.Build();

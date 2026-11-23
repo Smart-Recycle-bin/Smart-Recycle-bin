@@ -17,8 +17,11 @@ namespace SmartBin.Context
         }
         public DbSet<Wallet> Wallets { get; set; }
         public DbSet<RefreshToken> RefreshTokens { get; set; }
-
         public DbSet<AuthOtp> AuthOtps { get; set; }
+        public DbSet<SmartBin.Models.SmartBin> SmartBins { get; set; }
+        public DbSet<WasteType> WasteTypes { get; set; }
+        public DbSet<DisposalItem> DisposalItems { get; set; }
+        public DbSet<ServiceRecord> ServiceRecords { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -91,6 +94,74 @@ namespace SmartBin.Context
                     .WithOne()
                     .HasForeignKey<Wallet>(w => w.UserId)
                     .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // SMART_BIN Configuration
+            builder.Entity<SmartBin.Models.SmartBin>(entity =>
+            {
+                entity.ToTable("SMART_BIN");
+                entity.HasKey(b => b.BinId);
+                entity.HasIndex(b => b.SerialNumber).IsUnique();
+                entity.HasIndex(b => b.QRCode).IsUnique();
+                entity.HasIndex(b => b.Status);
+                entity.HasIndex(b => b.District);
+
+                entity.Property(b => b.FillLevel)
+                    .HasDefaultValue(0);
+
+                entity.Property(b => b.Status)
+                    .HasDefaultValue("AVAILABLE");
+
+                entity.HasOne(b => b.Collector)
+                    .WithMany()
+                    .HasForeignKey(b => b.CollectorId)
+                    .OnDelete(DeleteBehavior.SetNull);
+            });
+
+            // WASTE_TYPE Configuration
+            builder.Entity<WasteType>(entity =>
+            {
+                entity.ToTable("WASTE_TYPE");
+                entity.HasKey(wt => wt.WasteTypeId);
+                entity.HasIndex(wt => wt.Name).IsUnique();
+
+                entity.HasData(
+                    new WasteType { WasteTypeId = 1, Name = "PLASTIC", Description = "Plastic bottles and containers", BasePoints = 15 },
+                    new WasteType { WasteTypeId = 2, Name = "METAL", Description = "Aluminum cans and metals", BasePoints = 20 },
+                    new WasteType { WasteTypeId = 3, Name = "PAPER", Description = "Paper and cardboard", BasePoints = 10 },
+                    new WasteType { WasteTypeId = 4, Name = "ORGANIC", Description = "Organic waste", BasePoints = 5 },
+                    new WasteType { WasteTypeId = 5, Name = "TRASH", Description = "General non-recyclable trash", BasePoints = 1 }
+                );
+            });
+
+            // DISPOSAL_ITEM Configuration
+            builder.Entity<DisposalItem>(entity =>
+            {
+                entity.ToTable("DISPOSAL_ITEM");
+                entity.HasKey(di => di.ItemId);
+                entity.HasIndex(di => di.SessionId);
+
+                entity.HasOne(di => di.WasteType)
+                    .WithMany(wt => wt.DisposalItems)
+                    .HasForeignKey(di => di.WasteTypeId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            // SERVICE_RECORD Configuration
+            builder.Entity<ServiceRecord>(entity =>
+            {
+                entity.ToTable("SERVICE_RECORD");
+                entity.HasKey(sr => sr.ServiceId);
+
+                entity.HasOne(sr => sr.Bin)
+                    .WithMany(b => b.ServiceRecords)
+                    .HasForeignKey(sr => sr.BinId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(sr => sr.Collector)
+                    .WithMany()
+                    .HasForeignKey(sr => sr.CollectorId)
+                    .OnDelete(DeleteBehavior.Restrict);
             });
 
         }
