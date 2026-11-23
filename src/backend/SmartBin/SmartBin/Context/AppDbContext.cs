@@ -1,21 +1,18 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using SmartBin.Models;  
+using SmartBin.Models;
+
 namespace SmartBin.Context
 {
-
-
-    
-
     public class AppDbContext : IdentityDbContext<ApplicationUser, ApplicationRole, int>
     {
-
         public AppDbContext(DbContextOptions<AppDbContext> options)
             : base(options)
         {
         }
- 
+
         public DbSet<RefreshToken> RefreshTokens { get; set; }
 
         public DbSet<AuthOtp> AuthOtps { get; set; }
@@ -77,6 +74,9 @@ namespace SmartBin.Context
 
                 entity.Property(c => c.Name)
                     .IsRequired();
+
+                entity.Property(c => c.IsActive)
+                    .HasDefaultValue(true);
             });
 
             // Reward Configuration
@@ -87,6 +87,9 @@ namespace SmartBin.Context
                 entity.Property(r => r.Name)
                     .IsRequired();
 
+                entity.Property(r => r.StockQuantity)
+                    .HasDefaultValue(0);
+
                 entity.HasOne(r => r.Category)
                     .WithMany(c => c.Rewards)
                     .HasForeignKey(r => r.CategoryId)
@@ -94,5 +97,4 @@ namespace SmartBin.Context
             });
         }
     }
-
 }
