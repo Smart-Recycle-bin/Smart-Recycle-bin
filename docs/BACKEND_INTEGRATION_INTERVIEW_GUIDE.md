@@ -1,135 +1,296 @@
-# EcoBin - Backend Integration & Interview Preparation Guide
+# EcoBin - Complete Backend & Mobile Integration Guide
 
 > **Audience:** Anyone presenting or defending this project (especially mobile / frontend developers with zero C# background).  
-> **Goal:** Understand every piece of backend and mobile work done on this branch, how the systems talk to each other, and how to confidently answer technical interview questions.
+> **Goal:** Understand every folder, every file, and every piece of code used to connect the Flutter mobile app to the .NET backend, complete with plain-English explanations and step-by-step examples.
 
 ---
 
-## 1. High-Level System Architecture
+## 1. High-Level Architecture: How the Whole System Fits Together
 
 ```mermaid
 flowchart TD
-    subgraph MobileApp ["Mobile App (Flutter / Dart)"]
-        UI["UI Screens (Login, Map, Profile)"]
-        VM["ViewModels (State Management)"]
-        Repo["Repositories & Data Sources"]
-        ApiClient["ApiClient (Dio HTTP Client)"]
-        UI --> VM --> Repo --> ApiClient
-    end
-
-    subgraph Tunnel ["Local Network Bridge"]
-        ADB["adb reverse tcp:5121 tcp:5121\n(Routes emulator localhost directly to PC)"]
-    end
-
-    subgraph Backend ["Backend (.NET 10 Web API)"]
-        Kestrel["Kestrel Web Server (:5121)"]
-        AuthMiddleware["JWT Authentication & RBAC Middleware"]
-        Controllers["Controllers (Bins, AdminBins, Auth, Ingestion)"]
-        Services["Business Services (BinService, AuthService)"]
-        Simulator["Background Simulator (BinHeartbeatSimulatorService)"]
-        EF["Entity Framework Core (ORM)"]
+    subgraph Mobile ["📱 Mobile App (Flutter / Dart)"]
+        UI["UI Screens\n(LoginView, MapView)"]
+        VM["ViewModels\n(State Management)"]
+        RepoM["Repositories & Data Sources\n(Prepares HTTP requests)"]
+        DioClient["Dio HTTP Client\n(Sends JSON over the network)"]
         
+        UI --> VM --> RepoM --> DioClient
+    end
+
+    subgraph Tunnel ["🌉 Network Bridge"]
+        ADB["adb reverse tcp:5121 tcp:5121\n(Tunnels phone's localhost to PC)"]
+    end
+
+    subgraph Backend ["⚙️ Backend (.NET 10 Web API)"]
+        Kestrel["Kestrel Web Server (:5121)"]
+        AuthMiddleware["JWT Authentication\n(Checks digital signature & role)"]
+        Controllers["Controllers\n(The Waiters: Receives requests)"]
+        Services["Services\n(The Chefs: Business logic & math)"]
+        EF["Entity Framework Core (ORM)\n(Translates C# to SQL)"]
+        Simulator["Background Service\n(Heartbeat pulse checker)"]
+
         Kestrel --> AuthMiddleware --> Controllers --> Services --> EF
         Simulator --> EF
     end
 
-    subgraph Database ["Database"]
-        SQL["Microsoft SQL Server (SmartBinDB)"]
+    subgraph Database ["🗄️ Database (Microsoft SQL Server)"]
+        SQL[("SmartBinDB\nTables: SMART_BIN, AspNetUsers, etc.")]
         EF --> SQL
     end
 
-    ApiClient -->|HTTP JSON requests| ADB --> Kestrel
+    DioClient -->|HTTP Requests| ADB --> Kestrel
 ```
 
-### The Three Main Layers:
-1. **Frontend (Flutter):** Runs on the Android emulator or physical phone. It captures user interactions (typing email, pressing login, viewing the bin map) and sends HTTP requests.
-2. **Backend (ASP.NET Core Web API):** Runs on your computer. It listens on port `5121`, checks security tokens, applies business logic (e.g. distance calculation), and writes/reads data.
-3. **Database (SQL Server):** Holds the persistent records: users, roles, bin physical hardware status, waste categories, and session history.
+---
+
+## 2. Folder Structure Explained (The "Restaurant" Analogy)
+
+To make backend architecture simple to understand without any C# experience, think of the backend as a **restaurant**:
+
+```
+src/backend/SmartBin/SmartBin/
+│
+├── Controllers/       <-- The Waiters
+├── Services/          <-- The Chefs (Kitchen)
+├── Models/            <-- The Ingredients & Food Items
+├── Dtos/              <-- The Menu & Order Slips
+├── Context/           <-- The Kitchen Order System (Connects to Storage)
+├── Migrations/        <-- Blueprints for building the Restaurant
+└── Program.cs         <-- The Restaurant Manager (Opens doors, sets rules)
+```
+
+### Detailed Breakdown of Every Folder:
+
+### 1. `Controllers/` (The Waiters)
+- **Role:** Controllers are the public-facing entry points. When the mobile app sends an HTTP request, it hits a Controller first.
+- **Rule:** The waiter doesn't cook the food! The controller never writes complex math or database queries. It just receives the order, passes it to the `Service`, and hands the result back to the mobile app.
+- **Key files here:**
+  - `AuthController.cs`: Handles `/api/v1/auth/login`, `/register`, `/verify-email`.
+  - `BinsController.cs`: Handles citizen requests like `/api/v1/bins` (nearby map) and `/bins/search`.
+  - `AdminBinsController.cs`: Handles admin-only requests like `/api/v1/admin/bins`.
+
+### 2. `Services/` (The Chefs / Business Logic)
+- **Role:** This is where the actual brain of the application lives.
+- **What it does:** Calculates distance between coordinates using the Haversine formula, hashes passwords, generates JWT tokens, and decides if a bin is `AVAILABLE` or `UNAVAILABLE`.
+- **Key files here:**
+  - `BinService.cs`: Implements bin distance calculation, 1 km filtering, and sorting.
+  - `AuthService.cs`: Implements user registration, password verification, and account checks.
+  - `JwtService.cs`: Generates the encrypted digital token (JWT).
+  - `BinHeartbeatSimulatorService.cs`: A background worker running every 10 seconds to detect dead bins.
+
+### 3. `Models/` (The Database Entities)
+- **Role:** Represents the actual tables and columns inside Microsoft SQL Server.
+- **Key files here:**
+  - `SmartBin.cs`: Represents the `SMART_BIN` table (Latitude, Longitude, Status, FillLevel, SerialNumber).
+  - `ApplicationUser.cs`: Represents the `AspNetUsers` table (Email, DisplayName, AccountStatus).
+  - `WasteType.cs`: Represents `WASTE_TYPE` (Plastic, Glass, Paper, Organic).
+
+### 4. `Dtos/` (Data Transfer Objects — The Order Slips)
+- **Role:** Defines the exact JSON structure sent into and out of endpoints.
+- **Why we need it:** We never expose raw database tables to mobile apps. For example, a citizen should never see the internal database table columns like `CollectorId` or raw sensor calibration. A DTO filters and shapes the data specifically for the screen requesting it.
+- **Key files here:**
+  - `CitizenBinDto.cs`: Only contains `binId`, `name`, `latitude`, `longitude`, `status`, `district`. (Notice `fillLevel` is removed for citizen privacy!).
+  - `LoginRequestDto.cs`: Defines `{ "email": "...", "password": "..." }`.
+
+### 5. `Context/` (The Database Bridge)
+- **File:** `AppDbContext.cs`
+- **Role:** Uses **Entity Framework Core (EF Core)** to translate C# code into SQL commands (`SELECT`, `INSERT`, `UPDATE`) automatically so developers don't have to write raw SQL strings by hand.
+
+### 6. `Mobile: src/mobile/lib/` (The Flutter Client Architecture)
+```
+src/mobile/lib/
+├── core/
+│   ├── config/app_config.dart        <-- Holds backend URL (http://localhost:5121/api/v1)
+│   └── network/api_client.dart       <-- Configures Dio with timeouts and token headers
+└── features/
+    ├── auth/
+    │   ├── data/datasources/         <-- Calls auth API endpoints via Dio
+    │   ├── data/models/              <-- Parses JSON into Dart objects safely
+    │   └── presentation/views/       <-- Login, Register, VerifyEmail UI screens
+    └── map_bins/
+        ├── data/datasources/         <-- Calls /bins and /bins/search
+        ├── data/models/bin_model.dart<-- Parses bin JSON (AVAILABLE / UNAVAILABLE badge)
+        └── presentation/views/       <-- MapView showing pins and walking routes
+```
 
 ---
 
-## 2. Every Endpoint Connected in this Branch
+## 3. Code Walkthrough: What Every Key Code Snippet Does
 
-### A. Authentication Endpoints (Member 1 Scope)
-
-| Endpoint | Method | Who Uses It | What It Does in Plain English |
-| :--- | :---: | :--- | :--- |
-| `/api/v1/auth/register` | `POST` | New Citizen | Creates a new citizen account with email, name, and password. By default, it sets role to `USER_CITIZEN` and `EmailConfirmed = false`. |
-| `/api/v1/auth/verify-email` | `POST` | New Citizen | Validates the 5-digit verification code sent to the citizen's email to activate the account (`EmailConfirmed = true`). |
-| `/api/v1/auth/resend-verification-otp` | `POST` | Citizen | Sends a fresh 5-digit OTP if the previous one expired. |
-| `/api/v1/auth/login` | `POST` | Citizen & Admin | Checks email & password, verifies that email is confirmed, and gives the user back a **JWT Access Token**. |
+Here is the exact code we wrote/used, explained simply line-by-line:
 
 ---
 
-### B. Bin Discovery & Management Endpoints (Member 3 Scope)
+### Snippet 1: The Citizen Nearby Bins Endpoint (`BinsController.cs`)
 
-| Endpoint | Method | Who Uses It | What It Does in Plain English |
-| :--- | :---: | :--- | :--- |
-| `/api/v1/bins` (`E60`) | `GET` | Mobile (Citizen) | Returns all smart bins within a **1 km radius** of the citizen's GPS coordinates. Uses the **Haversine formula** to sort bins by distance. |
-| `/api/v1/bins/{binId}` (`E61`) | `GET` | Admin / Internal | Gets detailed information for a single bin. **Note:** On mobile, citizen privacy is enforced—citizens only see whether a bin is `AVAILABLE` or `UNAVAILABLE`. Technical metrics (`fillLevel`) are reserved for the Admin Dashboard. |
-| `/api/v1/bins/search` (`E64`) | `GET` | Mobile (Citizen) | Allows searching bins by **district name** (e.g. "Cairo"), **serial number**, or **ID**. If GPS coordinates are passed, it automatically calculates the walking distance (in meters) and walking time (in minutes). |
-| `/api/v1/admin/bins` (`E50`) | `GET` | Admin Dashboard | Returns a paginated table of all bins in the fleet with search and status filters (`ONLINE`, `OFFLINE`, `MAINTENANCE`). Protected by `[Authorize(Roles = "SYS_ADMIN")]`. |
-| `/api/v1/admin/bins` (`E51`) | `POST` | Admin Dashboard | Registers a brand-new physical bin in the system with serial number and capacity threshold. Protected by `[Authorize(Roles = "SYS_ADMIN")]`. |
-| `/api/v1/admin/bins/{binId}` (`E53`) | `PUT` | Admin Dashboard | Updates a bin's district, capacity threshold, or maintenance status. Protected by `[Authorize(Roles = "SYS_ADMIN")]`. |
-| `/api/v1/sessions/{sessionId}/items` (`E21`) | `POST` | Smart Bin Hardware | Triggered by the physical smart bin hardware when an item is deposited. It identifies the waste material (plastic, glass, paper), logs points, and resets the 60-second session activity timer. |
+```csharp
+[HttpGet]
+public async Task<IActionResult> GetNearbyBins(
+    [FromQuery] double? lat,
+    [FromQuery] double? lng,
+    [FromQuery] double? radiusKm = 1.0)
+{
+    var bins = await _binService.GetNearbyBinsAsync(lat, lng, radiusKm);
+    return Ok(new { success = true, data = bins });
+}
+```
 
----
+#### What this code does in plain English:
+1. `[HttpGet]`: Tells the server: *"Listen for GET requests at `/api/v1/bins`"*.
+2. `[FromQuery] double? lat, lng, radiusKm = 1.0`: Reads the coordinates from the URL parameters (e.g. `?lat=30.04&lng=31.23`). If the mobile app doesn't specify a radius, it **defaults to 1.0 km**.
+3. `await _binService.GetNearbyBinsAsync(...)`: Hands the coordinates to the Chef (`BinService`) to do the math.
+4. `return Ok(new { success = true, data = bins })`: Sends back HTTP 200 with the formatted JSON list.
 
-## 3. Core Concepts Explained (No C# Knowledge Required)
-
-### 1. What is an API & an Endpoint?
-- **Analogy:** Think of the backend like a **restaurant kitchen** and the mobile app as the **customer**.
-- The mobile app cannot walk into the kitchen and touch the database directly. Instead, it talks to the **waiter** (the API).
-- An **endpoint** is a specific order on the menu:
-  - `GET /api/v1/bins` = *"Please bring me a list of nearby bins."*
-  - `POST /api/v1/auth/login` = *"Here are my credentials, please give me a VIP wristband."*
-
-### 2. What is a JWT (JSON Web Token)?
-- **Analogy:** A tamper-proof digital **VIP wristband**.
-- When you log in, the server gives you a long scrambled string (`eyJhbGciOi...`).
-- Inside that token is your User ID and your Role (`SYS_ADMIN` or `USER_CITIZEN`).
-- The token is digitally signed with a **secret password** known only to the backend. If a user tries to alter their role from citizen to admin, the signature breaks and the server immediately rejects the request.
-
-### 3. What is Role-Based Access Control (RBAC)?
-- A security gate that checks your role before allowing access.
-- An endpoint marked `[Authorize(Roles = "SYS_ADMIN")]` ensures that normal citizen users cannot create, delete, or reconfigure smart bins.
-
-### 4. What is the Haversine Distance Formula?
-- Because the Earth is a curved sphere, you cannot use simple 2D Pythagorean theorem ($a^2 + b^2 = c^2$) to calculate distance between GPS coordinates.
-- The **Haversine formula** calculates the true straight-line distance (in meters) between two GPS points $(lat_1, lng_1)$ and $(lat_2, lng_2)$ taking Earth's curvature into account.
-- We set the discovery limit to **1,000 meters (1 km)** so citizens only see bins within walking distance.
-
-### 5. What is the Background Simulator (`BinHeartbeatSimulatorService`)?
-- In real life, smart bins have cellular/Wi-Fi hardware that sends a "heartbeat" ping to the server every few minutes.
-- If a bin stops sending pings for more than 5 minutes (due to dead battery or power failure), our background service automatically switches its status to **`OFFLINE`** so users aren't directed to a broken bin.
+#### Example:
+- **Mobile Sends:** `GET http://localhost:5121/api/v1/bins?lat=30.044&lng=31.235`
+- **Backend Returns:**
+  ```json
+  {
+    "success": true,
+    "data": [
+      {
+        "binId": 1,
+        "name": "Bin#001",
+        "latitude": 30.0440,
+        "longitude": 31.2359,
+        "status": "AVAILABLE",
+        "district": "Cairo"
+      }
+    ]
+  }
+  ```
 
 ---
 
-## 4. Key Real-World Bugs We Solved (Interview Goldmine!)
+### Snippet 2: The 1km Haversine Distance Filter (`BinService.cs`)
 
-Interviewers love asking: *"Tell me about a difficult bug you ran into and how you solved it."*  
-Here are the real bugs we hit, diagnosed, and resolved:
+```csharp
+foreach (var bin in bins)
+{
+    double dist = 0;
+    if (lat.HasValue && lng.HasValue && bin.Latitude.HasValue && bin.Longitude.HasValue)
+    {
+        dist = CalculateHaversineDistance(
+            lat.Value, lng.Value,
+            (double)bin.Latitude.Value, (double)bin.Longitude.Value);
 
-### Bug 1: The `403 Forbidden` on Admin Endpoints
-- **What happened:** When sending an admin token to `POST /api/v1/admin/bins`, the server returned `403 Forbidden` even though the user was an Admin.
-- **Root Cause:** By default in ASP.NET Core, an automatic mapping layer renames incoming JWT claims from `"role"` to a legacy SOAP URI (`http://schemas.microsoft.com/ws/2008/06/identity/claims/role`). Because the server was configured to look strictly for a claim named `"role"`, it couldn't find it and denied access!
-- **The Fix:**
-  1. Added `options.MapInboundClaims = false;` in `Program.cs` to prevent the framework from altering claim names.
-  2. Emitted both `"role"` and `ClaimTypes.Role` in `JwtService.cs` so all authorization handlers are satisfied.
+        double maxDistMeters = (radiusKm ?? 1.0) * 1000.0;
+        if (dist > maxDistMeters)
+        {
+            continue; // Skip this bin, it is too far away!
+        }
+    }
+    result.Add((bin, dist));
+}
+```
 
-### Bug 2: Android Emulator "Connection Refused"
-- **What happened:** Setting `apiBaseUrl = 'http://localhost:5121/api/v1'` caused Flutter on the Android emulator to immediately throw `Connection refused`.
-- **Root Cause:** To the Android emulator, `localhost` means the **virtual Android phone itself**, not the computer running the backend.
-- **The Fix:** We ran `adb reverse tcp:5121 tcp:5121`. This creates a direct socket forwarding tunnel between the emulator's port 5121 and the host PC's port 5121, allowing `localhost:5121` to work seamlessly without firewall blocks.
+#### What this code does in plain English:
+1. `CalculateHaversineDistance(...)`: Measures the straight-line distance in meters between the citizen's phone and the smart bin on the curved surface of the Earth.
+2. `maxDistMeters = (radiusKm ?? 1.0) * 1000.0`: Converts kilometers to meters ($1.0 \text{ km} \times 1000 = 1000 \text{ meters}$).
+3. `if (dist > maxDistMeters) continue;`: If the bin is 1,200 meters away, it is ignored and dropped from the results. Only bins $\le 1000$ meters make the cut!
+4. `result.Add((bin, dist))`: Adds the valid bin to the list.
 
-### Bug 3: Android Emulator "15-Second Connection Timeout"
-- **What happened:** When trying `10.0.2.2:5121`, the request hung for 15 seconds and timed out.
-- **Root Cause:** The backend server was initially listening only on `localhost` (loopback `127.0.0.1`), and Windows Firewall filtered virtual NAT traffic coming from the emulator's virtual network card.
-- **The Fix:** Configured `launchSettings.json` to bind to `0.0.0.0:5121` (all network interfaces) and used `adb reverse` to bypass Windows Firewall completely.
+---
 
-### Bug 4: Citizen Privacy & Data Leaks
-- **Requirement:** Citizens should never see bin fill levels (`fillLevel`) or internal hardware metrics.
-- **The Fix:** In `bin_model.dart` and `map_view.dart`, `fillLevel` was removed from citizen view models. The app only displays a status badge: **`AVAILABLE`** (green) or **`UNAVAILABLE`** (red).
+### Snippet 3: Admin Protection & Claim Fix (`Program.cs` & `AdminBinsController.cs`)
+
+In `AdminBinsController.cs`:
+```csharp
+[ApiController]
+[Route("api/v1/admin/bins")]
+[Authorize(Roles = "SYS_ADMIN")]
+public class AdminBinsController : ControllerBase
+```
+
+In `Program.cs`:
+```csharp
+.AddJwtBearer(options =>
+{
+    options.MapInboundClaims = false;
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        RoleClaimType = "role",
+        NameClaimType = "id"
+    };
+});
+```
+
+#### What this code does in plain English:
+1. `[Authorize(Roles = "SYS_ADMIN")]`: Puts a security guard on this controller. If the token doesn't say `SYS_ADMIN`, reject with **`403 Forbidden`**.
+2. `options.MapInboundClaims = false;`: Stops ASP.NET from translating the clean JSON key `"role"` into a 100-character XML web link.
+3. `RoleClaimType = "role"`: Tells the security guard: *"Check the tag named `role` on the user's token to see if they are an admin."*
+
+---
+
+### Snippet 4: Mobile Safe ID & Status Parser (`bin_model.dart`)
+
+```dart
+factory BinModel.fromJson(Map<String, dynamic> json) {
+  final rawStatus = (json['status'] ?? 'AVAILABLE').toString().toUpperCase();
+  final isAvailable = rawStatus == 'AVAILABLE' || rawStatus == 'ONLINE';
+
+  return BinModel(
+    binId: json['binId']?.toString() ?? '',
+    name: json['name'] ?? 'Smart Bin',
+    latitude: (json['latitude'] as num?)?.toDouble() ?? 0.0,
+    longitude: (json['longitude'] as num?)?.toDouble() ?? 0.0,
+    status: isAvailable ? 'AVAILABLE' : 'UNAVAILABLE',
+    district: json['district'],
+  );
+}
+```
+
+#### What this code does in plain English:
+1. `json['binId']?.toString()`: Protects against crashes! In SQL Server, IDs are integers (`1, 2, 3`), but Flutter UI components expect a `String` (`"1", "2"`). Calling `.toString()` prevents type-cast exceptions.
+2. `isAvailable ? 'AVAILABLE' : 'UNAVAILABLE'`: **Privacy protection!** The backend might store internal states like `MAINTENANCE` or `FAULTY`, but the citizen app simplifies this into either a green **AVAILABLE** or red **UNAVAILABLE** badge.
+
+---
+
+### Snippet 5: Mobile Error Envelope Unpacker (`auth_remote_data_source.dart`)
+
+```dart
+String _extractErrorMessage(dynamic data, String fallback) {
+  if (data is Map<String, dynamic>) {
+    final errorObj = data['error'];
+    if (errorObj is Map<String, dynamic>) {
+      final msg = errorObj['message'];
+      if (msg != null && msg.toString().isNotEmpty) {
+        return msg.toString();
+      }
+    }
+  }
+  return fallback;
+}
+```
+
+#### What this code does in plain English:
+When the backend rejects a request (e.g. wrong password), it returns:
+```json
+{
+  "success": false,
+  "error": {
+    "code": "INVALID_CREDENTIALS",
+    "message": "Invalid email or password."
+  }
+}
+```
+This helper method digs inside `data['error']['message']` to extract `"Invalid email or password."` and displays it in a clean red SnackBar on the phone, instead of showing an ugly crash or generic error.
+
+---
+
+## 4. The 4 Network Bugs We Solved (Interview Showcase)
+
+| Problem Encountered | Error Code / Message | Why it Happened | How We Fixed It |
+| :--- | :--- | :--- | :--- |
+| **Password Rejected** | `400 Validation Error: The registration data is invalid.` | ASP.NET Identity requires at least 1 uppercase, 1 lowercase, 1 digit, and **1 special symbol** (`!@#$`). `"Admin1234"` failed, but `"Admin1234!"` succeeded. | Instructed the user to use passwords with a special symbol (`Admin1234!`). |
+| **Admin Access Denied** | `403 Forbidden` on `/api/v1/admin/bins` | ASP.NET Core renamed incoming `"role"` claim to `http://schemas...`, so the `[Authorize(Roles = "SYS_ADMIN")]` check couldn't find the role. | Added `options.MapInboundClaims = false;` in `Program.cs` and added `ClaimTypes.Role` in `JwtService.cs`. |
+| **Connection Refused** | `Connection refused` on Android Emulator | The app tried to connect to `localhost:5121`. On an Android emulator, `localhost` means the virtual phone itself, not the PC! | Ran `adb reverse tcp:5121 tcp:5121` so the emulator's port 5121 directly tunnels to the host PC's port 5121. |
+| **15s Timeout** | `The request connection took longer than 0:00:15.000000` | Connecting to `10.0.2.2` got dropped by Windows Defender Firewall or Kestrel listening only on `127.0.0.1`. | Updated `launchSettings.json` to bind to `0.0.0.0:5121` and used the `adb reverse` tunnel. |
 
 ---
 
