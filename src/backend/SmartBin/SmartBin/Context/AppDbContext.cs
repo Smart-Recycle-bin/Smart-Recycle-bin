@@ -12,7 +12,7 @@ namespace SmartBin.Context
             : base(options)
         {
         }
-
+        public DbSet<Wallet> Wallets { get; set; }
         public DbSet<RefreshToken> RefreshTokens { get; set; }
 
         public DbSet<AuthOtp> AuthOtps { get; set; }
@@ -94,6 +94,37 @@ namespace SmartBin.Context
                     .WithMany(c => c.Rewards)
                     .HasForeignKey(r => r.CategoryId)
                     .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            // Wallet Configuration
+            builder.Entity<Wallet>(entity =>
+            {
+                entity.ToTable("WALLET");
+
+                entity.HasKey(w => w.WalletId);
+
+                entity.Property(w => w.WalletId)
+                    .ValueGeneratedOnAdd();
+
+                entity.Property(w => w.UserId)
+                    .IsRequired();
+
+                entity.Property(w => w.AvailablePoints)
+                    .IsRequired()
+                    .HasDefaultValue(0);
+
+                entity.Property(w => w.LifetimeEarnedPoints)
+                    .IsRequired()
+                    .HasDefaultValue(0);
+
+                // One user has exactly one wallet
+                entity.HasIndex(w => w.UserId)
+                    .IsUnique();
+
+                entity.HasOne(w => w.User)
+                    .WithOne()
+                    .HasForeignKey<Wallet>(w => w.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
             });
         }
     }
