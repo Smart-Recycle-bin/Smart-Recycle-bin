@@ -5,7 +5,7 @@ abstract class BinsRepository {
   Future<Result<List<BinEntity>>> getNearbyBins({
     required double latitude,
     required double longitude,
-    double radiusKm = 5.0,
+    double radiusKm = 1.0,
   });
 
   Future<Result<List<BinEntity>>> searchBins({
