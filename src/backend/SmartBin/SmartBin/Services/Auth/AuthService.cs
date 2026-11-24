@@ -5,12 +5,12 @@ using SmartBin.Dtos.Auth;
 using SmartBin.DTOs.Auth;
 using SmartBin.Models;
 using SmartBin.Repositories;
- using System.Security.Cryptography;
+using System.Security.Cryptography;
 using System.Text;
 
-namespace SmartBin.Services
+namespace SmartBin.Services.Auth
 {
-    public class AuthService
+    public class AuthService 
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly UserManager<ApplicationUser> _userManager;
@@ -325,7 +325,7 @@ namespace SmartBin.Services
                     Purpose = purpose,
                     OtpHash = otpHash,
                     CreatedAt = DateTime.UtcNow,
-                    ExpiresAt = DateTime.UtcNow.AddMinutes(30),
+                    ExpiresAt = DateTime.UtcNow.AddMinutes(10),
                     FailedAttempts = 0
                 };
 
@@ -378,12 +378,29 @@ namespace SmartBin.Services
 
             var otpEntity = await _context.AuthOtps
                 .Where(otp =>
-                    otp.UserId == user.Id)
+                    otp.UserId == user.Id &&
+                    otp.Purpose == "email_verification" &&
+                    otp.ConsumedAt == null &&
+                    otp.InvalidatedAt == null)
                 .OrderByDescending(otp => otp.CreatedAt)
                 .FirstOrDefaultAsync();
 
-            if (otpEntity == null || otpEntity.ExpiresAt <= DateTime.UtcNow)
+            if (otpEntity == null)
             {
+                throw new ApiException(
+                    "INVALID_OR_EXPIRED_OTP",
+                    "The code is incorrect or has expired.",
+                    400
+                );
+            }
+
+            // Check if OTP has expired
+            if (otpEntity.ExpiresAt <= DateTime.UtcNow)
+            {
+                otpEntity.InvalidatedAt = DateTime.UtcNow;
+
+                await _context.SaveChangesAsync();
+
                 throw new ApiException(
                     "INVALID_OR_EXPIRED_OTP",
                     "The code is incorrect or has expired.",
@@ -556,9 +573,12 @@ namespace SmartBin.Services
             {
                 // Invalidate all previous active verification codes.
                 var activeOtps = await _context.AuthOtps
-                    .Where(otp =>
-                        otp.UserId == user.Id)
-                    .ToListAsync();
+                .Where(otp =>
+                    otp.UserId == user.Id &&
+                    otp.Purpose == purpose &&
+                    otp.ConsumedAt == null &&
+                    otp.InvalidatedAt == null)
+                .ToListAsync();
 
                 foreach (var otp in activeOtps)
                 {
@@ -585,6 +605,497 @@ namespace SmartBin.Services
             return new ResendVerificationOtpResponseDto
             {
                 Message = successMessage
+            };
+        }
+
+        public async Task LogoutAsync(int userId, string? refreshToken)
+        {
+            // لو المستخدم مبعتش Refresh Token
+            // مفيش حاجة نلغيها في قاعدة البيانات
+            if (string.IsNullOrWhiteSpace(refreshToken))
+                return;
+
+            // نحول الـ Refresh Token إلى Hash
+            var tokenHash = HashRefreshToken(refreshToken);
+
+            // نلغي كل التوكنز التابعة لنفس الـ Family
+            await _refreshTokenRepository.RevokeFamilyAsync(
+                tokenHash,
+                userId
+            );
+        }
+
+        public async Task<RefreshResponseDto> RefreshAsync(
+    RefreshRequestDto request)
+        {
+            if (string.IsNullOrWhiteSpace(request.RefreshToken))
+            {
+                throw new ApiException(
+                    "VALIDATION_ERROR",
+                    "Refresh token is required.",
+                    400
+                );
+            }
+
+            var tokenHash = HashRefreshToken(request.RefreshToken);
+
+            var oldToken = await _refreshTokenRepository
+                .GetByTokenHashAsync(tokenHash);
+
+            if (oldToken == null)
+            {
+                throw new ApiException(
+                    "INVALID_REFRESH_TOKEN",
+                    "The refresh token is invalid, expired or already used.",
+                    401
+                );
+            }
+
+            // Reuse detection: revoke the whole family.
+            if (oldToken.RevokedAt != null)
+            {
+                await _refreshTokenRepository.RevokeFamilyAsync(
+                    tokenHash,
+                    oldToken.UserId
+                );
+
+                throw new ApiException(
+                    "INVALID_REFRESH_TOKEN",
+                    "The refresh token is invalid, expired or already used.",
+                    401
+                );
+            }
+
+            if (oldToken.ExpiresAt <= DateTime.UtcNow)
+            {
+                throw new ApiException(
+                    "INVALID_REFRESH_TOKEN",
+                    "The refresh token is invalid, expired or already used.",
+                    401
+                );
+            }
+
+            var user = await _userManager.FindByIdAsync(
+                oldToken.UserId.ToString()
+            );
+
+            if (user == null)
+            {
+                throw new ApiException(
+                    "INVALID_REFRESH_TOKEN",
+                    "The refresh token is invalid, expired or already used.",
+                    401
+                );
+            }
+
+            if (user.AccountStatus == "suspended")
+            {
+                throw new ApiException(
+                    "ACCOUNT_SUSPENDED",
+                    "Your account is suspended.",
+                    403
+                );
+            }
+
+            if (user.AccountStatus == "inactive")
+            {
+                throw new ApiException(
+                    "ACCOUNT_INACTIVE",
+                    "Your account is inactive.",
+                    403
+                );
+            }
+
+            var roles = await _userManager.GetRolesAsync(user);
+            var role = roles.FirstOrDefault();
+
+            if (role == null)
+            {
+                throw new ApiException(
+                    "USER_ROLE_NOT_FOUND",
+                    "User role is not assigned.",
+                    403
+                );
+            }
+
+            var now = DateTime.UtcNow;
+
+            var newAccessToken = _jwtService.GenerateAccessToken(
+                user,
+                role
+            );
+
+            var newRefreshToken = GenerateRefreshToken();
+
+            await using var transaction =
+                await _context.Database.BeginTransactionAsync();
+
+            try
+            {
+                var newTokenEntity = new RefreshToken
+                {
+                    UserId = user.Id,
+                    TokenHash = HashRefreshToken(newRefreshToken),
+                    FamilyId = oldToken.FamilyId,
+                    CreatedAt = now,
+                    ExpiresAt = now.AddDays(
+                        _jwtService.GetRefreshTokenExpiresInDays()
+                    ),
+                    CreatedByIp = _httpContextAccessor.HttpContext?
+                        .Connection.RemoteIpAddress?.ToString(),
+                    UserAgent = _httpContextAccessor.HttpContext?
+                        .Request.Headers.UserAgent.ToString()
+                };
+
+                // Save new token first to get its database ID.
+                await _refreshTokenRepository.AddAsync(newTokenEntity);
+
+                // Revoke old token and link it to the replacement.
+                oldToken.RevokedAt = now;
+                oldToken.ReplacedByTokenId = newTokenEntity.RefreshTokenId;
+
+                await _refreshTokenRepository.UpdateAsync(oldToken);
+
+                user.LastActiveAt = now;
+
+                var updateResult = await _userManager.UpdateAsync(user);
+
+                if (!updateResult.Succeeded)
+                {
+                    throw new ApiException(
+                        "REFRESH_FAILED",
+                        "Could not update user activity.",
+                        500
+                    );
+                }
+
+                await transaction.CommitAsync();
+
+                return new RefreshResponseDto
+                {
+                    AccessToken = newAccessToken,
+                    ExpiresIn = _jwtService.GetAccessTokenExpiresInSeconds(),
+                    RefreshToken = newRefreshToken
+                };
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+        }
+
+
+        public async Task<ForgotPasswordResponseDto> ForgotPasswordAsync(
+            ForgotPasswordRequestDto request)
+        {
+            const string purpose = "password_reset";
+
+            const string successMessage =
+                "If this email exists, a verification code has been sent.";
+
+            // 1. Find user by email
+            var user = await _userManager.FindByEmailAsync(request.Email);
+
+            // 2. Don't reveal whether the email exists
+            if (user == null ||
+                !user.EmailConfirmed ||
+                user.AccountStatus == "suspended" ||
+                user.AccountStatus == "inactive")
+            {
+                return new ForgotPasswordResponseDto
+                {
+                    Message = successMessage
+                };
+            }
+
+            var now = DateTime.UtcNow;
+            var oneHourAgo = now.AddHours(-1);
+
+            // 3. Count password reset OTPs sent during the last hour
+            var sentCount = await _context.AuthOtps
+                .CountAsync(otp =>
+                    otp.UserId == user.Id &&
+                    otp.Purpose == purpose &&
+                    otp.CreatedAt >= oneHourAgo);
+
+            if (sentCount >= 5)
+            {
+                throw new ApiException(
+                    "TOO_MANY_REQUESTS",
+                    "You have reached the maximum number of OTP requests. Try again later.",
+                    429
+                );
+            }
+
+            // 4. Get the latest password reset OTP
+            var lastOtp = await _context.AuthOtps
+                .Where(otp =>
+                    otp.UserId == user.Id &&
+                    otp.Purpose == purpose)
+                .OrderByDescending(otp => otp.CreatedAt)
+                .FirstOrDefaultAsync();
+
+            // 5. Enforce 60-second resend cooldown
+            if (lastOtp != null &&
+                lastOtp.CreatedAt > now.AddSeconds(-60))
+            {
+                throw new ApiException(
+                    "TOO_MANY_REQUESTS",
+                    "Please wait 60 seconds before requesting another code.",
+                    429
+                );
+            }
+
+            // 6. Generate a new OTP
+            string otpCode = _otpService.GenerateOtp();
+
+            string otpHash = _otpService.HashOtp(
+                user.Id,
+                purpose,
+                otpCode
+            );
+
+            var otpEntity = new AuthOtp
+            {
+                UserId = user.Id,
+                Purpose = purpose,
+                OtpHash = otpHash,
+                CreatedAt = now,
+                ExpiresAt = now.AddMinutes(10),
+                FailedAttempts = 0
+            };
+
+            await using var transaction =
+                await _context.Database.BeginTransactionAsync();
+
+            try
+            {
+                // 7. Invalidate previous active password reset OTPs
+                var activeOtps = await _context.AuthOtps
+                    .Where(otp =>
+                        otp.UserId == user.Id &&
+                        otp.Purpose == purpose &&
+                        otp.ConsumedAt == null &&
+                        otp.InvalidatedAt == null)
+                    .ToListAsync();
+
+                foreach (var oldOtp in activeOtps)
+                {
+                    oldOtp.InvalidatedAt = now;
+                }
+
+                // 8. Save the new OTP
+                await _context.AuthOtps.AddAsync(otpEntity);
+
+                await _context.SaveChangesAsync();
+
+                await transaction.CommitAsync();
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+
+            // 9. Send OTP by email
+            await _emailService.SendPasswordResetOtpAsync(
+                user.Email!,
+                otpCode
+            );
+
+            // 10. Return the same generic response
+            return new ForgotPasswordResponseDto
+            {
+                Message = successMessage
+            };
+        }
+
+
+        public async Task<ResetPasswordResponseDto> ResetPasswordAsync(
+            ResetPasswordRequestDto request)
+        {
+            const string purpose = "password_reset";
+
+            // 1. Validate required inputs
+            if (string.IsNullOrWhiteSpace(request.Email) ||
+                string.IsNullOrWhiteSpace(request.Otp) ||
+                string.IsNullOrWhiteSpace(request.NewPassword) ||
+                request.Otp.Length != 5 ||
+                !request.Otp.All(char.IsDigit))
+            {
+                throw new ApiException(
+                    "VALIDATION_ERROR",
+                    "Email, a valid 5-digit OTP and new password are required.",
+                    400
+                );
+            }
+
+            // 2. Find user by email
+            var user = await _userManager.FindByEmailAsync(request.Email);
+
+            if (user == null)
+            {
+                throw new ApiException(
+                    "INVALID_OR_EXPIRED_OTP",
+                    "The code is incorrect or has expired.",
+                    400
+                );
+            }
+
+            // 3. Get the latest password reset OTP
+            var otpEntity = await _context.AuthOtps
+                .Where(otp =>
+                    otp.UserId == user.Id &&
+                    otp.Purpose == purpose)
+                .OrderByDescending(otp => otp.CreatedAt)
+                .FirstOrDefaultAsync();
+
+            if (otpEntity == null)
+            {
+                throw new ApiException(
+                    "INVALID_OR_EXPIRED_OTP",
+                    "The code is incorrect or has expired.",
+                    400
+                );
+            }
+
+            // 4. Check maximum failed attempts
+            if (otpEntity.FailedAttempts >= 5)
+            {
+                throw new ApiException(
+                    "TOO_MANY_ATTEMPTS",
+                    "Too many incorrect attempts. Request a new code.",
+                    429
+                );
+            }
+
+            // 5. Check whether OTP was already used or invalidated
+            if (otpEntity.ConsumedAt != null ||
+                otpEntity.InvalidatedAt != null)
+            {
+                throw new ApiException(
+                    "INVALID_OR_EXPIRED_OTP",
+                    "The code is incorrect or has expired.",
+                    400
+                );
+            }
+
+            // 6. Check OTP expiration
+            var now = DateTime.UtcNow;
+
+            if (otpEntity.ExpiresAt <= now)
+            {
+                otpEntity.InvalidatedAt = now;
+
+                await _context.SaveChangesAsync();
+
+                throw new ApiException(
+                    "INVALID_OR_EXPIRED_OTP",
+                    "The code is incorrect or has expired.",
+                    400
+                );
+            }
+
+            // 7. Verify the entered OTP
+            bool isValid = _otpService.VerifyOtp(
+                user.Id,
+                purpose,
+                request.Otp,
+                otpEntity.OtpHash
+            );
+
+            if (!isValid)
+            {
+                otpEntity.FailedAttempts++;
+
+                if (otpEntity.FailedAttempts >= 5)
+                {
+                    otpEntity.InvalidatedAt = now;
+
+                    await _context.SaveChangesAsync();
+
+                    throw new ApiException(
+                        "TOO_MANY_ATTEMPTS",
+                        "Too many incorrect attempts. Request a new code.",
+                        429
+                    );
+                }
+
+                await _context.SaveChangesAsync();
+
+                throw new ApiException(
+                    "INVALID_OR_EXPIRED_OTP",
+                    "The code is incorrect or has expired.",
+                    400
+                );
+            }
+
+            // 8. Start transaction
+            await using var transaction =
+                await _context.Database.BeginTransactionAsync();
+
+            try
+            {
+                // 9. Generate Identity password reset token
+                var resetToken =
+                    await _userManager.GeneratePasswordResetTokenAsync(user);
+
+                // 10. Change password using ASP.NET Core Identity
+                var resetResult = await _userManager.ResetPasswordAsync(
+                    user,
+                    resetToken,
+                    request.NewPassword
+                );
+
+                if (!resetResult.Succeeded)
+                {
+                    throw new ApiException(
+                        "VALIDATION_ERROR",
+                        "The new password does not meet the password requirements.",
+                        400
+                    );
+                }
+
+                // 11. Mark the OTP as consumed
+                otpEntity.ConsumedAt = now;
+
+                // 12. Invalidate other active password reset OTPs
+                var otherActiveOtps = await _context.AuthOtps
+                    .Where(otp =>
+                        otp.UserId == user.Id &&
+                        otp.Purpose == purpose &&
+                        otp.OtpId != otpEntity.OtpId &&
+                        otp.ConsumedAt == null &&
+                        otp.InvalidatedAt == null)
+                    .ToListAsync();
+
+                foreach (var otp in otherActiveOtps)
+                {
+                    otp.InvalidatedAt = now;
+                }
+
+                // 13. Revoke all refresh tokens for this user
+                await _refreshTokenRepository.RevokeAllUserTokensAsync(
+                    user.Id
+                );
+
+                await _context.SaveChangesAsync();
+
+                // 14. Commit transaction
+                await transaction.CommitAsync();
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+
+            // 15. Return success response
+            return new ResetPasswordResponseDto
+            {
+                Message =
+                    "Password has been reset successfully. Please log in again."
             };
         }
 

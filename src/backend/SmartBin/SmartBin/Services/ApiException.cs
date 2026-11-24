@@ -12,7 +12,7 @@ namespace SmartBin.Services
             string message,
             int statusCode)
             : base(message)
-        {
+        { 
             ErrorCode = errorCode;
             StatusCode = statusCode;
         }

@@ -4,7 +4,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 
-namespace SmartBin.Services
+namespace SmartBin.Services.Auth
 {
 
     
@@ -13,7 +13,7 @@ namespace SmartBin.Services
             private readonly IConfiguration _configuration;
 
             public JwtService(IConfiguration configuration)
-            {
+            { 
                 _configuration = configuration;
             }
 

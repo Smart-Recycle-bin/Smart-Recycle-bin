@@ -14,7 +14,7 @@ namespace SmartBin.Models
         public int CollectorId { get; set; }
 
         public DateTime ServicedAt { get; set; } = DateTime.UtcNow;
-
+         
         [Column(TypeName = "decimal(5, 2)")]
         public decimal? PreviousFillLevel { get; set; }
 

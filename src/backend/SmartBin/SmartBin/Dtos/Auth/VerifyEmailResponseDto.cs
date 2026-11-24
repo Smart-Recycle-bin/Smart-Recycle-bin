@@ -7,3 +7,4 @@ namespace SmartBin.DTOs.Auth
         public bool IsVerified { get; set; }
     }
 }
+ 

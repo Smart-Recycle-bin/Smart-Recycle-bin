@@ -14,7 +14,7 @@ namespace SmartBin.Models
         public string SerialNumber { get; set; } = string.Empty;
 
         [Required]
-        [MaxLength(255)]
+        [MaxLength(255)] 
         public string QRCode { get; set; } = string.Empty;
 
         [Column(TypeName = "decimal(10, 7)")]

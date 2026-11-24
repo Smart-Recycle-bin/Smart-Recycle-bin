@@ -16,10 +16,10 @@
         public DateTime ExpiresAt { get; set; }
 
         public int FailedAttempts { get; set; } = 0;
+         
+        public DateTime? ConsumedAt { get; set; }
 
-        public DateTime ConsumedAt { get; set; }
-
-        public DateTime InvalidatedAt { get; set; }
+        public DateTime? InvalidatedAt { get; set; }
 
         public ApplicationUser User { get; set; } 
     }

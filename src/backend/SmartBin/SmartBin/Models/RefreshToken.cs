@@ -17,12 +17,12 @@
 
         public DateTime CreatedAt { get; set; } 
 
-        public DateTime RevokedAt { get; set; }
+        public DateTime? RevokedAt { get; set; }
 
        
         public int? ReplacedByTokenId { get; set; }
 
-        public string CreatedByIp { get; set; }
+        public string CreatedByIp { get; set; } 
 
         public string UserAgent { get; set; }
 
