@@ -3,7 +3,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using SmartBin.Context;
 using SmartBin.Models;
-
+using SmartBin.Repositories;
+using SmartBin.Services;
 namespace SmartBin
 {
     public class Program
@@ -15,7 +16,7 @@ namespace SmartBin
             // Add services
             builder.Services.AddControllers();
             builder.Services.AddOpenApi();
-
+            builder.Services.AddSwaggerGen();
             // Database
             builder.Services.AddDbContext<AppDbContext>(options =>
                 options.UseSqlServer(
@@ -23,6 +24,12 @@ namespace SmartBin
                 )
             );
 
+            // Repositories
+            builder.Services.AddScoped<IRewardRepository, RewardRepository>();
+            builder.Services.AddScoped<IRewardCategoryRepository, RewardCategoryRepository>();
+
+            builder.Services.AddScoped<IRewardService, RewardService>();
+            builder.Services.AddScoped<IRewardCategoryService, RewardCategoryService>();
             // Identity
             builder.Services
                 .AddIdentity<ApplicationUser, ApplicationRole>()
@@ -35,6 +42,12 @@ namespace SmartBin
             if (app.Environment.IsDevelopment())
             {
                 app.MapOpenApi();
+            }
+
+            if (app.Environment.IsDevelopment())
+            {
+                app.UseSwagger();
+                app.UseSwaggerUI();
             }
 
             app.UseAuthentication();
