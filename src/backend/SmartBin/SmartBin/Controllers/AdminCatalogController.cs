@@ -1,7 +1,8 @@
-﻿
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using SmartBin.DTOs;
+using SmartBin.DTOs.Common;
 using SmartBin.Services;
 
 namespace SmartBin.Controllers
@@ -13,17 +14,22 @@ namespace SmartBin.Controllers
 	{
 		private readonly IRewardService _rewardService;
 		private readonly IRewardCategoryService _categoryService;
+		private readonly IStorageService _storageService;
 
 		public AdminCatalogController(
 			IRewardService rewardService,
-			IRewardCategoryService categoryService)
+			IRewardCategoryService categoryService,
+			IStorageService storageService)
 		{
 			_rewardService = rewardService;
 			_categoryService = categoryService;
+			_storageService = storageService;
 		}
 
 		// E34: Get all catalog items
 		[HttpGet]
+		[ProducesResponseType(typeof(PagedApiResponse<List<RewardResponseDto>>), StatusCodes.Status200OK)]
+		[ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
 		public async Task<IActionResult> GetAll(
 			[FromQuery] int? categoryId,
 			[FromQuery] string? status,
@@ -131,6 +137,8 @@ namespace SmartBin.Controllers
 
 		// E35: Create catalog item
 		[HttpPost]
+		[ProducesResponseType(typeof(ApiResponse<RewardResponseDto>), StatusCodes.Status201Created)]
+		[ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
 		public async Task<IActionResult> Create(
 			[FromBody] CreateRewardRequestDto request)
 		{
@@ -160,6 +168,7 @@ namespace SmartBin.Controllers
 
 		// E36: Get active reward categories
 		[HttpGet("categories")]
+		[ProducesResponseType(typeof(ApiResponse<List<RewardCategoryResponseDto>>), StatusCodes.Status200OK)]
 		public async Task<IActionResult> GetCategories()
 		{
 			var categories = await _categoryService.GetActiveAsync();
@@ -173,6 +182,8 @@ namespace SmartBin.Controllers
 
 		// E37: Create reward category
 		[HttpPost("categories")]
+		[ProducesResponseType(typeof(ApiResponse<RewardCategoryResponseDto>), StatusCodes.Status201Created)]
+		[ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status409Conflict)]
 		public async Task<IActionResult> CreateCategory(
 			[FromBody] CreateRewardCategoryRequestDto request)
 		{
@@ -184,6 +195,297 @@ namespace SmartBin.Controllers
 				{
 					success = true,
 					data = category
+				});
+			}
+			catch (InvalidOperationException ex)
+			{
+				return Conflict(new
+				{
+					success = false,
+					error = new
+					{
+						code = "CONFLICT",
+						message = ex.Message
+					}
+				});
+			}
+			catch (ArgumentException ex)
+			{
+				return Conflict(new
+				{
+					success = false,
+					error = new
+					{
+						code = "CONFLICT",
+						message = ex.Message
+					}
+				});
+			}
+		}
+
+		// NEW-CAT-UPDATE: Update reward category
+		[HttpPut("categories/{categoryId:int}")]
+		[ProducesResponseType(typeof(ApiResponse<RewardCategoryResponseDto>), StatusCodes.Status200OK)]
+		[ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+		[ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status409Conflict)]
+		public async Task<IActionResult> UpdateCategory(
+			int categoryId,
+			[FromBody] UpdateRewardCategoryRequestDto request)
+		{
+			var (result, category) = await _categoryService.UpdateAsync(categoryId, request);
+
+			if (result == UpdateCategoryResult.NotFound)
+			{
+				return NotFound(new
+				{
+					success = false,
+					error = new
+					{
+						code = "NOT_FOUND",
+						message = "Category not found."
+					}
+				});
+			}
+
+			if (result == UpdateCategoryResult.ConflictNameArchived)
+			{
+				return Conflict(new
+				{
+					success = false,
+					error = new
+					{
+						code = "CONFLICT",
+						message = "A category with this name already exists in the archive. You can unarchive it instead of renaming."
+					}
+				});
+			}
+
+			if (result == UpdateCategoryResult.ConflictName)
+			{
+				return Conflict(new
+				{
+					success = false,
+					error = new
+					{
+						code = "CONFLICT",
+						message = "A category with this name already exists."
+					}
+				});
+			}
+
+			return Ok(new
+			{
+				success = true,
+				data = category
+			});
+		}
+
+		// NEW-CAT-ARCHIVE: Archive reward category
+		[HttpPost("categories/{categoryId:int}/archive")]
+		[ProducesResponseType(typeof(ApiResponse<CategoryArchiveStatusDto>), StatusCodes.Status200OK)]
+		[ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+		[ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status409Conflict)]
+		public async Task<IActionResult> ArchiveCategory(int categoryId)
+		{
+			var result = await _categoryService.ArchiveAsync(categoryId);
+
+			if (result == ArchiveCategoryResult.NotFound)
+			{
+				return NotFound(new
+				{
+					success = false,
+					error = new
+					{
+						code = "NOT_FOUND",
+						message = "Category not found."
+					}
+				});
+			}
+
+			if (result == ArchiveCategoryResult.AlreadyArchived)
+			{
+				return Conflict(new
+				{
+					success = false,
+					error = new
+					{
+						code = "CONFLICT",
+						message = "Category is already archived."
+					}
+				});
+			}
+
+			if (result == ArchiveCategoryResult.HasActiveRewards)
+			{
+				return Conflict(new
+				{
+					success = false,
+					error = new
+					{
+						code = "CONFLICT",
+						message = "Cannot archive category because it has active rewards. Archive or deactivate related rewards first."
+					}
+				});
+			}
+
+			return Ok(new
+			{
+				success = true,
+				data = new
+				{
+					categoryId,
+					status = "archived",
+					archivedAt = DateTime.UtcNow
+				}
+			});
+		}
+
+		// Unarchive reward category
+		[HttpPost("categories/{categoryId:int}/unarchive")]
+		[ProducesResponseType(typeof(ApiResponse<CategoryArchiveStatusDto>), StatusCodes.Status200OK)]
+		[ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+		[ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status409Conflict)]
+		public async Task<IActionResult> UnarchiveCategory(int categoryId)
+		{
+			var result = await _categoryService.UnarchiveAsync(categoryId);
+
+			if (result == UnarchiveCategoryResult.NotFound)
+			{
+				return NotFound(new
+				{
+					success = false,
+					error = new
+					{
+						code = "NOT_FOUND",
+						message = "Category not found."
+					}
+				});
+			}
+
+			if (result == UnarchiveCategoryResult.NotArchived)
+			{
+				return Conflict(new
+				{
+					success = false,
+					error = new
+					{
+						code = "CONFLICT",
+						message = "Category is not archived."
+					}
+				});
+			}
+
+			return Ok(new
+			{
+				success = true,
+				data = new
+				{
+					categoryId,
+					status = "active"
+				}
+			});
+		}
+
+		// E38: Upload reward or banner image (supports folder="rewards" or folder="categories")
+		[HttpPost("upload-image")]
+		[Consumes("multipart/form-data")]
+		[ProducesResponseType(typeof(ApiResponse<UploadImageResponseDto>), StatusCodes.Status200OK)]
+		[ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+		[ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status413PayloadTooLarge)]
+		[ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status415UnsupportedMediaType)]
+		public async Task<IActionResult> UploadImage(
+			IFormFile? file,
+			[FromQuery] string folder = "rewards")
+		{
+			if (file == null || file.Length == 0)
+			{
+				return BadRequest(new
+				{
+					success = false,
+					error = new
+					{
+						code = "VALIDATION_ERROR",
+						message = "File is required."
+					}
+				});
+			}
+
+			// Max file size: 5 MB
+			const long maxSizeBytes = 5 * 1024 * 1024;
+			if (file.Length > maxSizeBytes)
+			{
+				return StatusCode(413, new
+				{
+					success = false,
+					error = new
+					{
+						code = "PAYLOAD_TOO_LARGE",
+						message = "File size exceeds the allowed limit (5MB)."
+					}
+				});
+			}
+
+			var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp" };
+			var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+			if (!allowedExtensions.Contains(extension))
+			{
+				return StatusCode(415, new
+				{
+					success = false,
+					error = new
+					{
+						code = "UNSUPPORTED_MEDIA_TYPE",
+						message = "Only JPEG, PNG and WEBP images are accepted."
+					}
+				});
+			}
+
+			var targetFolder = string.Equals(folder, "categories", StringComparison.OrdinalIgnoreCase)
+				? "categories"
+				: "rewards";
+
+			var imageUrl = await _storageService.UploadFileAsync(file, targetFolder);
+
+			return Ok(new
+			{
+				success = true,
+				data = new
+				{
+					imageUrl
+				}
+			});
+		}
+
+		// E39: Update catalog item
+		[HttpPut("{itemId:int}")]
+		[ProducesResponseType(typeof(ApiResponse<RewardResponseDto>), StatusCodes.Status200OK)]
+		[ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+		[ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+		public async Task<IActionResult> Update(
+			int itemId,
+			[FromBody] UpdateRewardRequestDto request)
+		{
+			try
+			{
+				var result = await _rewardService.UpdateAsync(itemId, request);
+
+				if (result == null)
+				{
+					return NotFound(new
+					{
+						success = false,
+						error = new
+						{
+							code = "NOT_FOUND",
+							message = "Catalog item not found."
+						}
+					});
+				}
+
+				return Ok(new
+				{
+					success = true,
+					data = result
 				});
 			}
 			catch (ArgumentException ex)
@@ -200,37 +502,11 @@ namespace SmartBin.Controllers
 			}
 		}
 
-
-		// E39: Update catalog item
-		[HttpPut("{itemId:int}")]
-		public async Task<IActionResult> Update(
-			int itemId,
-			[FromBody] UpdateRewardRequestDto request)
-		{
-			var result = await _rewardService.UpdateAsync(itemId, request);
-
-			if (result == null)
-			{
-				return NotFound(new
-				{
-					success = false,
-					error = new
-					{
-						code = "NOT_FOUND",
-						message = "Catalog item not found."
-					}
-				});
-			}
-
-			return Ok(new
-			{
-				success = true,
-				data = result
-			});
-		}
-
 		// E40: Archive catalog item
 		[HttpPost("{itemId:int}/archive")]
+		[ProducesResponseType(typeof(ApiResponse<ItemArchiveStatusDto>), StatusCodes.Status200OK)]
+		[ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+		[ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status409Conflict)]
 		public async Task<IActionResult> Archive(int itemId)
 		{
 			var result = await _rewardService.ArchiveAsync(itemId);
@@ -256,7 +532,7 @@ namespace SmartBin.Controllers
 					error = new
 					{
 						code = "CONFLICT",
-						message = "Reward is already archived."
+						message = "Item is already archived."
 					}
 				});
 			}
@@ -268,6 +544,65 @@ namespace SmartBin.Controllers
 				{
 					itemId,
 					status = "archived"
+				}
+			});
+		}
+
+		// Unarchive catalog item
+		[HttpPost("{itemId:int}/unarchive")]
+		[ProducesResponseType(typeof(ApiResponse<ItemArchiveStatusDto>), StatusCodes.Status200OK)]
+		[ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+		[ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status409Conflict)]
+		public async Task<IActionResult> Unarchive(int itemId)
+		{
+			var result = await _rewardService.UnarchiveAsync(itemId);
+
+			if (result == UnarchiveRewardResult.NotFound)
+			{
+				return NotFound(new
+				{
+					success = false,
+					error = new
+					{
+						code = "NOT_FOUND",
+						message = "Catalog item not found."
+					}
+				});
+			}
+
+			if (result == UnarchiveRewardResult.NotArchived)
+			{
+				return Conflict(new
+				{
+					success = false,
+					error = new
+					{
+						code = "CONFLICT",
+						message = "Reward is not archived."
+					}
+				});
+			}
+
+			if (result == UnarchiveRewardResult.CategoryArchived)
+			{
+				return Conflict(new
+				{
+					success = false,
+					error = new
+					{
+						code = "CONFLICT",
+						message = "Cannot unarchive reward because its parent category is archived. Unarchive category first."
+					}
+				});
+			}
+
+			return Ok(new
+			{
+				success = true,
+				data = new
+				{
+					itemId,
+					status = "active"
 				}
 			});
 		}

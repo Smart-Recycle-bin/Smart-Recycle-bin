@@ -9,9 +9,10 @@ namespace SmartBin.Services
     {
         private readonly IRewardRepository _rewardRepository;
         private readonly IRewardCategoryRepository _categoryRepository;
+
         public RewardService(
-    IRewardRepository rewardRepository,
-    IRewardCategoryRepository categoryRepository)
+            IRewardRepository rewardRepository,
+            IRewardCategoryRepository categoryRepository)
         {
             _rewardRepository = rewardRepository;
             _categoryRepository = categoryRepository;
@@ -39,7 +40,6 @@ namespace SmartBin.Services
                     r.Name.Contains(search));
             }
 
-
             if (!string.IsNullOrWhiteSpace(status))
             {
                 query = status.ToLower() switch
@@ -50,7 +50,6 @@ namespace SmartBin.Services
                     _ => query
                 };
             }
-
 
             query = sortBy?.ToLower() switch
             {
@@ -86,6 +85,7 @@ namespace SmartBin.Services
                 VoucherCodeType = r.VoucherCodeType,
                 PointsCost = r.PointsCost,
                 Stock = r.StockQuantity,
+                RedemptionsCount = 0,
                 Status = !r.IsActive
                     ? "archived"
                     : r.StockQuantity > 0
@@ -98,6 +98,7 @@ namespace SmartBin.Services
 
             return (items, totalItems);
         }
+
         public async Task<RewardResponseDto?> GetByIdAsync(int rewardId)
         {
             var reward = await _rewardRepository.GetByIdAsync(rewardId);
@@ -117,6 +118,7 @@ namespace SmartBin.Services
                 VoucherCodeType = reward.VoucherCodeType,
                 PointsCost = reward.PointsCost,
                 Stock = reward.StockQuantity,
+                RedemptionsCount = 0,
                 Status = !reward.IsActive
                   ? "archived"
                   : reward.StockQuantity > 0
@@ -127,6 +129,7 @@ namespace SmartBin.Services
                 ValidUntil = reward.ValidUntil
             };
         }
+
         public async Task<RewardResponseDto> CreateAsync(CreateRewardRequestDto request)
         {
             var category = await _categoryRepository
@@ -165,6 +168,7 @@ namespace SmartBin.Services
                 VoucherCodeType = reward.VoucherCodeType,
                 PointsCost = reward.PointsCost,
                 Stock = reward.StockQuantity,
+                RedemptionsCount = 0,
                 Status = !reward.IsActive
                  ? "archived"
                  : reward.StockQuantity > 0
@@ -187,22 +191,58 @@ namespace SmartBin.Services
                 return null;
             }
 
-            var category = await _categoryRepository.GetByIdAsync(request.CategoryId);
+            string categoryName = reward.Category?.Name ?? string.Empty;
 
-            if (category == null)
+            if (request.CategoryId.HasValue)
             {
-                throw new ArgumentException("Category not found.");
+                var category = await _categoryRepository.GetByIdAsync(request.CategoryId.Value);
+                if (category == null)
+                {
+                    throw new ArgumentException("Category not found.");
+                }
+                reward.CategoryId = request.CategoryId.Value;
+                categoryName = category.Name;
             }
 
-            reward.Name = request.Title;
-            reward.Description = request.Description;
-            reward.CategoryId = request.CategoryId;
-            reward.VoucherCodeType = request.VoucherCodeType;
-            reward.PointsCost = request.PointsCost;
-            reward.StockQuantity = request.Stock;
-            reward.ImageUrl = request.ImageUrl;
-            reward.ValidFrom = request.ValidFrom;
-            reward.ValidUntil = request.ValidUntil;
+            if (!string.IsNullOrWhiteSpace(request.Title))
+            {
+                reward.Name = request.Title.Trim();
+            }
+
+            if (request.Description != null)
+            {
+                reward.Description = request.Description;
+            }
+
+            if (request.VoucherCodeType != null)
+            {
+                reward.VoucherCodeType = request.VoucherCodeType;
+            }
+
+            if (request.PointsCost.HasValue)
+            {
+                reward.PointsCost = request.PointsCost.Value;
+            }
+
+            if (request.Stock.HasValue)
+            {
+                reward.StockQuantity = request.Stock.Value;
+            }
+
+            if (request.ImageUrl != null)
+            {
+                reward.ImageUrl = request.ImageUrl;
+            }
+
+            if (request.ValidFrom.HasValue)
+            {
+                reward.ValidFrom = request.ValidFrom.Value;
+            }
+
+            if (request.ValidUntil.HasValue)
+            {
+                reward.ValidUntil = request.ValidUntil.Value;
+            }
 
             _rewardRepository.Update(reward);
             await _rewardRepository.SaveChangesAsync();
@@ -213,10 +253,11 @@ namespace SmartBin.Services
                 Title = reward.Name,
                 Description = reward.Description,
                 CategoryId = reward.CategoryId,
-                CategoryName = category.Name,
+                CategoryName = categoryName,
                 VoucherCodeType = reward.VoucherCodeType,
                 PointsCost = reward.PointsCost,
                 Stock = reward.StockQuantity,
+                RedemptionsCount = 0,
                 Status = !reward.IsActive
                    ? "archived"
                    : reward.StockQuantity > 0
@@ -227,7 +268,6 @@ namespace SmartBin.Services
                 ValidUntil = reward.ValidUntil
             };
         }
-
 
         public async Task<ArchiveRewardResult> ArchiveAsync(int rewardId)
         {
@@ -251,6 +291,47 @@ namespace SmartBin.Services
             return ArchiveRewardResult.Archived;
         }
 
+        public async Task<UnarchiveRewardResult> UnarchiveAsync(int rewardId)
+        {
+            var reward = await _rewardRepository.GetByIdAsync(rewardId);
 
+            if (reward == null)
+            {
+                return UnarchiveRewardResult.NotFound;
+            }
+
+            if (reward.IsActive)
+            {
+                return UnarchiveRewardResult.NotArchived;
+            }
+
+            // Check if parent category is active
+            var category = await _categoryRepository.GetByIdAsync(reward.CategoryId);
+            if (category == null || !category.IsActive)
+            {
+                return UnarchiveRewardResult.CategoryArchived;
+            }
+
+            reward.IsActive = true;
+
+            _rewardRepository.Update(reward);
+            await _rewardRepository.SaveChangesAsync();
+
+            return UnarchiveRewardResult.Success;
+        }
+
+        public async Task<bool> DecrementStockAsync(int rewardId, int quantity = 1)
+        {
+            var reward = await _rewardRepository.GetByIdAsync(rewardId);
+            if (reward == null || !reward.IsActive || reward.StockQuantity < quantity)
+            {
+                return false;
+            }
+
+            reward.StockQuantity -= quantity;
+            _rewardRepository.Update(reward);
+            await _rewardRepository.SaveChangesAsync();
+            return true;
+        }
     }
 }

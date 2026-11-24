@@ -11,15 +11,18 @@ namespace SmartBin.Services.Bins
         private readonly AppDbContext _context;
         private readonly ISessionCoordinationService _sessionService;
         private readonly IClassificationAdapter _classificationAdapter;
+        private readonly IStorageService _storageService;
 
         public IngestionService(
             AppDbContext context,
             ISessionCoordinationService sessionService,
-            IClassificationAdapter classificationAdapter)
+            IClassificationAdapter classificationAdapter,
+            IStorageService storageService)
         {
             _context = context;
             _sessionService = sessionService;
             _classificationAdapter = classificationAdapter;
+            _storageService = storageService;
         }
 
         public async Task<IngestItemResponseDto> IngestItemAsync(int sessionId, IngestItemRequestDto request, string? deviceKey)
@@ -67,9 +70,8 @@ namespace SmartBin.Services.Bins
                     ?? new WasteType { WasteTypeId = 1, Name = WasteTypeNames.Plastic, BasePoints = 15 };
             }
 
-            // 5. Store image path/URL
-            var fileName = $"item_{sessionId}_{DateTime.UtcNow.Ticks}_{Path.GetFileName(request.Image.FileName)}";
-            var imagePath = $"https://cdn.ecobin.app/items/{fileName}";
+            // 5. Store image to Cloudflare R2 under recycled-items
+            var imagePath = await _storageService.UploadFileAsync(request.Image, "recycled-items");
 
             // 6. Persist DISPOSAL_ITEM record
             var disposalItem = new DisposalItem

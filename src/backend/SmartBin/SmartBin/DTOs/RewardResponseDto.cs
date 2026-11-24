@@ -1,4 +1,3 @@
-
 namespace SmartBin.DTOs
 {
     public class RewardResponseDto
@@ -18,6 +17,8 @@ namespace SmartBin.DTOs
         public int PointsCost { get; set; }
 
         public int Stock { get; set; }
+
+        public int RedemptionsCount { get; set; } = 0;
 
         public string Status { get; set; } = null!;
 

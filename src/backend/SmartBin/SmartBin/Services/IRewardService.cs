@@ -1,4 +1,3 @@
-
 using SmartBin.DTOs;
 
 namespace SmartBin.Services
@@ -8,6 +7,14 @@ namespace SmartBin.Services
         NotFound,
         AlreadyArchived,
         Archived
+    }
+
+    public enum UnarchiveRewardResult
+    {
+        NotFound,
+        NotArchived,
+        CategoryArchived,
+        Success
     }
 
     public interface IRewardService
@@ -33,5 +40,8 @@ namespace SmartBin.Services
 
         Task<ArchiveRewardResult> ArchiveAsync(int rewardId);
 
+        Task<UnarchiveRewardResult> UnarchiveAsync(int rewardId);
+
+        Task<bool> DecrementStockAsync(int rewardId, int quantity = 1);
     }
 }

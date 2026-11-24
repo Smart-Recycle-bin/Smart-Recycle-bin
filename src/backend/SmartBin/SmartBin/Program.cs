@@ -65,6 +65,7 @@ namespace SmartBin
 
             builder.Services.AddScoped<IRewardService, RewardService>();
             builder.Services.AddScoped<IRewardCategoryService, RewardCategoryService>();
+            builder.Services.AddScoped<IStorageService, CloudflareR2StorageService>();
             // Identity
             builder.Services
                .AddIdentity<ApplicationUser, ApplicationRole>(options =>
