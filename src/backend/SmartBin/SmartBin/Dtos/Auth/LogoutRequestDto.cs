@@ -6,4 +6,4 @@ namespace SmartBin.DTOs.Auth
     {
         public string? RefreshToken { get; set; }
     }
-}
+} 

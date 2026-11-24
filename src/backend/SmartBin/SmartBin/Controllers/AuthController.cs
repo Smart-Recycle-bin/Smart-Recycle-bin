@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
  using SmartBin.Dtos.Auth;
 using SmartBin.DTOs.Auth;
 using SmartBin.Services;
+using SmartBin.Services.Auth;
 using System.Security.Claims;
 
 namespace SmartBin.Controllers
@@ -139,7 +140,7 @@ namespace SmartBin.Controllers
         [Authorize]
         [HttpPost("logout")]
         public async Task<IActionResult> Logout(
-    [FromBody] LogoutRequestDto? request)
+         [FromBody] LogoutRequestDto? request)
         {
             try
             {
@@ -244,7 +245,7 @@ namespace SmartBin.Controllers
                     }
                 });
             }
-        }
+        } 
 
         [AllowAnonymous]
         [HttpPost("reset-password")]

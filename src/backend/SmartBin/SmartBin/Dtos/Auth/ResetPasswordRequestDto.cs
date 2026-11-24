@@ -8,4 +8,4 @@
 
         public string NewPassword { get; set; } 
     }
-}
+} 

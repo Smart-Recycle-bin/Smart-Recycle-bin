@@ -5,5 +5,5 @@ namespace SmartBin.DTOs.Auth
     {
         public string Email { get; set; } 
     }
-}
+} 
 

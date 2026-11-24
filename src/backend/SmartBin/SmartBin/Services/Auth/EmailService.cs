@@ -1,8 +1,7 @@
-﻿
-using System.Net;
+﻿using System.Net;
 using System.Net.Mail;
 
-namespace SmartBin.Services
+namespace SmartBin.Services.Auth
 {
     public class EmailService
     {
@@ -49,7 +48,7 @@ namespace SmartBin.Services
             var host = _configuration["EmailSettings:Host"];
             if (!int.TryParse(
              _configuration["EmailSettings:Port"],
-             out var port))
+             out var port)) 
             {
                 throw new InvalidOperationException(
                     "Email port is missing or invalid."

@@ -13,6 +13,6 @@ namespace SmartBin.Dtos.Auth
             [Required]
             public string Password { get; set; }
         }
-    
+     
 
 }

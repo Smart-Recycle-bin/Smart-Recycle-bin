@@ -14,7 +14,7 @@ namespace SmartBin.Models
         public string Name { get; set; } = string.Empty;
 
         [MaxLength(255)]
-        public string? Description { get; set; }
+        public string? Description { get; set; } 
 
         public int BasePoints { get; set; }
 

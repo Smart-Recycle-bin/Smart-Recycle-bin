@@ -19,3 +19,4 @@ namespace SmartBin.DTOs.Profile
         public bool RemovePhoto { get; set; } = false;
     }
 }
+  

@@ -1,4 +1,4 @@
-﻿namespace SmartBin.DTOs.Auth
+﻿namespace SmartBin.Dtos.Auth
 {
     public class RefreshResponseDto
     {
@@ -6,4 +6,5 @@
         public int ExpiresIn { get; set; }
         public string RefreshToken { get; set; }
     }
-}
+} 
+   

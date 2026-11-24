@@ -22,7 +22,7 @@
        
         public int? ReplacedByTokenId { get; set; }
 
-        public string CreatedByIp { get; set; }
+        public string CreatedByIp { get; set; } 
 
         public string UserAgent { get; set; }
 

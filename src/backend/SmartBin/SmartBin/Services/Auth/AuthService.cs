@@ -5,12 +5,12 @@ using SmartBin.Dtos.Auth;
 using SmartBin.DTOs.Auth;
 using SmartBin.Models;
 using SmartBin.Repositories;
- using System.Security.Cryptography;
+using System.Security.Cryptography;
 using System.Text;
 
-namespace SmartBin.Services
+namespace SmartBin.Services.Auth
 {
-    public class AuthService
+    public class AuthService 
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly UserManager<ApplicationUser> _userManager;

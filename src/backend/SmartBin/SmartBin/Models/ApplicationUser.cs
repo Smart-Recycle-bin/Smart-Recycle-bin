@@ -7,7 +7,7 @@ namespace SmartBin.Models
     {
         public string DisplayName { get; set; }
 
-        public string? ProfilePhoto { get; set; }
+        public string? ProfilePhoto { get; set; } 
 
         public string AccountStatus { get; set; } = "active";
 

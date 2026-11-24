@@ -7,8 +7,9 @@ using Microsoft.IdentityModel.Tokens;
 using SmartBin.Context;
 using SmartBin.Models;
 using SmartBin.Repositories;
-using SmartBin.Services;
+using SmartBin.Services.Auth;
 using SmartBin.Services.Bins;
+using SmartBin.Services.Profile;
 using System.Text;
 
 namespace SmartBin
@@ -47,7 +48,7 @@ namespace SmartBin
                             details = errors
                         }
                     });
-                };
+                }; 
             });
 
             builder.Services.AddEndpointsApiExplorer();

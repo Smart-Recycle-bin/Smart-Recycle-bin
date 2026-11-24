@@ -5,4 +5,4 @@ namespace SmartBin.DTOs.Auth
     {
         public string Message { get; set; }
     }
-}
+} 

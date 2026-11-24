@@ -14,3 +14,4 @@ namespace SmartBin.DTOs.Profile
         public string? PhoneNumber { get; set; }
     }
 }
+  

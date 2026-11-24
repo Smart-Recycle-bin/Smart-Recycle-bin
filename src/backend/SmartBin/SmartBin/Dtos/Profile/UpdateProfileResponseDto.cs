@@ -12,3 +12,4 @@ namespace SmartBin.DTOs.Profile
         public string? ProfilePhotoUrl { get; set; }
     }
 }
+  

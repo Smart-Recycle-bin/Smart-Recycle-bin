@@ -11,7 +11,7 @@ namespace SmartBin.Models
 
         public int LifetimeEarnedPoints { get; set; }  
 
-        public ApplicationUser User { get; set; } 
+        public ApplicationUser User { get; set; }  
     }
 }
 

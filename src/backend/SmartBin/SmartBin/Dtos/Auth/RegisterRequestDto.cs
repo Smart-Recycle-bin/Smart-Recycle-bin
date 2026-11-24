@@ -16,3 +16,4 @@ namespace SmartBin.Dtos.Auth
         public string DisplayName { get; set; }
     }
 }
+ 

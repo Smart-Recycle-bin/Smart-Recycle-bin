@@ -1,8 +1,7 @@
-﻿
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Text;
 
-namespace SmartBin.Services
+namespace SmartBin.Services.Auth
 {
     public class OtpService
     {
@@ -57,4 +56,4 @@ namespace SmartBin.Services
             );
         }
     }
-}
+} 

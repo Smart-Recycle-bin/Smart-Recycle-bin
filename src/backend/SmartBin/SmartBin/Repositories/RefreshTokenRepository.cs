@@ -70,7 +70,7 @@ namespace SmartBin.Repositories
             {
                 token.RevokedAt = now;
             }
-
+             
             await _context.SaveChangesAsync();
         }
 

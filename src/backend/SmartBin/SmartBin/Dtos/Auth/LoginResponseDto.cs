@@ -11,4 +11,4 @@ namespace SmartBin.DTOs.Auth
 
         public LoginUserDto User { get; set; } 
     }
-}
+} 

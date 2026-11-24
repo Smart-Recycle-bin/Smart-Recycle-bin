@@ -11,7 +11,7 @@ namespace SmartBin.Models
 
         public int SessionId { get; set; }
 
-        public int WasteTypeId { get; set; }
+        public int WasteTypeId { get; set; } 
 
         [Required]
         [MaxLength(500)]
