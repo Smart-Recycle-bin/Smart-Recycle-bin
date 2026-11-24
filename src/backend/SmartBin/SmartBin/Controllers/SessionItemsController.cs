@@ -1,5 +1,7 @@
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using SmartBin.Dtos.Bins;
+using SmartBin.DTOs.Common;
 using SmartBin.Services;
 using SmartBin.Services.Bins;
 
@@ -21,6 +23,9 @@ namespace SmartBin.Controllers
         /// </summary>
         [HttpPost("{sessionId:int}/items")]
         [Consumes("multipart/form-data")]
+        [ProducesResponseType(typeof(ApiResponse<IngestItemResponseDto>), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> IngestItem(
             [FromRoute] int sessionId,
             [FromForm] IngestItemRequestDto request,

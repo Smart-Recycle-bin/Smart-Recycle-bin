@@ -21,7 +21,6 @@ namespace SmartBin
 
             // Add services
             builder.Services.AddControllers();
-
             builder.Services.Configure<ApiBehaviorOptions>(options =>
             {
                 options.InvalidModelStateResponseFactory = context =>
@@ -53,7 +52,6 @@ namespace SmartBin
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
             builder.Services.AddHttpContextAccessor();
-
             // Database
             builder.Services.AddDbContext<AppDbContext>(options =>
                 options.UseSqlServer(
@@ -61,6 +59,13 @@ namespace SmartBin
                 )
             );
 
+            // Repositories
+            builder.Services.AddScoped<IRewardRepository, RewardRepository>();
+            builder.Services.AddScoped<IRewardCategoryRepository, RewardCategoryRepository>();
+
+            builder.Services.AddScoped<IRewardService, RewardService>();
+            builder.Services.AddScoped<IRewardCategoryService, RewardCategoryService>();
+            builder.Services.AddScoped<IStorageService, CloudflareR2StorageService>();
             // Identity
             builder.Services
                .AddIdentity<ApplicationUser, ApplicationRole>(options =>
@@ -160,6 +165,12 @@ namespace SmartBin
             }
 
             // HTTP Request Pipeline
+            if (app.Environment.IsDevelopment())
+            {
+                app.UseSwagger();
+                app.UseSwaggerUI();
+            }
+
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
