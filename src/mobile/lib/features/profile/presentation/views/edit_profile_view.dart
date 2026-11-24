@@ -19,8 +19,8 @@ class _EditProfileViewState extends State<EditProfileView> {
   void initState() {
     super.initState();
     final user = context.read<ProfileViewModel>().user;
-    _nameController = TextEditingController(text: user?.displayName ?? 'Youssef Mohamed');
-    _phoneController = TextEditingController(text: user?.phoneNumber ?? '+201234567890');
+    _nameController = TextEditingController(text: user?.displayName ?? '');
+    _phoneController = TextEditingController(text: user?.phoneNumber ?? '');
   }
 
   @override

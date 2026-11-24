@@ -14,16 +14,19 @@ class BinModel extends BinEntity {
   });
 
   factory BinModel.fromJson(Map<String, dynamic> json) {
+    final id = json['binId']?.toString() ?? '';
+    final nameStr = json['name'] as String? ?? (id.isNotEmpty ? 'Bin#$id' : 'Bin#101');
+
     return BinModel(
-      binId: json['binId'] ?? '',
-      name: json['name'] ?? 'Bin#${json['binId']?.replaceAll('bin-', '') ?? '101'}',
+      binId: id,
+      name: nameStr,
       latitude: (json['latitude'] as num?)?.toDouble() ?? 30.0444,
       longitude: (json['longitude'] as num?)?.toDouble() ?? 31.2357,
-      district: json['district'] ?? 'Downtown Cairo',
-      status: json['status'] ?? 'AVAILABLE',
-      fillLevel: json['fillLevel'] ?? 10,
-      distanceMeters: json['distanceMeters'] ?? 140,
-      walkingMinutes: json['walkingTimeMinutes'] ?? 2,
+      district: json['district'] as String? ?? 'Downtown Cairo',
+      status: (json['status'] as String?)?.toUpperCase() ?? 'AVAILABLE',
+      fillLevel: (json['fillLevel'] as num?)?.toInt() ?? 0,
+      distanceMeters: (json['distanceMeters'] as num?)?.toInt() ?? 140,
+      walkingMinutes: (json['walkingTimeMinutes'] as num?)?.toInt() ?? 2,
     );
   }
 

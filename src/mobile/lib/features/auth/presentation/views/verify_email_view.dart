@@ -5,7 +5,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/widgets/auth_scaffold_background.dart';
 import '../viewmodels/auth_viewmodel.dart';
-import '../../../shell/presentation/views/main_shell_view.dart';
+import 'login_view.dart';
 
 class VerifyEmailView extends StatefulWidget {
   final String email;
@@ -49,12 +49,12 @@ class _VerifyEmailViewState extends State<VerifyEmailView> {
       if (success) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Email verified! You can now access your account.'),
+            content: Text('Email verified successfully! You can now log in.'),
             backgroundColor: AppColors.primaryGreen,
           ),
         );
         Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (_) => const MainShellView()),
+          MaterialPageRoute(builder: (_) => const LoginView()),
           (route) => false,
         );
       } else if (vm.errorMessage != null) {

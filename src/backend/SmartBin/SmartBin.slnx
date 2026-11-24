@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="SmartBin/SmartBin.csproj" />
+  <Project Path="SmartBin.Tests/SmartBin.Tests.csproj" />
+</Solution>

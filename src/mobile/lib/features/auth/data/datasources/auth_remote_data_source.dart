@@ -20,6 +20,23 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
   AuthRemoteDataSourceImpl({required this.apiClient});
 
+  String _extractErrorMessage(dynamic data, String fallback) {
+    if (data is Map<String, dynamic>) {
+      final errorObj = data['error'];
+      if (errorObj is Map<String, dynamic>) {
+        final msg = errorObj['message'];
+        if (msg != null && msg.toString().isNotEmpty) {
+          return msg.toString();
+        }
+      } else if (errorObj is String && errorObj.isNotEmpty) {
+        return errorObj;
+      } else if (data['message'] != null) {
+        return data['message'].toString();
+      }
+    }
+    return fallback;
+  }
+
   @override
   Future<Map<String, dynamic>> login(String email, String password) async {
     if (AppConfig.useMockData) {
@@ -34,14 +51,14 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     try {
       final response = await apiClient.dio.post(
         ApiEndpoints.login,
-        data: {'email': email, 'password': password},
+        data: {'email': email.trim(), 'password': password},
       );
       if (response.data['success'] == true) {
         return response.data['data'] as Map<String, dynamic>;
       }
-      throw Exception(response.data['error'] ?? 'Login failed');
+      throw Exception(_extractErrorMessage(response.data, 'Login failed'));
     } on DioException catch (e) {
-      throw Exception(e.response?.data?['message'] ?? e.message);
+      throw Exception(_extractErrorMessage(e.response?.data, e.message ?? 'Login failed'));
     }
   }
 
@@ -62,17 +79,17 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       final response = await apiClient.dio.post(
         ApiEndpoints.register,
         data: {
-          'displayName': fullName,
-          'email': email,
+          'displayName': fullName.trim(),
+          'email': email.trim(),
           'password': password,
         },
       );
       if (response.data['success'] == true) {
         return UserModel.fromJson(response.data['data']);
       }
-      throw Exception(response.data['error'] ?? 'Registration failed');
+      throw Exception(_extractErrorMessage(response.data, 'Registration failed'));
     } on DioException catch (e) {
-      throw Exception(e.response?.data?['message'] ?? e.message);
+      throw Exception(_extractErrorMessage(e.response?.data, e.message ?? 'Registration failed'));
     }
   }
 
@@ -86,11 +103,14 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     try {
       final response = await apiClient.dio.post(
         ApiEndpoints.verifyEmail,
-        data: {'email': email, 'otp': otp},
+        data: {'email': email.trim(), 'otp': otp.trim()},
       );
-      return response.data['success'] == true;
+      if (response.data['success'] == true) {
+        return true;
+      }
+      throw Exception(_extractErrorMessage(response.data, 'Verification failed'));
     } on DioException catch (e) {
-      throw Exception(e.response?.data?['message'] ?? e.message);
+      throw Exception(_extractErrorMessage(e.response?.data, e.message ?? 'Verification failed'));
     }
   }
 
@@ -104,11 +124,11 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     try {
       final response = await apiClient.dio.post(
         ApiEndpoints.resendVerificationOtp,
-        data: {'email': email},
+        data: {'email': email.trim()},
       );
       return response.data['success'] == true;
-    } on DioException catch (_) {
-      return true;
+    } on DioException catch (e) {
+      throw Exception(_extractErrorMessage(e.response?.data, e.message ?? 'Failed to resend code'));
     }
   }
 
@@ -122,11 +142,11 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     try {
       final response = await apiClient.dio.post(
         ApiEndpoints.forgotPassword,
-        data: {'email': email},
+        data: {'email': email.trim()},
       );
       return response.data['success'] == true;
-    } on DioException catch (_) {
-      return true;
+    } on DioException catch (e) {
+      throw Exception(_extractErrorMessage(e.response?.data, e.message ?? 'Failed to send reset code'));
     }
   }
 
@@ -140,11 +160,11 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     try {
       final response = await apiClient.dio.post(
         ApiEndpoints.verifyResetOtp,
-        data: {'email': email, 'otp': otp},
+        data: {'email': email.trim(), 'otp': otp.trim()},
       );
       return response.data['success'] == true;
-    } on DioException catch (_) {
-      return true;
+    } on DioException catch (e) {
+      throw Exception(_extractErrorMessage(e.response?.data, e.message ?? 'Invalid code'));
     }
   }
 
