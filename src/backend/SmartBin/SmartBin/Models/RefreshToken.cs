@@ -17,7 +17,7 @@
 
         public DateTime CreatedAt { get; set; } 
 
-        public DateTime RevokedAt { get; set; }
+        public DateTime? RevokedAt { get; set; }
 
        
         public int? ReplacedByTokenId { get; set; }

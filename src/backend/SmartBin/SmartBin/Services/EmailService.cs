@@ -13,12 +13,52 @@ namespace SmartBin.Services
             _configuration = configuration;
         }
 
-        public async Task SendVerificationOtpAsync(string email, string otp)
+        // Email verification OTP
+        public async Task SendVerificationOtpAsync(
+            string email,
+            string otp)
+        {
+            await SendOtpEmailAsync(
+                email,
+                otp,
+                "SmartBin - Email Verification",
+                "Your email verification code"
+            );
+        }
+
+        // Password reset OTP
+        public async Task SendPasswordResetOtpAsync(
+            string email,
+            string otp)
+        {
+            await SendOtpEmailAsync(
+                email,
+                otp,
+                "SmartBin - Password Reset",
+                "Your password reset code"
+            );
+        }
+
+        // Shared email sending logic
+        private async Task SendOtpEmailAsync(
+            string email,
+            string otp,
+            string subject,
+            string messageText)
         {
             var host = _configuration["EmailSettings:Host"];
-            var port = int.Parse(_configuration["EmailSettings:Port"]!);
-            var senderEmail = _configuration["EmailSettings:SenderEmail"];
-            var password = _configuration["EmailSettings:Password"];
+            if (!int.TryParse(
+             _configuration["EmailSettings:Port"],
+             out var port))
+            {
+                throw new InvalidOperationException(
+                    "Email port is missing or invalid."
+                );
+            }
+            var senderEmail =
+                _configuration["EmailSettings:SenderEmail"];
+            var password =
+                _configuration["EmailSettings:Password"];
 
             if (string.IsNullOrWhiteSpace(host) ||
                 string.IsNullOrWhiteSpace(senderEmail) ||
@@ -33,16 +73,16 @@ namespace SmartBin.Services
 
             message.From = new MailAddress(senderEmail);
             message.To.Add(email);
-            message.Subject = "SmartBin - Email Verification";
+            message.Subject = subject;
             message.Body =
-                $"Your verification code is {otp}. It expires in 10 minutes.";
+                $"{messageText}: {otp}. It expires in 10 minutes.";
 
             using var smtpClient = new SmtpClient(host, port)
             {
                 Credentials = new NetworkCredential(
-           senderEmail.Trim(),
-           password.Replace(" ", "").Trim()
-       ),
+                    senderEmail.Trim(),
+                    password.Replace(" ", "").Trim()
+                ),
                 EnableSsl = true,
                 UseDefaultCredentials = false,
                 DeliveryMethod = SmtpDeliveryMethod.Network,
@@ -53,4 +93,3 @@ namespace SmartBin.Services
         }
     }
 }
-

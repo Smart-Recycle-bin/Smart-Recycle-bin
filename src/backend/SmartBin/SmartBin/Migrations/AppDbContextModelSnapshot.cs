@@ -254,7 +254,7 @@ namespace SmartBin.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("OtpId"));
 
-                    b.Property<DateTime>("ConsumedAt")
+                    b.Property<DateTime?>("ConsumedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<DateTime>("CreatedAt")
@@ -266,7 +266,7 @@ namespace SmartBin.Migrations
                     b.Property<int>("FailedAttempts")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("InvalidatedAt")
+                    b.Property<DateTime?>("InvalidatedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("OtpHash")
@@ -351,7 +351,7 @@ namespace SmartBin.Migrations
                     b.Property<int?>("ReplacedByTokenId")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("RevokedAt")
+                    b.Property<DateTime?>("RevokedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("TokenHash")

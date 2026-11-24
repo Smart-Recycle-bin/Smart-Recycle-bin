@@ -1,8 +1,10 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
  using SmartBin.Dtos.Auth;
 using SmartBin.DTOs.Auth;
 using SmartBin.Services;
+using System.Security.Claims;
 
 namespace SmartBin.Controllers
 {
@@ -112,6 +114,146 @@ namespace SmartBin.Controllers
             {
                 var result =
                     await _authService.ResendVerificationOtpAsync(request);
+
+                return Ok(new
+                {
+                    success = true,
+                    data = result
+                });
+            }
+            catch (ApiException ex)
+            {
+                return StatusCode(ex.StatusCode, new
+                {
+                    success = false,
+                    error = new
+                    {
+                        code = ex.ErrorCode,
+                        message = ex.Message
+                    }
+                });
+            }
+        }
+
+
+        [Authorize]
+        [HttpPost("logout")]
+        public async Task<IActionResult> Logout(
+    [FromBody] LogoutRequestDto? request)
+        {
+            try
+            {
+                 var userIdValue = User.FindFirstValue("id");
+
+                if (!int.TryParse(userIdValue, out int userId))
+                {
+                    return Unauthorized(new
+                    {
+                        success = false,
+                        error = new
+                        {
+                            code = "UNAUTHORIZED",
+                            message = "Access token is missing or invalid."
+                        }
+                    });
+                }
+
+                 await _authService.LogoutAsync(
+                    userId,
+                    request?.RefreshToken
+                );
+
+                return Ok(new
+                {
+                    success = true,
+                    data = new
+                    {
+                        message = "Logged out successfully"
+                    }
+                });
+            }
+            catch (ApiException ex)
+            {
+                return StatusCode(ex.StatusCode, new
+                {
+                    success = false,
+                    error = new
+                    {
+                        code = ex.ErrorCode,
+                        message = ex.Message
+                    }
+                });
+            }
+        }
+
+        [AllowAnonymous]
+        [HttpPost("refresh")]
+        public async Task<IActionResult> Refresh(
+          [FromBody] RefreshRequestDto request)
+        {
+            try
+            {
+                var result = await _authService.RefreshAsync(request);
+
+                return Ok(new
+                {
+                    success = true,
+                    data = result
+                });
+            }
+            catch (ApiException ex)
+            {
+                return StatusCode(ex.StatusCode, new
+                {
+                    success = false,
+                    error = new
+                    {
+                        code = ex.ErrorCode,
+                        message = ex.Message
+                    }
+                });
+            }
+        }
+
+
+
+        [AllowAnonymous]
+        [HttpPost("forgot-password")]
+        public async Task<IActionResult> ForgotPassword(
+            [FromBody] ForgotPasswordRequestDto request)
+        {
+            try
+            {
+                var result = await _authService.ForgotPasswordAsync(request);
+
+                return Ok(new
+                {
+                    success = true,
+                    data = result
+                });
+            }
+            catch (ApiException ex)
+            {
+                return StatusCode(ex.StatusCode, new
+                {
+                    success = false,
+                    error = new
+                    {
+                        code = ex.ErrorCode,
+                        message = ex.Message
+                    }
+                });
+            }
+        }
+
+        [AllowAnonymous]
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> ResetPassword(
+            [FromBody] ResetPasswordRequestDto request)
+        {
+            try
+            {
+                var result = await _authService.ResetPasswordAsync(request);
 
                 return Ok(new
                 {
