@@ -1,16 +1,13 @@
-﻿using Microsoft.AspNetCore.Identity;
+
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using SmartBin.Models;  
+using SmartBin.Models;
+
 namespace SmartBin.Context
 {
-
-
-    
-
     public class AppDbContext : IdentityDbContext<ApplicationUser, ApplicationRole, int>
     {
-
         public AppDbContext(DbContextOptions<AppDbContext> options)
             : base(options)
         {
@@ -22,6 +19,10 @@ namespace SmartBin.Context
         public DbSet<WasteType> WasteTypes { get; set; }
         public DbSet<DisposalItem> DisposalItems { get; set; }
         public DbSet<ServiceRecord> ServiceRecords { get; set; }
+
+        public DbSet<RewardCategory> RewardCategories { get; set; }
+
+        public DbSet<Reward> Rewards { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -66,6 +67,39 @@ namespace SmartBin.Context
                 entity.HasIndex(otp => otp.ExpiresAt);
             });
 
+            // RewardCategory Configuration
+            builder.Entity<RewardCategory>(entity =>
+            {
+                entity.HasKey(c => c.CategoryId);
+
+                entity.HasIndex(c => c.Name)
+                    .IsUnique();
+
+                entity.Property(c => c.Name)
+                    .IsRequired();
+
+                entity.Property(c => c.IsActive)
+                    .HasDefaultValue(true);
+            });
+
+            // Reward Configuration
+            builder.Entity<Reward>(entity =>
+            {
+                entity.HasKey(r => r.RewardId);
+
+                entity.Property(r => r.Name)
+                    .IsRequired();
+
+                entity.Property(r => r.StockQuantity)
+                    .HasDefaultValue(0);
+
+                entity.HasOne(r => r.Category)
+                    .WithMany(c => c.Rewards)
+                    .HasForeignKey(r => r.CategoryId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            // Wallet Configuration
             builder.Entity<Wallet>(entity =>
             {
                 entity.ToTable("WALLET");
@@ -95,7 +129,6 @@ namespace SmartBin.Context
                     .HasForeignKey<Wallet>(w => w.UserId)
                     .OnDelete(DeleteBehavior.Cascade);
             });
-
             // SMART_BIN Configuration
             builder.Entity<SmartBin.Models.SmartBin>(entity =>
             {
@@ -163,8 +196,6 @@ namespace SmartBin.Context
                     .HasForeignKey(sr => sr.CollectorId)
                     .OnDelete(DeleteBehavior.Restrict);
             });
-
         }
     }
-
 }

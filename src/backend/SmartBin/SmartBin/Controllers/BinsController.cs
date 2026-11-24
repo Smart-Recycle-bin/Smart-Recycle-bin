@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using SmartBin.Dtos.Bins;
+using SmartBin.DTOs.Common;
 using SmartBin.Services;
 using SmartBin.Services.Bins;
 
@@ -21,6 +23,8 @@ namespace SmartBin.Controllers
         /// E60 — Citizen bin map
         /// </summary>
         [HttpGet]
+        [ProducesResponseType(typeof(ApiResponse<List<CitizenBinDto>>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> GetNearbyBins(
             [FromQuery] double? lat,
             [FromQuery] double? lng,
@@ -54,6 +58,8 @@ namespace SmartBin.Controllers
         /// E64 — Search bins and locations
         /// </summary>
         [HttpGet("search")]
+        [ProducesResponseType(typeof(ApiResponse<List<SearchBinDto>>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> SearchBins(
             [FromQuery] string query,
             [FromQuery] double? lat,
@@ -88,6 +94,8 @@ namespace SmartBin.Controllers
         /// E61 — Bin details
         /// </summary>
         [HttpGet("{binId:int}")]
+        [ProducesResponseType(typeof(ApiResponse<BinDetailsDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetBinDetails([FromRoute] int binId)
         {
             try
