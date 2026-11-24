@@ -12,7 +12,7 @@ class BinsRepositoryImpl implements BinsRepository {
   Future<Result<List<BinEntity>>> getNearbyBins({
     required double latitude,
     required double longitude,
-    double radiusKm = 5.0,
+    double radiusKm = 1.0,
   }) async {
     try {
       final bins = await remoteDataSource.getNearbyBins(latitude, longitude, radiusKm);

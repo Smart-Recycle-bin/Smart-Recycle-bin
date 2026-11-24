@@ -18,9 +18,13 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<Result<UserEntity>> login({required String email, required String password}) async {
     try {
       final data = await remoteDataSource.login(email, password);
-      final accessToken = data['accessToken'] as String? ?? 'demo_token';
+      final accessToken = data['accessToken'] as String? ?? '';
       final refreshToken = data['refreshToken'] as String?;
-      final userData = data['user'] as Map<String, dynamic>? ?? {};
+      final userData = Map<String, dynamic>.from(data['user'] as Map? ?? {});
+
+      if (!userData.containsKey('email') || userData['email'] == null || userData['email'].toString().isEmpty) {
+        userData['email'] = email;
+      }
 
       await tokenStorage.saveTokens(
         accessToken: accessToken,

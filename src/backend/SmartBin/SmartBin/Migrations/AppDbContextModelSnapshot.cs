@@ -289,6 +289,43 @@ namespace SmartBin.Migrations
                     b.ToTable("AuthOtps");
                 });
 
+            modelBuilder.Entity("SmartBin.Models.DisposalItem", b =>
+                {
+                    b.Property<int>("ItemId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ItemId"));
+
+                    b.Property<decimal?>("AIConfidence")
+                        .HasColumnType("decimal(5, 4)");
+
+                    b.Property<DateTime>("DetectedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("EstimatedPoints")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Image")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("SessionId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("WasteTypeId")
+                        .HasColumnType("int");
+
+                    b.HasKey("ItemId");
+
+                    b.HasIndex("SessionId");
+
+                    b.HasIndex("WasteTypeId");
+
+                    b.ToTable("DISPOSAL_ITEM", (string)null);
+                });
+
             modelBuilder.Entity("SmartBin.Models.RefreshToken", b =>
                 {
                     b.Property<int>("RefreshTokenId")
@@ -427,6 +464,108 @@ namespace SmartBin.Migrations
                     b.ToTable("RewardCategories");
                 });
 
+            modelBuilder.Entity("SmartBin.Models.ServiceRecord", b =>
+                {
+                    b.Property<int>("ServiceId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ServiceId"));
+
+                    b.Property<int>("BinId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CollectorId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<decimal?>("PreviousFillLevel")
+                        .HasColumnType("decimal(5, 2)");
+
+                    b.Property<DateTime>("ServicedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("ServiceId");
+
+                    b.HasIndex("BinId");
+
+                    b.HasIndex("CollectorId");
+
+                    b.ToTable("SERVICE_RECORD", (string)null);
+                });
+
+            modelBuilder.Entity("SmartBin.Models.SmartBin", b =>
+                {
+                    b.Property<int>("BinId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("BinId"));
+
+                    b.Property<decimal?>("CapacityThreshold")
+                        .HasColumnType("decimal(8, 2)");
+
+                    b.Property<int?>("CollectorId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("District")
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<decimal>("FillLevel")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("decimal(5, 2)")
+                        .HasDefaultValue(0m);
+
+                    b.Property<DateTime?>("LastHeartbeatAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal?>("Latitude")
+                        .HasColumnType("decimal(10, 7)");
+
+                    b.Property<decimal?>("Longitude")
+                        .HasColumnType("decimal(10, 7)");
+
+                    b.Property<string>("QRCode")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("SerialNumber")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasDefaultValue("AVAILABLE");
+
+                    b.HasKey("BinId");
+
+                    b.HasIndex("CollectorId");
+
+                    b.HasIndex("District");
+
+                    b.HasIndex("QRCode")
+                        .IsUnique();
+
+                    b.HasIndex("SerialNumber")
+                        .IsUnique();
+
+                    b.HasIndex("Status");
+
+                    b.ToTable("SMART_BIN", (string)null);
+                });
+
             modelBuilder.Entity("SmartBin.Models.Wallet", b =>
                 {
                     b.Property<int>("WalletId")
@@ -454,6 +593,71 @@ namespace SmartBin.Migrations
                         .IsUnique();
 
                     b.ToTable("WALLET", (string)null);
+                });
+
+            modelBuilder.Entity("SmartBin.Models.WasteType", b =>
+                {
+                    b.Property<int>("WasteTypeId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("WasteTypeId"));
+
+                    b.Property<int>("BasePoints")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("WasteTypeId");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("WASTE_TYPE", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            WasteTypeId = 1,
+                            BasePoints = 15,
+                            Description = "Plastic bottles and containers",
+                            Name = "PLASTIC"
+                        },
+                        new
+                        {
+                            WasteTypeId = 2,
+                            BasePoints = 20,
+                            Description = "Aluminum cans and metals",
+                            Name = "METAL"
+                        },
+                        new
+                        {
+                            WasteTypeId = 3,
+                            BasePoints = 10,
+                            Description = "Paper and cardboard",
+                            Name = "PAPER"
+                        },
+                        new
+                        {
+                            WasteTypeId = 4,
+                            BasePoints = 5,
+                            Description = "Organic waste",
+                            Name = "ORGANIC"
+                        },
+                        new
+                        {
+                            WasteTypeId = 5,
+                            BasePoints = 1,
+                            Description = "General non-recyclable trash",
+                            Name = "TRASH"
+                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<int>", b =>
@@ -518,6 +722,17 @@ namespace SmartBin.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("SmartBin.Models.DisposalItem", b =>
+                {
+                    b.HasOne("SmartBin.Models.WasteType", "WasteType")
+                        .WithMany("DisposalItems")
+                        .HasForeignKey("WasteTypeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("WasteType");
+                });
+
             modelBuilder.Entity("SmartBin.Models.RefreshToken", b =>
                 {
                     b.HasOne("SmartBin.Models.RefreshToken", "ReplacedByToken")
@@ -552,6 +767,35 @@ namespace SmartBin.Migrations
                     b.Navigation("Rewards");
                 });
 
+            modelBuilder.Entity("SmartBin.Models.ServiceRecord", b =>
+                {
+                    b.HasOne("SmartBin.Models.SmartBin", "Bin")
+                        .WithMany("ServiceRecords")
+                        .HasForeignKey("BinId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SmartBin.Models.ApplicationUser", "Collector")
+                        .WithMany()
+                        .HasForeignKey("CollectorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Bin");
+
+                    b.Navigation("Collector");
+                });
+
+            modelBuilder.Entity("SmartBin.Models.SmartBin", b =>
+                {
+                    b.HasOne("SmartBin.Models.ApplicationUser", "Collector")
+                        .WithMany()
+                        .HasForeignKey("CollectorId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Collector");
+                });
+
             modelBuilder.Entity("SmartBin.Models.Wallet", b =>
                 {
                     b.HasOne("SmartBin.Models.ApplicationUser", "User")
@@ -561,6 +805,16 @@ namespace SmartBin.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("SmartBin.Models.SmartBin", b =>
+                {
+                    b.Navigation("ServiceRecords");
+                });
+
+            modelBuilder.Entity("SmartBin.Models.WasteType", b =>
+                {
+                    b.Navigation("DisposalItems");
                 });
 #pragma warning restore 612, 618
         }

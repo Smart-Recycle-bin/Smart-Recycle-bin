@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 // Core
+import 'core/config/app_config.dart';
 import 'core/network/api_client.dart';
 import 'core/storage/token_storage.dart';
 import 'core/theme/app_theme.dart';
@@ -52,7 +53,10 @@ void main() async {
 
   final sharedPrefs = await SharedPreferences.getInstance();
   final tokenStorage = TokenStorage(sharedPrefs);
-  final apiClient = ApiClient(tokenStorage: tokenStorage);
+  final apiClient = ApiClient(
+    tokenStorage: tokenStorage,
+    baseUrl: AppConfig.apiBaseUrl,
+  );
 
   // Repositories
   final authRepository = AuthRepositoryImpl(
