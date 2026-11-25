@@ -9,14 +9,19 @@ namespace SmartBin.Services.Profile
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IWalletRepository _walletRepository;
+        private readonly IStorageService _storageService;
 
         public ProfileService(
             UserManager<ApplicationUser> userManager,
-            IWalletRepository walletRepository)
+            IWalletRepository walletRepository,
+            IStorageService storageService)
         {
-            _userManager = userManager;
+            _userManager      = userManager;
             _walletRepository = walletRepository;
+            _storageService   = storageService;
         }
+
+        // ── GET ───────────────────────────────────────────────────────────────
 
         public async Task<ProfileResponseDto> GetProfileAsync(int userId)
         {
@@ -32,56 +37,87 @@ namespace SmartBin.Services.Profile
             }
 
             var roles = await _userManager.GetRolesAsync(user);
-            var role = roles.FirstOrDefault();
+            var role  = roles.FirstOrDefault();
 
             var walletPoints = await _walletRepository.GetAvailablePointsAsync(user.Id);
 
             return new ProfileResponseDto
             {
-                UserId = user.Id,
-                Email = user.Email ?? string.Empty,
-                DisplayName = user.DisplayName,
-                PhoneNumber = user.PhoneNumber,
+                UserId          = user.Id,
+                Email           = user.Email ?? string.Empty,
+                DisplayName     = user.DisplayName,
+                PhoneNumber     = user.PhoneNumber,
                 ProfilePhotoUrl = user.ProfilePhoto,
-                Role = role ?? string.Empty,
-                Points = walletPoints
+                Role            = role ?? string.Empty,
+                Points          = walletPoints
             };
         }
 
-        public async Task<ProfileResponseDto> UpdateProfileAsync(int userId, UpdateProfileRequestDto request)
+        // ── UPDATE ────────────────────────────────────────────────────────────
+
+        public async Task<UpdateProfileResponseDto> UpdateProfileAsync(
+            int userId,
+            UpdateProfileRequestDto request)
         {
-            var user = await _userManager.FindByIdAsync(userId.ToString());
+            var user = await _userManager.FindByIdAsync(userId.ToString())
+                       ?? throw new ApiException("USER_NOT_FOUND", "User account was not found.", 404);
 
-            if (user == null)
+            // ── 1. Display name ───────────────────────────────────────────────
+            if (request.DisplayName is not null)
+                user.DisplayName = request.DisplayName.Trim();
+
+            // ── 2. Phone number ───────────────────────────────────────────────
+            if (request.PhoneNumber is not null)
             {
-                throw new ApiException(
-                    "USER_NOT_FOUND",
-                    "User account was not found.",
-                    404
-                );
+                var phoneResult = await _userManager.SetPhoneNumberAsync(user, request.PhoneNumber.Trim());
+                if (!phoneResult.Succeeded)
+                    throw new ApiException("VALIDATION_ERROR",
+                        string.Join("; ", phoneResult.Errors.Select(e => e.Description)), 400);
             }
 
-            user.DisplayName = request.DisplayName;
-            if (request.PhoneNumber != null)
+            // ── 3. Photo handling ─────────────────────────────────────────────
+            if (request.RemovePhoto)
             {
-                user.PhoneNumber = request.PhoneNumber;
+                if (!string.IsNullOrWhiteSpace(user.ProfilePhoto))
+                    await _storageService.DeleteFileAsync(user.ProfilePhoto);
+
+                user.ProfilePhoto = null;
             }
-            if (!string.IsNullOrWhiteSpace(request.ProfilePhotoUrl))
+            else if (request.Photo is not null)
+            {
+                using var encodedStream =
+                    await CloudflareR2StorageService.StripExifAndReencodeAsync(request.Photo);
+
+                var key = $"profiles/{userId}.jpg";
+                var newPhotoUrl = await _storageService.UploadFileWithKeyAsync(
+                    encodedStream, key, "image/jpeg");
+
+                if (!string.IsNullOrWhiteSpace(user.ProfilePhoto) &&
+                    !string.Equals(user.ProfilePhoto, newPhotoUrl, StringComparison.OrdinalIgnoreCase))
+                {
+                    await _storageService.DeleteFileAsync(user.ProfilePhoto);
+                }
+
+                user.ProfilePhoto = newPhotoUrl;
+            }
+            else if (!string.IsNullOrWhiteSpace(request.ProfilePhotoUrl))
             {
                 user.ProfilePhoto = request.ProfilePhotoUrl;
             }
 
+            // ── 4. Persist ────────────────────────────────────────────────────
             var updateResult = await _userManager.UpdateAsync(user);
             if (!updateResult.Succeeded)
-            {
-                throw new ApiException(
-                    "UPDATE_PROFILE_FAILED",
-                    "Failed to update user profile.",
-                    400
-                );
-            }
+                throw new ApiException("UPDATE_FAILED",
+                    string.Join("; ", updateResult.Errors.Select(e => e.Description)), 500);
 
-            return await GetProfileAsync(userId);
+            return new UpdateProfileResponseDto
+            {
+                UserId          = user.Id,
+                DisplayName     = user.DisplayName,
+                PhoneNumber     = user.PhoneNumber,
+                ProfilePhotoUrl = user.ProfilePhoto
+            };
         }
     }
 }

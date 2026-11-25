@@ -10,6 +10,16 @@ namespace SmartBin
         {
             var builder = WebApplication.CreateBuilder(args);
 
+            // Allow multipart uploads up to 5 MB (4 MB photo + overhead)
+            builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(o =>
+            {
+                o.MultipartBodyLengthLimit = 5 * 1024 * 1024; // 5 MB
+            });
+            builder.WebHost.ConfigureKestrel(k =>
+            {
+                k.Limits.MaxRequestBodySize = 5 * 1024 * 1024; // 5 MB
+            });
+
             // Configure Services via Modular Extensions
             builder.Services.AddApiControllers();
             builder.Services.AddCorsPolicy();
