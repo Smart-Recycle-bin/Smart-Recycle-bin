@@ -1,4 +1,6 @@
 
+using Amazon.Runtime;
+using Amazon.S3;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -7,6 +9,7 @@ using Microsoft.IdentityModel.Tokens;
 using SmartBin.Context;
 using SmartBin.Models;
 using SmartBin.Repositories;
+using SmartBin.Services;
 using SmartBin.Services.Auth;
 using SmartBin.Services.Bins;
 using SmartBin.Services.Profile;
@@ -22,6 +25,15 @@ namespace SmartBin
 
             // Add services
             builder.Services.AddControllers();
+            // Allow multipart uploads up to 5 MB (4 MB photo + overhead)
+            builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(o =>
+            {
+                o.MultipartBodyLengthLimit = 5 * 1024 * 1024; // 5 MB
+            });
+            builder.WebHost.ConfigureKestrel(k =>
+            {
+                k.Limits.MaxRequestBodySize = 5 * 1024 * 1024; // 5 MB
+            });
             builder.Services.Configure<ApiBehaviorOptions>(options =>
             {
                 options.InvalidModelStateResponseFactory = context =>
@@ -124,6 +136,10 @@ namespace SmartBin
             builder.Services.AddSingleton<IMember5AnalyticsService, Member5AnalyticsService>();
             builder.Services.AddSingleton<IClassificationAdapter, ClassificationAdapter>();
             builder.Services.AddHostedService<BinHeartbeatSimulatorService>();
+
+
+            
+
 
 
             var app = builder.Build();
