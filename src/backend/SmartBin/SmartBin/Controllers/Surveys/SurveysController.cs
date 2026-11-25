@@ -1,6 +1,8 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using SmartBin.Common.Swagger;
+using SmartBin.DTOs.Common;
 using SmartBin.DTOs.Surveys;
 using SmartBin.Services;
 using SmartBin.Services.Surveys;
@@ -28,6 +30,12 @@ namespace SmartBin.Controllers
         }
 
         [HttpGet]
+        [ProducesResponseType(typeof(PagedSurveysResponseDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status403Forbidden)]
+        [SwaggerResponseExample(StatusCodes.Status200OK, SwaggerExamples.GetMySurveysSuccess)]
+        [SwaggerResponseExample(StatusCodes.Status400BadRequest, SwaggerExamples.ValidationError)]
         public async Task<IActionResult> GetMySurveys(
             [FromQuery] string? status = "all",
             [FromQuery] int page = 1,
@@ -66,6 +74,16 @@ namespace SmartBin.Controllers
         }
 
         [HttpPost("{surveyId:int}/submit")]
+        [ProducesResponseType(typeof(ApiResponse<SubmitSurveyCorrectionsResponseDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status409Conflict)]
+        [SwaggerResponseExample(StatusCodes.Status200OK, SwaggerExamples.SubmitSurveyCorrectionsSuccess)]
+        [SwaggerResponseExample(StatusCodes.Status400BadRequest, SwaggerExamples.ValidationError)]
+        [SwaggerResponseExample(StatusCodes.Status404NotFound, SwaggerExamples.NotFound)]
+        [SwaggerResponseExample(StatusCodes.Status409Conflict, SwaggerExamples.SurveyConflict)]
         public async Task<IActionResult> SubmitCorrections(
             [FromRoute] string surveyId,
             [FromBody] SubmitSurveyCorrectionsRequestDto request,

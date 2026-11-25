@@ -722,6 +722,56 @@ namespace SmartBin.Migrations
                     b.ToTable("SMART_BIN", (string)null);
                 });
 
+            modelBuilder.Entity("SmartBin.Models.SupportTicket", b =>
+                {
+                    b.Property<int>("SupportTicketId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("SupportTicketId"));
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("SessionId")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasDefaultValue("open");
+
+                    b.Property<string>("TicketCode")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("SupportTicketId");
+
+                    b.HasIndex("TicketCode")
+                        .IsUnique();
+
+                    b.HasIndex("UserId", "CreatedAt");
+
+                    b.ToTable("SupportTickets");
+                });
+
             modelBuilder.Entity("SmartBin.Models.SurveyResponse", b =>
                 {
                     b.Property<int>("ResponseId")
@@ -755,6 +805,51 @@ namespace SmartBin.Migrations
                     b.HasIndex("UserSelectedTypeId");
 
                     b.ToTable("SURVEY_RESPONSE", (string)null);
+                });
+
+            modelBuilder.Entity("SmartBin.Models.UserVoucher", b =>
+                {
+                    b.Property<int>("VoucherId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("VoucherId"));
+
+                    b.Property<int>("DenominationEgp")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsUsed")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<int>("PointsDeducted")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("RedeemedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("RewardId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("VoucherCode")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
+                    b.HasKey("VoucherId");
+
+                    b.HasIndex("RewardId");
+
+                    b.HasIndex("VoucherCode")
+                        .IsUnique();
+
+                    b.HasIndex("UserId", "RedeemedAt");
+
+                    b.ToTable("UserVouchers");
                 });
 
             modelBuilder.Entity("SmartBin.Models.Wallet", b =>
@@ -1043,6 +1138,17 @@ namespace SmartBin.Migrations
                     b.Navigation("Collector");
                 });
 
+            modelBuilder.Entity("SmartBin.Models.SupportTicket", b =>
+                {
+                    b.HasOne("SmartBin.Models.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("SmartBin.Models.SurveyResponse", b =>
                 {
                     b.HasOne("SmartBin.Models.DisposalItem", "Item")
@@ -1067,6 +1173,25 @@ namespace SmartBin.Migrations
                     b.Navigation("Survey");
 
                     b.Navigation("UserSelectedType");
+                });
+
+            modelBuilder.Entity("SmartBin.Models.UserVoucher", b =>
+                {
+                    b.HasOne("SmartBin.Models.Reward", "Reward")
+                        .WithMany()
+                        .HasForeignKey("RewardId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SmartBin.Models.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Reward");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("SmartBin.Models.Wallet", b =>

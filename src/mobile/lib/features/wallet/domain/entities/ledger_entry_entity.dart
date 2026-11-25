@@ -3,6 +3,7 @@ class LedgerEntryEntity {
   final String title;
   final String timeFormatted;
   final int pointsDelta;
+  final int? balanceAfter;
   final String type; // 'credit' (earned) or 'debit' (spent)
   final String source;
 
@@ -11,6 +12,7 @@ class LedgerEntryEntity {
     required this.title,
     required this.timeFormatted,
     required this.pointsDelta,
+    this.balanceAfter,
     required this.type,
     required this.source,
   });

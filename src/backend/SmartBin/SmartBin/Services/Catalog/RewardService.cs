@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using SmartBin.Context;
 using SmartBin.DTOs;
 using SmartBin.Models;
 using SmartBin.Repositories;
@@ -12,17 +13,20 @@ namespace SmartBin.Services
         private readonly IRewardCategoryRepository _categoryRepository;
         private readonly IWalletService _walletService;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly AppDbContext _db;
 
         public RewardService(
             IRewardRepository rewardRepository,
             IRewardCategoryRepository categoryRepository,
             IWalletService walletService,
-            IUnitOfWork unitOfWork)
+            IUnitOfWork unitOfWork,
+            AppDbContext db)
         {
             _rewardRepository = rewardRepository;
             _categoryRepository = categoryRepository;
             _walletService = walletService;
             _unitOfWork = unitOfWork;
+            _db = db;
         }
 
         public async Task<(List<RewardResponseDto> Items, int TotalItems)> GetAllAsync(
@@ -296,11 +300,25 @@ namespace SmartBin.Services
         public async Task<RedeemRewardResultDto> RedeemRewardAsync(
             int userId,
             int rewardId,
-            int? pointsCost,
+            int denominationEgp,
             CancellationToken cancellationToken = default)
         {
+            // SECURITY: Never trust client-supplied cost.
+            // Only accept known denomination tiers (10, 20, 50 EGP) and compute points server-side.
+            int multiplier = denominationEgp switch
+            {
+                10 => 1,
+                20 => 2,
+                50 => 5,
+                _ => throw new ApiException(
+                    StatusCodes.Status400BadRequest,
+                    "VALIDATION_ERROR",
+                    "Invalid denomination. Supported values are 10, 20, or 50 EGP.",
+                    new[] { new { field = "denominationEgp", message = "denominationEgp must be 10, 20, or 50." } })
+            };
+
             var reward = await _rewardRepository.GetByIdAsync(rewardId);
-            if (reward == null)
+            if (reward == null || !reward.IsActive || (reward.Category != null && !reward.Category.IsActive))
             {
                 throw new ApiException(
                     StatusCodes.Status404NotFound,
@@ -308,15 +326,25 @@ namespace SmartBin.Services
                     "Reward item not found.");
             }
 
-            if (reward.StockQuantity <= 0)
+            var now = DateTime.UtcNow;
+            if ((reward.ValidFrom.HasValue && reward.ValidFrom.Value > now) ||
+                (reward.ValidUntil.HasValue && reward.ValidUntil.Value < now))
             {
                 throw new ApiException(
                     StatusCodes.Status400BadRequest,
+                    "REWARD_EXPIRED",
+                    "Reward voucher is outside its valid redemption period.");
+            }
+
+            if (reward.StockQuantity <= 0)
+            {
+                throw new ApiException(
+                    StatusCodes.Status409Conflict,
                     "OUT_OF_STOCK",
                     "Reward item is out of stock.");
             }
 
-            var pointsRequired = pointsCost ?? reward.PointsCost;
+            int pointsRequired = checked(reward.PointsCost * multiplier);
 
             await _unitOfWork.BeginTransactionAsync(cancellationToken);
             try
@@ -324,9 +352,8 @@ namespace SmartBin.Services
                 var stockDecremented = await _rewardRepository.DecrementStockIfAvailableAsync(rewardId, 1, cancellationToken);
                 if (!stockDecremented)
                 {
-                    await _unitOfWork.RollbackTransactionAsync(cancellationToken);
                     throw new ApiException(
-                        StatusCodes.Status400BadRequest,
+                        StatusCodes.Status409Conflict,
                         "OUT_OF_STOCK",
                         "Reward item is out of stock.");
                 }
@@ -337,9 +364,22 @@ namespace SmartBin.Services
                     pointsRequired,
                     cancellationToken);
 
-                await _unitOfWork.CommitTransactionAsync(cancellationToken);
+                var voucherCode = $"ECO-{Guid.NewGuid().ToString("N")[..8].ToUpperInvariant()}";
 
-                var voucherCode = $"ECO-{Guid.NewGuid().ToString("N")[..8].ToUpper()}";
+                // Persist the voucher code inside the same transaction so redemption is fully atomic
+                var userVoucher = new UserVoucher
+                {
+                    UserId = userId,
+                    RewardId = rewardId,
+                    VoucherCode = voucherCode,
+                    PointsDeducted = debitResult.PointsDeducted,
+                    DenominationEgp = denominationEgp,
+                    IsUsed = false,
+                    RedeemedAt = now
+                };
+                _db.UserVouchers.Add(userVoucher);
+
+                await _unitOfWork.CommitTransactionAsync(cancellationToken);
 
                 return new RedeemRewardResultDto
                 {
@@ -350,7 +390,10 @@ namespace SmartBin.Services
             }
             catch
             {
-                await _unitOfWork.RollbackTransactionAsync(cancellationToken);
+                if (_unitOfWork.HasActiveTransaction)
+                {
+                    await _unitOfWork.RollbackTransactionAsync(cancellationToken);
+                }
                 throw;
             }
         }

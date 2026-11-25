@@ -92,13 +92,16 @@ namespace SmartBin.Services.Profile
                 var newPhotoUrl = await _storageService.UploadFileWithKeyAsync(
                     encodedStream, key, "image/jpeg");
 
-                if (!string.IsNullOrWhiteSpace(user.ProfilePhoto) &&
-                    !string.Equals(user.ProfilePhoto, newPhotoUrl, StringComparison.OrdinalIgnoreCase))
+                var existingCleanUrl = user.ProfilePhoto?.Split('?', 2)[0];
+                var newCleanUrl = newPhotoUrl.Split('?', 2)[0];
+
+                if (!string.IsNullOrWhiteSpace(existingCleanUrl) &&
+                    !string.Equals(existingCleanUrl, newCleanUrl, StringComparison.OrdinalIgnoreCase))
                 {
-                    await _storageService.DeleteFileAsync(user.ProfilePhoto);
+                    await _storageService.DeleteFileAsync(user.ProfilePhoto!);
                 }
 
-                user.ProfilePhoto = newPhotoUrl;
+                user.ProfilePhoto = $"{newCleanUrl}?v={DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}";
             }
             else if (!string.IsNullOrWhiteSpace(request.ProfilePhotoUrl))
             {

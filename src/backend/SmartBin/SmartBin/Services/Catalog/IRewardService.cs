@@ -47,7 +47,7 @@ namespace SmartBin.Services
         Task<RedeemRewardResultDto> RedeemRewardAsync(
             int userId,
             int rewardId,
-            int? pointsCost,
+            int denominationEgp,
             CancellationToken cancellationToken = default
         );
     }

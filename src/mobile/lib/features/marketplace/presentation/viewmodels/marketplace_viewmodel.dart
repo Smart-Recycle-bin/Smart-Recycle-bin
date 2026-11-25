@@ -1,15 +1,20 @@
 import 'package:flutter/foundation.dart';
 import '../../domain/entities/catalog_item_entity.dart';
 import '../../domain/repositories/marketplace_repository.dart';
+import '../../../wallet/domain/repositories/wallet_repository.dart';
 
 class MarketplaceViewModel extends ChangeNotifier {
   final MarketplaceRepository marketplaceRepository;
+  final WalletRepository? walletRepository;
 
-  MarketplaceViewModel({required this.marketplaceRepository});
+  MarketplaceViewModel({
+    required this.marketplaceRepository,
+    this.walletRepository,
+  }) : _balancePoints = walletRepository == null ? 1420 : 0;
 
   List<CatalogItemEntity> _items = [];
   List<SpotlightBannerEntity> _banners = [];
-  int _balancePoints = 1420;
+  int _balancePoints;
   bool _isLoading = false;
   String? _errorMessage;
 
@@ -31,6 +36,12 @@ class MarketplaceViewModel extends ChangeNotifier {
     return _balancePoints - _selectedDenomination!.pointsCost;
   }
 
+  void syncBalancePoints(int points) {
+    if (_balancePoints == points) return;
+    _balancePoints = points;
+    notifyListeners();
+  }
+
   Future<void> init() async {
     await fetchMarketplaceData();
   }
@@ -40,8 +51,21 @@ class MarketplaceViewModel extends ChangeNotifier {
     _errorMessage = null;
     notifyListeners();
 
-    final catalogResult = await marketplaceRepository.getCatalog();
-    final bannersResult = await marketplaceRepository.getSpotlightBanners();
+    final catalogFuture = marketplaceRepository.getCatalog();
+    final bannersFuture = marketplaceRepository.getSpotlightBanners();
+    final balanceFuture = walletRepository?.getWalletBalance();
+
+    final catalogResult = await catalogFuture;
+    final bannersResult = await bannersFuture;
+    if (balanceFuture != null) {
+      final balanceResult = await balanceFuture;
+      balanceResult.when(
+        onSuccess: (data) {
+          _balancePoints = (data['availablePoints'] as num?)?.toInt() ?? _balancePoints;
+        },
+        onFailure: (_) {},
+      );
+    }
 
     _isLoading = false;
 
@@ -60,6 +84,7 @@ class MarketplaceViewModel extends ChangeNotifier {
 
   void selectItemForRedemption(CatalogItemEntity item) {
     _selectedItem = item;
+    _errorMessage = null;
     if (item.denominations.isNotEmpty) {
       _selectedDenomination = item.denominations.first;
     }
@@ -68,6 +93,7 @@ class MarketplaceViewModel extends ChangeNotifier {
 
   void selectDenomination(VoucherDenomination denomination) {
     _selectedDenomination = denomination;
+    _errorMessage = null;
     notifyListeners();
   }
 
@@ -81,6 +107,7 @@ class MarketplaceViewModel extends ChangeNotifier {
     }
 
     _isLoading = true;
+    _errorMessage = null;
     notifyListeners();
 
     final result = await marketplaceRepository.redeemReward(
@@ -89,19 +116,35 @@ class MarketplaceViewModel extends ChangeNotifier {
       pointsCost: _selectedDenomination!.pointsCost,
     );
 
-    _isLoading = false;
-
-    return result.when(
+    String? redeemedCode;
+    result.when(
       onSuccess: (voucherCode) {
-        _balancePoints -= _selectedDenomination!.pointsCost;
-        notifyListeners();
-        return voucherCode;
+        redeemedCode = voucherCode;
       },
       onFailure: (error) {
-        _errorMessage = error;
-        notifyListeners();
-        return null;
+        _errorMessage = error.replaceFirst('Exception: ', '');
       },
     );
+
+    if (redeemedCode != null) {
+      if (walletRepository != null) {
+        final refreshed = await walletRepository!.getWalletBalance();
+        refreshed.when(
+          onSuccess: (data) {
+            _balancePoints = (data['availablePoints'] as num?)?.toInt() ??
+                (_balancePoints - _selectedDenomination!.pointsCost);
+          },
+          onFailure: (_) {
+            _balancePoints -= _selectedDenomination!.pointsCost;
+          },
+        );
+      } else {
+        _balancePoints -= _selectedDenomination!.pointsCost;
+      }
+    }
+
+    _isLoading = false;
+    notifyListeners();
+    return redeemedCode;
   }
 }

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using SmartBin.Common.Swagger;
 using SmartBin.DTOs;
 using SmartBin.DTOs.Common;
 using SmartBin.Services;
@@ -30,6 +31,8 @@ namespace SmartBin.Controllers
 		[HttpGet]
 		[ProducesResponseType(typeof(PagedApiResponse<List<RewardResponseDto>>), StatusCodes.Status200OK)]
 		[ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+		[SwaggerResponseExample(StatusCodes.Status200OK, SwaggerExamples.AdminCatalogListSuccess)]
+		[SwaggerResponseExample(StatusCodes.Status400BadRequest, SwaggerExamples.ValidationError)]
 		public async Task<IActionResult> GetAll(
 			[FromQuery] int? categoryId,
 			[FromQuery] string? status,
@@ -139,6 +142,8 @@ namespace SmartBin.Controllers
 		[HttpPost]
 		[ProducesResponseType(typeof(ApiResponse<RewardResponseDto>), StatusCodes.Status201Created)]
 		[ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+		[SwaggerResponseExample(StatusCodes.Status201Created, SwaggerExamples.AdminCatalogItemSuccess)]
+		[SwaggerResponseExample(StatusCodes.Status400BadRequest, SwaggerExamples.ValidationError)]
 		public async Task<IActionResult> Create(
 			[FromBody] CreateRewardRequestDto request)
 		{
@@ -169,6 +174,7 @@ namespace SmartBin.Controllers
 		// E36: Get active reward categories
 		[HttpGet("categories")]
 		[ProducesResponseType(typeof(ApiResponse<List<RewardCategoryResponseDto>>), StatusCodes.Status200OK)]
+		[SwaggerResponseExample(StatusCodes.Status200OK, SwaggerExamples.AdminCategoriesListSuccess)]
 		public async Task<IActionResult> GetCategories()
 		{
 			var categories = await _categoryService.GetActiveAsync();
@@ -183,7 +189,11 @@ namespace SmartBin.Controllers
 		// E37: Create reward category
 		[HttpPost("categories")]
 		[ProducesResponseType(typeof(ApiResponse<RewardCategoryResponseDto>), StatusCodes.Status201Created)]
+		[ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
 		[ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status409Conflict)]
+		[SwaggerResponseExample(StatusCodes.Status201Created, SwaggerExamples.AdminCategorySuccess)]
+		[SwaggerResponseExample(StatusCodes.Status400BadRequest, SwaggerExamples.ValidationError)]
+		[SwaggerResponseExample(StatusCodes.Status409Conflict, SwaggerExamples.Conflict)]
 		public async Task<IActionResult> CreateCategory(
 			[FromBody] CreateRewardCategoryRequestDto request)
 		{
@@ -228,6 +238,9 @@ namespace SmartBin.Controllers
 		[ProducesResponseType(typeof(ApiResponse<RewardCategoryResponseDto>), StatusCodes.Status200OK)]
 		[ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
 		[ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status409Conflict)]
+		[SwaggerResponseExample(StatusCodes.Status200OK, SwaggerExamples.AdminCategorySuccess)]
+		[SwaggerResponseExample(StatusCodes.Status404NotFound, SwaggerExamples.NotFound)]
+		[SwaggerResponseExample(StatusCodes.Status409Conflict, SwaggerExamples.Conflict)]
 		public async Task<IActionResult> UpdateCategory(
 			int categoryId,
 			[FromBody] UpdateRewardCategoryRequestDto request)
@@ -285,6 +298,9 @@ namespace SmartBin.Controllers
 		[ProducesResponseType(typeof(ApiResponse<CategoryArchiveStatusDto>), StatusCodes.Status200OK)]
 		[ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
 		[ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status409Conflict)]
+		[SwaggerResponseExample(StatusCodes.Status200OK, SwaggerExamples.AdminCategoryArchiveSuccess)]
+		[SwaggerResponseExample(StatusCodes.Status404NotFound, SwaggerExamples.NotFound)]
+		[SwaggerResponseExample(StatusCodes.Status409Conflict, SwaggerExamples.Conflict)]
 		public async Task<IActionResult> ArchiveCategory(int categoryId)
 		{
 			var result = await _categoryService.ArchiveAsync(categoryId);
@@ -345,6 +361,9 @@ namespace SmartBin.Controllers
 		[ProducesResponseType(typeof(ApiResponse<CategoryArchiveStatusDto>), StatusCodes.Status200OK)]
 		[ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
 		[ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status409Conflict)]
+		[SwaggerResponseExample(StatusCodes.Status200OK, SwaggerExamples.AdminCategoryUnarchiveSuccess)]
+		[SwaggerResponseExample(StatusCodes.Status404NotFound, SwaggerExamples.NotFound)]
+		[SwaggerResponseExample(StatusCodes.Status409Conflict, SwaggerExamples.Conflict)]
 		public async Task<IActionResult> UnarchiveCategory(int categoryId)
 		{
 			var result = await _categoryService.UnarchiveAsync(categoryId);
@@ -393,6 +412,10 @@ namespace SmartBin.Controllers
 		[ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
 		[ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status413PayloadTooLarge)]
 		[ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status415UnsupportedMediaType)]
+		[SwaggerResponseExample(StatusCodes.Status200OK, SwaggerExamples.AdminUploadImageSuccess)]
+		[SwaggerResponseExample(StatusCodes.Status400BadRequest, SwaggerExamples.ValidationError)]
+		[SwaggerResponseExample(StatusCodes.Status413PayloadTooLarge, SwaggerExamples.PayloadTooLarge)]
+		[SwaggerResponseExample(StatusCodes.Status415UnsupportedMediaType, SwaggerExamples.UnsupportedMediaType)]
 		public async Task<IActionResult> UploadImage(
 			IFormFile? file,
 			[FromQuery] string folder = "rewards")
@@ -461,6 +484,9 @@ namespace SmartBin.Controllers
 		[ProducesResponseType(typeof(ApiResponse<RewardResponseDto>), StatusCodes.Status200OK)]
 		[ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
 		[ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+		[SwaggerResponseExample(StatusCodes.Status200OK, SwaggerExamples.AdminCatalogItemSuccess)]
+		[SwaggerResponseExample(StatusCodes.Status400BadRequest, SwaggerExamples.ValidationError)]
+		[SwaggerResponseExample(StatusCodes.Status404NotFound, SwaggerExamples.NotFound)]
 		public async Task<IActionResult> Update(
 			int itemId,
 			[FromBody] UpdateRewardRequestDto request)
@@ -507,6 +533,9 @@ namespace SmartBin.Controllers
 		[ProducesResponseType(typeof(ApiResponse<ItemArchiveStatusDto>), StatusCodes.Status200OK)]
 		[ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
 		[ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status409Conflict)]
+		[SwaggerResponseExample(StatusCodes.Status200OK, SwaggerExamples.AdminItemArchiveSuccess)]
+		[SwaggerResponseExample(StatusCodes.Status404NotFound, SwaggerExamples.NotFound)]
+		[SwaggerResponseExample(StatusCodes.Status409Conflict, SwaggerExamples.Conflict)]
 		public async Task<IActionResult> Archive(int itemId)
 		{
 			var result = await _rewardService.ArchiveAsync(itemId);
@@ -553,6 +582,9 @@ namespace SmartBin.Controllers
 		[ProducesResponseType(typeof(ApiResponse<ItemArchiveStatusDto>), StatusCodes.Status200OK)]
 		[ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
 		[ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status409Conflict)]
+		[SwaggerResponseExample(StatusCodes.Status200OK, SwaggerExamples.AdminItemUnarchiveSuccess)]
+		[SwaggerResponseExample(StatusCodes.Status404NotFound, SwaggerExamples.NotFound)]
+		[SwaggerResponseExample(StatusCodes.Status409Conflict, SwaggerExamples.Conflict)]
 		public async Task<IActionResult> Unarchive(int itemId)
 		{
 			var result = await _rewardService.UnarchiveAsync(itemId);

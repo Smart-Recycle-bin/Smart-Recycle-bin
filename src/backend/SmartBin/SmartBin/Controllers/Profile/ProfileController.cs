@@ -1,6 +1,10 @@
+using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
+using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using SmartBin.Common.Swagger;
+using SmartBin.DTOs.Common;
 using SmartBin.DTOs.Profile;
 using SmartBin.Services;
 using SmartBin.Services.Profile;
@@ -22,6 +26,11 @@ namespace SmartBin.Controllers
         // ── GET /api/v1/profile ───────────────────────────────────────────────
 
         [HttpGet]
+        [ProducesResponseType(typeof(ApiResponse<ProfileResponseDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+        [SwaggerResponseExample(StatusCodes.Status200OK, SwaggerExamples.ProfileGetSuccess)]
+        [SwaggerResponseExample(StatusCodes.Status404NotFound, SwaggerExamples.ProfileNotFound)]
         public async Task<IActionResult> GetProfile()
         {
             try
@@ -49,6 +58,15 @@ namespace SmartBin.Controllers
         [HttpPut]
         [Consumes("multipart/form-data", "application/json")]
         [RequestSizeLimit(5 * 1024 * 1024)] // 5 MB overall request guard
+        [ProducesResponseType(typeof(ApiResponse<UpdateProfileResponseDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status413PayloadTooLarge)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status415UnsupportedMediaType)]
+        [SwaggerResponseExample(StatusCodes.Status200OK, SwaggerExamples.ProfileUpdateSuccess)]
+        [SwaggerResponseExample(StatusCodes.Status400BadRequest, SwaggerExamples.ValidationError)]
+        [SwaggerResponseExample(StatusCodes.Status413PayloadTooLarge, SwaggerExamples.PayloadTooLarge)]
+        [SwaggerResponseExample(StatusCodes.Status415UnsupportedMediaType, SwaggerExamples.UnsupportedMediaType)]
         public async Task<IActionResult> UpdateProfile(
             [FromForm] UpdateProfileRequestDto request)
         {
@@ -57,6 +75,62 @@ namespace SmartBin.Controllers
                 var userId = GetCurrentUserId();
                 if (userId is null)
                     return Unauthorized(UnauthorizedBody());
+
+                // [FromForm] leaves request empty when Content-Type is application/json;
+                // deserialize and validate the JSON body explicitly so both content types work.
+                if (!Request.HasFormContentType &&
+                    Request.ContentType?.Contains("application/json", StringComparison.OrdinalIgnoreCase) == true)
+                {
+                    UpdateProfileRequestDto? jsonRequest;
+                    try
+                    {
+                        jsonRequest = await Request.ReadFromJsonAsync<UpdateProfileRequestDto>();
+                    }
+                    catch (JsonException)
+                    {
+                        return BadRequest(new
+                        {
+                            success = false,
+                            error = new { code = "VALIDATION_ERROR", message = "Invalid JSON payload." }
+                        });
+                    }
+
+                    if (jsonRequest is null)
+                    {
+                        return BadRequest(new
+                        {
+                            success = false,
+                            error = new { code = "VALIDATION_ERROR", message = "Invalid request data." }
+                        });
+                    }
+
+                    var validationResults = new List<ValidationResult>();
+                    if (!Validator.TryValidateObject(
+                            jsonRequest,
+                            new ValidationContext(jsonRequest),
+                            validationResults,
+                            validateAllProperties: true))
+                    {
+                        var errors = validationResults.Select(r => new
+                        {
+                            field = r.MemberNames.FirstOrDefault() ?? string.Empty,
+                            message = r.ErrorMessage ?? "Invalid value."
+                        }).ToList();
+
+                        return BadRequest(new
+                        {
+                            success = false,
+                            error = new
+                            {
+                                code = "VALIDATION_ERROR",
+                                message = "Invalid request data.",
+                                details = errors
+                            }
+                        });
+                    }
+
+                    request = jsonRequest;
+                }
 
                 var result = await _profileService.UpdateProfileAsync(userId.Value, request);
 

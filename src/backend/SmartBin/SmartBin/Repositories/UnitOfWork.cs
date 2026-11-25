@@ -49,8 +49,11 @@ namespace SmartBin.Repositories
             }
             finally
             {
-                await _currentTransaction.DisposeAsync();
-                _currentTransaction = null;
+                if (_currentTransaction != null)
+                {
+                    await _currentTransaction.DisposeAsync();
+                    _currentTransaction = null;
+                }
             }
         }
 
@@ -67,8 +70,11 @@ namespace SmartBin.Repositories
             }
             finally
             {
-                await _currentTransaction.DisposeAsync();
-                _currentTransaction = null;
+                if (_currentTransaction != null)
+                {
+                    await _currentTransaction.DisposeAsync();
+                    _currentTransaction = null;
+                }
             }
         }
 

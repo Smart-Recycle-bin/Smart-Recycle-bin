@@ -5,6 +5,9 @@ import 'package:ecobin/features/marketplace/presentation/views/marketplace_view.
 import 'package:ecobin/features/marketplace/presentation/viewmodels/marketplace_viewmodel.dart';
 import 'package:ecobin/features/marketplace/domain/repositories/marketplace_repository.dart';
 import 'package:ecobin/features/marketplace/domain/entities/catalog_item_entity.dart';
+import 'package:ecobin/features/wallet/domain/entities/ledger_entry_entity.dart';
+import 'package:ecobin/features/wallet/domain/repositories/wallet_repository.dart';
+import 'package:ecobin/features/wallet/presentation/viewmodels/wallet_viewmodel.dart';
 import 'package:ecobin/core/utils/result.dart';
 
 class MockMarketplaceRepo implements MarketplaceRepository {
@@ -52,6 +55,24 @@ class MockMarketplaceRepo implements MarketplaceRepository {
   }
 }
 
+class MockWalletRepo implements WalletRepository {
+  int currentPoints;
+  MockWalletRepo({this.currentPoints = 780});
+
+  @override
+  Future<Result<Map<String, dynamic>>> getWalletBalance() async {
+    return Result.success({
+      'availablePoints': currentPoints,
+      'lifetimeEarnedPoints': 3120,
+    });
+  }
+
+  @override
+  Future<Result<List<LedgerEntryEntity>>> getLedger() async {
+    return Result.success([]);
+  }
+}
+
 void main() {
   testWidgets('MarketplaceView renders reward card with points badge and redeem button', (tester) async {
     tester.view.physicalSize = const Size(1080, 2400);
@@ -85,5 +106,44 @@ void main() {
 
     // Verify Redeem buttons
     expect(find.text('Redeem'), findsNWidgets(2));
+  });
+
+  testWidgets('MarketplaceView syncs balance points with WalletViewModel and supports refresh', (tester) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 2.75;
+    addTearDown(() => tester.view.resetPhysicalSize());
+
+    final marketRepo = MockMarketplaceRepo();
+    final walletRepo = MockWalletRepo(currentPoints: 780);
+    final walletVm = WalletViewModel(walletRepository: walletRepo);
+    final marketVm = MarketplaceViewModel(
+      marketplaceRepository: marketRepo,
+      walletRepository: walletRepo,
+    );
+
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider<WalletViewModel>.value(value: walletVm),
+          ChangeNotifierProvider<MarketplaceViewModel>.value(value: marketVm),
+        ],
+        child: const MaterialApp(
+          home: MarketplaceView(),
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    expect(find.text('780 pts'), findsOneWidget);
+    expect(find.text('780 PTS', findRichText: true), findsOneWidget);
+
+    // Simulate backend points change and tap refresh button
+    walletRepo.currentPoints = 280;
+    await tester.tap(find.byTooltip('Refresh'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('280 pts'), findsOneWidget);
+    expect(find.text('280 PTS', findRichText: true), findsOneWidget);
   });
 }

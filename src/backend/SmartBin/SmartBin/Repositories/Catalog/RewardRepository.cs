@@ -65,6 +65,7 @@ namespace SmartBin.Repositories
             {
                 query = status.ToLower() switch
                 {
+                    "active" => query.Where(r => r.IsActive),
                     "archived" => query.Where(r => !r.IsActive),
                     "in_stock" => query.Where(r => r.IsActive && r.StockQuantity > 0),
                     "out_of_stock" => query.Where(r => r.IsActive && r.StockQuantity == 0),
@@ -102,7 +103,7 @@ namespace SmartBin.Repositories
         public async Task<bool> DecrementStockIfAvailableAsync(int rewardId, int quantity, CancellationToken cancellationToken = default)
         {
             var updatedRows = await _context.Rewards
-                .Where(r => r.RewardId == rewardId && r.StockQuantity >= quantity)
+                .Where(r => r.RewardId == rewardId && r.IsActive && r.StockQuantity >= quantity)
                 .ExecuteUpdateAsync(setters => setters
                     .SetProperty(r => r.StockQuantity, r => r.StockQuantity - quantity),
                     cancellationToken);

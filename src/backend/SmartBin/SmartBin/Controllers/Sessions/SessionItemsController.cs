@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using SmartBin.Common.Swagger;
 using SmartBin.Dtos.Bins;
 using SmartBin.DTOs.Common;
 using SmartBin.Services;
@@ -26,6 +27,13 @@ namespace SmartBin.Controllers
         [ProducesResponseType(typeof(ApiResponse<IngestItemResponseDto>), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status409Conflict)]
+        [SwaggerResponseExample(StatusCodes.Status201Created, SwaggerExamples.IngestItemSuccess)]
+        [SwaggerResponseExample(StatusCodes.Status400BadRequest, SwaggerExamples.ValidationError)]
+        [SwaggerResponseExample(StatusCodes.Status401Unauthorized, SwaggerExamples.Unauthorized)]
+        [SwaggerResponseExample(StatusCodes.Status404NotFound, SwaggerExamples.NotFound)]
+        [SwaggerResponseExample(StatusCodes.Status409Conflict, SwaggerExamples.SessionNotActiveConflict)]
         public async Task<IActionResult> IngestItem(
             [FromRoute] int sessionId,
             [FromForm] IngestItemRequestDto request,

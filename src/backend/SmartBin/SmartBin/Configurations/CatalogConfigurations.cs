@@ -39,4 +39,37 @@ namespace SmartBin.Configurations
                 .OnDelete(DeleteBehavior.Restrict);
         }
     }
+
+    public class UserVoucherConfiguration : IEntityTypeConfiguration<UserVoucher>
+    {
+        public void Configure(EntityTypeBuilder<UserVoucher> builder)
+        {
+            builder.HasKey(v => v.VoucherId);
+
+            builder.Property(v => v.VoucherCode)
+                .IsRequired()
+                .HasMaxLength(32);
+
+            builder.HasIndex(v => v.VoucherCode)
+                .IsUnique();
+
+            builder.HasIndex(v => new { v.UserId, v.RedeemedAt });
+
+            builder.Property(v => v.IsUsed)
+                .HasDefaultValue(false);
+
+            builder.Property(v => v.RedeemedAt)
+                .IsRequired();
+
+            builder.HasOne(v => v.User)
+                .WithMany()
+                .HasForeignKey(v => v.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasOne(v => v.Reward)
+                .WithMany()
+                .HasForeignKey(v => v.RewardId)
+                .OnDelete(DeleteBehavior.Restrict);
+        }
+    }
 }

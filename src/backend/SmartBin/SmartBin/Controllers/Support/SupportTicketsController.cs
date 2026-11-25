@@ -1,15 +1,85 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using SmartBin.Common.Swagger;
+using SmartBin.Context;
+using SmartBin.DTOs.Common;
 using SmartBin.DTOs.Support;
+using SmartBin.Models;
 
 namespace SmartBin.Controllers
 {
     [ApiController]
     [Route("api/v1/support")]
+    [Authorize]
     public class SupportTicketsController : ControllerBase
     {
-        [HttpPost("tickets")]
-        public IActionResult SubmitTicket([FromBody] CreateSupportTicketRequestDto request)
+        private readonly AppDbContext _db;
+
+        public SupportTicketsController(AppDbContext db)
         {
+            _db = db;
+        }
+
+        [HttpGet("tickets")]
+        [ProducesResponseType(typeof(ApiResponse<List<SupportTicketResponseDto>>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+        [SwaggerResponseExample(StatusCodes.Status200OK, SwaggerExamples.SupportGetTicketsSuccess)]
+        public async Task<IActionResult> GetMyTickets(CancellationToken cancellationToken)
+        {
+            var rawUserId = User.FindFirstValue("id") ?? User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(rawUserId, out int userId))
+            {
+                return Unauthorized(new
+                {
+                    success = false,
+                    error = new { code = "UNAUTHORIZED", message = "Access token is missing or invalid." }
+                });
+            }
+
+            var tickets = await _db.SupportTickets
+                .AsNoTracking()
+                .Where(t => t.UserId == userId)
+                .OrderByDescending(t => t.CreatedAt)
+                .Select(t => new SupportTicketResponseDto
+                {
+                    TicketId = t.TicketCode,
+                    Category = t.Category,
+                    Description = t.Description,
+                    SessionId = t.SessionId,
+                    Status = t.Status,
+                    CreatedAt = t.CreatedAt
+                })
+                .ToListAsync(cancellationToken);
+
+            return Ok(new
+            {
+                success = true,
+                data = tickets
+            });
+        }
+
+        [HttpPost("tickets")]
+        [ProducesResponseType(typeof(ApiResponse<SupportTicketResponseDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+        [SwaggerResponseExample(StatusCodes.Status200OK, SwaggerExamples.SupportSubmitTicketSuccess)]
+        [SwaggerResponseExample(StatusCodes.Status400BadRequest, SwaggerExamples.SupportSubmitTicketBadRequest)]
+        public async Task<IActionResult> SubmitTicket(
+            [FromBody] CreateSupportTicketRequestDto request,
+            CancellationToken cancellationToken)
+        {
+            var rawUserId = User.FindFirstValue("id") ?? User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(rawUserId, out int userId))
+            {
+                return Unauthorized(new
+                {
+                    success = false,
+                    error = new { code = "UNAUTHORIZED", message = "Access token is missing or invalid." }
+                });
+            }
+
             if (string.IsNullOrWhiteSpace(request.Description))
             {
                 return BadRequest(new
@@ -23,16 +93,36 @@ namespace SmartBin.Controllers
                 });
             }
 
-            var ticketId = Guid.NewGuid().ToString("N")[..8].ToUpperInvariant();
+            var ticketCode = $"TICK-{Guid.NewGuid().ToString("N")[..8].ToUpperInvariant()}";
+            var category = string.IsNullOrWhiteSpace(request.Category)
+                ? "general_inquiry"
+                : request.Category.Trim();
+
+            var ticket = new SupportTicket
+            {
+                TicketCode = ticketCode,
+                UserId = userId,
+                Category = category,
+                Description = request.Description.Trim(),
+                SessionId = string.IsNullOrWhiteSpace(request.SessionId) ? null : request.SessionId.Trim(),
+                Status = "open",
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _db.SupportTickets.Add(ticket);
+            await _db.SaveChangesAsync(cancellationToken);
+
             return Ok(new
             {
                 success = true,
-                data = new
+                data = new SupportTicketResponseDto
                 {
-                    ticketId = $"TICK-{ticketId}",
-                    category = request.Category,
-                    status = "open",
-                    createdAt = DateTime.UtcNow
+                    TicketId = ticket.TicketCode,
+                    Category = ticket.Category,
+                    Description = ticket.Description,
+                    SessionId = ticket.SessionId,
+                    Status = ticket.Status,
+                    CreatedAt = ticket.CreatedAt
                 }
             });
         }

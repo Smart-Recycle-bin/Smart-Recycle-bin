@@ -1,18 +1,26 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
+using SmartBin.Common.Swagger;
+using SmartBin.DTOs;
+using SmartBin.DTOs.Common;
 using SmartBin.Services;
 
 namespace SmartBin.Controllers
 {
     public class RedeemRewardRequestDto
     {
+        /// <summary>
+        /// The EGP denomination tier selected (10, 20, or 50).
+        /// The server computes the points cost from the database — never trust the client for this.
+        /// </summary>
         public int DenominationEgp { get; set; } = 10;
-        public int? PointsCost { get; set; }
     }
 
     [ApiController]
     [Route("api/v1/catalog")]
+    [Authorize]
     public class CatalogController : ControllerBase
     {
         private readonly IRewardService _rewardService;
@@ -31,6 +39,11 @@ namespace SmartBin.Controllers
         }
 
         [HttpGet]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status500InternalServerError)]
+        [SwaggerResponseExample(StatusCodes.Status200OK, SwaggerExamples.CatalogListSuccess)]
+        [SwaggerResponseExample(StatusCodes.Status500InternalServerError, SwaggerExamples.ServerError)]
         public async Task<IActionResult> GetCatalog()
         {
             try
@@ -81,6 +94,9 @@ namespace SmartBin.Controllers
         }
 
         [HttpGet("featured")]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+        [SwaggerResponseExample(StatusCodes.Status200OK, SwaggerExamples.CatalogFeaturedSuccess)]
         public async Task<IActionResult> GetSpotlightBanners()
         {
             var banners = new[]
@@ -111,6 +127,13 @@ namespace SmartBin.Controllers
         }
 
         [HttpGet("{itemId}")]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+        [SwaggerResponseExample(StatusCodes.Status200OK, SwaggerExamples.CatalogItemDetailsSuccess)]
+        [SwaggerResponseExample(StatusCodes.Status400BadRequest, SwaggerExamples.ValidationError)]
+        [SwaggerResponseExample(StatusCodes.Status404NotFound, SwaggerExamples.NotFound)]
         public async Task<IActionResult> GetItemDetails([FromRoute] string itemId)
         {
             if (!TryParseItemId(itemId, out int id))
@@ -159,9 +182,19 @@ namespace SmartBin.Controllers
 
         [HttpPost("{itemId}/redemptions")]
         [Authorize(Roles = "USER_CITIZEN")]
+        [ProducesResponseType(typeof(ApiResponse<RedeemRewardResultDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status409Conflict)]
+        [SwaggerResponseExample(StatusCodes.Status200OK, SwaggerExamples.CatalogRedeemSuccess)]
+        [SwaggerResponseExample(StatusCodes.Status400BadRequest, SwaggerExamples.CatalogRedeemBadRequest)]
+        [SwaggerResponseExample(StatusCodes.Status404NotFound, SwaggerExamples.NotFound)]
+        [SwaggerResponseExample(StatusCodes.Status409Conflict, SwaggerExamples.CatalogRedeemConflict)]
         public async Task<IActionResult> RedeemReward(
             [FromRoute] string itemId,
-            [FromBody] RedeemRewardRequestDto? request,
+            [FromBody(EmptyBodyBehavior = EmptyBodyBehavior.Allow)] RedeemRewardRequestDto? request,
             CancellationToken cancellationToken)
         {
             var rawUserId = User.FindFirstValue("id") ?? User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -188,7 +221,7 @@ namespace SmartBin.Controllers
                 var result = await _rewardService.RedeemRewardAsync(
                     userId,
                     id,
-                    request?.PointsCost,
+                    request?.DenominationEgp ?? 10,
                     cancellationToken);
 
                 return Ok(new

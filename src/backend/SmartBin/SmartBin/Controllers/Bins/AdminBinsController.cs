@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using SmartBin.Common.Swagger;
 using SmartBin.Dtos.Bins;
+using SmartBin.DTOs.Common;
 using SmartBin.Services;
 using SmartBin.Services.Bins;
 
@@ -22,6 +24,12 @@ namespace SmartBin.Controllers
         /// E50 — Admin bin table
         /// </summary>
         [HttpGet]
+        [ProducesResponseType(typeof(PagedApiResponse<List<AdminBinDto>>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status403Forbidden)]
+        [SwaggerResponseExample(StatusCodes.Status200OK, SwaggerExamples.AdminBinsListSuccess)]
+        [SwaggerResponseExample(StatusCodes.Status400BadRequest, SwaggerExamples.ValidationError)]
         public async Task<IActionResult> GetAdminBins(
             [FromQuery] string? search,
             [FromQuery] string? district,
@@ -64,6 +72,14 @@ namespace SmartBin.Controllers
         /// E51 — Register bin
         /// </summary>
         [HttpPost]
+        [ProducesResponseType(typeof(ApiResponse<RegisterBinResponseDto>), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status409Conflict)]
+        [SwaggerResponseExample(StatusCodes.Status201Created, SwaggerExamples.AdminRegisterBinSuccess)]
+        [SwaggerResponseExample(StatusCodes.Status400BadRequest, SwaggerExamples.ValidationError)]
+        [SwaggerResponseExample(StatusCodes.Status409Conflict, SwaggerExamples.AdminRegisterBinConflict)]
         public async Task<IActionResult> RegisterBin([FromBody] RegisterBinRequestDto request)
         {
             try
@@ -94,6 +110,14 @@ namespace SmartBin.Controllers
         /// E53 — Update bin metadata
         /// </summary>
         [HttpPut("{binId:int}")]
+        [ProducesResponseType(typeof(ApiResponse<UpdateBinMetadataResponseDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+        [SwaggerResponseExample(StatusCodes.Status200OK, SwaggerExamples.AdminUpdateBinSuccess)]
+        [SwaggerResponseExample(StatusCodes.Status400BadRequest, SwaggerExamples.ValidationError)]
+        [SwaggerResponseExample(StatusCodes.Status404NotFound, SwaggerExamples.NotFound)]
         public async Task<IActionResult> UpdateBinMetadata(
             [FromRoute] int binId,
             [FromBody] UpdateBinMetadataRequestDto request)

@@ -3,6 +3,7 @@ import 'package:ecobin/core/config/app_config.dart';
 import 'package:ecobin/core/constants/api_endpoints.dart';
 import 'package:ecobin/core/mock/mock_data.dart';
 import 'package:ecobin/core/network/api_client.dart';
+import 'package:ecobin/core/network/dio_error_helper.dart';
 import '../../domain/entities/catalog_item_entity.dart';
 import '../models/catalog_item_model.dart';
 
@@ -101,11 +102,13 @@ class MarketplaceRemoteDataSourceImpl implements MarketplaceRemoteDataSource {
         data: {'denominationEgp': denominationEgp},
       );
       if (response.data['success'] == true) {
-        return response.data['data']['voucherCode'] ?? 'CRF-9F2C-1090';
+        return response.data['data']['voucherCode'] as String;
       }
-      return 'CRF-9F2C-1090';
-    } on DioException catch (_) {
-      return 'CRF-9F2C-1090';
+      throw Exception(
+        response.data['error']?['message'] ?? 'Failed to redeem reward.',
+      );
+    } on DioException catch (e) {
+      throw Exception(extractDioErrorMessage(e, 'Failed to redeem reward.'));
     }
   }
 }

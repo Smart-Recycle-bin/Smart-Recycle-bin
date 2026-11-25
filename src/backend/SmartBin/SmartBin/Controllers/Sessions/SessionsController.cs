@@ -1,7 +1,10 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using SmartBin.Common.Swagger;
+using SmartBin.DTOs.Common;
 using SmartBin.DTOs.Sessions;
+using SmartBin.DTOs.Surveys;
 using SmartBin.Services;
 using SmartBin.Services.Sessions;
 using SmartBin.Services.Surveys;
@@ -34,6 +37,16 @@ namespace SmartBin.Controllers
         }
 
         [HttpPost("bins/{binId}/sessions")]
+        [ProducesResponseType(typeof(ApiResponse<StartSessionResponseDto>), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status409Conflict)]
+        [SwaggerResponseExample(StatusCodes.Status201Created, SwaggerExamples.StartSessionSuccess)]
+        [SwaggerResponseExample(StatusCodes.Status400BadRequest, SwaggerExamples.ValidationError)]
+        [SwaggerResponseExample(StatusCodes.Status404NotFound, SwaggerExamples.NotFound)]
+        [SwaggerResponseExample(StatusCodes.Status409Conflict, SwaggerExamples.StartSessionConflict)]
         public async Task<IActionResult> StartSession(
             [FromRoute] string binId,
             [FromBody] StartSessionRequestDto request,
@@ -69,6 +82,14 @@ namespace SmartBin.Controllers
         }
 
         [HttpGet("sessions/{sessionId}")]
+        [ProducesResponseType(typeof(ApiResponse<SessionStatusResponseDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+        [SwaggerResponseExample(StatusCodes.Status200OK, SwaggerExamples.SessionStatusSuccess)]
+        [SwaggerResponseExample(StatusCodes.Status400BadRequest, SwaggerExamples.ValidationError)]
+        [SwaggerResponseExample(StatusCodes.Status404NotFound, SwaggerExamples.NotFound)]
         public async Task<IActionResult> GetSessionStatus(
             [FromRoute] string sessionId,
             CancellationToken cancellationToken)
@@ -103,6 +124,16 @@ namespace SmartBin.Controllers
         }
 
         [HttpPost("sessions/{sessionId}/end")]
+        [ProducesResponseType(typeof(ApiResponse<EndSessionResponseDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status409Conflict)]
+        [SwaggerResponseExample(StatusCodes.Status200OK, SwaggerExamples.EndSessionSuccess)]
+        [SwaggerResponseExample(StatusCodes.Status400BadRequest, SwaggerExamples.ValidationError)]
+        [SwaggerResponseExample(StatusCodes.Status404NotFound, SwaggerExamples.NotFound)]
+        [SwaggerResponseExample(StatusCodes.Status409Conflict, SwaggerExamples.SessionNotActiveConflict)]
         public async Task<IActionResult> EndSession(
             [FromRoute] string sessionId,
             CancellationToken cancellationToken)
@@ -137,6 +168,16 @@ namespace SmartBin.Controllers
         }
 
         [HttpGet("sessions/{sessionId}/survey")]
+        [ProducesResponseType(typeof(ApiResponse<SessionSurveyResponseDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status409Conflict)]
+        [SwaggerResponseExample(StatusCodes.Status200OK, SwaggerExamples.GetSessionSurveySuccess)]
+        [SwaggerResponseExample(StatusCodes.Status400BadRequest, SwaggerExamples.ValidationError)]
+        [SwaggerResponseExample(StatusCodes.Status404NotFound, SwaggerExamples.NotFound)]
+        [SwaggerResponseExample(StatusCodes.Status409Conflict, SwaggerExamples.SurveyConflict)]
         public async Task<IActionResult> GetSessionSurvey(
             [FromRoute] string sessionId,
             CancellationToken cancellationToken)
@@ -171,6 +212,16 @@ namespace SmartBin.Controllers
         }
 
         [HttpPost("sessions/{sessionId}/survey/confirm")]
+        [ProducesResponseType(typeof(ApiResponse<ConfirmSurveyResponseDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status409Conflict)]
+        [SwaggerResponseExample(StatusCodes.Status200OK, SwaggerExamples.ConfirmSurveySuccess)]
+        [SwaggerResponseExample(StatusCodes.Status400BadRequest, SwaggerExamples.ValidationError)]
+        [SwaggerResponseExample(StatusCodes.Status404NotFound, SwaggerExamples.NotFound)]
+        [SwaggerResponseExample(StatusCodes.Status409Conflict, SwaggerExamples.SurveyConflict)]
         public async Task<IActionResult> ConfirmSurvey(
             [FromRoute] string sessionId,
             CancellationToken cancellationToken)

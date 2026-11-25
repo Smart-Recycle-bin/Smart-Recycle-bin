@@ -18,7 +18,7 @@ class ActiveSessionView extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
-      appBar: const EcoBinAppBar(points: 1420),
+      appBar: const EcoBinAppBar(),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
         child: Column(

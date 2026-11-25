@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/utils/provider_helpers.dart';
 import '../../../shell/presentation/widgets/ecobin_app_bar.dart';
+import '../../../wallet/presentation/viewmodels/wallet_viewmodel.dart';
 import '../viewmodels/surveys_list_viewmodel.dart';
 import 'verify_survey_view.dart';
 
@@ -18,8 +20,17 @@ class _SurveysListViewState extends State<SurveysListView> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<SurveysListViewModel>().fetchSurveys();
+      _refreshSurveys(context);
     });
+  }
+
+  Future<void> _refreshSurveys(BuildContext context) async {
+    final surveysVm = context.read<SurveysListViewModel>();
+    final walletVm = context.maybeRead<WalletViewModel>();
+    await Future.wait([
+      surveysVm.fetchSurveys(),
+      if (walletVm != null) walletVm.fetchWalletData(),
+    ]);
   }
 
   @override
@@ -28,25 +39,44 @@ class _SurveysListViewState extends State<SurveysListView> {
 
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
-      appBar: const EcoBinAppBar(points: 1420),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Screen Header & Pending Points
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Surveys List',
-                  style: AppTypography.headlineCairo.copyWith(
-                    fontSize: 24,
-                    color: AppColors.deepForest,
-                    fontWeight: FontWeight.bold,
+      appBar: const EcoBinAppBar(),
+      body: RefreshIndicator(
+        onRefresh: () => _refreshSurveys(context),
+        color: AppColors.primaryGreen,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Screen Header & Pending Points
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Flexible(
+                          child: Text(
+                            'Surveys List',
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTypography.headlineCairo.copyWith(
+                              fontSize: 24,
+                              color: AppColors.deepForest,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.refresh_rounded, color: AppColors.deepForest, size: 22),
+                          tooltip: 'Refresh',
+                          onPressed: vm.isLoading ? null : () => _refreshSurveys(context),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                RichText(
+                  RichText(
                   text: TextSpan(
                     text: 'Pending ',
                     style: AppTypography.titlePlex.copyWith(
@@ -244,8 +274,9 @@ class _SurveysListViewState extends State<SurveysListView> {
                   ),
                 );
               }),
-            const SizedBox(height: 40),
-          ],
+              const SizedBox(height: 40),
+            ],
+          ),
         ),
       ),
     );
