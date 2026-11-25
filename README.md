@@ -176,7 +176,7 @@ gantt
 ---
 
 ## 7. Instructor & Supervision
-- **Instructor / Academic Supervisor:** **Eng.Ayad Ali**
+- **Instructor / Academic Supervisor:** **Eng.Ayed Ali**
 - **Training Initiative / Track:** Software Development Track (Full-Stack .NET, Mobile & Cloud)
 - **Supervising Institution:** YAT Learning / Information Technology Institute (MCIT / DEPI Initiative)
 
