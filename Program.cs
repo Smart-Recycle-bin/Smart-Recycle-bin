@@ -1,8 +1,12 @@
+using System;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 
 namespace EcoBin.Api;
 
@@ -17,8 +21,31 @@ public class Program
         builder.Services.AddControllers();
         builder.Services.AddOpenApi();
         builder.Services.AddEndpointsApiExplorer();
-        builder.Services.AddSwaggerGen();
         builder.Services.AddHttpContextAccessor();
+
+        // Swagger + Bearer Authorize button
+        builder.Services.AddSwaggerGen(c =>
+        {
+            c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+            {
+                Name = "Authorization",
+                Type = SecuritySchemeType.Http,
+                Scheme = "bearer",
+                BearerFormat = "JWT",
+                In = ParameterLocation.Header,
+                Description = "Paste your JWT token here (without 'Bearer ')"
+            });
+            c.AddSecurityRequirement(new OpenApiSecurityRequirement
+            {
+                {
+                    new OpenApiSecurityScheme
+                    {
+                        Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" }
+                    },
+                    Array.Empty<string>()
+                }
+            });
+        });
 
         // ---- Member 5 services ----
         builder.Services.AddScoped<ICatalogService, CatalogService>();
@@ -75,13 +102,31 @@ public class Program
 
         var app = builder.Build();
 
-        app.UseMiddleware<ErrorMiddleware>(); // <-- Restored
+        app.UseMiddleware<ErrorMiddleware>();
 
         if (app.Environment.IsDevelopment())
         {
             app.MapOpenApi();
             app.UseSwagger();
             app.UseSwaggerUI();
+
+            // TEMPORARY dev-only endpoint to generate test JWTs (delete before merging with Member 1)
+            app.MapGet("/dev/token", (int userId, string role, IConfiguration cfg) =>
+            {
+                var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(cfg["Jwt:Key"]!));
+                var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+                var claims = new[]
+                {
+                    new Claim("sub", userId.ToString()),
+                    new Claim(ClaimTypes.Role, role)
+                };
+                var token = new JwtSecurityToken(
+                    claims: claims,
+                    expires: DateTime.UtcNow.AddHours(2),
+                    signingCredentials: creds);
+
+                return Results.Ok(new { token = new JwtSecurityTokenHandler().WriteToken(token) });
+            });
         }
 
         app.UseHttpsRedirection();
