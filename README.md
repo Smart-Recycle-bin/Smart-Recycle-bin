@@ -204,7 +204,7 @@ Smart-Recycle-bin/
 ### 🔗 Project Deliverable Links
 - **Interactive UI/UX Prototype:** [EcoBin Mobile Figma Design Prototype](https://www.figma.com/design/MZPYvOei74jV7NKwTf6vLO/Untitled?node-id=0-1&t=ABeZOigsrJWrVioC-1)
 - **Mobile UI/UX Design Specification (PDF):** [EcoBinUI Mobile.pdf (Main Branch)](https://github.com/Smart-Recycle-bin/Smart-Recycle-bin/blob/main/docs/EcoBinUI%20Mobile.pdf) | [Local File](./docs/EcoBinUI%20Mobile.pdf)
-- **Project Presentation & Cloud Drive:** [Google Drive Folder]([https://drive.google.com/](https://drive.google.com/drive/folders/1wq8Fy2wFHD_6KSCNlfqy7LihXcbXJkwD?usp=sharing)) *(Add Google Drive Link)*
+- **Project Presentation & Cloud Drive:** [Google Drive Folder]([https://drive.google.com/](https://drive.google.com/drive/folders/1wq8Fy2wFHD_6KSCNlfqy7LihXcbXJkwD?usp=sharing)) *([Add Google Drive Link](https://drive.google.com/drive/folders/1wq8Fy2wFHD_6KSCNlfqy7LihXcbXJkwD?usp=sharing))*
 - **Technical Documentation Directory:** [Browse `docs/` Folder](./docs/)
   - [Mobile UI/UX Design Specification (EcoBinUI Mobile.pdf)](https://github.com/Smart-Recycle-bin/Smart-Recycle-bin/blob/main/docs/EcoBinUI%20Mobile.pdf)
   - [Feature Prioritization & Scenarios (Smart-Waste-Management-Features.md)](./docs/Smart-Waste-Management-Features.md)
