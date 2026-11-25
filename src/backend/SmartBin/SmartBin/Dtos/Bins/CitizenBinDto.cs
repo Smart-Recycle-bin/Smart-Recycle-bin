@@ -9,5 +9,7 @@ namespace SmartBin.Dtos.Bins
         public string Status { get; set; } = string.Empty;
         public decimal FillLevel { get; set; }
         public string? District { get; set; }
+        public int? DistanceMeters { get; set; }
+        public int? WalkingTimeMinutes { get; set; }
     }
 }

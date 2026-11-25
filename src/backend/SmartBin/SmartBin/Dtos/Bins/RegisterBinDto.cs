@@ -7,8 +7,8 @@ namespace SmartBin.Dtos.Bins
         [Required(ErrorMessage = "deviceSerial is required.")]
         public string DeviceSerial { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "districtArea is required.")]
-        public string DistrictArea { get; set; } = string.Empty;
+        public string? District { get; set; }
+        public string? DistrictArea { get; set; }
 
         [Required(ErrorMessage = "latitude is required.")]
         [Range(-90.0, 90.0, ErrorMessage = "Must be between -90 and 90.")]
