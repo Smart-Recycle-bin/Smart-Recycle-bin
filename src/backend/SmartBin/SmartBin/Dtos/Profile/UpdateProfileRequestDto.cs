@@ -1,4 +1,3 @@
-﻿
 using System.ComponentModel.DataAnnotations;
 
 namespace SmartBin.DTOs.Profile
@@ -7,11 +6,12 @@ namespace SmartBin.DTOs.Profile
     {
         [Required]
         [StringLength(100, MinimumLength = 2)]
-        public string DisplayName { get; set; } 
+        public string DisplayName { get; set; } = string.Empty;
 
         [Phone]
         [StringLength(20)]
         public string? PhoneNumber { get; set; }
+
+        public string? ProfilePhotoUrl { get; set; }
     }
 }
-  
