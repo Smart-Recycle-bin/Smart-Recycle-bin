@@ -87,8 +87,17 @@ namespace SmartBin.Services.Profile
 
                 // Fixed key per user — uploading overwrites the old photo automatically.
                 var key = $"profiles/{userId}.jpg";
-                user.ProfilePhoto = await _storageService.UploadFileWithKeyAsync(
+                var newPhotoUrl = await _storageService.UploadFileWithKeyAsync(
                     encodedStream, key, "image/jpeg");
+
+                // If the user had an older photo at a different key (e.g. GUID-based), remove it
+                if (!string.IsNullOrWhiteSpace(user.ProfilePhoto) &&
+                    !string.Equals(user.ProfilePhoto, newPhotoUrl, StringComparison.OrdinalIgnoreCase))
+                {
+                    await _storageService.DeleteFileAsync(user.ProfilePhoto);
+                }
+
+                user.ProfilePhoto = newPhotoUrl;
             }
 
             // ── 4. Persist ────────────────────────────────────────────────────
