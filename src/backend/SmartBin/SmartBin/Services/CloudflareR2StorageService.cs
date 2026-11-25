@@ -147,11 +147,14 @@ namespace SmartBin.Services
 
                 if (string.IsNullOrWhiteSpace(publicUrl)) return;
 
+                // Strip any query string before deriving the S3 key
+                var cleanUrl = publicUrl.Split('?', 2)[0];
+
                 // Derive the S3 key from the public URL
                 var baseUrl = publicBaseUrl.TrimEnd('/') + "/";
-                if (!publicUrl.StartsWith(baseUrl, StringComparison.OrdinalIgnoreCase)) return;
+                if (!cleanUrl.StartsWith(baseUrl, StringComparison.OrdinalIgnoreCase)) return;
 
-                var key = publicUrl[baseUrl.Length..];
+                var key = cleanUrl[baseUrl.Length..];
 
                 if (!string.IsNullOrWhiteSpace(accountId) &&
                     !string.IsNullOrWhiteSpace(accessKeyId) &&
