@@ -1,21 +1,24 @@
-
 using Microsoft.AspNetCore.Identity;
 using SmartBin.DTOs.Profile;
 using SmartBin.Models;
+using SmartBin.Repositories.Wallet;
 
 namespace SmartBin.Services.Profile
 {
     public class ProfileService
     {
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IWalletRepository _walletRepository;
         private readonly IStorageService _storageService;
 
         public ProfileService(
             UserManager<ApplicationUser> userManager,
+            IWalletRepository walletRepository,
             IStorageService storageService)
         {
-            _userManager    = userManager;
-            _storageService = storageService;
+            _userManager      = userManager;
+            _walletRepository = walletRepository;
+            _storageService   = storageService;
         }
 
         // ── GET ───────────────────────────────────────────────────────────────
@@ -36,14 +39,17 @@ namespace SmartBin.Services.Profile
             var roles = await _userManager.GetRolesAsync(user);
             var role  = roles.FirstOrDefault();
 
+            var walletPoints = await _walletRepository.GetAvailablePointsAsync(user.Id);
+
             return new ProfileResponseDto
             {
                 UserId          = user.Id,
-                Email           = user.Email!,
+                Email           = user.Email ?? string.Empty,
                 DisplayName     = user.DisplayName,
                 PhoneNumber     = user.PhoneNumber,
                 ProfilePhotoUrl = user.ProfilePhoto,
-                Role            = role ?? string.Empty
+                Role            = role ?? string.Empty,
+                Points          = walletPoints
             };
         }
 
@@ -63,7 +69,6 @@ namespace SmartBin.Services.Profile
             // ── 2. Phone number ───────────────────────────────────────────────
             if (request.PhoneNumber is not null)
             {
-                // UserManager handles setting PhoneNumber
                 var phoneResult = await _userManager.SetPhoneNumberAsync(user, request.PhoneNumber.Trim());
                 if (!phoneResult.Succeeded)
                     throw new ApiException("VALIDATION_ERROR",
@@ -73,7 +78,6 @@ namespace SmartBin.Services.Profile
             // ── 3. Photo handling ─────────────────────────────────────────────
             if (request.RemovePhoto)
             {
-                // Delete old photo from storage (best-effort)
                 if (!string.IsNullOrWhiteSpace(user.ProfilePhoto))
                     await _storageService.DeleteFileAsync(user.ProfilePhoto);
 
@@ -81,16 +85,13 @@ namespace SmartBin.Services.Profile
             }
             else if (request.Photo is not null)
             {
-                // Validate + re-encode (throws ApiException on bad file)
                 using var encodedStream =
                     await CloudflareR2StorageService.StripExifAndReencodeAsync(request.Photo);
 
-                // Fixed key per user — uploading overwrites the old photo automatically.
                 var key = $"profiles/{userId}.jpg";
                 var newPhotoUrl = await _storageService.UploadFileWithKeyAsync(
                     encodedStream, key, "image/jpeg");
 
-                // If the user had an older photo at a different key (e.g. GUID-based), remove it
                 if (!string.IsNullOrWhiteSpace(user.ProfilePhoto) &&
                     !string.Equals(user.ProfilePhoto, newPhotoUrl, StringComparison.OrdinalIgnoreCase))
                 {
@@ -98,6 +99,10 @@ namespace SmartBin.Services.Profile
                 }
 
                 user.ProfilePhoto = newPhotoUrl;
+            }
+            else if (!string.IsNullOrWhiteSpace(request.ProfilePhotoUrl))
+            {
+                user.ProfilePhoto = request.ProfilePhotoUrl;
             }
 
             // ── 4. Persist ────────────────────────────────────────────────────
@@ -116,4 +121,3 @@ namespace SmartBin.Services.Profile
         }
     }
 }
-

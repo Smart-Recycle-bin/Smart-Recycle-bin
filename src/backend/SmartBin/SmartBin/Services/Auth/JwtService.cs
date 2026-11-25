@@ -35,6 +35,10 @@ namespace SmartBin.Services.Auth
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim("role", role),
                 new Claim(ClaimTypes.Role, role),
+                new Claim("email", user.Email ?? string.Empty),
+                new Claim(ClaimTypes.Email, user.Email ?? string.Empty),
+                new Claim("name", user.DisplayName ?? string.Empty),
+                new Claim(ClaimTypes.Name, user.DisplayName ?? string.Empty),
                 new Claim(
                     JwtRegisteredClaimNames.Jti,
                     Guid.NewGuid().ToString()

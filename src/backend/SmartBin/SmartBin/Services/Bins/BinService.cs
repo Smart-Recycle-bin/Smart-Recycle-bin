@@ -1,19 +1,24 @@
-using Microsoft.EntityFrameworkCore;
-using SmartBin.Context;
 using SmartBin.Dtos.Bins;
 using SmartBin.Dtos.Common;
 using SmartBin.Models.Constants;
+using SmartBin.Repositories;
+using SmartBin.Repositories.Bins;
 
 namespace SmartBin.Services.Bins
 {
     public class BinService : IBinService
     {
-        private readonly AppDbContext _context;
+        private readonly IBinRepository _binRepository;
+        private readonly IUnitOfWork _unitOfWork;
         private readonly IMember5AnalyticsService _analyticsService;
 
-        public BinService(AppDbContext context, IMember5AnalyticsService analyticsService)
+        public BinService(
+            IBinRepository binRepository,
+            IUnitOfWork unitOfWork,
+            IMember5AnalyticsService analyticsService)
         {
-            _context = context;
+            _binRepository = binRepository;
+            _unitOfWork = unitOfWork;
             _analyticsService = analyticsService;
         }
 
@@ -31,8 +36,7 @@ namespace SmartBin.Services.Bins
                     new[] { new { field = "lng", message = "Must be between -180 and 180." } });
             }
 
-            var query = _context.SmartBins.AsNoTracking();
-            var bins = await query.ToListAsync();
+            var bins = await _binRepository.GetAllForSpatialQueryAsync();
 
             var result = new List<(SmartBin.Models.SmartBin Bin, double DistanceMeters)>();
 
@@ -68,16 +72,15 @@ namespace SmartBin.Services.Bins
                 Longitude = x.Bin.Longitude,
                 Status = SmartBinStatus.ToCitizenStatus(x.Bin.Status),
                 FillLevel = x.Bin.FillLevel,
-                District = x.Bin.District
+                District = x.Bin.District,
+                DistanceMeters = lat.HasValue && lng.HasValue ? (int)Math.Round(x.DistanceMeters) : 140,
+                WalkingTimeMinutes = lat.HasValue && lng.HasValue ? (int)Math.Max(1, Math.Ceiling(x.DistanceMeters / 80.0)) : 2
             }).ToList();
         }
 
         public async Task<BinDetailsDto> GetBinDetailsAsync(int binId, string userRole)
         {
-            var bin = await _context.SmartBins
-                .AsNoTracking()
-                .Include(b => b.Collector)
-                .FirstOrDefaultAsync(b => b.BinId == binId);
+            var bin = await _binRepository.GetByIdWithCollectorAsync(binId);
 
             if (bin == null)
             {
@@ -111,7 +114,7 @@ namespace SmartBin.Services.Bins
             limit = Math.Clamp(limit, 1, 50);
 
             var normalizedQuery = query.Trim().ToLowerInvariant();
-            var allBins = await _context.SmartBins.AsNoTracking().ToListAsync();
+            var allBins = await _binRepository.GetAllForSpatialQueryAsync();
 
             var matchingBins = allBins.Where(b =>
                 (b.District != null && b.District.ToLowerInvariant().Contains(normalizedQuery)) ||
@@ -133,7 +136,6 @@ namespace SmartBin.Services.Bins
                         (double)bin.Latitude.Value, (double)bin.Longitude.Value);
 
                     distanceMeters = (int)Math.Round(dist);
-                    // Approx 12 minutes per kilometer (walking pace)
                     walkingTimeMinutes = Math.Max(1, (int)Math.Round(dist / 1000.0 * 12.0));
                 }
 
@@ -172,63 +174,18 @@ namespace SmartBin.Services.Bins
             page = Math.Max(1, page);
             pageSize = Math.Clamp(pageSize, 1, 100);
 
-            var query = _context.SmartBins
-                .AsNoTracking()
-                .Include(b => b.Collector)
-                .Include(b => b.ServiceRecords)
-                .AsQueryable();
+            var (bins, totalItems) = await _binRepository.GetAdminBinsPagedAsync(
+                search, district, status, collectorId, page, pageSize, sortBy, sortDir);
 
-            if (!string.IsNullOrWhiteSpace(search))
-            {
-                var s = search.Trim();
-                if (int.TryParse(s, out var id))
-                {
-                    query = query.Where(b => b.BinId == id || b.SerialNumber.Contains(s));
-                }
-                else
-                {
-                    query = query.Where(b => b.SerialNumber.Contains(s));
-                }
-            }
-
-            if (!string.IsNullOrWhiteSpace(district))
-            {
-                query = query.Where(b => b.District != null && b.District.Contains(district));
-            }
-
-            if (!string.IsNullOrWhiteSpace(status))
-            {
-                query = query.Where(b => b.Status.ToUpper() == status.ToUpper());
-            }
-
-            if (collectorId.HasValue)
-            {
-                query = query.Where(b => b.CollectorId == collectorId.Value);
-            }
-
-            bool isDesc = string.Equals(sortDir, "desc", StringComparison.OrdinalIgnoreCase);
-
-            query = sortBy?.ToLowerInvariant() switch
-            {
-                "filllevel" => isDesc ? query.OrderByDescending(b => b.FillLevel) : query.OrderBy(b => b.FillLevel),
-                "district" => isDesc ? query.OrderByDescending(b => b.District) : query.OrderBy(b => b.District),
-                "status" => isDesc ? query.OrderByDescending(b => b.Status) : query.OrderBy(b => b.Status),
-                "createdat" => isDesc ? query.OrderByDescending(b => b.CreatedAt) : query.OrderBy(b => b.CreatedAt),
-                _ => isDesc ? query.OrderByDescending(b => b.BinId) : query.OrderBy(b => b.BinId)
-            };
-
-            int totalItems = await query.CountAsync();
             int totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
-
-            var bins = await query
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .ToListAsync();
 
             var items = bins.Select(b => new AdminBinDto
             {
                 BinId = b.BinId,
+                Name = $"Bin#{b.BinId:D3}",
+                Area = b.District,
                 District = b.District,
+                Region = b.District ?? "Default",
                 Latitude = b.Latitude,
                 Longitude = b.Longitude,
                 FillLevel = b.FillLevel,
@@ -253,7 +210,14 @@ namespace SmartBin.Services.Bins
 
         public async Task<RegisterBinResponseDto> RegisterBinAsync(RegisterBinRequestDto request)
         {
-            var exists = await _context.SmartBins.AnyAsync(b => b.SerialNumber == request.DeviceSerial);
+            var district = !string.IsNullOrWhiteSpace(request.District) ? request.District : request.DistrictArea;
+            if (string.IsNullOrWhiteSpace(district))
+            {
+                throw new ApiException(400, "VALIDATION_ERROR", "district is required.",
+                    new[] { new { field = "district", message = "district is required." } });
+            }
+
+            var exists = await _binRepository.ExistsSerialNumberOrQrAsync(request.DeviceSerial, $"QR-BIN-{request.DeviceSerial}");
             if (exists)
             {
                 throw new ApiException(409, "DEVICE_ALREADY_REGISTERED", "This device serial is already registered.");
@@ -262,7 +226,7 @@ namespace SmartBin.Services.Bins
             var bin = new SmartBin.Models.SmartBin
             {
                 SerialNumber = request.DeviceSerial,
-                District = request.DistrictArea,
+                District = district,
                 Latitude = request.Latitude,
                 Longitude = request.Longitude,
                 CapacityThreshold = request.CapacityThresholdKg,
@@ -273,8 +237,8 @@ namespace SmartBin.Services.Bins
                 LastHeartbeatAt = DateTime.UtcNow
             };
 
-            _context.SmartBins.Add(bin);
-            await _context.SaveChangesAsync();
+            await _binRepository.AddAsync(bin);
+            await _unitOfWork.SaveChangesAsync();
 
             return new RegisterBinResponseDto
             {
@@ -287,7 +251,7 @@ namespace SmartBin.Services.Bins
 
         public async Task<UpdateBinMetadataResponseDto> UpdateBinMetadataAsync(int binId, UpdateBinMetadataRequestDto request)
         {
-            var bin = await _context.SmartBins.FirstOrDefaultAsync(b => b.BinId == binId);
+            var bin = await _binRepository.GetByIdAsync(binId);
             if (bin == null)
             {
                 throw new ApiException(404, "NOT_FOUND", "Bin not found.");
@@ -298,7 +262,8 @@ namespace SmartBin.Services.Bins
             bin.District = request.District;
             bin.CapacityThreshold = request.CapacityThresholdKg;
 
-            await _context.SaveChangesAsync();
+            _binRepository.Update(bin);
+            await _unitOfWork.SaveChangesAsync();
 
             return new UpdateBinMetadataResponseDto
             {
@@ -326,7 +291,6 @@ namespace SmartBin.Services.Bins
 
         private static DateTime EstimatePredictedFullAt(decimal currentFill)
         {
-            // Linear projection: 100% capacity projected forward based on fill
             var hoursLeft = Math.Max(2.0, (100.0 - (double)currentFill) * 0.75);
             return DateTime.UtcNow.AddHours(hoursLeft);
         }

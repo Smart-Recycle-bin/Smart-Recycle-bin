@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Http;
 
 namespace SmartBin.DTOs.Profile
 {
@@ -8,13 +9,15 @@ namespace SmartBin.DTOs.Profile
     /// </summary>
     public class UpdateProfileRequestDto
     {
-        [MaxLength(100, ErrorMessage = "Display name must be at most 100 characters.")]
+        [StringLength(100, MinimumLength = 2, ErrorMessage = "Display name must be between 2 and 100 characters.")]
         public string? DisplayName { get; set; }
 
         /// <summary>E.164 phone number, e.g. +201112223334</summary>
         [Phone(ErrorMessage = "Phone number is not valid.")]
         [MaxLength(20, ErrorMessage = "Phone number must be at most 20 characters.")]
         public string? PhoneNumber { get; set; }
+
+        public string? ProfilePhotoUrl { get; set; }
 
         /// <summary>
         /// Photo file — JPEG, PNG or WEBP only, max 4 MB.
