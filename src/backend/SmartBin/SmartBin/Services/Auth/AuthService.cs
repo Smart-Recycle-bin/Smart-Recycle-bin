@@ -1,10 +1,10 @@
-﻿using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
-using SmartBin.Context;
+using Microsoft.AspNetCore.Identity;
 using SmartBin.Dtos.Auth;
 using SmartBin.DTOs.Auth;
 using SmartBin.Models;
-using SmartBin.Repositories;
+using SmartBin.Repositories.Abstractions;
+using SmartBin.Repositories.Auth;
+using SmartBin.Repositories.Wallet;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -15,32 +15,35 @@ namespace SmartBin.Services.Auth
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly JwtService _jwtService;
-        private readonly RefreshTokenRepository _refreshTokenRepository;
-        private readonly AppDbContext _context;
+        private readonly IRefreshTokenRepository _refreshTokenRepository;
+        private readonly IAuthOtpRepository _authOtpRepository;
+        private readonly IWalletRepository _walletRepository;
+        private readonly IUnitOfWork _unitOfWork;
         private readonly OtpService _otpService;
         private readonly EmailService _emailService;
         private readonly RoleManager<ApplicationRole> _roleManager;
 
         public AuthService(
-          UserManager<ApplicationUser> userManager,
-          JwtService jwtService,
-          RefreshTokenRepository refreshTokenRepository,
-          AppDbContext context,
-          OtpService otpService,
-          EmailService emailService,
-          RoleManager<ApplicationRole> roleManager,
-            IHttpContextAccessor httpContextAccessor
-
-          )
+            UserManager<ApplicationUser> userManager,
+            JwtService jwtService,
+            IRefreshTokenRepository refreshTokenRepository,
+            IAuthOtpRepository authOtpRepository,
+            IWalletRepository walletRepository,
+            IUnitOfWork unitOfWork,
+            OtpService otpService,
+            EmailService emailService,
+            RoleManager<ApplicationRole> roleManager,
+            IHttpContextAccessor httpContextAccessor)
         {
             _userManager = userManager;
             _jwtService = jwtService;
             _refreshTokenRepository = refreshTokenRepository;
-            _context = context;
+            _authOtpRepository = authOtpRepository;
+            _walletRepository = walletRepository;
+            _unitOfWork = unitOfWork;
             _otpService = otpService;
             _emailService = emailService;
             _roleManager = roleManager;
-
             _httpContextAccessor = httpContextAccessor;
         }
 
@@ -142,8 +145,7 @@ namespace SmartBin.Services.Auth
             var refreshToken = GenerateRefreshToken();
 
             // 7. Start database transaction
-            await using var transaction =
-                await _context.Database.BeginTransactionAsync();
+            await _unitOfWork.BeginTransactionAsync();
 
             try
             {
@@ -159,8 +161,8 @@ namespace SmartBin.Services.Auth
                  ),
                     CreatedAt = DateTime.UtcNow,
 
-                    CreatedByIp = httpContext.Connection.RemoteIpAddress?.ToString(),
-                    UserAgent = httpContext.Request.Headers.UserAgent.ToString()
+                    CreatedByIp = httpContext?.Connection.RemoteIpAddress?.ToString(),
+                    UserAgent = httpContext?.Request.Headers.UserAgent.ToString()
                 };
 
                 // 9. Save refresh token
@@ -181,11 +183,11 @@ namespace SmartBin.Services.Auth
                 }
 
                 // 11. Commit transaction
-                await transaction.CommitAsync();
+                await _unitOfWork.CommitTransactionAsync();
             }
             catch
             {
-                await transaction.RollbackAsync();
+                await _unitOfWork.RollbackTransactionAsync();
                 throw;
             }
 
@@ -248,8 +250,7 @@ namespace SmartBin.Services.Auth
                 WarningCount = 0
             };
 
-            await using var transaction =
-                await _context.Database.BeginTransactionAsync();
+            await _unitOfWork.BeginTransactionAsync();
 
             string otp;
 
@@ -304,8 +305,8 @@ namespace SmartBin.Services.Auth
                     LifetimeEarnedPoints = 0
                 };
 
-                await _context.Wallets.AddAsync(wallet);
-                await _context.SaveChangesAsync();
+                await _walletRepository.AddAsync(wallet);
+                await _unitOfWork.SaveChangesAsync();
 
 
                 // 7. Generate email verification OTP
@@ -329,17 +330,17 @@ namespace SmartBin.Services.Auth
                     FailedAttempts = 0
                 };
 
-                await _context.AuthOtps.AddAsync(otpEntity);
+                await _authOtpRepository.AddAsync(otpEntity);
 
                 // 8. Save wallet and OTP
-                await _context.SaveChangesAsync();
+                await _unitOfWork.SaveChangesAsync();
 
                 // 9. Commit transaction
-                await transaction.CommitAsync();
+                await _unitOfWork.CommitTransactionAsync();
             }
             catch
             {
-                await transaction.RollbackAsync();
+                await _unitOfWork.RollbackTransactionAsync();
                 throw;
             }
 
@@ -376,14 +377,7 @@ namespace SmartBin.Services.Auth
                 );
             }
 
-            var otpEntity = await _context.AuthOtps
-                .Where(otp =>
-                    otp.UserId == user.Id &&
-                    otp.Purpose == "email_verification" &&
-                    otp.ConsumedAt == null &&
-                    otp.InvalidatedAt == null)
-                .OrderByDescending(otp => otp.CreatedAt)
-                .FirstOrDefaultAsync();
+            var otpEntity = await _authOtpRepository.GetLatestActiveOtpAsync(user.Id, "email_verification");
 
             if (otpEntity == null)
             {
@@ -398,8 +392,9 @@ namespace SmartBin.Services.Auth
             if (otpEntity.ExpiresAt <= DateTime.UtcNow)
             {
                 otpEntity.InvalidatedAt = DateTime.UtcNow;
+                _authOtpRepository.Update(otpEntity);
 
-                await _context.SaveChangesAsync();
+                await _unitOfWork.SaveChangesAsync();
 
                 throw new ApiException(
                     "INVALID_OR_EXPIRED_OTP",
@@ -419,8 +414,7 @@ namespace SmartBin.Services.Auth
 
             ApiException? verificationError = null;
 
-            await using var transaction =
-                await _context.Database.BeginTransactionAsync();
+            await _unitOfWork.BeginTransactionAsync();
 
             try
             {
@@ -454,7 +448,8 @@ namespace SmartBin.Services.Auth
                         );
                     }
 
-                    await _context.SaveChangesAsync();
+                    _authOtpRepository.Update(otpEntity);
+                    await _unitOfWork.SaveChangesAsync();
                 }
                 else
                 {
@@ -472,15 +467,16 @@ namespace SmartBin.Services.Auth
                     }
 
                     otpEntity.ConsumedAt = DateTime.UtcNow;
+                    _authOtpRepository.Update(otpEntity);
 
-                    await _context.SaveChangesAsync();
+                    await _unitOfWork.SaveChangesAsync();
                 }
 
-                await transaction.CommitAsync();
+                await _unitOfWork.CommitTransactionAsync();
             }
             catch
             {
-                await transaction.RollbackAsync();
+                await _unitOfWork.RollbackTransactionAsync();
                 throw;
             }
 
@@ -521,11 +517,7 @@ namespace SmartBin.Services.Auth
 
             // Count all verification OTPs sent during the last hour.
             // This includes the first OTP sent during registration.
-            var sentCount = await _context.AuthOtps
-                .CountAsync(otp =>
-                    otp.UserId == user.Id &&
-                    otp.Purpose == purpose &&
-                    otp.CreatedAt >= oneHourAgo);
+            var sentCount = await _authOtpRepository.CountRecentOtpsAsync(user.Id, purpose, oneHourAgo);
 
             if (sentCount >= 5)
             {
@@ -537,12 +529,7 @@ namespace SmartBin.Services.Auth
             }
 
             // Get the most recently created verification OTP.
-            var lastOtp = await _context.AuthOtps
-                .Where(otp =>
-                    otp.UserId == user.Id &&
-                    otp.Purpose == purpose)
-                .OrderByDescending(otp => otp.CreatedAt)
-                .FirstOrDefaultAsync();
+            var lastOtp = await _authOtpRepository.GetLatestOtpAsync(user.Id, purpose);
 
             if (lastOtp != null &&
                 lastOtp.CreatedAt > now.AddSeconds(-60))
@@ -566,33 +553,27 @@ namespace SmartBin.Services.Auth
                 FailedAttempts = 0
             };
 
-            await using var transaction =
-                await _context.Database.BeginTransactionAsync();
+            await _unitOfWork.BeginTransactionAsync();
 
             try
             {
                 // Invalidate all previous active verification codes.
-                var activeOtps = await _context.AuthOtps
-                .Where(otp =>
-                    otp.UserId == user.Id &&
-                    otp.Purpose == purpose &&
-                    otp.ConsumedAt == null &&
-                    otp.InvalidatedAt == null)
-                .ToListAsync();
+                var activeOtps = await _authOtpRepository.GetActiveOtpsAsync(user.Id, purpose);
 
                 foreach (var otp in activeOtps)
                 {
                     otp.InvalidatedAt = now;
+                    _authOtpRepository.Update(otp);
                 }
 
-                await _context.AuthOtps.AddAsync(newOtpEntity);
+                await _authOtpRepository.AddAsync(newOtpEntity);
 
-                await _context.SaveChangesAsync();
-                await transaction.CommitAsync();
+                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.CommitTransactionAsync();
             }
             catch
             {
-                await transaction.RollbackAsync();
+                await _unitOfWork.RollbackTransactionAsync();
                 throw;
             }
 
@@ -626,7 +607,7 @@ namespace SmartBin.Services.Auth
         }
 
         public async Task<RefreshResponseDto> RefreshAsync(
-    RefreshRequestDto request)
+            RefreshRequestDto request)
         {
             if (string.IsNullOrWhiteSpace(request.RefreshToken))
             {
@@ -727,8 +708,7 @@ namespace SmartBin.Services.Auth
 
             var newRefreshToken = GenerateRefreshToken();
 
-            await using var transaction =
-                await _context.Database.BeginTransactionAsync();
+            await _unitOfWork.BeginTransactionAsync();
 
             try
             {
@@ -769,7 +749,7 @@ namespace SmartBin.Services.Auth
                     );
                 }
 
-                await transaction.CommitAsync();
+                await _unitOfWork.CommitTransactionAsync();
 
                 return new RefreshResponseDto
                 {
@@ -780,7 +760,7 @@ namespace SmartBin.Services.Auth
             }
             catch
             {
-                await transaction.RollbackAsync();
+                await _unitOfWork.RollbackTransactionAsync();
                 throw;
             }
         }
@@ -813,11 +793,7 @@ namespace SmartBin.Services.Auth
             var oneHourAgo = now.AddHours(-1);
 
             // 3. Count password reset OTPs sent during the last hour
-            var sentCount = await _context.AuthOtps
-                .CountAsync(otp =>
-                    otp.UserId == user.Id &&
-                    otp.Purpose == purpose &&
-                    otp.CreatedAt >= oneHourAgo);
+            var sentCount = await _authOtpRepository.CountRecentOtpsAsync(user.Id, purpose, oneHourAgo);
 
             if (sentCount >= 5)
             {
@@ -829,12 +805,7 @@ namespace SmartBin.Services.Auth
             }
 
             // 4. Get the latest password reset OTP
-            var lastOtp = await _context.AuthOtps
-                .Where(otp =>
-                    otp.UserId == user.Id &&
-                    otp.Purpose == purpose)
-                .OrderByDescending(otp => otp.CreatedAt)
-                .FirstOrDefaultAsync();
+            var lastOtp = await _authOtpRepository.GetLatestOtpAsync(user.Id, purpose);
 
             // 5. Enforce 60-second resend cooldown
             if (lastOtp != null &&
@@ -866,35 +837,29 @@ namespace SmartBin.Services.Auth
                 FailedAttempts = 0
             };
 
-            await using var transaction =
-                await _context.Database.BeginTransactionAsync();
+            await _unitOfWork.BeginTransactionAsync();
 
             try
             {
                 // 7. Invalidate previous active password reset OTPs
-                var activeOtps = await _context.AuthOtps
-                    .Where(otp =>
-                        otp.UserId == user.Id &&
-                        otp.Purpose == purpose &&
-                        otp.ConsumedAt == null &&
-                        otp.InvalidatedAt == null)
-                    .ToListAsync();
+                var activeOtps = await _authOtpRepository.GetActiveOtpsAsync(user.Id, purpose);
 
                 foreach (var oldOtp in activeOtps)
                 {
                     oldOtp.InvalidatedAt = now;
+                    _authOtpRepository.Update(oldOtp);
                 }
 
                 // 8. Save the new OTP
-                await _context.AuthOtps.AddAsync(otpEntity);
+                await _authOtpRepository.AddAsync(otpEntity);
 
-                await _context.SaveChangesAsync();
+                await _unitOfWork.SaveChangesAsync();
 
-                await transaction.CommitAsync();
+                await _unitOfWork.CommitTransactionAsync();
             }
             catch
             {
-                await transaction.RollbackAsync();
+                await _unitOfWork.RollbackTransactionAsync();
                 throw;
             }
 
@@ -911,6 +876,100 @@ namespace SmartBin.Services.Auth
             };
         }
 
+
+        public async Task<bool> VerifyResetOtpAsync(
+            VerifyResetOtpRequestDto request)
+        {
+            const string purpose = "password_reset";
+
+            if (string.IsNullOrWhiteSpace(request.Email) ||
+                string.IsNullOrWhiteSpace(request.Otp) ||
+                request.Otp.Length != 5 ||
+                !request.Otp.All(char.IsDigit))
+            {
+                throw new ApiException(
+                    "VALIDATION_ERROR",
+                    "Email and a valid 5-digit OTP are required.",
+                    400
+                );
+            }
+
+            var user = await _userManager.FindByEmailAsync(request.Email);
+
+            if (user == null)
+            {
+                throw new ApiException(
+                    "INVALID_OR_EXPIRED_OTP",
+                    "The code is incorrect or has expired.",
+                    400
+                );
+            }
+
+            var otpEntity = await _authOtpRepository.GetLatestOtpAsync(user.Id, purpose);
+
+            if (otpEntity == null ||
+                otpEntity.ConsumedAt != null ||
+                otpEntity.InvalidatedAt != null)
+            {
+                throw new ApiException(
+                    "INVALID_OR_EXPIRED_OTP",
+                    "The code is incorrect or has expired.",
+                    400
+                );
+            }
+
+            if (otpEntity.FailedAttempts >= 5)
+            {
+                throw new ApiException(
+                    "TOO_MANY_ATTEMPTS",
+                    "Too many incorrect attempts. Request a new code.",
+                    429
+                );
+            }
+
+            var now = DateTime.UtcNow;
+
+            if (otpEntity.ExpiresAt <= now)
+            {
+                otpEntity.InvalidatedAt = now;
+                _authOtpRepository.Update(otpEntity);
+                await _unitOfWork.SaveChangesAsync();
+
+                throw new ApiException(
+                    "INVALID_OR_EXPIRED_OTP",
+                    "The code is incorrect or has expired.",
+                    400
+                );
+            }
+
+            bool isValid = _otpService.VerifyOtp(
+                user.Id,
+                purpose,
+                request.Otp,
+                otpEntity.OtpHash
+            );
+
+            if (!isValid)
+            {
+                otpEntity.FailedAttempts++;
+
+                if (otpEntity.FailedAttempts >= 5)
+                {
+                    otpEntity.InvalidatedAt = now;
+                }
+
+                _authOtpRepository.Update(otpEntity);
+                await _unitOfWork.SaveChangesAsync();
+
+                throw new ApiException(
+                    "INVALID_OR_EXPIRED_OTP",
+                    "The code is incorrect or has expired.",
+                    400
+                );
+            }
+
+            return true;
+        }
 
         public async Task<ResetPasswordResponseDto> ResetPasswordAsync(
             ResetPasswordRequestDto request)
@@ -944,12 +1003,7 @@ namespace SmartBin.Services.Auth
             }
 
             // 3. Get the latest password reset OTP
-            var otpEntity = await _context.AuthOtps
-                .Where(otp =>
-                    otp.UserId == user.Id &&
-                    otp.Purpose == purpose)
-                .OrderByDescending(otp => otp.CreatedAt)
-                .FirstOrDefaultAsync();
+            var otpEntity = await _authOtpRepository.GetLatestOtpAsync(user.Id, purpose);
 
             if (otpEntity == null)
             {
@@ -987,8 +1041,9 @@ namespace SmartBin.Services.Auth
             if (otpEntity.ExpiresAt <= now)
             {
                 otpEntity.InvalidatedAt = now;
+                _authOtpRepository.Update(otpEntity);
 
-                await _context.SaveChangesAsync();
+                await _unitOfWork.SaveChangesAsync();
 
                 throw new ApiException(
                     "INVALID_OR_EXPIRED_OTP",
@@ -1013,7 +1068,8 @@ namespace SmartBin.Services.Auth
                 {
                     otpEntity.InvalidatedAt = now;
 
-                    await _context.SaveChangesAsync();
+                    _authOtpRepository.Update(otpEntity);
+                    await _unitOfWork.SaveChangesAsync();
 
                     throw new ApiException(
                         "TOO_MANY_ATTEMPTS",
@@ -1022,7 +1078,8 @@ namespace SmartBin.Services.Auth
                     );
                 }
 
-                await _context.SaveChangesAsync();
+                _authOtpRepository.Update(otpEntity);
+                await _unitOfWork.SaveChangesAsync();
 
                 throw new ApiException(
                     "INVALID_OR_EXPIRED_OTP",
@@ -1032,8 +1089,7 @@ namespace SmartBin.Services.Auth
             }
 
             // 8. Start transaction
-            await using var transaction =
-                await _context.Database.BeginTransactionAsync();
+            await _unitOfWork.BeginTransactionAsync();
 
             try
             {
@@ -1059,35 +1115,24 @@ namespace SmartBin.Services.Auth
 
                 // 11. Mark the OTP as consumed
                 otpEntity.ConsumedAt = now;
+                _authOtpRepository.Update(otpEntity);
 
                 // 12. Invalidate other active password reset OTPs
-                var otherActiveOtps = await _context.AuthOtps
-                    .Where(otp =>
-                        otp.UserId == user.Id &&
-                        otp.Purpose == purpose &&
-                        otp.OtpId != otpEntity.OtpId &&
-                        otp.ConsumedAt == null &&
-                        otp.InvalidatedAt == null)
-                    .ToListAsync();
-
-                foreach (var otp in otherActiveOtps)
-                {
-                    otp.InvalidatedAt = now;
-                }
+                await _authOtpRepository.InvalidateOtherActiveOtpsAsync(user.Id, purpose, otpEntity.OtpId, now);
 
                 // 13. Revoke all refresh tokens for this user
                 await _refreshTokenRepository.RevokeAllUserTokensAsync(
                     user.Id
                 );
 
-                await _context.SaveChangesAsync();
+                await _unitOfWork.SaveChangesAsync();
 
                 // 14. Commit transaction
-                await transaction.CommitAsync();
+                await _unitOfWork.CommitTransactionAsync();
             }
             catch
             {
-                await transaction.RollbackAsync();
+                await _unitOfWork.RollbackTransactionAsync();
                 throw;
             }
 
@@ -1098,9 +1143,5 @@ namespace SmartBin.Services.Auth
                     "Password has been reset successfully. Please log in again."
             };
         }
-
-
-
-
     }
 }

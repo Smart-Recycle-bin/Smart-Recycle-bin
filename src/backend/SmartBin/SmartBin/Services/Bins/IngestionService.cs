@@ -1,25 +1,28 @@
-using Microsoft.EntityFrameworkCore;
-using SmartBin.Context;
 using SmartBin.Dtos.Bins;
 using SmartBin.Models;
 using SmartBin.Models.Constants;
+using SmartBin.Repositories;
+using SmartBin.Repositories.Bins;
 
 namespace SmartBin.Services.Bins
 {
     public class IngestionService : IIngestionService
     {
-        private readonly AppDbContext _context;
+        private readonly IBinRepository _binRepository;
+        private readonly IUnitOfWork _unitOfWork;
         private readonly ISessionCoordinationService _sessionService;
         private readonly IClassificationAdapter _classificationAdapter;
         private readonly IStorageService _storageService;
 
         public IngestionService(
-            AppDbContext context,
+            IBinRepository binRepository,
+            IUnitOfWork unitOfWork,
             ISessionCoordinationService sessionService,
             IClassificationAdapter classificationAdapter,
             IStorageService storageService)
         {
-            _context = context;
+            _binRepository = binRepository;
+            _unitOfWork = unitOfWork;
             _sessionService = sessionService;
             _classificationAdapter = classificationAdapter;
             _storageService = storageService;
@@ -27,15 +30,8 @@ namespace SmartBin.Services.Bins
 
         public async Task<IngestItemResponseDto> IngestItemAsync(int sessionId, IngestItemRequestDto request, string? deviceKey)
         {
-            // E21 rule: Validates that this request comes from a bin device actor, not a citizen user JWT
-            if (string.IsNullOrWhiteSpace(deviceKey))
-            {
-                // Fallback check: device authentication placeholder
-                // If caller sends explicit invalid credential header
-            }
-
             // 1. Validate session state via Member 2's session service
-            var sessionResult = await _sessionService.ValidateAndExtendSessionAsync(sessionId, extendSeconds: 60);
+            await _sessionService.EnsureSessionActiveAsync(sessionId);
 
             // 2. Validate Image file
             if (request.Image == null || request.Image.Length == 0)
@@ -60,20 +56,17 @@ namespace SmartBin.Services.Bins
             }
 
             // 4. Resolve WasteType from database
-            var wasteType = await _context.WasteTypes
-                .FirstOrDefaultAsync(wt => wt.Name.ToUpper() == classification.WasteType.ToUpper());
-
+            var wasteType = await _binRepository.GetWasteTypeByNameAsync(classification.WasteType);
             if (wasteType == null)
             {
-                // Auto-fallback or retrieve default
-                wasteType = await _context.WasteTypes.FirstOrDefaultAsync(wt => wt.Name == WasteTypeNames.Plastic)
+                wasteType = await _binRepository.GetDefaultWasteTypeAsync()
                     ?? new WasteType { WasteTypeId = 1, Name = WasteTypeNames.Plastic, BasePoints = 15 };
             }
 
             // 5. Store image to Cloudflare R2 under recycled-items
             var imagePath = await _storageService.UploadFileAsync(request.Image, "recycled-items");
 
-            // 6. Persist DISPOSAL_ITEM record
+            // 6. Persist DISPOSAL_ITEM and atomically extend Session.WindowExpiresAt in one transaction
             var disposalItem = new DisposalItem
             {
                 SessionId = sessionId,
@@ -84,8 +77,29 @@ namespace SmartBin.Services.Bins
                 AIConfidence = classification.ConfidenceScore
             };
 
-            _context.DisposalItems.Add(disposalItem);
-            await _context.SaveChangesAsync();
+            DateTime windowExpiresAt;
+            await _unitOfWork.BeginTransactionAsync();
+            try
+            {
+                await _binRepository.AddDisposalItemAsync(disposalItem);
+                await _unitOfWork.SaveChangesAsync();
+
+                windowExpiresAt = await _sessionService.ExtendSessionWindowAsync(sessionId, extendSeconds: 60);
+                await _unitOfWork.CommitTransactionAsync();
+            }
+            catch
+            {
+                await _unitOfWork.RollbackTransactionAsync();
+                throw;
+            }
+
+            // 7. Broadcast SignalR events only after successful DB persistence
+            await _sessionService.NotifyItemIngestedAsync(
+                sessionId,
+                disposalItem.ItemId,
+                wasteType.Name,
+                disposalItem.EstimatedPoints,
+                windowExpiresAt);
 
             return new IngestItemResponseDto
             {
@@ -94,7 +108,7 @@ namespace SmartBin.Services.Bins
                 WasteType = wasteType.Name,
                 ConfidenceScore = classification.ConfidenceScore,
                 EstimatedPoints = disposalItem.EstimatedPoints,
-                WindowExpiresAt = sessionResult.WindowExpiresAt
+                WindowExpiresAt = windowExpiresAt
             };
         }
     }

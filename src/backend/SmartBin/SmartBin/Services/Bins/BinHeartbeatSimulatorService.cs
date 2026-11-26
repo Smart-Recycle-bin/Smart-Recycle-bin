@@ -1,9 +1,7 @@
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using SmartBin.Context;
-using SmartBin.Models.Constants;
+using SmartBin.Repositories.Bins;
 
 namespace SmartBin.Services.Bins
 {
@@ -31,24 +29,15 @@ namespace SmartBin.Services.Bins
                 try
                 {
                     using var scope = _serviceProvider.CreateScope();
-                    var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                    var binRepository = scope.ServiceProvider.GetRequiredService<IBinRepository>();
 
                     var threshold = DateTime.UtcNow.Subtract(_offlineTimeout);
 
-                    // Check bins with overdue heartbeats and update status to OFFLINE
-                    var overdueBins = await context.SmartBins
-                        .Where(b => b.Status != SmartBinStatus.Offline && b.LastHeartbeatAt.HasValue && b.LastHeartbeatAt < threshold)
-                        .ToListAsync(stoppingToken);
+                    int count = await binRepository.MarkOverdueBinsOfflineAsync(threshold, stoppingToken);
 
-                    if (overdueBins.Count > 0)
+                    if (count > 0)
                     {
-                        foreach (var bin in overdueBins)
-                        {
-                            bin.Status = SmartBinStatus.Offline;
-                        }
-
-                        await context.SaveChangesAsync(stoppingToken);
-                        _logger.LogInformation("Marked {Count} bin(s) as OFFLINE due to heartbeat timeout.", overdueBins.Count);
+                        _logger.LogInformation("Marked {Count} bin(s) as OFFLINE due to heartbeat timeout.", count);
                     }
                 }
                 catch (Exception ex) when (!stoppingToken.IsCancellationRequested)

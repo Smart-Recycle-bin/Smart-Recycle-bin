@@ -1,3 +1,7 @@
+using SmartBin.Models.Constants;
+using SmartBin.Repositories.Sessions;
+using SmartBin.Services.Sessions;
+
 namespace SmartBin.Services.Bins
 {
     public class SessionCoordinationResult
@@ -10,59 +14,97 @@ namespace SmartBin.Services.Bins
     public interface ISessionCoordinationService
     {
         Task<SessionCoordinationResult> ValidateAndExtendSessionAsync(int sessionId, int extendSeconds = 60);
+        Task EnsureSessionActiveAsync(int sessionId, CancellationToken cancellationToken = default);
+        Task<DateTime> ExtendSessionWindowAsync(int sessionId, int extendSeconds = 60, CancellationToken cancellationToken = default);
+        Task NotifyItemIngestedAsync(
+            int sessionId,
+            int itemId,
+            string wasteType,
+            int estimatedPoints,
+            DateTime windowExpiresAt,
+            CancellationToken cancellationToken = default);
     }
 
     /// <summary>
-    /// Coordination service stub simulating Member 2's DISPOSAL_SESSION service
-    /// Verifies session is active and atomically resets the 60-second window.
+    /// Database-backed coordination service backed by ISessionRepository.
+    /// Verifies session is active and atomically resets the 60-second rolling window.
     /// </summary>
     public class SessionCoordinationService : ISessionCoordinationService
     {
-        // Thread-safe in-memory session registry for V1 coordination
-        private static readonly Dictionary<int, (bool IsActive, DateTime ExpiresAt)> _sessions = new()
-        {
-            [9021] = (true, DateTime.UtcNow.AddSeconds(60)),
-            [1001] = (true, DateTime.UtcNow.AddSeconds(60)),
-            [1002] = (false, DateTime.UtcNow.AddMinutes(-5)) // Expired / inactive session
-        };
+        private readonly ISessionRepository _sessionRepository;
+        private readonly ISessionRealtimeNotifier _realtimeNotifier;
 
-        public Task<SessionCoordinationResult> ValidateAndExtendSessionAsync(int sessionId, int extendSeconds = 60)
+        public SessionCoordinationService(
+            ISessionRepository sessionRepository,
+            ISessionRealtimeNotifier realtimeNotifier)
         {
-            lock (_sessions)
+            _sessionRepository = sessionRepository;
+            _realtimeNotifier = realtimeNotifier;
+        }
+
+        public async Task<SessionCoordinationResult> ValidateAndExtendSessionAsync(int sessionId, int extendSeconds = 60)
+        {
+            var newExpiresAt = await ExtendSessionWindowAsync(sessionId, extendSeconds);
+            return new SessionCoordinationResult
             {
-                if (!_sessions.TryGetValue(sessionId, out var session))
-                {
-                    // Allow positive session IDs in simulator if not explicitly recorded as inactive
-                    if (sessionId > 0 && sessionId != 9999)
-                    {
-                        var newExpiresAt = DateTime.UtcNow.AddSeconds(extendSeconds);
-                        _sessions[sessionId] = (true, newExpiresAt);
-                        return Task.FromResult(new SessionCoordinationResult
-                        {
-                            SessionId = sessionId,
-                            IsActive = true,
-                            WindowExpiresAt = newExpiresAt
-                        });
-                    }
+                SessionId = sessionId,
+                IsActive = true,
+                WindowExpiresAt = newExpiresAt
+            };
+        }
 
+        public async Task EnsureSessionActiveAsync(int sessionId, CancellationToken cancellationToken = default)
+        {
+            var isActive = await _sessionRepository.IsSessionActiveAsync(sessionId, DateTime.UtcNow, cancellationToken);
+
+            if (!isActive)
+            {
+                var session = await _sessionRepository.GetByIdAsync(sessionId, cancellationToken);
+                if (session == null)
+                {
                     throw new ApiException(404, "SESSION_NOT_FOUND", "Disposal session not found.");
                 }
 
-                if (!session.IsActive || DateTime.UtcNow > session.ExpiresAt)
+                throw new ApiException(409, "SESSION_NOT_ACTIVE", "The disposal session is no longer active.");
+            }
+        }
+
+        public async Task<DateTime> ExtendSessionWindowAsync(
+            int sessionId,
+            int extendSeconds = 60,
+            CancellationToken cancellationToken = default)
+        {
+            var extended = await _sessionRepository.ExtendSessionWindowIfActiveAsync(sessionId, extendSeconds, cancellationToken);
+
+            if (!extended.HasValue)
+            {
+                var session = await _sessionRepository.GetByIdAsync(sessionId, cancellationToken);
+                if (session == null)
                 {
-                    throw new ApiException(409, "SESSION_NOT_ACTIVE", "The disposal session is no longer active.");
+                    throw new ApiException(404, "SESSION_NOT_FOUND", "Disposal session not found.");
                 }
 
-                var extendedExpiresAt = DateTime.UtcNow.AddSeconds(extendSeconds);
-                _sessions[sessionId] = (true, extendedExpiresAt);
-
-                return Task.FromResult(new SessionCoordinationResult
-                {
-                    SessionId = sessionId,
-                    IsActive = true,
-                    WindowExpiresAt = extendedExpiresAt
-                });
+                throw new ApiException(409, "SESSION_NOT_ACTIVE", "The disposal session is no longer active.");
             }
+
+            return extended.Value;
+        }
+
+        public Task NotifyItemIngestedAsync(
+            int sessionId,
+            int itemId,
+            string wasteType,
+            int estimatedPoints,
+            DateTime windowExpiresAt,
+            CancellationToken cancellationToken = default)
+        {
+            return _realtimeNotifier.NotifyItemIngestedAsync(
+                sessionId,
+                itemId,
+                wasteType,
+                estimatedPoints,
+                windowExpiresAt,
+                cancellationToken);
         }
     }
 }
