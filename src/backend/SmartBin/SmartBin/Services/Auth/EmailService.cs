@@ -1,4 +1,4 @@
-﻿using System.Net;
+using System.Net;
 using System.Net.Mail;
 
 namespace SmartBin.Services.Auth
@@ -10,6 +10,19 @@ namespace SmartBin.Services.Auth
         public EmailService(IConfiguration configuration)
         {
             _configuration = configuration;
+        }
+
+        public bool IsConfigured()
+        {
+            var host = _configuration["EmailSettings:Host"];
+            var senderEmail = _configuration["EmailSettings:SenderEmail"];
+            var password = _configuration["EmailSettings:Password"];
+
+            return int.TryParse(_configuration["EmailSettings:Port"], out var port) &&
+                   port > 0 &&
+                   !string.IsNullOrWhiteSpace(host) &&
+                   !string.IsNullOrWhiteSpace(senderEmail) &&
+                   !string.IsNullOrWhiteSpace(password);
         }
 
         // Email verification OTP
@@ -35,6 +48,20 @@ namespace SmartBin.Services.Auth
                 otp,
                 "SmartBin - Password Reset",
                 "Your password reset code"
+            );
+        }
+
+        // Collector account onboarding setup OTP
+        public async Task SendCollectorSetupOtpAsync(
+            string email,
+            string displayName,
+            string otp)
+        {
+            await SendOtpEmailAsync(
+                email,
+                otp,
+                "SmartBin - Collector Account Created",
+                $"Hello {displayName}, your EcoBin Collector account is active. Use this setup code in the password reset flow to set your password"
             );
         }
 

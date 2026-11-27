@@ -18,8 +18,11 @@ namespace SmartBin.Models
         public DateTime LastActiveAt { get; set; }
 
         [MaxLength(150)]
+        public string? District { get; set; }
 
+        public DateTime? DeactivatedAt { get; set; }
 
+        public int? DeactivatedByAdminId { get; set; }
 
         public DateTime? SuspendedAt { get; set; }
 

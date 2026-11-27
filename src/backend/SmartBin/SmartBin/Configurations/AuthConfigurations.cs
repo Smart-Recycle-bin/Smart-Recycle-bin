@@ -5,6 +5,14 @@ using SmartBin.Models;
 
 namespace SmartBin.Configurations
 {
+    public class ApplicationUserConfiguration : IEntityTypeConfiguration<ApplicationUser>
+    {
+        public void Configure(EntityTypeBuilder<ApplicationUser> builder)
+        {
+            builder.HasIndex(u => u.District);
+        }
+    }
+
     public class IdentityUserRoleConfiguration : IEntityTypeConfiguration<IdentityUserRole<int>>
     {
         public void Configure(EntityTypeBuilder<IdentityUserRole<int>> builder)
