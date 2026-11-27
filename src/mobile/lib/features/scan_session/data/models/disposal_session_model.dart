@@ -10,10 +10,12 @@ class DetectedItemModel extends DetectedItemEntity {
 
   factory DetectedItemModel.fromJson(Map<String, dynamic> json) {
     return DetectedItemModel(
-      itemId: json['itemId'] ?? '',
-      wasteType: json['wasteType'] ?? 'PLASTIC',
-      points: json['estimatedPoints'] ?? json['points'] ?? 10,
-      imageUrl: json['imageUrl'],
+      itemId: json['itemId']?.toString() ?? '',
+      wasteType: json['wasteType']?.toString() ?? 'PLASTIC',
+      points: (json['estimatedPoints'] as num?)?.toInt() ??
+          (json['points'] as num?)?.toInt() ??
+          10,
+      imageUrl: json['imageUrl']?.toString(),
     );
   }
 
@@ -33,6 +35,7 @@ class DisposalSessionModel extends DisposalSessionEntity {
     required super.binId,
     required super.binName,
     required super.status,
+    super.surveyId,
     required super.totalPoints,
     required super.countdownSeconds,
     required super.items,
@@ -40,20 +43,27 @@ class DisposalSessionModel extends DisposalSessionEntity {
 
   factory DisposalSessionModel.fromJson(Map<String, dynamic> json) {
     final rawItems = json['items'] as List? ?? [];
-    final itemsList = rawItems.map((e) => DetectedItemModel.fromJson(e)).toList();
+    final itemsList = rawItems
+        .map((e) => DetectedItemModel.fromJson(Map<String, dynamic>.from(e as Map)))
+        .toList();
 
-    int points = json['totalPoints'] ?? 0;
+    final parsedBinId = json['binId']?.toString() ?? '1';
+    final parsedSurveyId = json['surveyId']?.toString();
+
+    int points = (json['totalPoints'] as num?)?.toInt() ?? 0;
     if (points == 0 && itemsList.isNotEmpty) {
       points = itemsList.fold(0, (sum, item) => sum + item.points);
     }
 
     return DisposalSessionModel(
-      sessionId: json['sessionId'] ?? '',
-      binId: json['binId'] ?? 'bin-210',
-      binName: json['binName'] ?? 'Bin#${json['binId']?.replaceAll('bin-', '') ?? '210'}',
-      status: json['status'] ?? 'active',
+      sessionId: json['sessionId']?.toString() ?? '',
+      binId: parsedBinId,
+      binName: json['binName']?.toString() ??
+          'Bin#${parsedBinId.replaceAll('bin-', '').padLeft(3, '0')}',
+      status: json['status']?.toString() ?? 'active',
+      surveyId: (parsedSurveyId != null && parsedSurveyId.isNotEmpty) ? parsedSurveyId : null,
       totalPoints: points,
-      countdownSeconds: json['countdownSeconds'] ?? 90,
+      countdownSeconds: (json['countdownSeconds'] as num?)?.toInt() ?? 60,
       items: itemsList,
     );
   }
@@ -64,6 +74,7 @@ class DisposalSessionModel extends DisposalSessionEntity {
       'binId': binId,
       'binName': binName,
       'status': status,
+      if (surveyId != null) 'surveyId': surveyId,
       'totalPoints': totalPoints,
       'countdownSeconds': countdownSeconds,
       'items': items.map((e) => (e as DetectedItemModel).toJson()).toList(),

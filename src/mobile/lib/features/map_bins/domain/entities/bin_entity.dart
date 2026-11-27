@@ -1,6 +1,7 @@
 class BinEntity {
   final String binId;
   final String name;
+  final String? qrCode;
   final double latitude;
   final double longitude;
   final String district;
@@ -12,6 +13,7 @@ class BinEntity {
   const BinEntity({
     required this.binId,
     required this.name,
+    this.qrCode,
     required this.latitude,
     required this.longitude,
     required this.district,
@@ -37,6 +39,7 @@ class BinEntity {
   BinEntity copyWith({
     String? binId,
     String? name,
+    String? qrCode,
     double? latitude,
     double? longitude,
     String? district,
@@ -48,6 +51,7 @@ class BinEntity {
     return BinEntity(
       binId: binId ?? this.binId,
       name: name ?? this.name,
+      qrCode: qrCode ?? this.qrCode,
       latitude: latitude ?? this.latitude,
       longitude: longitude ?? this.longitude,
       district: district ?? this.district,

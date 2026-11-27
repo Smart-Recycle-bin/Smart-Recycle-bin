@@ -11,14 +11,23 @@ class SurveyItemModel extends SurveyItemEntity {
   });
 
   factory SurveyItemModel.fromJson(Map<String, dynamic> json) {
+    final detected = json['detectedWasteType']?.toString() ??
+        json['wasteType']?.toString() ??
+        'Plastic';
+    final confirmed = json['confirmedWasteType']?.toString() ??
+        json['wasteType']?.toString() ??
+        detected;
+
     return SurveyItemModel(
-      itemId: json['itemId'] ?? '',
-      detectedWasteType: json['detectedWasteType'] ?? json['wasteType'] ?? 'Plastic',
-      confirmedWasteType: json['confirmedWasteType'] ?? json['wasteType'] ?? 'Plastic',
-      points: json['points'] ?? json['estimatedPoints'] ?? 5,
-      imageUrl: json['imageUrl'] ??
+      itemId: json['itemId']?.toString() ?? '',
+      detectedWasteType: detected,
+      confirmedWasteType: confirmed,
+      points: (json['points'] as num?)?.toInt() ??
+          (json['estimatedPoints'] as num?)?.toInt() ??
+          5,
+      imageUrl: json['imageUrl']?.toString() ??
           'https://images.unsplash.com/photo-1574974671999-24b7dfba0d53?w=300',
-      isCorrected: json['isCorrected'] ?? false,
+      isCorrected: json['isCorrected'] == true,
     );
   }
 

@@ -18,5 +18,6 @@ namespace SmartBin.Services.Bins
     public interface IIngestionService
     {
         Task<IngestItemResponseDto> IngestItemAsync(int sessionId, IngestItemRequestDto request, string? deviceKey);
+        Task<IngestItemResponseDto> IngestItemByBinAsync(string binIdentifier, IngestBinItemRequestDto request, string? deviceKey);
     }
 }

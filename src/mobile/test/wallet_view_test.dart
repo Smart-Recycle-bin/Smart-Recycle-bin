@@ -9,8 +9,14 @@ import 'package:ecobin/features/wallet/presentation/viewmodels/wallet_viewmodel.
 import 'package:ecobin/features/wallet/presentation/views/wallet_view.dart';
 
 class FakeWalletRepository implements WalletRepository {
+  bool shouldFail;
+  FakeWalletRepository({this.shouldFail = false});
+
   @override
   Future<Result<Map<String, dynamic>>> getWalletBalance() async {
+    if (shouldFail) {
+      return const Result.failure('Session expired (401)');
+    }
     return Result.success({
       'availablePoints': 780,
       'lifetimeEarnedPoints': 3120,
@@ -19,6 +25,9 @@ class FakeWalletRepository implements WalletRepository {
 
   @override
   Future<Result<List<LedgerEntryEntity>>> getLedger() async {
+    if (shouldFail) {
+      return const Result.failure('Session expired (401)');
+    }
     // Use exact backend JSON payload (int transactionId, nullable fields)
     final backendItems = [
       {
@@ -89,5 +98,33 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Recycle Survey Bonus'), findsNothing);
     expect(find.text('Gift Redeem'), findsOneWidget);
+  });
+
+  testWidgets('WalletView displays inline error banner when refresh fails with cached entries', (tester) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 2.75;
+    addTearDown(() => tester.view.resetPhysicalSize());
+
+    final repo = FakeWalletRepository();
+    final walletVm = WalletViewModel(walletRepository: repo);
+
+    await tester.pumpWidget(
+      ChangeNotifierProvider<WalletViewModel>.value(
+        value: walletVm,
+        child: const MaterialApp(
+          home: WalletView(),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Recycle Survey Bonus'), findsOneWidget);
+
+    repo.shouldFail = true;
+    await tester.tap(find.byTooltip('Refresh'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Could not refresh balance: Session expired (401)'), findsOneWidget);
+    expect(find.text('Retry'), findsOneWidget);
+    expect(find.text('Recycle Survey Bonus'), findsOneWidget);
   });
 }

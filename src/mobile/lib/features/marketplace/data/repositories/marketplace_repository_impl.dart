@@ -1,5 +1,6 @@
 import '../../../../core/utils/result.dart';
 import '../../domain/entities/catalog_item_entity.dart';
+import '../../domain/entities/redeemed_voucher_entity.dart';
 import '../../domain/repositories/marketplace_repository.dart';
 import '../datasources/marketplace_remote_data_source.dart';
 
@@ -47,6 +48,16 @@ class MarketplaceRepositoryImpl implements MarketplaceRepository {
     try {
       final code = await remoteDataSource.redeemReward(itemId, denominationEgp, pointsCost);
       return Result.success(code);
+    } catch (e) {
+      return Result.failure(e.toString());
+    }
+  }
+
+  @override
+  Future<Result<List<RedeemedVoucherEntity>>> getMyVouchers({String? status}) async {
+    try {
+      final vouchers = await remoteDataSource.getMyVouchers(status: status);
+      return Result.success(vouchers);
     } catch (e) {
       return Result.failure(e.toString());
     }

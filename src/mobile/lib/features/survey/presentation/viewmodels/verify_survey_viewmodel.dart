@@ -11,7 +11,7 @@ class VerifySurveyViewModel extends ChangeNotifier {
   SurveyEntity? _survey;
   List<SurveyItemEntity> _items = [];
   int _aiRating = 4;
-  int _totalRewardPoints = 50;
+  int _totalRewardPoints = 0;
   bool _isLoading = false;
   String? _errorMessage;
 
@@ -34,6 +34,7 @@ class VerifySurveyViewModel extends ChangeNotifier {
       onSuccess: (surveyData) {
         _survey = surveyData;
         _items = List.from(surveyData.items);
+        _totalRewardPoints = surveyData.points;
       },
       onFailure: (error) {
         _errorMessage = error;
@@ -68,6 +69,7 @@ class VerifySurveyViewModel extends ChangeNotifier {
 
     final result = await surveyRepository.submitSurvey(
       surveyId: _survey!.surveyId,
+      sessionId: _survey!.sessionId,
       items: _items,
       aiRating: _aiRating,
     );
@@ -80,7 +82,7 @@ class VerifySurveyViewModel extends ChangeNotifier {
         return true;
       },
       onFailure: (error) {
-        _errorMessage = error;
+        _errorMessage = error.replaceFirst('Exception: ', '');
         notifyListeners();
         return false;
       },

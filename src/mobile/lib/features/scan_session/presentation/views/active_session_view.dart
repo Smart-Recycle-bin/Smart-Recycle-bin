@@ -7,14 +7,37 @@ import 'package:ecobin/features/scan_session/presentation/viewmodels/active_sess
 import 'package:ecobin/features/survey/presentation/views/verify_survey_view.dart';
 import 'package:ecobin/features/profile/presentation/views/support_view.dart';
 
-class ActiveSessionView extends StatelessWidget {
+class ActiveSessionView extends StatefulWidget {
   const ActiveSessionView({super.key});
+
+  @override
+  State<ActiveSessionView> createState() => _ActiveSessionViewState();
+}
+
+class _ActiveSessionViewState extends State<ActiveSessionView> {
+  bool _navigatedToSurvey = false;
+
+  void _navigateToSurvey(String? surveyId) {
+    if (_navigatedToSurvey || !mounted) return;
+    _navigatedToSurvey = true;
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (_) => VerifySurveyView(surveyId: surveyId ?? 'srv-2043'),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<ActiveSessionViewModel>();
     final session = vm.currentSession;
     final items = session?.items ?? [];
+
+    if (session != null && !session.isActive && !_navigatedToSurvey) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _navigateToSurvey(session.surveyId);
+      });
+    }
 
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
@@ -159,7 +182,7 @@ class ActiveSessionView extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      '+${session?.totalPoints ?? 35} PTS',
+                      '+${session?.totalPoints ?? 0} PTS',
                       style: AppTypography.titlePlex.copyWith(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
@@ -173,7 +196,32 @@ class ActiveSessionView extends StatelessWidget {
             const SizedBox(height: 14),
 
             // Detected Items List (Cards with green recycling icon)
-            ...items.map((item) {
+            if (items.isEmpty)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.sensors_rounded, color: AppColors.primaryGreen),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Waiting for items from bin camera & AI evaluation...',
+                        style: AppTypography.bodyPlex.copyWith(
+                          fontSize: 13,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            else
+              ...items.map((item) {
               return Container(
                 margin: const EdgeInsets.only(bottom: 10),
                 padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
@@ -219,6 +267,17 @@ class ActiveSessionView extends StatelessWidget {
             }),
             const SizedBox(height: 14),
 
+            if (vm.errorMessage != null) ...[
+              Text(
+                vm.errorMessage!,
+                style: AppTypography.bodyPlex.copyWith(
+                  color: AppColors.danger,
+                  fontSize: 13,
+                ),
+              ),
+              const SizedBox(height: 10),
+            ],
+
             // Information prompt
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -244,18 +303,22 @@ class ActiveSessionView extends StatelessWidget {
 
             // Finish Session Button
             ElevatedButton.icon(
-              icon: const Icon(Icons.check_circle_outline, size: 22),
+              icon: vm.isLoading
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                    )
+                  : const Icon(Icons.check_circle_outline, size: 22),
               label: const Text('Finish Session'),
-              onPressed: () async {
-                await vm.endSession();
-                if (context.mounted) {
-                  Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(
-                      builder: (_) => const VerifySurveyView(surveyId: 'srv-2043'),
-                    ),
-                  );
-                }
-              },
+              onPressed: vm.isLoading
+                  ? null
+                  : () async {
+                      final ended = await vm.endSession();
+                      if (ended && context.mounted) {
+                        _navigateToSurvey(vm.currentSession?.surveyId);
+                      }
+                    },
             ),
             const SizedBox(height: 14),
 
@@ -265,7 +328,7 @@ class ActiveSessionView extends StatelessWidget {
                 onTap: () {
                   Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder: (_) => const SupportView(sessionId: 's-9021'),
+                      builder: (_) => SupportView(sessionId: session?.sessionId ?? ''),
                     ),
                   );
                 },
@@ -337,15 +400,15 @@ class ActiveSessionView extends StatelessWidget {
                         const SizedBox(height: 4),
                         RichText(
                           text: TextSpan(
-                            text: 'You\'ll receive a validation survey notification in ~2 mins to verify items and earn ',
+                            text: 'Verify your detected items after finishing to earn ',
                             style: AppTypography.bodyPlex.copyWith(
                               fontSize: 12,
                               color: AppColors.textSecondary,
                             ),
-                            children: const [
+                            children: [
                               TextSpan(
-                                text: '+35 Points',
-                                style: TextStyle(
+                                text: '+${session?.totalPoints ?? 0} Points',
+                                style: const TextStyle(
                                   color: AppColors.primaryGreen,
                                   fontWeight: FontWeight.bold,
                                 ),

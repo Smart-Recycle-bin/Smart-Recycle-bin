@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
- using SmartBin.Dtos.Auth;
+using SmartBin.Common.Swagger;
+using SmartBin.Dtos.Auth;
 using SmartBin.DTOs.Auth;
+using SmartBin.DTOs.Common;
 using SmartBin.Services;
 using SmartBin.Services.Auth;
 using System.Security.Claims;
@@ -21,6 +23,14 @@ namespace SmartBin.Controllers
         }
 
         [HttpPost("login")]
+        [ProducesResponseType(typeof(ApiResponse<LoginResponseDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status403Forbidden)]
+        [SwaggerResponseExample(StatusCodes.Status200OK, SwaggerExamples.AuthLoginSuccess)]
+        [SwaggerResponseExample(StatusCodes.Status400BadRequest, SwaggerExamples.ValidationError)]
+        [SwaggerResponseExample(StatusCodes.Status401Unauthorized, SwaggerExamples.AuthLoginUnauthorized)]
+        [SwaggerResponseExample(StatusCodes.Status403Forbidden, SwaggerExamples.AuthLoginForbidden)]
         public async Task<IActionResult> Login(
             [FromBody] LoginRequestDto request)
         {
@@ -51,6 +61,12 @@ namespace SmartBin.Controllers
         }
 
         [HttpPost("register")]
+        [ProducesResponseType(typeof(ApiResponse<RegisterResponseDto>), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status409Conflict)]
+        [SwaggerResponseExample(StatusCodes.Status201Created, SwaggerExamples.AuthRegisterSuccess)]
+        [SwaggerResponseExample(StatusCodes.Status400BadRequest, SwaggerExamples.ValidationError)]
+        [SwaggerResponseExample(StatusCodes.Status409Conflict, SwaggerExamples.AuthRegisterConflict)]
         public async Task<IActionResult> Register(
             [FromBody] RegisterRequestDto request)
         {
@@ -80,6 +96,12 @@ namespace SmartBin.Controllers
 
 
         [HttpPost("verify-email")]
+        [ProducesResponseType(typeof(ApiResponse<VerifyEmailResponseDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status429TooManyRequests)]
+        [SwaggerResponseExample(StatusCodes.Status200OK, SwaggerExamples.AuthVerifyEmailSuccess)]
+        [SwaggerResponseExample(StatusCodes.Status400BadRequest, SwaggerExamples.AuthInvalidOtp)]
+        [SwaggerResponseExample(StatusCodes.Status429TooManyRequests, SwaggerExamples.AuthTooManyAttempts)]
         public async Task<IActionResult> VerifyEmail(
             [FromBody] VerifyEmailRequestDto request)
         {
@@ -108,6 +130,12 @@ namespace SmartBin.Controllers
         }
 
         [HttpPost("resend-verification-otp")]
+        [ProducesResponseType(typeof(ApiResponse<ResendVerificationOtpResponseDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status429TooManyRequests)]
+        [SwaggerResponseExample(StatusCodes.Status200OK, SwaggerExamples.AuthResendOtpSuccess)]
+        [SwaggerResponseExample(StatusCodes.Status400BadRequest, SwaggerExamples.ValidationError)]
+        [SwaggerResponseExample(StatusCodes.Status429TooManyRequests, SwaggerExamples.AuthTooManyRequests)]
         public async Task<IActionResult> ResendVerificationOtp(
             [FromBody] ResendVerificationOtpRequestDto request)
         {
@@ -139,6 +167,10 @@ namespace SmartBin.Controllers
 
         [Authorize]
         [HttpPost("logout")]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+        [SwaggerResponseExample(StatusCodes.Status200OK, SwaggerExamples.AuthLogoutSuccess)]
+        [SwaggerResponseExample(StatusCodes.Status401Unauthorized, SwaggerExamples.Unauthorized)]
         public async Task<IActionResult> Logout(
          [FromBody] LogoutRequestDto? request)
         {
@@ -190,6 +222,12 @@ namespace SmartBin.Controllers
         [AllowAnonymous]
         [HttpPost("refresh")]
         [HttpPost("refresh-token")]
+        [ProducesResponseType(typeof(ApiResponse<RefreshResponseDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+        [SwaggerResponseExample(StatusCodes.Status200OK, SwaggerExamples.AuthRefreshSuccess)]
+        [SwaggerResponseExample(StatusCodes.Status400BadRequest, SwaggerExamples.ValidationError)]
+        [SwaggerResponseExample(StatusCodes.Status401Unauthorized, SwaggerExamples.AuthRefreshUnauthorized)]
         public async Task<IActionResult> Refresh(
           [FromBody] RefreshRequestDto request)
         {
@@ -221,6 +259,12 @@ namespace SmartBin.Controllers
 
         [AllowAnonymous]
         [HttpPost("forgot-password")]
+        [ProducesResponseType(typeof(ApiResponse<ForgotPasswordResponseDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status429TooManyRequests)]
+        [SwaggerResponseExample(StatusCodes.Status200OK, SwaggerExamples.AuthForgotPasswordSuccess)]
+        [SwaggerResponseExample(StatusCodes.Status400BadRequest, SwaggerExamples.ValidationError)]
+        [SwaggerResponseExample(StatusCodes.Status429TooManyRequests, SwaggerExamples.AuthTooManyRequests)]
         public async Task<IActionResult> ForgotPassword(
             [FromBody] ForgotPasswordRequestDto request)
         {
@@ -250,6 +294,12 @@ namespace SmartBin.Controllers
 
         [AllowAnonymous]
         [HttpPost("verify-reset-otp")]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status429TooManyRequests)]
+        [SwaggerResponseExample(StatusCodes.Status200OK, SwaggerExamples.AuthVerifyResetOtpSuccess)]
+        [SwaggerResponseExample(StatusCodes.Status400BadRequest, SwaggerExamples.AuthInvalidOtp)]
+        [SwaggerResponseExample(StatusCodes.Status429TooManyRequests, SwaggerExamples.AuthTooManyAttempts)]
         public async Task<IActionResult> VerifyResetOtp(
             [FromBody] VerifyResetOtpRequestDto request)
         {
@@ -283,6 +333,12 @@ namespace SmartBin.Controllers
 
         [AllowAnonymous]
         [HttpPost("reset-password")]
+        [ProducesResponseType(typeof(ApiResponse<ResetPasswordResponseDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status429TooManyRequests)]
+        [SwaggerResponseExample(StatusCodes.Status200OK, SwaggerExamples.AuthResetPasswordSuccess)]
+        [SwaggerResponseExample(StatusCodes.Status400BadRequest, SwaggerExamples.AuthInvalidOtp)]
+        [SwaggerResponseExample(StatusCodes.Status429TooManyRequests, SwaggerExamples.AuthTooManyAttempts)]
         public async Task<IActionResult> ResetPassword(
             [FromBody] ResetPasswordRequestDto request)
         {

@@ -1,10 +1,19 @@
 using System.Net;
 using System.Net.Http.Headers;
+using System.Net.Http.Json;
 using System.Text.Json;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging.Abstractions;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
+using SmartBin.Common;
 using SmartBin.Models;
 using SmartBin.Models.Constants;
+using SmartBin.Services;
+using SmartBin.Services.Bins;
 using SmartBin.Services.Sessions;
 using SmartBin.Tests.Infrastructure;
 
@@ -152,6 +161,86 @@ namespace SmartBin.Tests
             var session = await _factory.ExecuteDbAsync(db =>
                 db.DisposalSessions.AsNoTracking().FirstAsync(s => s.SessionId == sessionId));
             Assert.True(session.WindowExpiresAt > DateTime.UtcNow.AddSeconds(45));
+        }
+
+        [Fact]
+        public async Task IngestItemByBin_ResolvesLockedUserWithoutSessionId_ReturnsAngleAndRejectsAfterEnd()
+        {
+            using var userClient = _factory.CreateAuthorizedClient(_factory.Citizen1Id);
+            var startResp = await userClient.PostAsJsonAsync(
+                $"/api/v1/bins/{_factory.AvailableBinQr}/sessions",
+                new { qrPayload = _factory.AvailableBinQr });
+            Assert.Equal(HttpStatusCode.Created, startResp.StatusCode);
+
+            using var startDoc = JsonDocument.Parse(await startResp.Content.ReadAsStringAsync());
+            int sessionId = startDoc.RootElement.GetProperty("data").GetProperty("sessionId").GetInt32();
+
+            using var deviceClient = _factory.CreateClient();
+            deviceClient.DefaultRequestHeaders.Add("X-Device-Key", "device-secret");
+            using var form = CreateImageForm("metal_can.jpg");
+
+            var ingestResp = await deviceClient.PostAsync($"/api/v1/bins/{_factory.AvailableBinQr}/items", form);
+            Assert.Equal(HttpStatusCode.Created, ingestResp.StatusCode);
+
+            using var ingestDoc = JsonDocument.Parse(await ingestResp.Content.ReadAsStringAsync());
+            var data = ingestDoc.RootElement.GetProperty("data");
+            Assert.Equal(sessionId, data.GetProperty("sessionId").GetInt32());
+            Assert.Equal(_factory.AvailableBinId, data.GetProperty("binId").GetInt32());
+            Assert.Equal(_factory.Citizen1Id, data.GetProperty("userId").GetInt32());
+            Assert.Equal("METAL", data.GetProperty("wasteType").GetString());
+            Assert.Equal("metal", data.GetProperty("predictedLabel").GetString());
+            Assert.Equal(72, data.GetProperty("angle").GetInt32());
+
+            // End session -> bin lock releases and further hardware uploads fail with 409 NO_ACTIVE_SESSION
+            var endResp = await userClient.PostAsync($"/api/v1/sessions/{sessionId}/end", null);
+            Assert.Equal(HttpStatusCode.OK, endResp.StatusCode);
+
+            using var formAfter = CreateImageForm("plastic.jpg");
+            var rejectedResp = await deviceClient.PostAsync($"/api/v1/bins/{_factory.AvailableBinQr}/items", formAfter);
+            Assert.Equal(HttpStatusCode.Conflict, rejectedResp.StatusCode);
+            using var errDoc = JsonDocument.Parse(await rejectedResp.Content.ReadAsStringAsync());
+            Assert.Equal("NO_ACTIVE_SESSION", errDoc.RootElement.GetProperty("error").GetProperty("code").GetString());
+        }
+
+        [Fact]
+        public async Task MlNetClassificationAdapter_LoadsTrainedModelAndClassifiesValidJpeg()
+        {
+            var config = new ConfigurationBuilder()
+                .AddInMemoryCollection(new Dictionary<string, string?>
+                {
+                    ["MLModel:ModelPath"] = Path.Combine(AppContext.BaseDirectory, "AI", "MLModel.mlnet")
+                })
+                .Build();
+
+            var adapter = new MlNetClassificationAdapter(config, NullLogger<MlNetClassificationAdapter>.Instance);
+
+            using var img = new Image<Rgb24>(64, 64, new Rgb24(220, 220, 220));
+            using var jpegStream = new MemoryStream();
+            await img.SaveAsJpegAsync(jpegStream);
+            jpegStream.Position = 0;
+
+            var formFile = new FormFile(jpegStream, 0, jpegStream.Length, "image", "sample.jpg")
+            {
+                Headers = new HeaderDictionary(),
+                ContentType = "image/jpeg"
+            };
+
+            var result = await adapter.ClassifyImageAsync(formFile, jpegStream);
+
+            Assert.Contains(result.WasteType, WasteTypeNames.All);
+            Assert.Contains(result.PredictedLabel, new[] { "biological", "metal", "paper", "plastic", "trash" });
+            Assert.Contains(result.Angle, new[] { 0, 72, 144, 216, 288 });
+            Assert.True(result.ConfidenceScore > 0m && result.ConfidenceScore <= 1m);
+
+            using var invalidStream = new MemoryStream(new byte[] { 1, 2, 3, 4 });
+            var invalidFile = new FormFile(invalidStream, 0, invalidStream.Length, "image", "bad.jpg")
+            {
+                Headers = new HeaderDictionary(),
+                ContentType = "image/jpeg"
+            };
+
+            var ex = await Assert.ThrowsAsync<ApiException>(() => adapter.ClassifyImageAsync(invalidFile, invalidStream));
+            Assert.Equal(400, ex.StatusCode);
         }
 
         private async Task<int> CreateSessionAsync(DateTime windowExpiresAt, string status = SessionStatus.Active)

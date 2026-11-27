@@ -4,7 +4,9 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi;
 using SmartBin.Common;
+using SmartBin.Common.Swagger;
 using SmartBin.Context;
 using SmartBin.Models;
 using SmartBin.Repositories;
@@ -67,7 +69,32 @@ namespace SmartBin.DependencyInjection
             });
 
             services.AddEndpointsApiExplorer();
-            services.AddSwaggerGen();
+            services.AddSwaggerGen(options =>
+            {
+                options.SwaggerDoc("v1", new OpenApiInfo
+                {
+                    Title = "EcoBin / SmartBin API",
+                    Version = "v1",
+                    Description = "Smart recycling bin backend API with JWT authentication and response examples."
+                });
+
+                options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+                {
+                    Name = "Authorization",
+                    Description = "Enter JWT Bearer token",
+                    In = ParameterLocation.Header,
+                    Type = SecuritySchemeType.Http,
+                    Scheme = "bearer",
+                    BearerFormat = "JWT"
+                });
+
+                options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
+                {
+                    [new OpenApiSecuritySchemeReference("Bearer", document)] = []
+                });
+
+                options.OperationFilter<SwaggerResponseExamplesOperationFilter>();
+            });
             services.AddHttpContextAccessor();
 
             return services;
@@ -140,7 +167,7 @@ namespace SmartBin.DependencyInjection
             services.AddScoped<IBinService, BinService>();
             services.AddScoped<IIngestionService, IngestionService>();
             services.AddScoped<ISessionCoordinationService, SessionCoordinationService>();
-            services.AddSingleton<IClassificationAdapter, ClassificationAdapter>();
+            services.AddSingleton<IClassificationAdapter, MlNetClassificationAdapter>();
             services.AddHostedService<BinHeartbeatSimulatorService>();
 
             // Sessions, Surveys, Wallet & SignalR

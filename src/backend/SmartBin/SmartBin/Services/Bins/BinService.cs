@@ -68,6 +68,7 @@ namespace SmartBin.Services.Bins
             {
                 BinId = x.Bin.BinId,
                 Name = $"Bin#{x.Bin.BinId:D3}",
+                QrCode = x.Bin.QRCode,
                 Latitude = x.Bin.Latitude,
                 Longitude = x.Bin.Longitude,
                 Status = SmartBinStatus.ToCitizenStatus(x.Bin.Status),

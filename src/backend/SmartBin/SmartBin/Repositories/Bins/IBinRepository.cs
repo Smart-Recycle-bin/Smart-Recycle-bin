@@ -5,6 +5,7 @@ namespace SmartBin.Repositories.Bins
     public interface IBinRepository
     {
         Task<Models.SmartBin?> GetByIdAsync(int binId, CancellationToken cancellationToken = default);
+        Task<Models.SmartBin?> GetByIdentifierAsync(string identifier, CancellationToken cancellationToken = default);
         Task<Models.SmartBin?> GetByIdWithCollectorAsync(int binId, CancellationToken cancellationToken = default);
         Task<List<Models.SmartBin>> GetAllForSpatialQueryAsync(CancellationToken cancellationToken = default);
         Task<(List<Models.SmartBin> Items, int TotalItems)> GetAdminBinsPagedAsync(

@@ -118,6 +118,13 @@ class AuthViewModel extends ChangeNotifier {
     );
   }
 
+  void handleSessionExpired() {
+    _currentUser = null;
+    _isLoading = false;
+    _errorMessage = 'Session expired. Please sign in again.';
+    notifyListeners();
+  }
+
   Future<void> logout() async {
     _setLoading(true);
     await authRepository.logout();

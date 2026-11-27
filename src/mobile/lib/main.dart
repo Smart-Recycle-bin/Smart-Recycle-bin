@@ -53,6 +53,8 @@ void main() async {
 
   final sharedPrefs = await SharedPreferences.getInstance();
   final tokenStorage = TokenStorage(sharedPrefs);
+  final navigatorKey = GlobalKey<NavigatorState>();
+  final messengerKey = GlobalKey<ScaffoldMessengerState>();
   final apiClient = ApiClient(
     tokenStorage: tokenStorage,
     baseUrl: AppConfig.apiBaseUrl,
@@ -63,6 +65,22 @@ void main() async {
     remoteDataSource: AuthRemoteDataSourceImpl(apiClient: apiClient),
     tokenStorage: tokenStorage,
   );
+  final authViewModel = AuthViewModel(authRepository: authRepository)..init();
+
+  apiClient.onSessionExpired = () {
+    authViewModel.handleSessionExpired();
+    navigatorKey.currentState?.pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const LoginView()),
+      (route) => false,
+    );
+    messengerKey.currentState
+      ?..hideCurrentSnackBar()
+      ..showSnackBar(
+        const SnackBar(
+          content: Text('Session expired. Please sign in again.'),
+        ),
+      );
+  };
 
   final binsRepository = BinsRepositoryImpl(
     remoteDataSource: BinsRemoteDataSourceImpl(apiClient: apiClient),
@@ -91,9 +109,7 @@ void main() async {
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(
-          create: (_) => AuthViewModel(authRepository: authRepository)..init(),
-        ),
+        ChangeNotifierProvider<AuthViewModel>.value(value: authViewModel),
         ChangeNotifierProvider(
           create: (_) => MapBinsViewModel(binsRepository: binsRepository),
         ),
@@ -119,20 +135,33 @@ void main() async {
           create: (_) => ProfileViewModel(profileRepository: profileRepository),
         ),
       ],
-      child: EcoBinApp(isAuthenticated: tokenStorage.isAuthenticated),
+      child: EcoBinApp(
+        isAuthenticated: tokenStorage.isAuthenticated,
+        navigatorKey: navigatorKey,
+        messengerKey: messengerKey,
+      ),
     ),
   );
 }
 
 class EcoBinApp extends StatelessWidget {
   final bool isAuthenticated;
+  final GlobalKey<NavigatorState>? navigatorKey;
+  final GlobalKey<ScaffoldMessengerState>? messengerKey;
 
-  const EcoBinApp({super.key, required this.isAuthenticated});
+  const EcoBinApp({
+    super.key,
+    required this.isAuthenticated,
+    this.navigatorKey,
+    this.messengerKey,
+  });
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'EcoBin',
+      navigatorKey: navigatorKey,
+      scaffoldMessengerKey: messengerKey,
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       home: isAuthenticated ? const MainShellView() : const LoginView(),

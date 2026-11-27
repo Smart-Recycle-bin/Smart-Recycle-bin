@@ -4,6 +4,7 @@ class BinModel extends BinEntity {
   const BinModel({
     required super.binId,
     required super.name,
+    super.qrCode,
     required super.latitude,
     required super.longitude,
     required super.district,
@@ -16,10 +17,12 @@ class BinModel extends BinEntity {
   factory BinModel.fromJson(Map<String, dynamic> json) {
     final id = json['binId']?.toString() ?? '';
     final nameStr = json['name'] as String? ?? (id.isNotEmpty ? 'Bin#$id' : 'Bin#101');
+    final qr = json['qrCode']?.toString();
 
     return BinModel(
       binId: id,
       name: nameStr,
+      qrCode: (qr != null && qr.isNotEmpty) ? qr : null,
       latitude: (json['latitude'] as num?)?.toDouble() ?? 30.0444,
       longitude: (json['longitude'] as num?)?.toDouble() ?? 31.2357,
       district: json['district'] as String? ?? 'Downtown Cairo',
@@ -34,6 +37,7 @@ class BinModel extends BinEntity {
     return {
       'binId': binId,
       'name': name,
+      if (qrCode != null) 'qrCode': qrCode,
       'latitude': latitude,
       'longitude': longitude,
       'district': district,

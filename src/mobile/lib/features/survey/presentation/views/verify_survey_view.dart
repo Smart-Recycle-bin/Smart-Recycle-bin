@@ -5,6 +5,8 @@ import '../../../../core/constants/app_typography.dart';
 import '../../../shell/presentation/widgets/ecobin_app_bar.dart';
 import '../viewmodels/verify_survey_viewmodel.dart';
 import '../../../shell/presentation/views/main_shell_view.dart';
+import '../../../wallet/presentation/viewmodels/wallet_viewmodel.dart';
+import '../../../../core/utils/provider_helpers.dart';
 
 class VerifySurveyView extends StatefulWidget {
   final String surveyId;
@@ -29,7 +31,7 @@ class _VerifySurveyViewState extends State<VerifySurveyView> {
     });
   }
 
-  final List<String> _categories = ['Plastic', 'Metal', 'Paper', 'Organic'];
+  final List<String> _categories = ['Plastic', 'Metal', 'Paper', 'Organic', 'Trash'];
 
   @override
   Widget build(BuildContext context) {
@@ -52,28 +54,31 @@ class _VerifySurveyViewState extends State<VerifySurveyView> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Verify Items Survey',
-                            style: AppTypography.headlineCairo.copyWith(
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.deepForest,
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Verify Items Survey',
+                              style: AppTypography.headlineCairo.copyWith(
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.deepForest,
+                              ),
                             ),
-                          ),
-                          Text(
-                            'Survey#${vm.survey?.surveyNumber ?? 2043}',
-                            style: AppTypography.subtitlePlex.copyWith(
-                              fontSize: 14,
-                              color: AppColors.textSecondary,
+                            Text(
+                              'Survey#${vm.survey?.surveyNumber ?? widget.surveyId}',
+                              style: AppTypography.subtitlePlex.copyWith(
+                                fontSize: 14,
+                                color: AppColors.textSecondary,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
+                      const SizedBox(width: 8),
                       Text(
-                        '+21 PTS',
+                        '+${vm.totalRewardPoints} PTS',
                         style: AppTypography.titlePlex.copyWith(
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
@@ -85,6 +90,25 @@ class _VerifySurveyViewState extends State<VerifySurveyView> {
                   const SizedBox(height: 16),
 
                   // Detected Items List
+                  if (items.isEmpty)
+                    Container(
+                      width: double.infinity,
+                      margin: const EdgeInsets.only(bottom: 14),
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Text(
+                        'No items were detected in this session.',
+                        textAlign: TextAlign.center,
+                        style: AppTypography.bodyPlex.copyWith(
+                          color: AppColors.textSecondary,
+                          fontSize: 13,
+                        ),
+                      ),
+                    )
+                  else
                   ...List.generate(items.length, (index) {
                     final item = items[index];
                     return Container(
@@ -224,14 +248,17 @@ class _VerifySurveyViewState extends State<VerifySurveyView> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
-                              'AI Correctness Rating',
-                              style: AppTypography.titlePlex.copyWith(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.darkSlate,
+                            Expanded(
+                              child: Text(
+                                'AI Correctness Rating',
+                                style: AppTypography.titlePlex.copyWith(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.darkSlate,
+                                ),
                               ),
                             ),
+                            const SizedBox(width: 8),
                             Text(
                               'Optional',
                               style: AppTypography.subtitlePlex.copyWith(
@@ -266,14 +293,17 @@ class _VerifySurveyViewState extends State<VerifySurveyView> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
-                              'TOTAL REWARD',
-                              style: AppTypography.badgeText.copyWith(
-                                color: AppColors.textSecondary,
-                                letterSpacing: 1.0,
-                                fontSize: 13,
+                            Expanded(
+                              child: Text(
+                                'TOTAL REWARD',
+                                style: AppTypography.badgeText.copyWith(
+                                  color: AppColors.textSecondary,
+                                  letterSpacing: 1.0,
+                                  fontSize: 13,
+                                ),
                               ),
                             ),
+                            const SizedBox(width: 8),
                             Text(
                               '+${vm.totalRewardPoints} PTS',
                               style: AppTypography.titlePlex.copyWith(
@@ -297,23 +327,48 @@ class _VerifySurveyViewState extends State<VerifySurveyView> {
                                 borderRadius: BorderRadius.circular(26),
                               ),
                             ),
-                            onPressed: () async {
-                              final success = await vm.submitSurvey();
-                              if (context.mounted && success) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('50 EcoPoints credited to your wallet!'),
-                                    backgroundColor: AppColors.primaryGreen,
-                                  ),
-                                );
-                                Navigator.of(context).pushAndRemoveUntil(
-                                  MaterialPageRoute(
-                                    builder: (_) => const MainShellView(initialIndex: 0),
-                                  ),
-                                  (route) => false,
-                                );
-                              }
-                            },
+                            onPressed: vm.isLoading
+                                ? null
+                                : () async {
+                                    final hadCorrection =
+                                        vm.items.any((i) => i.isCorrected);
+                                    final success = await vm.submitSurvey();
+                                    if (!context.mounted) return;
+                                    if (success) {
+                                      await context
+                                          .maybeRead<WalletViewModel>()
+                                          ?.fetchWalletData();
+                                      if (!context.mounted) return;
+                                      final awarded = vm.totalRewardPoints;
+                                      final message = awarded > 0
+                                          ? '$awarded EcoPoints credited to your wallet!'
+                                          : hadCorrection
+                                              ? 'Correction submitted for inspection review!'
+                                              : 'Survey confirmed!';
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                          content: Text(message),
+                                          backgroundColor: AppColors.primaryGreen,
+                                        ),
+                                      );
+                                      Navigator.of(context).pushAndRemoveUntil(
+                                        MaterialPageRoute(
+                                          builder: (_) =>
+                                              const MainShellView(initialIndex: 0),
+                                        ),
+                                        (route) => false,
+                                      );
+                                    } else {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            vm.errorMessage ?? 'Failed to submit survey.',
+                                          ),
+                                          backgroundColor: AppColors.danger,
+                                        ),
+                                      );
+                                    }
+                                  },
                             child: const Text('Submit & Collect Points'),
                           )
                         else

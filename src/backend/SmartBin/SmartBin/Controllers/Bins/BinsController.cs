@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using SmartBin.Common.Swagger;
 using SmartBin.Dtos.Bins;
 using SmartBin.DTOs.Common;
 using SmartBin.Services;
@@ -25,6 +26,8 @@ namespace SmartBin.Controllers
         [HttpGet]
         [ProducesResponseType(typeof(ApiResponse<List<CitizenBinDto>>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+        [SwaggerResponseExample(StatusCodes.Status200OK, SwaggerExamples.BinsNearbySuccess)]
+        [SwaggerResponseExample(StatusCodes.Status400BadRequest, SwaggerExamples.ValidationError)]
         public async Task<IActionResult> GetNearbyBins(
             [FromQuery] double? lat,
             [FromQuery] double? lng,
@@ -60,6 +63,8 @@ namespace SmartBin.Controllers
         [HttpGet("search")]
         [ProducesResponseType(typeof(ApiResponse<List<SearchBinDto>>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+        [SwaggerResponseExample(StatusCodes.Status200OK, SwaggerExamples.BinsSearchSuccess)]
+        [SwaggerResponseExample(StatusCodes.Status400BadRequest, SwaggerExamples.ValidationError)]
         public async Task<IActionResult> SearchBins(
             [FromQuery] string query,
             [FromQuery] double? lat,
@@ -95,7 +100,11 @@ namespace SmartBin.Controllers
         /// </summary>
         [HttpGet("{binId}")]
         [ProducesResponseType(typeof(ApiResponse<BinDetailsDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+        [SwaggerResponseExample(StatusCodes.Status200OK, SwaggerExamples.BinDetailsSuccess)]
+        [SwaggerResponseExample(StatusCodes.Status400BadRequest, SwaggerExamples.ValidationError)]
+        [SwaggerResponseExample(StatusCodes.Status404NotFound, SwaggerExamples.NotFound)]
         public async Task<IActionResult> GetBinDetails([FromRoute] string binId)
         {
             var cleanId = binId.Replace("bin-", "", StringComparison.OrdinalIgnoreCase).Replace("bin_", "", StringComparison.OrdinalIgnoreCase);

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/utils/provider_helpers.dart';
+import '../../../../core/widgets/refresh_error_banner.dart';
 import '../../../shell/presentation/widgets/ecobin_app_bar.dart';
 import '../viewmodels/wallet_viewmodel.dart';
 import '../../../marketplace/presentation/viewmodels/marketplace_viewmodel.dart';
@@ -199,6 +200,13 @@ class _WalletViewState extends State<WalletView> {
               const SizedBox(height: 12),
 
               // Filter Tabs [All | Earned | Spent]
+              if (vm.errorMessage != null && vm.entries.isNotEmpty) ...[
+                RefreshErrorBanner(
+                  message: 'Could not refresh balance: ${vm.errorMessage!}',
+                  onRetry: () => _refreshWallet(context),
+                ),
+                const SizedBox(height: 12),
+              ],
               Container(
                 height: 46,
                 padding: const EdgeInsets.all(4),

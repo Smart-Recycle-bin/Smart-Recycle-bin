@@ -19,6 +19,7 @@ namespace SmartBin.Configurations
 
             builder.HasIndex(s => new { s.UserId, s.StartTime });
             builder.HasIndex(s => new { s.Status, s.WindowExpiresAt });
+            builder.HasIndex(s => new { s.BinId, s.Status });
 
             builder.HasOne(s => s.User)
                 .WithMany()

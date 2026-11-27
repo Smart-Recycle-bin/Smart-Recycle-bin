@@ -60,6 +60,18 @@ class _MapViewState extends State<MapView> {
       vm.fetchNearbyBins(),
       if (walletVm != null) walletVm.fetchWalletData(),
     ]);
+    if (!mounted) return;
+    final walletError = walletVm?.errorMessage;
+    if (walletError != null && walletError.isNotEmpty) {
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text('Could not refresh balance: $walletError'),
+            backgroundColor: AppColors.danger,
+          ),
+        );
+    }
   }
 
   void _focusOnRoute(LatLng userLoc, LatLng binLoc) {
@@ -666,6 +678,7 @@ class _MapViewState extends State<MapView> {
                                     MaterialPageRoute(
                                       builder: (_) => ScanBinView(
                                         initialBinId: nearest.binId,
+                                        initialQrCode: nearest.qrCode,
                                       ),
                                     ),
                                   );

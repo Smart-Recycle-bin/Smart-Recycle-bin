@@ -174,52 +174,147 @@ namespace SmartBin.Context
                 await context.SaveChangesAsync();
             }
 
-            // 4. Reward Categories & Rewards
-            if (!await context.RewardCategories.AnyAsync())
-            {
-                var catTelecom = new RewardCategory { Name = "Telecom", CreatedAt = DateTime.UtcNow };
-                var catRetail = new RewardCategory { Name = "Supermarket", CreatedAt = DateTime.UtcNow };
-                var catTransit = new RewardCategory { Name = "Transportation", CreatedAt = DateTime.UtcNow };
-                await context.RewardCategories.AddRangeAsync(catTelecom, catRetail, catTransit);
-                await context.SaveChangesAsync();
+            // 4. Reward Categories & Rewards (3 items per category)
+            var now = DateTime.UtcNow;
+            var categoryNames = new[] { "Telecom", "Supermarket", "Transportation" };
+            var existingCategories = await context.RewardCategories
+                .Where(c => categoryNames.Contains(c.Name))
+                .ToDictionaryAsync(c => c.Name);
 
-                var rewards = new List<Reward>
+            foreach (var name in categoryNames)
+            {
+                if (!existingCategories.ContainsKey(name))
                 {
-                    new()
-                    {
-                        CategoryId = catTelecom.CategoryId,
-                        Name = "Vodafone Internet E£ 5 Pounds",
-                        Description = "Get 500MB high-speed internet voucher redeemable via Vodafone app.",
-                        PointsCost = 500,
-                        StockQuantity = 100,
-                        IsActive = true,
-                        ImageUrl = "assets/images/vodafone_logo.png",
-                        CreatedAt = DateTime.UtcNow
-                    },
-                    new()
-                    {
-                        CategoryId = catRetail.CategoryId,
-                        Name = "Carrefour Voucher E£ 10 Pounds",
-                        Description = "Digital shopping voucher valid at all Carrefour stores across Egypt.",
-                        PointsCost = 1000,
-                        StockQuantity = 50,
-                        IsActive = true,
-                        ImageUrl = "assets/images/carrefour_logo.png",
-                        CreatedAt = DateTime.UtcNow
-                    },
-                    new()
-                    {
-                        CategoryId = catTransit.CategoryId,
-                        Name = "Metro Free Ticket",
-                        Description = "One free single-trip ticket for Cairo Metro lines 1, 2, or 3.",
-                        PointsCost = 200,
-                        StockQuantity = 200,
-                        IsActive = true,
-                        ImageUrl = "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=600",
-                        CreatedAt = DateTime.UtcNow
-                    }
-                };
-                await context.Rewards.AddRangeAsync(rewards);
+                    var cat = new RewardCategory { Name = name, CreatedAt = now };
+                    await context.RewardCategories.AddAsync(cat);
+                    existingCategories[name] = cat;
+                }
+            }
+            await context.SaveChangesAsync();
+
+            var catTelecom = existingCategories["Telecom"];
+            var catRetail = existingCategories["Supermarket"];
+            var catTransit = existingCategories["Transportation"];
+
+            var existingRewardNames = await context.Rewards
+                .Select(r => r.Name)
+                .ToHashSetAsync(StringComparer.OrdinalIgnoreCase);
+
+            var seedRewards = new List<Reward>
+            {
+                // Telecom (3 items)
+                new()
+                {
+                    CategoryId = catTelecom.CategoryId,
+                    Name = "Vodafone Internet E£ 5 Pounds",
+                    Description = "Get 500MB high-speed internet voucher redeemable via Vodafone app.",
+                    PointsCost = 500,
+                    StockQuantity = 100,
+                    IsActive = true,
+                    ImageUrl = "assets/images/vodafone_logo.png",
+                    CreatedAt = now
+                },
+                new()
+                {
+                    CategoryId = catTelecom.CategoryId,
+                    Name = "Vodafone Internet E£ 10 Pounds",
+                    Description = "Get 1.2GB high-speed internet voucher redeemable via Vodafone app.",
+                    PointsCost = 1000,
+                    StockQuantity = 80,
+                    IsActive = true,
+                    ImageUrl = "assets/images/vodafone_logo.png",
+                    CreatedAt = now
+                },
+                new()
+                {
+                    CategoryId = catTelecom.CategoryId,
+                    Name = "Vodafone Internet E£ 20 Pounds",
+                    Description = "Get 3GB high-speed internet voucher redeemable via Vodafone app.",
+                    PointsCost = 2000,
+                    StockQuantity = 50,
+                    IsActive = true,
+                    ImageUrl = "assets/images/vodafone_logo.png",
+                    CreatedAt = now
+                },
+
+                // Supermarket (3 items)
+                new()
+                {
+                    CategoryId = catRetail.CategoryId,
+                    Name = "Carrefour Voucher E£ 5 Pounds",
+                    Description = "Digital shopping voucher valid at all Carrefour stores across Egypt.",
+                    PointsCost = 500,
+                    StockQuantity = 80,
+                    IsActive = true,
+                    ImageUrl = "assets/images/carrefour_logo.png",
+                    CreatedAt = now
+                },
+                new()
+                {
+                    CategoryId = catRetail.CategoryId,
+                    Name = "Carrefour Voucher E£ 10 Pounds",
+                    Description = "Digital shopping voucher valid at all Carrefour stores across Egypt.",
+                    PointsCost = 1000,
+                    StockQuantity = 50,
+                    IsActive = true,
+                    ImageUrl = "assets/images/carrefour_logo.png",
+                    CreatedAt = now
+                },
+                new()
+                {
+                    CategoryId = catRetail.CategoryId,
+                    Name = "Carrefour Voucher E£ 25 Pounds",
+                    Description = "Digital shopping voucher valid at all Carrefour stores across Egypt.",
+                    PointsCost = 2500,
+                    StockQuantity = 30,
+                    IsActive = true,
+                    ImageUrl = "assets/images/carrefour_logo.png",
+                    CreatedAt = now
+                },
+
+                // Transportation (3 items)
+                new()
+                {
+                    CategoryId = catTransit.CategoryId,
+                    Name = "Metro Free Ticket",
+                    Description = "One free single-trip ticket for Cairo Metro lines 1, 2, or 3.",
+                    PointsCost = 200,
+                    StockQuantity = 200,
+                    IsActive = true,
+                    ImageUrl = "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=600",
+                    CreatedAt = now
+                },
+                new()
+                {
+                    CategoryId = catTransit.CategoryId,
+                    Name = "Metro 3-Trip Pass",
+                    Description = "Three single-trip tickets for Cairo Metro lines 1, 2, or 3.",
+                    PointsCost = 500,
+                    StockQuantity = 150,
+                    IsActive = true,
+                    ImageUrl = "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=600",
+                    CreatedAt = now
+                },
+                new()
+                {
+                    CategoryId = catTransit.CategoryId,
+                    Name = "Metro Weekly Pass",
+                    Description = "Unlimited Cairo Metro rides across lines 1, 2, and 3 for 7 days.",
+                    PointsCost = 1200,
+                    StockQuantity = 60,
+                    IsActive = true,
+                    ImageUrl = "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=600",
+                    CreatedAt = now
+                }
+            };
+
+            var missingRewards = seedRewards
+                .Where(r => !existingRewardNames.Contains(r.Name))
+                .ToList();
+
+            if (missingRewards.Count > 0)
+            {
+                await context.Rewards.AddRangeAsync(missingRewards);
                 await context.SaveChangesAsync();
             }
         }

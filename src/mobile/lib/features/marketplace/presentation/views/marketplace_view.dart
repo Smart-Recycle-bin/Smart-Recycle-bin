@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../../../../core/utils/provider_helpers.dart';
+import '../../../../core/widgets/refresh_error_banner.dart';
 import '../../../shell/presentation/widgets/ecobin_app_bar.dart';
 import '../../../wallet/presentation/viewmodels/wallet_viewmodel.dart';
 import '../viewmodels/marketplace_viewmodel.dart';
@@ -210,6 +211,14 @@ class _MarketplaceViewState extends State<MarketplaceView> {
               const SizedBox(height: 22),
 
               // Featured Spotlight
+              if ((walletVm?.errorMessage ?? vm.errorMessage) != null) ...[
+                RefreshErrorBanner(
+                  message:
+                      'Could not refresh balance: ${(walletVm?.errorMessage ?? vm.errorMessage)!}',
+                  onRetry: () => _refreshMarketplace(context),
+                ),
+                const SizedBox(height: 16),
+              ],
               Text(
                 'FEATURED SPOTLIGHT',
                 style: AppTypography.badgeText.copyWith(

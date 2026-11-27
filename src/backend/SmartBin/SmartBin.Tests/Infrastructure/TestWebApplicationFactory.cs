@@ -145,6 +145,9 @@ namespace SmartBin.Tests.Infrastructure
                 services.RemoveAll<IStorageService>();
                 services.AddSingleton<IStorageService>(FakeStorage);
 
+                services.RemoveAll<IClassificationAdapter>();
+                services.AddSingleton<IClassificationAdapter, ClassificationAdapter>();
+
                 services.RemoveAll<IMember5InspectionService>();
                 services.AddSingleton<IMember5InspectionService>(Member5Inspection);
             });

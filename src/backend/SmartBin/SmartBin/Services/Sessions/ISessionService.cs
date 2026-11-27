@@ -10,6 +10,12 @@ namespace SmartBin.Services.Sessions
             StartSessionRequestDto request,
             CancellationToken cancellationToken = default);
 
+        Task<StartSessionResponseDto> StartSessionByIdentifierAsync(
+            int userId,
+            string binIdentifier,
+            StartSessionRequestDto request,
+            CancellationToken cancellationToken = default);
+
         Task<SessionStatusResponseDto> GetSessionStatusAsync(
             int userId,
             int sessionId,

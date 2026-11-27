@@ -2,7 +2,9 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using SmartBin.Common.Swagger;
 using SmartBin.Context;
+using SmartBin.DTOs.Common;
 using SmartBin.DTOs.Support;
 using SmartBin.Models;
 
@@ -21,6 +23,9 @@ namespace SmartBin.Controllers
 
         [HttpGet("tickets")]
         [Authorize]
+        [ProducesResponseType(typeof(ApiResponse<List<SupportTicketResponseDto>>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+        [SwaggerResponseExample(StatusCodes.Status200OK, SwaggerExamples.SupportGetTicketsSuccess)]
         public async Task<IActionResult> GetMyTickets(CancellationToken cancellationToken)
         {
             var rawUserId = User.FindFirstValue("id") ?? User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -57,6 +62,10 @@ namespace SmartBin.Controllers
 
         [HttpPost("tickets")]
         [AllowAnonymous]
+        [ProducesResponseType(typeof(ApiResponse<SupportTicketResponseDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+        [SwaggerResponseExample(StatusCodes.Status200OK, SwaggerExamples.SupportSubmitTicketSuccess)]
+        [SwaggerResponseExample(StatusCodes.Status400BadRequest, SwaggerExamples.SupportSubmitTicketBadRequest)]
         public async Task<IActionResult> SubmitTicket(
             [FromBody] CreateSupportTicketRequestDto request,
             CancellationToken cancellationToken)

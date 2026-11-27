@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import '../../domain/entities/catalog_item_entity.dart';
+import '../../domain/entities/redeemed_voucher_entity.dart';
 import '../../domain/repositories/marketplace_repository.dart';
 import '../../../wallet/domain/repositories/wallet_repository.dart';
 
@@ -14,19 +15,27 @@ class MarketplaceViewModel extends ChangeNotifier {
 
   List<CatalogItemEntity> _items = [];
   List<SpotlightBannerEntity> _banners = [];
+  List<RedeemedVoucherEntity> _myVouchers = [];
   int _balancePoints;
   bool _isLoading = false;
+  bool _isLoadingVouchers = false;
   String? _errorMessage;
+  String? _vouchersErrorMessage;
+  String _voucherStatusFilter = 'all';
 
   CatalogItemEntity? _selectedItem;
   VoucherDenomination? _selectedDenomination;
 
   List<CatalogItemEntity> get items => _items;
   List<SpotlightBannerEntity> get banners => _banners;
+  List<RedeemedVoucherEntity> get myVouchers => _myVouchers;
   int get balancePoints => _balancePoints;
   double get cashValueEgp => _balancePoints / 100.0;
   bool get isLoading => _isLoading;
+  bool get isLoadingVouchers => _isLoadingVouchers;
   String? get errorMessage => _errorMessage;
+  String? get vouchersErrorMessage => _vouchersErrorMessage;
+  String get voucherStatusFilter => _voucherStatusFilter;
 
   CatalogItemEntity? get selectedItem => _selectedItem;
   VoucherDenomination? get selectedDenomination => _selectedDenomination;
@@ -186,5 +195,28 @@ class MarketplaceViewModel extends ChangeNotifier {
     _isLoading = false;
     notifyListeners();
     return redeemedCode;
+  }
+
+  Future<void> setVoucherFilter(String status) async {
+    _voucherStatusFilter = status;
+    await fetchMyVouchers(status: status);
+  }
+
+  Future<void> fetchMyVouchers({String? status}) async {
+    final activeFilter = status ?? _voucherStatusFilter;
+    _isLoadingVouchers = true;
+    _vouchersErrorMessage = null;
+    notifyListeners();
+
+    final result = await marketplaceRepository.getMyVouchers(
+      status: activeFilter == 'all' ? null : activeFilter,
+    );
+
+    _isLoadingVouchers = false;
+    result.when(
+      onSuccess: (vouchers) => _myVouchers = vouchers,
+      onFailure: (error) => _vouchersErrorMessage = error.replaceFirst('Exception: ', ''),
+    );
+    notifyListeners();
   }
 }

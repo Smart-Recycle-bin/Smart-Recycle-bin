@@ -1,6 +1,7 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SmartBin.Common;
+using SmartBin.Common.Swagger;
 using SmartBin.DTOs.Common;
 using SmartBin.DTOs.Vouchers;
 using SmartBin.Models.Constants;
@@ -23,6 +24,8 @@ namespace SmartBin.Controllers
         [HttpGet]
         [ProducesResponseType(typeof(PagedApiResponse<List<VoucherItemDto>>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+        [SwaggerResponseExample(StatusCodes.Status200OK, SwaggerExamples.VouchersListSuccess)]
+        [SwaggerResponseExample(StatusCodes.Status400BadRequest, SwaggerExamples.ValidationError)]
         public async Task<IActionResult> List(
             [FromQuery] string? status,
             [FromQuery] int page = 1,

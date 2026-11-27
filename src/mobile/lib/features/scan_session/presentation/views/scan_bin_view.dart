@@ -8,8 +8,13 @@ import 'active_session_view.dart';
 
 class ScanBinView extends StatefulWidget {
   final String initialBinId;
+  final String? initialQrCode;
 
-  const ScanBinView({super.key, this.initialBinId = 'bin-210'});
+  const ScanBinView({
+    super.key,
+    this.initialBinId = '1',
+    this.initialQrCode,
+  });
 
   @override
   State<ScanBinView> createState() => _ScanBinViewState();
@@ -57,27 +62,27 @@ class _ScanBinViewState extends State<ScanBinView>
   /// Process scanned QR code or manual simulation
   Future<void> _processScannedPayload(String rawPayload) async {
     if (_isProcessing || _hasScanned) return;
+    final trimmedPayload = rawPayload.trim();
+    if (trimmedPayload.isEmpty) return;
 
     setState(() {
       _isProcessing = true;
       _hasScanned = true;
     });
 
-    // Parse binId from payload (e.g., "bin-210:dyn-8f2c91a0" or "bin-210" or url)
-    String binId = widget.initialBinId;
-    if (rawPayload.contains(':')) {
-      final parts = rawPayload.split(':');
+    // Support QR payloads like "BIN-101", "bin123", "bin-2:dyn-...", or numeric IDs.
+    String binId = trimmedPayload;
+    if (trimmedPayload.contains(':')) {
+      final parts = trimmedPayload.split(':');
       if (parts.isNotEmpty && parts.first.trim().isNotEmpty) {
         binId = parts.first.trim();
       }
-    } else if (rawPayload.startsWith('bin-') || rawPayload.startsWith('BIN-')) {
-      binId = rawPayload.trim();
     }
 
     final vm = context.read<ActiveSessionViewModel>();
     final success = await vm.startSession(
       binId,
-      rawPayload,
+      trimmedPayload,
     );
 
     if (mounted) {
@@ -98,9 +103,11 @@ class _ScanBinViewState extends State<ScanBinView>
     }
   }
 
-  /// Manual button fallback
+  /// Manual button fallback for emulator / testing without camera barcode
   Future<void> _triggerManualScan() async {
-    final payload = '${widget.initialBinId}:dyn-8f2c91a0';
+    final payload = (widget.initialQrCode != null && widget.initialQrCode!.isNotEmpty)
+        ? widget.initialQrCode!
+        : 'bin-${widget.initialBinId.replaceAll(RegExp(r'^bin-', caseSensitive: false), '')}';
     await _processScannedPayload(payload);
   }
 
