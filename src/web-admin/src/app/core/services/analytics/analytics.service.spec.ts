@@ -3,8 +3,10 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { AnalyticsService } from './analytics.service';
 import { ApiClientService } from '../api/api-client.service';
-import { environment } from '@env/environment';
+import { resolveApiBaseUrl } from '@core/interceptors/shared/api-url';
 import { AnalyticsPeriod } from '@models/analytics/analytics-period.enum';
+
+const apiBaseUrl = resolveApiBaseUrl();
 
 describe('AnalyticsService', () => {
   let service: AnalyticsService;
@@ -25,7 +27,7 @@ describe('AnalyticsService', () => {
   it('should query overview data with period parameter', () => {
     service.getOverview({ period: AnalyticsPeriod.SevenDays }).subscribe();
 
-    const req = httpMock.expectOne(`${environment.apiBaseUrl}/admin/analytics?period=7d`);
+    const req = httpMock.expectOne(`${apiBaseUrl}/admin/analytics?period=7d`);
     expect(req.request.method).toBe('GET');
     req.flush({ success: true, data: {} });
   });

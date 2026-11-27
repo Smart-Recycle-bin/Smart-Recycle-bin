@@ -16,10 +16,10 @@ export interface OverviewQuery {
  * Top KPI card with value and period-over-period delta (UI p2, p17).
  */
 export interface OverviewKpiCard {
-  value: number;
-  deltaPercent?: number; // e.g. +4.2 (%)
-  deltaPp?: number;      // percentage points e.g. +0.6 pp
-  trendPositive?: boolean;
+  value: number | null;
+  deltaPercent?: number | null; // e.g. +4.2 (%)
+  deltaPp?: number | null;      // percentage points e.g. +0.6 pp
+  trendPositive?: boolean | null;
 }
 
 /**
@@ -43,12 +43,13 @@ export interface FleetHealthBreakdown {
 }
 
 /**
- * Material tonnage share breakdown item for donut chart (UI p17).
+ * Material share breakdown item for donut chart (item-count based when weight is not tracked).
  */
 export interface MaterialVolumeShare {
   material: string;
   percentage: number;
-  tonnage?: number;
+  itemCount?: number;
+  tonnage?: number | null;
 }
 
 /**
@@ -76,7 +77,7 @@ export interface BinNeedingAttentionItem {
 export interface PendingAiReviewItem {
   reportId: Id;
   predictedType: string;
-  confidence: number;
+  confidence: number | null;
   feedback: string;
 }
 
@@ -102,11 +103,13 @@ export interface DashboardOverview {
   pointsComparisonSeries: PointsTimeSeriesPoint[];
   fleetHealth: FleetHealthBreakdown;
 
-  totalRecycledTonnage: number;
+  totalRecycledTonnage: number | null;
+  totalDisposalItems?: number;
   materialShares: MaterialVolumeShare[];
+  recyclingVolumeByType?: Record<string, number>;
 
   contaminationTrend: MetricTrendPoint[];
-  dauTrend: MetricTrendPoint[];
+  dauTrend: MetricTrendPoint[] | null;
 
   urgentBins: BinNeedingAttentionItem[];
   urgentReviews: PendingAiReviewItem[];

@@ -99,17 +99,18 @@
       <section class="stats-grid" aria-label="Key Performance Indicators">
         <app-stat
           title="Daily Active Users"
-          [value]="(data.dailyActiveUsers.value | number) || '0'"
-          [change]="data.dailyActiveUsers.deltaPercent !== undefined ? ((data.dailyActiveUsers.deltaPercent >= 0 ? '+' : '') + data.dailyActiveUsers.deltaPercent + '%') : ''"
+          [value]="data.dailyActiveUsers.value !== null && data.dailyActiveUsers.value !== undefined ? ((data.dailyActiveUsers.value | number) ?? 'Not Tracked') : 'Not Tracked'"
+          [change]="formatDeltaPercent(data.dailyActiveUsers.deltaPercent)"
           [trend]="resolveTrend(data.dailyActiveUsers.trendPositive)"
+          [description]="data.dailyActiveUsers.value === null ? 'Historical stream not tracked' : ''"
           icon="users"
           iconTone="blue"
         />
 
         <app-stat
           title="Points Issued"
-          [value]="(data.pointsIssued.value | number) || '0'"
-          [change]="data.pointsIssued.deltaPercent !== undefined ? ((data.pointsIssued.deltaPercent >= 0 ? '+' : '') + data.pointsIssued.deltaPercent + '%') : ''"
+          [value]="data.pointsIssued.value !== null && data.pointsIssued.value !== undefined ? ((data.pointsIssued.value | number) ?? '0') : 'Not Tracked'"
+          [change]="formatDeltaPercent(data.pointsIssued.deltaPercent)"
           [trend]="resolveTrend(data.pointsIssued.trendPositive)"
           icon="award"
           iconTone="green"
@@ -117,8 +118,8 @@
 
         <app-stat
           title="Points Redeemed"
-          [value]="(data.pointsRedeemed.value | number) || '0'"
-          [change]="data.pointsRedeemed.deltaPercent !== undefined ? ((data.pointsRedeemed.deltaPercent >= 0 ? '+' : '') + data.pointsRedeemed.deltaPercent + '%') : ''"
+          [value]="data.pointsRedeemed.value !== null && data.pointsRedeemed.value !== undefined ? ((data.pointsRedeemed.value | number) ?? '0') : 'Not Tracked'"
+          [change]="formatDeltaPercent(data.pointsRedeemed.deltaPercent)"
           [trend]="resolveTrend(data.pointsRedeemed.trendPositive)"
           icon="gift"
           iconTone="purple"
@@ -126,9 +127,10 @@
 
         <app-stat
           title="Contamination Rate"
-          [value]="data.contaminationRate.value + '%'"
-          [change]="data.contaminationRate.deltaPp !== undefined ? ((data.contaminationRate.deltaPp >= 0 ? '+' : '') + data.contaminationRate.deltaPp + ' pp') : ''"
+          [value]="data.contaminationRate.value !== null && data.contaminationRate.value !== undefined ? data.contaminationRate.value + '%' : 'Not Tracked'"
+          [change]="formatDeltaPp(data.contaminationRate.deltaPp)"
           [trend]="resolveTrend(data.contaminationRate.trendPositive)"
+          [description]="data.contaminationRate.value === null ? 'No evaluated surveys in period' : ''"
           icon="alert-triangle"
           iconTone="amber"
         />
@@ -255,21 +257,24 @@
           </div>
         </app-card>
 
-        <!-- Recycling Volume by Material Donut -->
+        <!-- Material Mix by Item Count Donut -->
         <app-card
-          title="Material Recovery"
-          subtitle="Tonnage breakdown by material category"
+          title="Material Mix"
+          subtitle="Share by disposal item count"
           class="material-recovery-card"
         >
           <div class="donut-container">
             <app-donut-chart
               [data]="materialDonutSegments()"
-              centerLabel="Total"
-              [centerValue]="data.totalRecycledTonnage"
-              unit="t"
+              [centerLabel]="data.totalDisposalItems !== undefined ? 'Items' : 'Total'"
+              [centerValue]="materialCenterValue()"
+              [unit]="data.totalDisposalItems !== undefined ? '%' : 't'"
               [showLegend]="true"
             />
           </div>
+          @if (data.totalRecycledTonnage === null) {
+            <p class="material-truth-note">Recycled weight/tonnage: Not Tracked (only item counts are persisted).</p>
+          }
         </app-card>
 
         <!-- Trends Panel (Contamination & DAU) -->
@@ -284,14 +289,26 @@
             />
           </app-card>
 
-          <app-card title="Daily Active Users Trend" subtitle="Telemetry user sessions velocity">
-            <app-area-chart
-              [data]="dauTrendPoints()"
-              [height]="115"
-              color="var(--chart-2)"
-              unit="users"
-              [showLegend]="false"
-            />
+          <app-card
+            title="Daily Active Users Trend"
+            [subtitle]="hasDauTrend() ? 'Daily active users velocity' : 'Historical activity stream unavailable'"
+          >
+            @if (hasDauTrend()) {
+              <app-area-chart
+                [data]="dauTrendPoints()"
+                [height]="115"
+                color="var(--chart-2)"
+                unit="users"
+                [showLegend]="false"
+              />
+            } @else {
+              <div class="not-tracked-panel" data-testid="dau-not-tracked">
+                <span class="not-tracked-badge">Not Tracked</span>
+                <p class="not-tracked-note">
+                  Historical DAU requires an activity event stream; only a mutable last-active snapshot exists.
+                </p>
+              </div>
+            }
           </app-card>
         </div>
       </section>
@@ -332,6 +349,8 @@
                       <app-badge label="≥95% FULL" variant="danger" />
                     </div>
                   </a>
+                } @empty {
+                  <p class="empty-attention-note">No critical bins requiring immediate servicing.</p>
                 }
               </div>
             </div>
@@ -354,9 +373,15 @@
                       <span class="item-feedback">{{ rev.feedback }}</span>
                     </div>
                     <div class="item-badges">
-                      <app-badge [label]="(rev.confidence * 100 | number: '1.0-0') + '% conf.'" variant="warning" />
+                      @if (rev.confidence !== null && rev.confidence !== undefined) {
+                        <app-badge [label]="(rev.confidence * 100 | number: '1.0-0') + '% conf.'" variant="warning" />
+                      } @else {
+                        <app-badge label="Not Tracked" variant="neutral" />
+                      }
                     </div>
                   </a>
+                } @empty {
+                  <p class="empty-attention-note">No pending AI inspection reports in queue.</p>
                 }
               </div>
             </div>

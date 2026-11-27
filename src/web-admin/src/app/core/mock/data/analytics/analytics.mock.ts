@@ -75,28 +75,28 @@ export const MOCK_OVERVIEW_7D: DashboardOverview = {
 
   urgentBins: [
     {
-      binId: 'BIN-0007',
+      binId: 7,
       name: 'Tahrir Square North',
       area: 'Downtown, Cairo',
       fillLevel: 97,
       status: BinStatus.NeedsServicing,
     },
     {
-      binId: 'BIN-0038',
+      binId: 38,
       name: 'Ain Shams University',
       area: 'Ain Shams, Cairo',
       fillLevel: 96,
       status: BinStatus.NeedsServicing,
     },
     {
-      binId: 'BIN-0061',
+      binId: 61,
       name: 'Shubra El Kheima Market',
       area: 'Shubra El Kheima, Qalyubia',
       fillLevel: 99,
       status: BinStatus.NeedsServicing,
     },
     {
-      binId: 'BIN-0084',
+      binId: 84,
       name: 'Sidi Gaber Station',
       area: 'Sidi Gaber, Alexandria',
       fillLevel: 95,
@@ -106,31 +106,31 @@ export const MOCK_OVERVIEW_7D: DashboardOverview = {
 
   urgentReviews: [
     {
-      reportId: 'AIR-2048',
+      reportId: 2048,
       predictedType: 'Plastic (PET)',
       confidence: 0.62,
       feedback: 'The item was a glass bottle, not plastic. Label was misleading.',
     },
     {
-      reportId: 'AIR-2047',
+      reportId: 2047,
       predictedType: 'Paper',
       confidence: 0.71,
       feedback: 'It was a waxed carton - should be mixed packaging.',
     },
     {
-      reportId: 'AIR-2046',
+      reportId: 2046,
       predictedType: 'Metal',
       confidence: 0.55,
       feedback: 'Aluminium foil tray recognised as steel can.',
     },
     {
-      reportId: 'AIR-2042',
+      reportId: 2042,
       predictedType: 'Paper',
       confidence: 0.66,
       feedback: 'Receipt thermal paper is not recyclable.',
     },
     {
-      reportId: 'AIR-2041',
+      reportId: 2041,
       predictedType: 'Plastic (PET)',
       confidence: 0.79,
       feedback: 'Item was a tinted glass jar.',

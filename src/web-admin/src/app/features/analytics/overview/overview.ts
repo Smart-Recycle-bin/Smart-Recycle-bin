@@ -1,13 +1,17 @@
 import {
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
   computed,
   inject,
   OnInit,
   signal,
 } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
+import { of, Subject } from 'rxjs';
+import { catchError, map, switchMap, tap } from 'rxjs/operators';
 import { AnalyticsService } from '@services/analytics/analytics.service';
 import {
   AnalyticsPeriod,
@@ -90,6 +94,7 @@ function formatShortDate(dateStr: string): string {
 })
 export class Overview implements OnInit {
   private readonly analyticsService = inject(AnalyticsService);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly periodOptions = PERIOD_OPTIONS;
   readonly hotspotThresholds = HOTSPOT_THRESHOLDS;
@@ -101,6 +106,8 @@ export class Overview implements OnInit {
   readonly overviewData = signal<DashboardOverview | null>(null);
   readonly isLoading = signal<boolean>(true);
   readonly error = signal<unknown>(null);
+
+  private readonly overviewTrigger$ = new Subject<OverviewQuery>();
 
   readonly isCustomPeriod = computed(() => this.selectedPeriod() === AnalyticsPeriod.Custom);
 
@@ -157,6 +164,23 @@ export class Overview implements OnInit {
     }));
   });
 
+  readonly hasDauTrend = computed(() => {
+    const trend = this.overviewData()?.dauTrend;
+    return Array.isArray(trend) && trend.length > 1;
+  });
+
+  readonly materialCenterValue = computed<string | number | null>(() => {
+    const d = this.overviewData();
+    if (!d) return null;
+    if (d.totalDisposalItems !== undefined && d.totalDisposalItems !== null) {
+      return d.totalDisposalItems;
+    }
+    if (d.totalRecycledTonnage !== null && d.totalRecycledTonnage !== undefined) {
+      return d.totalRecycledTonnage;
+    }
+    return 'Not Tracked';
+  });
+
   /**
    * Computed Items for Top Contamination Hotspots Bar List
    */
@@ -192,6 +216,29 @@ export class Overview implements OnInit {
   });
 
   ngOnInit(): void {
+    this.overviewTrigger$
+      .pipe(
+        tap(() => {
+          this.isLoading.set(true);
+          this.error.set(null);
+        }),
+        switchMap((query) =>
+          this.analyticsService.getOverview(query).pipe(
+            map((data) => ({ ok: true as const, data })),
+            catchError((err: unknown) => of({ ok: false as const, error: err }))
+          )
+        ),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe((result) => {
+        this.isLoading.set(false);
+        if (result.ok) {
+          this.overviewData.set(result.data);
+        } else {
+          this.error.set(result.error);
+        }
+      });
+
     this.loadOverview();
   }
 
@@ -219,23 +266,21 @@ export class Overview implements OnInit {
       if (range.to) query.to = range.to;
     }
 
-    this.isLoading.set(true);
-    this.error.set(null);
-
-    this.analyticsService.getOverview(query).subscribe({
-      next: (data) => {
-        this.overviewData.set(data);
-        this.isLoading.set(false);
-      },
-      error: (err: unknown) => {
-        this.error.set(err);
-        this.isLoading.set(false);
-      },
-    });
+    this.overviewTrigger$.next(query);
   }
 
-  resolveTrend(positive: boolean | undefined): StatTrend | null {
-    if (positive === undefined) return null;
+  resolveTrend(positive: boolean | null | undefined): StatTrend | null {
+    if (positive === null || positive === undefined) return null;
     return positive ? 'positive' : 'negative';
+  }
+
+  formatDeltaPercent(delta: number | null | undefined): string {
+    if (delta === null || delta === undefined) return '';
+    return `${delta >= 0 ? '+' : ''}${delta}%`;
+  }
+
+  formatDeltaPp(delta: number | null | undefined): string {
+    if (delta === null || delta === undefined) return '';
+    return `${delta >= 0 ? '+' : ''}${delta} pp`;
   }
 }
