@@ -14,6 +14,7 @@ using SmartBin.Repositories.Audit;
 using SmartBin.Repositories.Auth;
 using SmartBin.Repositories.Bins;
 using SmartBin.Repositories.Collectors;
+using SmartBin.Repositories.Gamification;
 using SmartBin.Repositories.Inspections;
 using SmartBin.Repositories.Lookups;
 using SmartBin.Repositories.Notifications;
@@ -26,6 +27,7 @@ using SmartBin.Services.Audit;
 using SmartBin.Services.Auth;
 using SmartBin.Services.Bins;
 using SmartBin.Services.Collectors;
+using SmartBin.Services.Gamification;
 using SmartBin.Services.Inspections;
 using SmartBin.Services.Lookups;
 using SmartBin.Services.Notifications;
@@ -197,6 +199,7 @@ namespace SmartBin.DependencyInjection
             services.AddScoped<IAdminCollectorRepository, AdminCollectorRepository>();
             services.AddScoped<IAdminLookupRepository, AdminLookupRepository>();
             services.AddScoped<IAdminInspectionRepository, AdminInspectionRepository>();
+            services.AddScoped<IGamificationRepository, GamificationRepository>();
             services.AddScoped<IAuditLogRepository, AuditLogRepository>();
             services.AddScoped<IAdminNotificationRepository, AdminNotificationRepository>();
 
@@ -241,6 +244,7 @@ namespace SmartBin.DependencyInjection
             services.AddScoped<IAdminLedgerService, AdminLedgerService>();
             services.AddScoped<IMember5InspectionService, LocalInspectionService>();
             services.AddScoped<IAdminInspectionService, AdminInspectionService>();
+            services.AddScoped<IGamificationService, GamificationService>();
             services.AddScoped<IAuditLogService, AuditLogService>();
             services.AddScoped<IAdminNotificationService, AdminNotificationService>();
             services.AddHostedService<SessionTimeoutBackgroundService>();
