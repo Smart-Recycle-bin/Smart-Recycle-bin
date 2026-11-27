@@ -6,6 +6,7 @@ import { UserRole } from '../user/user-role.enum';
  */
 export interface AuthUser {
   userId: Id;
+  email?: string;
   displayName: string;
   role: UserRole;
 }

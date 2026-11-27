@@ -1,14 +1,18 @@
 import { TestBed } from '@angular/core/testing';
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { vi } from 'vitest';
 import { AuthService } from './auth.service';
 import { TokenStorageService } from './token-storage.service';
 import { ApiClientService } from '../api/api-client.service';
+import { authInterceptor } from '@core/interceptors/auth/auth.interceptor';
 import { UserRole } from '@models/user/user-role.enum';
 import { LoginResponse, StoredSession } from '@models/auth/auth.dto';
 import { environment } from '@env/environment';
+import { resolveApiBaseUrl } from '@core/interceptors/shared/api-url';
 import { AuthError } from '@core/errors/auth-error';
+
+const apiBaseUrl = resolveApiBaseUrl();
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -34,7 +38,7 @@ describe('AuthService', () => {
         AuthService,
         ApiClientService,
         TokenStorageService,
-        provideHttpClient(),
+        provideHttpClient(withInterceptors([authInterceptor])),
         provideHttpClientTesting(),
       ],
     });
@@ -53,7 +57,7 @@ describe('AuthService', () => {
   it('should store tokens on successful admin login', () => {
     service.login({ email: 'admin@ecobin.eg', password: 'password123' }).subscribe();
 
-    const req = httpMock.expectOne(`${environment.apiBaseUrl}/auth/login`);
+    const req = httpMock.expectOne(`${apiBaseUrl}/auth/login`);
     expect(req.request.method).toBe('POST');
     req.flush({ success: true, data: validAdminLoginResponse });
 
@@ -76,7 +80,7 @@ describe('AuthService', () => {
       },
     });
 
-    const loginReq = httpMock.expectOne(`${environment.apiBaseUrl}/auth/login`);
+    const loginReq = httpMock.expectOne(`${apiBaseUrl}/auth/login`);
     loginReq.flush({
       success: true,
       data: {
@@ -86,8 +90,9 @@ describe('AuthService', () => {
       },
     });
 
-    // Must best-effort revoke the issued refresh token
-    const logoutReq = httpMock.expectOne(`${environment.apiBaseUrl}/auth/logout`);
+    // Must best-effort revoke the issued refresh token WITH Authorization Bearer header
+    const logoutReq = httpMock.expectOne(`${apiBaseUrl}/auth/logout`);
+    expect(logoutReq.request.headers.get('Authorization')).toBe('Bearer access_adm_1');
     expect(logoutReq.request.body).toEqual({ refreshToken: 'leaked_refresh_token' });
     logoutReq.flush({ success: true, data: { message: 'Logged out successfully' } });
 
@@ -147,7 +152,7 @@ describe('AuthService', () => {
     }
   });
 
-  it('should send refreshToken on logout and clear session locally even when request errors', () => {
+  it('should send Bearer token and refreshToken on logout and clear session locally even when request errors', () => {
     tokenStorage.saveSession({
       accessToken: 'token_to_logout',
       expiresAt: new Date(Date.now() + 3600000).toISOString(),
@@ -158,11 +163,44 @@ describe('AuthService', () => {
 
     service.logout().subscribe();
 
-    const req = httpMock.expectOne(`${environment.apiBaseUrl}/auth/logout`);
+    const req = httpMock.expectOne(`${apiBaseUrl}/auth/logout`);
     expect(req.request.method).toBe('POST');
+    expect(req.request.headers.get('Authorization')).toBe('Bearer token_to_logout');
     expect(req.request.body).toEqual({ refreshToken: 'refresh_to_logout' });
 
     req.error(new ProgressEvent('Network error'), { status: 500, statusText: 'Server Error' });
+
+    expect(service.isAuthenticated()).toBe(false);
+    expect(service.session()).toBeNull();
+    expect(tokenStorage.getSession()).toBeNull();
+  });
+
+  it('should refresh expired accessToken before calling logout and still clear session if refresh fails', () => {
+    tokenStorage.saveSession({
+      accessToken: 'expired_access',
+      expiresAt: new Date(Date.now() - 10000).toISOString(),
+      refreshToken: 'valid_refresh',
+      user: { userId: 'ADM-001', displayName: 'Admin', role: UserRole.Admin },
+    });
+    service.restoreSession();
+
+    service.logout().subscribe();
+
+    const refreshReq = httpMock.expectOne(`${apiBaseUrl}/auth/refresh`);
+    expect(refreshReq.request.body).toEqual({ refreshToken: 'valid_refresh' });
+    refreshReq.flush({
+      success: true,
+      data: {
+        accessToken: 'fresh_access',
+        expiresIn: 900,
+        refreshToken: 'rotated_refresh',
+      },
+    });
+
+    const logoutReq = httpMock.expectOne(`${apiBaseUrl}/auth/logout`);
+    expect(logoutReq.request.headers.get('Authorization')).toBe('Bearer fresh_access');
+    expect(logoutReq.request.body).toEqual({ refreshToken: 'rotated_refresh' });
+    logoutReq.flush({ success: true, data: { message: 'Logged out successfully' } });
 
     expect(service.isAuthenticated()).toBe(false);
     expect(service.session()).toBeNull();
@@ -195,7 +233,7 @@ describe('AuthService', () => {
 
     service.refresh().subscribe();
 
-    const req = httpMock.expectOne(`${environment.apiBaseUrl}/auth/refresh`);
+    const req = httpMock.expectOne(`${apiBaseUrl}/auth/refresh`);
     expect(req.request.body).toEqual({ refreshToken: 'old_refresh' });
 
     req.flush({
@@ -223,7 +261,7 @@ describe('AuthService', () => {
     service.refresh().subscribe();
     service.refresh().subscribe();
 
-    const requests = httpMock.match(`${environment.apiBaseUrl}/auth/refresh`);
+    const requests = httpMock.match(`${apiBaseUrl}/auth/refresh`);
     expect(requests.length).toBe(1);
 
     requests[0]!.flush({
@@ -258,7 +296,7 @@ describe('AuthService', () => {
     });
 
     // Exactly ONE HTTP request should have been dispatched
-    const reqs = httpMock.match(`${environment.apiBaseUrl}/auth/refresh`);
+    const reqs = httpMock.match(`${apiBaseUrl}/auth/refresh`);
     expect(reqs.length).toBe(1);
 
     reqs[0]!.flush({
@@ -288,7 +326,7 @@ describe('AuthService', () => {
       error: () => {},
     });
 
-    const req = httpMock.expectOne(`${environment.apiBaseUrl}/auth/refresh`);
+    const req = httpMock.expectOne(`${apiBaseUrl}/auth/refresh`);
     req.flush(
       { success: false, error: { code: 'INVALID_REFRESH_TOKEN' } },
       { status: 401, statusText: 'Unauthorized' }
@@ -312,7 +350,7 @@ describe('AuthService', () => {
       error: () => {},
     });
 
-    const req = httpMock.expectOne(`${environment.apiBaseUrl}/auth/refresh`);
+    const req = httpMock.expectOne(`${apiBaseUrl}/auth/refresh`);
     req.error(new ProgressEvent('Network Error'), { status: 0, statusText: 'Unknown Error' });
 
     // Session remains preserved so user is not logged out on transient network drop

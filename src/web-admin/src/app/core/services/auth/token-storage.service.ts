@@ -51,7 +51,15 @@ export class TokenStorageService implements TokenStorage, OnDestroy {
           return null;
         }
         const parsed = JSON.parse(raw) as StoredSession;
-        if (parsed && parsed.accessToken && parsed.user) {
+        if (
+          parsed &&
+          typeof parsed.accessToken === 'string' &&
+          parsed.accessToken.length > 0 &&
+          typeof parsed.expiresAt === 'string' &&
+          Number.isFinite(Date.parse(parsed.expiresAt)) &&
+          parsed.user &&
+          typeof parsed.user.role === 'string'
+        ) {
           return parsed;
         }
       }

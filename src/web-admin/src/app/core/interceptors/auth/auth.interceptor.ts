@@ -67,8 +67,15 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
             });
             return next(retriedReq);
           }),
-          catchError(() => {
-            // Rethrow original 401 unchanged if refresh fails
+          catchError((refreshError: unknown) => {
+            const status =
+              refreshError && typeof refreshError === 'object' && 'status' in refreshError
+                ? (refreshError as { status: unknown }).status
+                : undefined;
+            if (typeof status === 'number' && (status === 0 || status >= 500)) {
+              return throwError(() => refreshError);
+            }
+            // Rethrow original 401 unchanged if refresh is rejected (401/403) or fails non-HTTP checks
             return throwError(() => error);
           })
         );

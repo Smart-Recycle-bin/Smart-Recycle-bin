@@ -76,8 +76,14 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
 
       // 2. HTTP 403 Forbidden
       if (rawError.status === 403) {
-        if (isLoginRequest && apiError.code === ApiErrorCode.AccountSuspended) {
-          // Login form shows suspended notice inline
+        if (
+          isLoginRequest &&
+          (apiError.code === ApiErrorCode.AccountSuspended ||
+            apiError.code === ApiErrorCode.EmailNotVerified ||
+            apiError.code === ApiErrorCode.AccountInactive ||
+            apiError.code === ApiErrorCode.UserRoleNotFound)
+        ) {
+          // Login form handles account status / verification notices inline
           return throwError(() => apiError);
         }
 

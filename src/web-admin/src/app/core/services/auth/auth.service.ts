@@ -126,13 +126,32 @@ export class AuthService implements OnDestroy {
       .post<LoginResponse>(API_ENDPOINTS.auth.login, credentials, { context })
       .pipe(
         switchMap((response) => {
+          const numericUserId = Number(response?.user?.userId);
+          if (
+            !response?.accessToken ||
+            !Number.isFinite(response.expiresIn) ||
+            response.expiresIn <= 0 ||
+            !response.user ||
+            !Number.isInteger(numericUserId) ||
+            numericUserId <= 0 ||
+            !response.user.role
+          ) {
+            this.clearSession();
+            return throwError(() => new Error('Invalid login response received from server.'));
+          }
+
           if (response.user.role !== UserRole.Admin) {
             const revoke$ = response.refreshToken
               ? this.apiClient
                   .post<void>(
                     API_ENDPOINTS.auth.logout,
                     { refreshToken: response.refreshToken },
-                    { context }
+                    {
+                      headers: { Authorization: `Bearer ${response.accessToken}` },
+                      context: new HttpContext()
+                        .set(SKIP_AUTH, true)
+                        .set(SKIP_ERROR_HANDLING, true),
+                    }
                   )
                   .pipe(catchError(() => of(undefined)))
               : of(undefined);
@@ -156,7 +175,10 @@ export class AuthService implements OnDestroy {
             accessToken: response.accessToken,
             expiresAt,
             refreshToken: response.refreshToken ?? null,
-            user: response.user,
+            user: {
+              ...response.user,
+              userId: numericUserId,
+            },
           };
 
           this.tokenStorage.saveSession(storedSession);
@@ -176,22 +198,39 @@ export class AuthService implements OnDestroy {
   }
 
   /**
-   * Best-effort logout calling the backend to revoke refresh token,
-   * always clearing session state locally regardless of network success or error.
+   * Best-effort logout calling the backend with a valid Bearer token to revoke the
+   * refresh token family, always clearing session state locally regardless of network success or error.
    */
   logout(): Observable<void> {
-    const refreshToken = this._session()?.refreshToken ?? undefined;
-    const body: LogoutRequest = { refreshToken };
-    const context = new HttpContext().set(SKIP_AUTH, true);
+    const sendLogout = (): Observable<void> => {
+      const currentSession = this.tokenStorage.getSession() ?? this._session();
+      const body: LogoutRequest = {
+        refreshToken: currentSession?.refreshToken ?? undefined,
+      };
+      const context = new HttpContext().set(SKIP_ERROR_HANDLING, true);
 
-    return this.apiClient
-      .post<void>(API_ENDPOINTS.auth.logout, body, { context })
-      .pipe(
-        catchError(() => of(undefined)),
-        finalize(() => {
-          this.clearSession();
-        })
-      );
+      if (!this.isAuthenticated() || !currentSession?.accessToken) {
+        return of(undefined);
+      }
+
+      return this.apiClient
+        .post<void>(API_ENDPOINTS.auth.logout, body, { context })
+        .pipe(catchError(() => of(undefined)));
+    };
+
+    const request$ =
+      !this.isAuthenticated() && this.hasRefreshToken()
+        ? this.refresh().pipe(
+            switchMap(() => sendLogout()),
+            catchError(() => of(undefined))
+          )
+        : sendLogout();
+
+    return request$.pipe(
+      finalize(() => {
+        this.clearSession();
+      })
+    );
   }
 
   /**
@@ -231,13 +270,13 @@ export class AuthService implements OnDestroy {
       ) {
         return from(
           navigator.locks.request('ecobin-auth-refresh', async () => {
-            // Re-read storage: another tab may have finished refreshing while waiting for the lock
+            // Re-read storage: another tab may have cleared or rotated the session while waiting for the lock
             const latestSession = this.tokenStorage.getSession();
-            if (
-              latestSession &&
-              latestSession.refreshToken &&
-              latestSession.refreshToken !== tokenToRefresh
-            ) {
+            if (!latestSession || !latestSession.refreshToken) {
+              this.clearSession();
+              throw new HttpErrorResponse({ status: 401, statusText: 'Unauthorized' });
+            }
+            if (latestSession.refreshToken !== tokenToRefresh) {
               this.setSession(latestSession);
               return;
             }
@@ -275,6 +314,15 @@ export class AuthService implements OnDestroy {
       )
       .pipe(
         map((response) => {
+          if (
+            !response?.accessToken ||
+            !response?.refreshToken ||
+            !Number.isFinite(response.expiresIn) ||
+            response.expiresIn <= 0
+          ) {
+            throw new Error('Invalid refresh response received from server.');
+          }
+
           const current = this.tokenStorage.getSession() ?? this._session();
           if (!current) {
             throw new Error('Session was cleared during refresh');

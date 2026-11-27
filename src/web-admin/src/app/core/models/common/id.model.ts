@@ -1,4 +1,4 @@
 /**
- * Opaque string identifier for entities and resources.
+ * Numeric integer identifier matching backend SQL/EF primary keys.
  */
-export type Id = string;
+export type Id = number;

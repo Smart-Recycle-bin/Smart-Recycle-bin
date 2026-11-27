@@ -71,10 +71,10 @@
 
     <!-- Reserved Error Banner Slot (No layout shift) -->
     <div class="error-banner-slot">
-      @if (invalidCredentials()) {
+      @if (loginErrorMessage()) {
         <div class="login-error-banner" role="alert">
           <app-icon name="alert-circle" size="sm" />
-          <span>Invalid email or password. Please try again.</span>
+          <span>{{ loginErrorMessage() }}</span>
         </div>
       }
     </div>
@@ -93,29 +93,6 @@
       </app-button>
     </div>
   </form>
-
-  <!-- Mock Backend Credentials Helper (Tree-shaken in production) -->
-  @if (isMockBackend && mockCredentials) {
-    <div class="mock-backend-card">
-      <div class="mock-chip-header">
-        <div class="mock-tag-group">
-          <span class="mock-chip-badge">Mock backend</span>
-          <span class="mock-chip-creds">{{ mockCredentials.email }}</span>
-        </div>
-        <button
-          type="button"
-          class="mock-fill-btn"
-          (click)="fillMockCredentials()"
-          aria-label="Auto-fill seeded admin credentials"
-        >
-          Fill
-        </button>
-      </div>
-      <p class="mock-test-note">
-        Any valid email signs in. Use <code>{{ prototypeErrorKeyword }}</code> to preview error state.
-      </p>
-    </div>
-  }
 
   <!-- Forgot Password Dialog Modal -->
   <app-modal

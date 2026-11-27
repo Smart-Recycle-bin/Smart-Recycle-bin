@@ -14,16 +14,13 @@ import { AuthService } from '@services/auth/auth.service';
 import { safeReturnUrl } from '@core/guards/auth/return-url';
 import { ApiError } from '@core/errors/api-error';
 import { AuthError } from '@core/errors/auth-error';
-import { isApiErrorCode } from '@core/errors/error-message';
+import { getErrorMessage, getFieldErrors, isApiErrorCode } from '@core/errors/error-message';
 import { ApiErrorCode } from '@models/common/api-error-code.enum';
-import { environment } from '@env/environment';
 import { Input } from '@shared/components/form/input/input';
 import { Button } from '@shared/components/button/button';
 import { Notice } from '@shared/components/notice/notice';
 import { Modal } from '@shared/components/overlay/modal/modal';
 import { Icon } from '@shared/components/icon/icon';
-
-declare const ngDevMode: boolean | undefined;
 
 @Component({
   selector: 'app-login',
@@ -46,18 +43,11 @@ export class Login {
   private readonly route = inject(ActivatedRoute);
 
   /**
-   * Prototype note display controlled by active environment configuration.
-   * Gated by ngDevMode and useMockBackend so credentials are eliminated in production.
-   */
-  readonly isMockBackend: boolean;
-  readonly prototypeErrorKeyword: string;
-  readonly mockCredentials: { email: string; password: string } | null;
-
-  /**
    * State signals for authentication request and error handling.
    */
   readonly isLoading = signal<boolean>(false);
   readonly invalidCredentials = signal<boolean>(false);
+  readonly loginErrorMessage = signal<string>('');
   readonly isSuspended = signal<boolean>(false);
   readonly isNotAdmin = signal<boolean>(false);
   readonly showPassword = signal<boolean>(false);
@@ -85,18 +75,6 @@ export class Login {
     email: ['', [Validators.required, Validators.email]],
   });
 
-  constructor() {
-    if ((typeof ngDevMode === 'undefined' || ngDevMode) && environment.useMockBackend) {
-      this.isMockBackend = true;
-      this.prototypeErrorKeyword = 'wrongpass';
-      this.mockCredentials = { email: 'admin@ecobin.eg', password: 'password123' };
-    } else {
-      this.isMockBackend = false;
-      this.prototypeErrorKeyword = '';
-      this.mockCredentials = null;
-    }
-  }
-
   togglePasswordVisibility(): void {
     this.showPassword.update((v) => !v);
   }
@@ -105,17 +83,6 @@ export class Login {
     if (event && typeof event.getModifierState === 'function') {
       this.capsLockActive.set(event.getModifierState('CapsLock'));
     }
-  }
-
-  fillMockCredentials(): void {
-    if (!this.mockCredentials) {
-      return;
-    }
-    this.loginForm.setValue({
-      email: this.mockCredentials.email,
-      password: this.mockCredentials.password,
-    });
-    this.clearErrors();
   }
 
   submitLogin(): void {
@@ -155,6 +122,7 @@ export class Login {
 
     if (isApiErrorCode(err, ApiErrorCode.InvalidCredentials)) {
       this.invalidCredentials.set(true);
+      this.loginErrorMessage.set('Invalid email or password. Please try again.');
       return;
     }
 
@@ -163,8 +131,34 @@ export class Login {
       return;
     }
 
+    if (
+      err instanceof ApiError &&
+      err.status === 403 &&
+      (err.code === ApiErrorCode.EmailNotVerified ||
+        err.code === ApiErrorCode.AccountInactive ||
+        err.code === ApiErrorCode.UserRoleNotFound)
+    ) {
+      this.loginErrorMessage.set(err.message);
+      return;
+    }
+
     if (isApiErrorCode(err, ApiErrorCode.ValidationError)) {
-      if (err instanceof ApiError && err.details && typeof err.details === 'object') {
+      const arrayFieldErrors = getFieldErrors(err);
+      if (arrayFieldErrors) {
+        for (const [key, msg] of Object.entries(arrayFieldErrors)) {
+          const normalized = key.toLowerCase();
+          if (normalized === 'email') {
+            this.loginForm.controls.email.setErrors({ serverError: msg });
+            this.emailServerError.set(msg);
+          } else if (normalized === 'password') {
+            this.loginForm.controls.password.setErrors({ serverError: msg });
+            this.passwordServerError.set(msg);
+          }
+        }
+        return;
+      }
+
+      if (err instanceof ApiError && err.details && typeof err.details === 'object' && !Array.isArray(err.details)) {
         const details = err.details as Record<string, string>;
         if (details['email']) {
           this.loginForm.controls.email.setErrors({ serverError: details['email'] });
@@ -182,11 +176,15 @@ export class Login {
       return;
     }
 
-    // Network errors, 5xx, and other unhandled HTTP errors are automatically toasted by errorInterceptor
+    // Network errors, 5xx, and generic 403 are toasted by errorInterceptor; display any other unhandled failure inline
+    if (!(err instanceof ApiError && (err.status === 0 || err.status >= 500 || err.status === 403))) {
+      this.loginErrorMessage.set(getErrorMessage(err, 'Unable to sign in. Please try again.'));
+    }
   }
 
   clearErrors(): void {
     this.invalidCredentials.set(false);
+    this.loginErrorMessage.set('');
     this.isSuspended.set(false);
     this.isNotAdmin.set(false);
     this.emailServerError.set('');
@@ -225,10 +223,16 @@ export class Login {
         this.isForgotLoading.set(false);
         this.forgotSubmitted.set(true);
       },
-      error: () => {
-        // Neutral response to avoid email enumeration
+      error: (err: unknown) => {
         this.isForgotLoading.set(false);
-        this.forgotSubmitted.set(true);
+        const fieldErrors = getFieldErrors(err);
+        if (fieldErrors?.['email']) {
+          this.forgotEmailError.set(fieldErrors['email']);
+          return;
+        }
+        this.forgotEmailError.set(
+          getErrorMessage(err, 'Unable to send reset instructions right now. Please try again.')
+        );
       },
     });
   }

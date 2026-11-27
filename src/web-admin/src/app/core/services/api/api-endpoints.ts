@@ -1,3 +1,5 @@
+import { Id } from '@models/common/id.model';
+
 /**
  * EcoBin Central API Endpoints registry.
  * All paths are relative to environment.apiBaseUrl (/api/v1).
@@ -18,9 +20,9 @@ export const API_ENDPOINTS = {
     // APIs.md 2.11 / gap_api.md 1.4: User search filtered for recyclers
     recyclers: '/admin/users',
     // APIs.md 2.13: Suspend user account
-    suspend: (userId: string) => `/admin/users/${userId}/suspend`,
+    suspend: (userId: Id) => `/admin/users/${userId}/suspend`,
     // APIs.md 2.14: Unsuspend user account
-    unsuspend: (userId: string) => `/admin/users/${userId}/unsuspend`,
+    unsuspend: (userId: Id) => `/admin/users/${userId}/unsuspend`,
   },
   collector: {
     // PROPOSED (gap_api.md 1.5): Collectors list
@@ -28,11 +30,11 @@ export const API_ENDPOINTS = {
     // APIs.md 2.7: Provision collector
     create: '/admin/collectors',
     // PROPOSED (gap_api.md 1.5): Update collector
-    update: (collectorId: string) => `/admin/collectors/${collectorId}`,
+    update: (collectorId: Id) => `/admin/collectors/${collectorId}`,
     // PROPOSED (gap_api.md 1.5): View collector assigned bins
-    assignedBins: (collectorId: string) => `/admin/collectors/${collectorId}/bins`,
+    assignedBins: (collectorId: Id) => `/admin/collectors/${collectorId}/bins`,
     // PROPOSED (gap_api.md 1.5): Deactivate collector account
-    deactivate: (collectorId: string) => `/admin/collectors/${collectorId}/deactivate`,
+    deactivate: (collectorId: Id) => `/admin/collectors/${collectorId}/deactivate`,
   },
   bin: {
     // PROPOSED (gap_api.md 1.3): Admin smart bins fleet list
@@ -41,8 +43,10 @@ export const API_ENDPOINTS = {
     map: '/admin/bins/map',
     // APIs.md 7.1: Register new smart bin
     register: '/admin/bins',
+    // E53: Update smart bin metadata
+    update: (binId: Id) => `/admin/bins/${binId}`,
     // APIs.md 7.3: Assign collector to smart bin
-    assign: (binId: string) => `/admin/bins/${binId}/assignment`,
+    assign: (binId: Id) => `/admin/bins/${binId}/assignment`,
   },
   analytics: {
     // APIs.md 7.9: Operational analytics overview KPIs
@@ -54,13 +58,13 @@ export const API_ENDPOINTS = {
     // PROPOSED (gap_api.md 1.6): Flagged inspection reports review queue
     list: '/admin/inspections',
     // PROPOSED (gap_api.md 1.6): Detailed inspection report with captured frames
-    detail: (reportId: string) => `/admin/inspections/${reportId}`,
+    detail: (reportId: Id) => `/admin/inspections/${reportId}`,
     // PROPOSED (gap_api.md 1.6): Correct waste category prediction
-    correct: (reportId: string) => `/admin/inspections/${reportId}/correct`,
+    correct: (reportId: Id) => `/admin/inspections/${reportId}/correct`,
     // PROPOSED (gap_api.md 1.6): Dismiss report (ML inference was correct)
-    dismiss: (reportId: string) => `/admin/inspections/${reportId}/dismiss`,
+    dismiss: (reportId: Id) => `/admin/inspections/${reportId}/dismiss`,
     // PROPOSED (gap_api.md 1.6): Send report to retraining dataset
-    retrain: (reportId: string) => `/admin/inspections/${reportId}/retrain`,
+    retrain: (reportId: Id) => `/admin/inspections/${reportId}/retrain`,
     // PROPOSED (gap_api.md 1.6): Available waste categories for reclassification
     wasteTypes: '/admin/waste-types',
   },
@@ -77,15 +81,17 @@ export const API_ENDPOINTS = {
     adjust: '/admin/ledger/adjustments',
   },
   reward: {
-    // PROPOSED (gap_api.md 1.9): Admin rewards catalog list
+    // Admin rewards catalog list
     list: '/admin/catalog',
+    // Active reward categories lookup
+    categories: '/admin/catalog/categories',
     // APIs.md 6.2: Create reward item
     create: '/admin/catalog',
     // APIs.md 6.3: Update reward item
-    update: (itemId: string) => `/admin/catalog/${itemId}`,
+    update: (itemId: Id) => `/admin/catalog/${itemId}`,
     // APIs.md 6.4: Archive reward item
-    archive: (itemId: string) => `/admin/catalog/${itemId}/archive`,
-    // PROPOSED (gap_api.md 1.9): Upload reward image asset
+    archive: (itemId: Id) => `/admin/catalog/${itemId}/archive`,
+    // Upload reward image asset
     uploadImage: '/admin/catalog/upload-image',
   },
   gamification: {
@@ -102,8 +108,16 @@ export const API_ENDPOINTS = {
     // PROPOSED (gap_api.md 1.12): Admin notifications feed
     list: '/admin/notifications',
     // PROPOSED (gap_api.md 1.12): Mark single notification as read
-    markRead: (id: string) => `/admin/notifications/${id}/read`,
+    markRead: (id: Id) => `/admin/notifications/${id}/read`,
     // PROPOSED (gap_api.md 1.12): Mark all notifications as read
     markAllRead: '/admin/notifications/mark-all-read',
+  },
+  lookups: {
+    // E78: System admin lookup options
+    admins: '/admin/lookups/admins',
+    // E79: Active collector lookup options
+    collectors: '/admin/lookups/collectors',
+    // E80: District lookup options
+    districts: '/admin/lookups/districts',
   },
 } as const;

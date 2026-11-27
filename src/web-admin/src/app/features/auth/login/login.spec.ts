@@ -9,7 +9,6 @@ import { AuthError } from '@core/errors/auth-error';
 import { ApiErrorCode } from '@models/common/api-error-code.enum';
 import { UserRole } from '@models/user/user-role.enum';
 import { LoginResponse } from '@models/auth/auth.dto';
-import { environment } from '@env/environment';
 
 describe('Login Component', () => {
   let component: Login;
@@ -215,6 +214,56 @@ describe('Login Component', () => {
     expect(component.loginForm.controls.email.invalid).toBe(true);
   });
 
+  it('should map backend array VALIDATION_ERROR details case-insensitively', () => {
+    const error = new ApiError({
+      status: 400,
+      code: ApiErrorCode.ValidationError,
+      message: 'Invalid request data.',
+      details: [
+        { field: 'Email', message: 'The Email field is not a valid e-mail address.' },
+        { field: 'Password', message: 'The Password field is required.' },
+      ],
+      requestUrl: 'http://localhost:5121/api/v1/auth/login',
+    });
+    authServiceSpy.login.mockReturnValue(throwError(() => error));
+
+    component.loginForm.setValue({
+      email: 'bad@example.com',
+      password: 'password123',
+    });
+
+    component.submitLogin();
+    fixture.detectChanges();
+
+    expect(component.emailServerError()).toBe('The Email field is not a valid e-mail address.');
+    expect(component.passwordServerError()).toBe('The Password field is required.');
+    expect(component.loginForm.controls.email.invalid).toBe(true);
+    expect(component.loginForm.controls.password.invalid).toBe(true);
+  });
+
+  it('should render inline error banner for EMAIL_NOT_VERIFIED 403 error', () => {
+    const error = new ApiError({
+      status: 403,
+      code: 'EMAIL_NOT_VERIFIED' as ApiErrorCode,
+      message: 'Please verify your email first.',
+      requestUrl: 'http://localhost:5121/api/v1/auth/login',
+    });
+    authServiceSpy.login.mockReturnValue(throwError(() => error));
+
+    component.loginForm.setValue({
+      email: 'admin@ecobin.org',
+      password: 'password123',
+    });
+
+    component.submitLogin();
+    fixture.detectChanges();
+
+    expect(component.loginErrorMessage()).toBe('Please verify your email first.');
+    const el = fixture.nativeElement as HTMLElement;
+    const banner = el.querySelector('.login-error-banner');
+    expect(banner?.textContent).toContain('Please verify your email first.');
+  });
+
   it('should render "Administrators only" notice on AuthError NOT_ADMIN', () => {
     const error = new AuthError('NOT_ADMIN', 'Access denied: Only system administrators can access this portal');
     authServiceSpy.login.mockReturnValue(throwError(() => error));
@@ -252,17 +301,10 @@ describe('Login Component', () => {
     expect(component.isLoading()).toBe(false);
   });
 
-  it('should conditionally render prototype hint based on environment.useMockBackend', () => {
+  it('should never render any mock backend credentials card', () => {
     const el = fixture.nativeElement as HTMLElement;
     const hint = el.querySelector('.mock-backend-card, .prototype-hint');
-
-    if (environment.useMockBackend) {
-      expect(hint).toBeTruthy();
-      expect(hint?.textContent).toContain('Mock backend');
-      expect(hint?.textContent).toContain('wrongpass');
-    } else {
-      expect(hint).toBeNull();
-    }
+    expect(hint).toBeNull();
   });
 
   it('should toggle password visibility and update aria-pressed', () => {
@@ -303,19 +345,6 @@ describe('Login Component', () => {
     } as unknown as KeyboardEvent;
     component.checkCapsLock(eventOff);
     expect(component.capsLockActive()).toBe(false);
-  });
-
-  it('should fill mock credentials when fill button is clicked', () => {
-    if (!environment.useMockBackend) {
-      return;
-    }
-
-    component.fillMockCredentials();
-    expect(component.loginForm.value).toEqual({
-      email: 'admin@ecobin.eg',
-      password: 'password123',
-    });
-    expect(component.loginForm.valid).toBe(true);
   });
 
   it('should open and handle "Forgot password?" modal workflow', () => {

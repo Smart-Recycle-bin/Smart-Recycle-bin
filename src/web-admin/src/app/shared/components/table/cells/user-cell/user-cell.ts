@@ -10,6 +10,6 @@ import { Avatar } from '@shared/components/avatar/avatar';
 })
 export class UserCell {
   readonly name = input.required<string>();
-  readonly subtitle = input<string>('');
+  readonly subtitle = input<string | number>('');
   readonly avatarUrl = input<string | null | undefined>();
 }

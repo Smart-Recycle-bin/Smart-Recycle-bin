@@ -31,8 +31,9 @@ export class CurrentUserService {
     if (session?.user) {
       const name = session.user.displayName;
       return {
-        id: session.user.userId,
+        id: String(session.user.userId),
         name,
+        email: session.user.email,
         role: session.user.role,
         initials: initials(name),
       };
