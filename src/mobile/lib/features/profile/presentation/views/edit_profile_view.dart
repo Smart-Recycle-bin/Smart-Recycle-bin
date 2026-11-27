@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_typography.dart';
 import '../viewmodels/profile_viewmodel.dart';
+import '../widgets/editable_profile_avatar.dart';
 
 class EditProfileView extends StatefulWidget {
   const EditProfileView({super.key});
@@ -42,7 +43,10 @@ class _EditProfileViewState extends State<EditProfileView> {
     }
 
     final vm = context.read<ProfileViewModel>();
-    final success = await vm.updateProfile(name, phone.isNotEmpty ? phone : null);
+    final success = await vm.updateProfile(
+      name,
+      phone.isNotEmpty ? phone : null,
+    );
 
     if (mounted) {
       if (success) {
@@ -52,7 +56,14 @@ class _EditProfileViewState extends State<EditProfileView> {
             backgroundColor: AppColors.primaryGreen,
           ),
         );
-        Navigator.of(context).pop();
+        Navigator.of(context).pop(true);
+      } else if (vm.errorMessage != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(vm.errorMessage!),
+            backgroundColor: AppColors.danger,
+          ),
+        );
       }
     }
   }
@@ -71,6 +82,14 @@ class _EditProfileViewState extends State<EditProfileView> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Center(
+              child: EditableProfileAvatar(
+                imageUrl: vm.user?.profilePhotoUrl,
+                isUploading: vm.isUploadingPhoto,
+                size: 96,
+              ),
+            ),
+            const SizedBox(height: 24),
             Text(
               'Display Name',
               style: AppTypography.subtitlePlex.copyWith(

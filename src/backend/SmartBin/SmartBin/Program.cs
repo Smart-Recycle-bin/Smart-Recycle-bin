@@ -26,7 +26,6 @@ namespace SmartBin
             builder.Services.AddCorsPolicy();
             builder.Services.AddPersistence(builder.Configuration);
             builder.Services.AddApplicationServices();
-            builder.Services.AddSwaggerGen();   
             builder.Services.AddJwtAuthentication(builder.Configuration);
 
             var app = builder.Build();

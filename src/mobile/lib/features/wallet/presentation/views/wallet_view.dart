@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/utils/provider_helpers.dart';
 import '../../../shell/presentation/widgets/ecobin_app_bar.dart';
 import '../viewmodels/wallet_viewmodel.dart';
+import '../../../marketplace/presentation/viewmodels/marketplace_viewmodel.dart';
 import '../../../marketplace/presentation/views/marketplace_view.dart';
 
 class WalletView extends StatefulWidget {
@@ -18,8 +20,16 @@ class _WalletViewState extends State<WalletView> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<WalletViewModel>().init();
+      _refreshWallet(context);
     });
+  }
+
+  Future<void> _refreshWallet(BuildContext context) async {
+    final vm = context.read<WalletViewModel>();
+    await vm.fetchWalletData();
+    if (context.mounted) {
+      context.maybeRead<MarketplaceViewModel>()?.syncBalancePoints(vm.availablePoints);
+    }
   }
 
   @override
@@ -30,19 +40,34 @@ class _WalletViewState extends State<WalletView> {
       backgroundColor: AppColors.backgroundLight,
       appBar: EcoBinAppBar(points: vm.availablePoints),
       body: RefreshIndicator(
-        onRefresh: () => vm.fetchWalletData(),
+        onRefresh: () => _refreshWallet(context),
+        color: AppColors.primaryGreen,
         child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'EcoPoints Wallet',
-                style: AppTypography.headlineCairo.copyWith(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.deepForest,
-                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
+                      'EcoPoints Wallet',
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTypography.headlineCairo.copyWith(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.deepForest,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.refresh_rounded, color: AppColors.deepForest),
+                    tooltip: 'Refresh',
+                    onPressed: vm.isLoading ? null : () => _refreshWallet(context),
+                  ),
+                ],
               ),
               const SizedBox(height: 14),
 
@@ -71,38 +96,42 @@ class _WalletViewState extends State<WalletView> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Available Balance',
-                              style: AppTypography.subtitlePlex.copyWith(
-                                color: Colors.white.withAlpha(200),
-                                fontSize: 13,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            RichText(
-                              text: TextSpan(
-                                text: '${vm.availablePoints} ',
-                                style: AppTypography.headlineCairo.copyWith(
-                                  fontSize: 32,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Available Balance',
+                                overflow: TextOverflow.ellipsis,
+                                style: AppTypography.subtitlePlex.copyWith(
+                                  color: Colors.white.withAlpha(200),
+                                  fontSize: 13,
                                 ),
-                                children: [
-                                  TextSpan(
-                                    text: 'PTS',
-                                    style: AppTypography.badgeText.copyWith(
-                                      color: AppColors.mintGreen,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                ],
                               ),
-                            ),
-                          ],
+                              const SizedBox(height: 4),
+                              RichText(
+                                text: TextSpan(
+                                  text: '${vm.availablePoints} ',
+                                  style: AppTypography.headlineCairo.copyWith(
+                                    fontSize: 32,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                  children: [
+                                    TextSpan(
+                                      text: 'PTS',
+                                      style: AppTypography.badgeText.copyWith(
+                                        color: AppColors.mintGreen,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
+                        const SizedBox(width: 8),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
@@ -143,10 +172,13 @@ class _WalletViewState extends State<WalletView> {
                         ),
                         icon: const Icon(Icons.card_giftcard, size: 16),
                         label: const Text('Redeem', style: TextStyle(fontSize: 13)),
-                        onPressed: () {
-                          Navigator.of(context).push(
+                        onPressed: () async {
+                          await Navigator.of(context).push(
                             MaterialPageRoute(builder: (_) => const MarketplaceView()),
                           );
+                          if (context.mounted) {
+                            await _refreshWallet(context);
+                          }
                         },
                       ),
                     ),
@@ -212,81 +244,138 @@ class _WalletViewState extends State<WalletView> {
               const SizedBox(height: 16),
 
               // Ledger Transactions List
-              ...vm.filteredEntries.map((entry) {
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              if (vm.isLoading && vm.entries.isEmpty)
+                const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(32),
+                    child: CircularProgressIndicator(color: AppColors.primaryGreen),
+                  ),
+                )
+              else if (vm.errorMessage != null && vm.entries.isEmpty)
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(18),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withAlpha(5),
-                        blurRadius: 6,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
+                    border: Border.all(color: AppColors.danger.withAlpha(80)),
                   ),
-                  child: Row(
+                  child: Column(
                     children: [
-                      // Circular Icon
-                      Container(
-                        width: 44,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          color: entry.isCredit
-                              ? AppColors.primaryGreen.withAlpha(30)
-                              : AppColors.mintGreen.withAlpha(40),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          entry.isCredit ? Icons.recycling_rounded : Icons.card_giftcard,
-                          color: entry.isCredit ? AppColors.deepForest : AppColors.primaryGreen,
-                          size: 22,
-                        ),
-                      ),
-                      const SizedBox(width: 14),
-
-                      // Title & Date
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              entry.title,
-                              style: AppTypography.titlePlex.copyWith(
-                                fontSize: 15,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.darkSlate,
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              entry.timeFormatted,
-                              style: AppTypography.bodyMedium.copyWith(
-                                fontSize: 12,
-                                color: AppColors.textMuted,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      // Points Delta
                       Text(
-                        entry.pointsFormatted,
-                        style: AppTypography.titlePlex.copyWith(
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                          color: entry.isCredit
-                              ? AppColors.primaryGreen
-                              : AppColors.darkSlate,
+                        vm.errorMessage!,
+                        textAlign: TextAlign.center,
+                        style: AppTypography.bodyPlex.copyWith(
+                          color: AppColors.danger,
+                          fontSize: 13,
                         ),
+                      ),
+                      const SizedBox(height: 10),
+                      TextButton.icon(
+                        onPressed: () => _refreshWallet(context),
+                        icon: const Icon(Icons.refresh_rounded),
+                        label: const Text('Retry'),
                       ),
                     ],
                   ),
-                );
-              }),
+                )
+              else if (vm.filteredEntries.isEmpty)
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                  child: Text(
+                    vm.activeFilter == 'All'
+                        ? 'No transactions yet.'
+                        : 'No ${vm.activeFilter.toLowerCase()} transactions yet.',
+                    textAlign: TextAlign.center,
+                    style: AppTypography.bodyPlex.copyWith(
+                      color: AppColors.textSecondary,
+                      fontSize: 14,
+                    ),
+                  ),
+                )
+              else
+                ...vm.filteredEntries.map((entry) {
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(18),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withAlpha(5),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        // Circular Icon
+                        Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: entry.isCredit
+                                ? AppColors.primaryGreen.withAlpha(30)
+                                : AppColors.mintGreen.withAlpha(40),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            entry.isCredit ? Icons.recycling_rounded : Icons.card_giftcard,
+                            color: entry.isCredit ? AppColors.deepForest : AppColors.primaryGreen,
+                            size: 22,
+                          ),
+                        ),
+                        const SizedBox(width: 14),
+
+                        // Title & Date
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                entry.title,
+                                style: AppTypography.titlePlex.copyWith(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.darkSlate,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                entry.balanceAfter != null
+                                    ? '${entry.timeFormatted} • Bal: ${entry.balanceAfter} PTS'
+                                    : entry.timeFormatted,
+                                style: AppTypography.bodyMedium.copyWith(
+                                  fontSize: 12,
+                                  color: AppColors.textMuted,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        // Points Delta
+                        Text(
+                          entry.pointsFormatted,
+                          style: AppTypography.titlePlex.copyWith(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            color: entry.isCredit
+                                ? AppColors.primaryGreen
+                                : AppColors.darkSlate,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
               const SizedBox(height: 40),
             ],
           ),

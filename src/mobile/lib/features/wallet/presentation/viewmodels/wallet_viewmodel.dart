@@ -7,8 +7,8 @@ class WalletViewModel extends ChangeNotifier {
 
   WalletViewModel({required this.walletRepository});
 
-  int _availablePoints = 1420;
-  int _lifetimeEarnedPoints = 3120;
+  int _availablePoints = 0;
+  int _lifetimeEarnedPoints = 0;
   List<LedgerEntryEntity> _entries = [];
   String _activeFilter = 'All'; // 'All', 'Earned', 'Spent'
   bool _isLoading = false;
@@ -47,19 +47,26 @@ class WalletViewModel extends ChangeNotifier {
 
     balanceResult.when(
       onSuccess: (data) {
-        _availablePoints = data['availablePoints'] ?? 1420;
-        _lifetimeEarnedPoints = data['lifetimeEarnedPoints'] ?? 3120;
+        _availablePoints = (data['availablePoints'] as num?)?.toInt() ?? _availablePoints;
+        _lifetimeEarnedPoints =
+            (data['lifetimeEarnedPoints'] as num?)?.toInt() ?? _lifetimeEarnedPoints;
       },
-      onFailure: (error) => _errorMessage = error,
+      onFailure: (error) => _errorMessage = error.replaceFirst('Exception: ', ''),
     );
 
     ledgerResult.when(
       onSuccess: (list) {
         _entries = list;
       },
-      onFailure: (error) => _errorMessage = error,
+      onFailure: (error) => _errorMessage = error.replaceFirst('Exception: ', ''),
     );
 
+    notifyListeners();
+  }
+
+  void syncAvailablePoints(int points) {
+    if (_availablePoints == points) return;
+    _availablePoints = points;
     notifyListeners();
   }
 

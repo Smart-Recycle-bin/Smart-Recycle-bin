@@ -1,4 +1,4 @@
-﻿using System.Net;
+using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
@@ -70,6 +70,7 @@ namespace SmartBin.Tests
 
                 var reward = new Reward { Name = "Retail 10 EGP", CategoryId = cat.CategoryId, PointsCost = 200, StockQuantity = 5, IsActive = true };
                 db.Rewards.Add(reward);
+                await db.SaveChangesAsync();
 
                 var wallet = await db.Wallets.FirstAsync(w => w.UserId == _factory.Citizen1Id);
                 wallet.AvailablePoints = 250;

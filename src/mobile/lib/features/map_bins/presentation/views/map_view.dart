@@ -4,9 +4,13 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart' hide Path;
 import 'package:ecobin/core/constants/app_colors.dart';
 import 'package:ecobin/core/constants/app_typography.dart';
+import 'package:ecobin/core/utils/provider_helpers.dart';
+import 'package:ecobin/core/widgets/profile_avatar.dart';
 import 'package:ecobin/features/map_bins/presentation/viewmodels/map_bins_viewmodel.dart';
 import 'package:ecobin/features/scan_session/presentation/views/scan_bin_view.dart';
+import 'package:ecobin/features/profile/presentation/viewmodels/profile_viewmodel.dart';
 import 'package:ecobin/features/profile/presentation/views/profile_view.dart';
+import 'package:ecobin/features/wallet/presentation/viewmodels/wallet_viewmodel.dart';
 
 class MapView extends StatefulWidget {
   const MapView({super.key});
@@ -49,6 +53,15 @@ class _MapViewState extends State<MapView> {
     _mapController.move(vm.userLatLng, _defaultZoom);
   }
 
+  Future<void> _refreshMapAndBalance() async {
+    final vm = context.read<MapBinsViewModel>();
+    final walletVm = context.maybeRead<WalletViewModel>();
+    await Future.wait([
+      vm.fetchNearbyBins(),
+      if (walletVm != null) walletVm.fetchWalletData(),
+    ]);
+  }
+
   void _focusOnRoute(LatLng userLoc, LatLng binLoc) {
     try {
       final bounds = LatLngBounds.fromPoints([userLoc, binLoc]);
@@ -71,6 +84,8 @@ class _MapViewState extends State<MapView> {
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<MapBinsViewModel>();
+    final walletPoints = context.maybeWatch<WalletViewModel>()?.availablePoints ?? 0;
+    final profilePhoto = context.maybeWatch<ProfileViewModel>()?.user?.profilePhotoUrl;
     final nearest = vm.nearestBin;
     final otherBins = vm.otherNearbyBins;
 
@@ -135,13 +150,14 @@ class _MapViewState extends State<MapView> {
                   userAgentPackageName: 'com.ecobin.app',
                 ),
 
-                // Walking route polyline when navigating to selected bin
+                // Dotted pedestrian walking route polyline when navigating to selected bin
                 if (vm.isNavigating && vm.routePoints.isNotEmpty)
                   PolylineLayer(
                     polylines: [
                       Polyline(
                         points: vm.routePoints,
                         strokeWidth: 5.5,
+                        pattern: const StrokePattern.dotted(spacingFactor: 1.8),
                         color: AppColors.primaryGreen,
                         borderColor: Colors.white,
                         borderStrokeWidth: 2.0,
@@ -241,7 +257,7 @@ class _MapViewState extends State<MapView> {
                                 ],
                               ),
                               child: Text(
-                                '1,420 pts',
+                                '$walletPoints pts',
                                 style: AppTypography.badgeText.copyWith(
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,
@@ -258,29 +274,18 @@ class _MapViewState extends State<MapView> {
                                   ),
                                 );
                               },
-                              child: Container(
-                                width: 38,
-                                height: 38,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    color: Colors.white,
-                                    width: 2,
+                              child: ProfileAvatar(
+                                imageUrl: profilePhoto,
+                                size: 38,
+                                borderColor: Colors.white,
+                                borderWidth: 2,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withAlpha(25),
+                                    blurRadius: 4,
+                                    offset: const Offset(0, 2),
                                   ),
-                                  image: const DecorationImage(
-                                    image: NetworkImage(
-                                      'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
-                                    ),
-                                    fit: BoxFit.cover,
-                                  ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withAlpha(25),
-                                      blurRadius: 4,
-                                      offset: const Offset(0, 2),
-                                    ),
-                                  ],
-                                ),
+                                ],
                               ),
                             ),
                           ],
@@ -290,68 +295,112 @@ class _MapViewState extends State<MapView> {
 
                     const SizedBox(height: 14),
 
-                    // Row 2: "NEARBY HUBS" & "Find Smart Bins Near You" + Target Button
+                    // Row 2: "NEARBY HUBS" & "Find Smart Bins Near You" + Refresh & GPS Buttons
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'NEARBY HUBS',
-                              style: AppTypography.badgeText.copyWith(
-                                color: AppColors.deepForest,
-                                letterSpacing: 1.1,
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'NEARBY HUBS',
+                                style: AppTypography.badgeText.copyWith(
+                                  color: AppColors.deepForest,
+                                  letterSpacing: 1.1,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: 1),
-                            Text(
-                              'Find Smart Bins Near You',
-                              style: AppTypography.titlePlex.copyWith(
-                                fontSize: 19,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.darkSlate,
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        // Mint green GPS target button matching UI
-                        Container(
-                          width: 44,
-                          height: 44,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF34D399),
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0xFF34D399).withAlpha(120),
-                                blurRadius: 8,
-                                offset: const Offset(0, 3),
+                              const SizedBox(height: 1),
+                              Text(
+                                'Find Smart Bins Near You',
+                                overflow: TextOverflow.ellipsis,
+                                style: AppTypography.titlePlex.copyWith(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: AppColors.darkSlate,
+                                ),
                               ),
                             ],
                           ),
-                          child: IconButton(
-                            icon: vm.isLocating
-                                ? const SizedBox(
-                                    width: 18,
-                                    height: 18,
-                                    child: CircularProgressIndicator(
-                                      color: Colors.white,
-                                      strokeWidth: 2,
-                                    ),
-                                  )
-                                : const Icon(
-                                    Icons.gps_fixed_rounded,
-                                    color: Colors.white,
-                                    size: 22,
+                        ),
+                        const SizedBox(width: 8),
+
+                        // Refresh & Mint green GPS target buttons
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withAlpha(20),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 3),
                                   ),
-                            padding: EdgeInsets.zero,
-                            onPressed: _centerOnUser,
-                          ),
+                                ],
+                              ),
+                              child: IconButton(
+                                icon: vm.isLoading
+                                    ? const SizedBox(
+                                        width: 16,
+                                        height: 16,
+                                        child: CircularProgressIndicator(
+                                          color: AppColors.deepForest,
+                                          strokeWidth: 2,
+                                        ),
+                                      )
+                                    : const Icon(
+                                        Icons.refresh_rounded,
+                                        color: AppColors.deepForest,
+                                        size: 20,
+                                      ),
+                                tooltip: 'Refresh bins & balance',
+                                padding: EdgeInsets.zero,
+                                onPressed: _refreshMapAndBalance,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Container(
+                              width: 44,
+                              height: 44,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF34D399),
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(0xFF34D399).withAlpha(120),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 3),
+                                  ),
+                                ],
+                              ),
+                              child: IconButton(
+                                icon: vm.isLocating
+                                    ? const SizedBox(
+                                        width: 18,
+                                        height: 18,
+                                        child: CircularProgressIndicator(
+                                          color: Colors.white,
+                                          strokeWidth: 2,
+                                        ),
+                                      )
+                                    : const Icon(
+                                        Icons.gps_fixed_rounded,
+                                        color: Colors.white,
+                                        size: 22,
+                                      ),
+                                padding: EdgeInsets.zero,
+                                onPressed: _centerOnUser,
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
@@ -640,6 +689,42 @@ class _MapViewState extends State<MapView> {
                       ),
                     ),
                     const SizedBox(height: 10),
+
+                    if (vm.isLoading && vm.bins.isEmpty)
+                      const Padding(
+                        padding: EdgeInsets.all(24),
+                        child: Center(
+                          child: CircularProgressIndicator(color: AppColors.primaryGreen),
+                        ),
+                      )
+                    else if (vm.bins.isEmpty)
+                      Container(
+                        padding: const EdgeInsets.all(18),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Column(
+                          children: [
+                            Text(
+                              vm.errorMessage ?? 'No smart bins found nearby.',
+                              textAlign: TextAlign.center,
+                              style: AppTypography.bodyPlex.copyWith(
+                                color: vm.errorMessage != null
+                                    ? AppColors.danger
+                                    : AppColors.textSecondary,
+                                fontSize: 13.5,
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            TextButton.icon(
+                              onPressed: _refreshMapAndBalance,
+                              icon: const Icon(Icons.refresh_rounded),
+                              label: const Text('Reload Bins'),
+                            ),
+                          ],
+                        ),
+                      ),
 
                     // ── List of Other Bins matching UI design ──
                     ...otherBins.map((bin) {
