@@ -1,4 +1,6 @@
+using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
+using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SmartBin.DTOs.Profile;
@@ -57,6 +59,62 @@ namespace SmartBin.Controllers
                 var userId = GetCurrentUserId();
                 if (userId is null)
                     return Unauthorized(UnauthorizedBody());
+
+                // [FromForm] leaves request empty when Content-Type is application/json;
+                // deserialize and validate the JSON body explicitly so both content types work.
+                if (!Request.HasFormContentType &&
+                    Request.ContentType?.Contains("application/json", StringComparison.OrdinalIgnoreCase) == true)
+                {
+                    UpdateProfileRequestDto? jsonRequest;
+                    try
+                    {
+                        jsonRequest = await Request.ReadFromJsonAsync<UpdateProfileRequestDto>();
+                    }
+                    catch (JsonException)
+                    {
+                        return BadRequest(new
+                        {
+                            success = false,
+                            error = new { code = "VALIDATION_ERROR", message = "Invalid JSON payload." }
+                        });
+                    }
+
+                    if (jsonRequest is null)
+                    {
+                        return BadRequest(new
+                        {
+                            success = false,
+                            error = new { code = "VALIDATION_ERROR", message = "Invalid request data." }
+                        });
+                    }
+
+                    var validationResults = new List<ValidationResult>();
+                    if (!Validator.TryValidateObject(
+                            jsonRequest,
+                            new ValidationContext(jsonRequest),
+                            validationResults,
+                            validateAllProperties: true))
+                    {
+                        var errors = validationResults.Select(r => new
+                        {
+                            field = r.MemberNames.FirstOrDefault() ?? string.Empty,
+                            message = r.ErrorMessage ?? "Invalid value."
+                        }).ToList();
+
+                        return BadRequest(new
+                        {
+                            success = false,
+                            error = new
+                            {
+                                code = "VALIDATION_ERROR",
+                                message = "Invalid request data.",
+                                details = errors
+                            }
+                        });
+                    }
+
+                    request = jsonRequest;
+                }
 
                 var result = await _profileService.UpdateProfileAsync(userId.Value, request);
 

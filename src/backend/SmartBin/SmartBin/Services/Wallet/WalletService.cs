@@ -41,6 +41,13 @@ namespace SmartBin.Services.Wallets
             };
         }
 
+        public Task<int> GetAvailablePointsAsync(
+            int userId,
+            CancellationToken cancellationToken = default)
+        {
+            return _walletRepository.GetAvailablePointsAsync(userId, cancellationToken);
+        }
+
         public async Task<(List<LedgerEntryDto> Items, PaginationMeta Meta)> GetLedgerAsync(
             int userId,
             int page,

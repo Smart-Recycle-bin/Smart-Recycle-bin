@@ -25,11 +25,31 @@ namespace SmartBin.Context
         public DbSet<DisposalSurvey> DisposalSurveys { get; set; }
         public DbSet<SurveyResponse> SurveyResponses { get; set; }
         public DbSet<LedgerTransaction> LedgerTransactions { get; set; }
+        public DbSet<Voucher> Vouchers { get; set; }
+        public DbSet<InspectionReport> InspectionReports { get; set; }
+        public DbSet<AuditLog> AuditLogs { get; set; }
+        public DbSet<Notification> Notifications { get; set; }
+        public DbSet<NotificationRecipient> NotificationRecipients { get; set; }
+        public DbSet<SupportTicket> SupportTickets { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
             builder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
+
+            if (Database.IsSqlServer())
+            {
+                builder.Entity<LedgerTransaction>()
+                    .HasIndex(lt => lt.VoucherId)
+                    .IsUnique()
+                    .HasFilter("[VoucherId] IS NOT NULL");
+            }
+            else
+            {
+                builder.Entity<LedgerTransaction>()
+                    .HasIndex(lt => lt.VoucherId)
+                    .IsUnique();
+            }
         }
     }
 }

@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace SmartBin.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class MergeMember5Module : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -58,6 +58,26 @@ namespace SmartBin.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_AspNetUsers", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "NOTIFICATION",
+                columns: table => new
+                {
+                    NotificationId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Title = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    Message = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: false),
+                    Type = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    TargetType = table.Column<string>(type: "nvarchar(40)", maxLength: 40, nullable: false),
+                    ResourceType = table.Column<string>(type: "nvarchar(80)", maxLength: 80, nullable: true),
+                    ResourceId = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ExpiresAt = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_NOTIFICATION", x => x.NotificationId);
                 });
 
             migrationBuilder.CreateTable(
@@ -199,6 +219,31 @@ namespace SmartBin.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "AUDIT_LOG",
+                columns: table => new
+                {
+                    AuditLogId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    AdminId = table.Column<int>(type: "int", nullable: false),
+                    ActionType = table.Column<string>(type: "nvarchar(80)", maxLength: 80, nullable: false),
+                    ResourceType = table.Column<string>(type: "nvarchar(80)", maxLength: 80, nullable: false),
+                    ResourceId = table.Column<int>(type: "int", nullable: false),
+                    Reason = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    IpAddress = table.Column<string>(type: "nvarchar(64)", maxLength: 64, nullable: true),
+                    Timestamp = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AUDIT_LOG", x => x.AuditLogId);
+                    table.ForeignKey(
+                        name: "FK_AUDIT_LOG_AspNetUsers_AdminId",
+                        column: x => x.AdminId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "AuthOtps",
                 columns: table => new
                 {
@@ -308,6 +353,32 @@ namespace SmartBin.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "NOTIFICATION_RECIPIENT",
+                columns: table => new
+                {
+                    NotificationId = table.Column<int>(type: "int", nullable: false),
+                    UserId = table.Column<int>(type: "int", nullable: false),
+                    IsRead = table.Column<bool>(type: "bit", nullable: false),
+                    ReadAt = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_NOTIFICATION_RECIPIENT", x => new { x.NotificationId, x.UserId });
+                    table.ForeignKey(
+                        name: "FK_NOTIFICATION_RECIPIENT_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_NOTIFICATION_RECIPIENT_NOTIFICATION_NotificationId",
+                        column: x => x.NotificationId,
+                        principalTable: "NOTIFICATION",
+                        principalColumn: "NotificationId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Rewards",
                 columns: table => new
                 {
@@ -395,6 +466,40 @@ namespace SmartBin.Migrations
                         principalTable: "SMART_BIN",
                         principalColumn: "BinId",
                         onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "VOUCHER",
+                columns: table => new
+                {
+                    VoucherId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    RedemptionId = table.Column<int>(type: "int", nullable: false),
+                    Code = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    UserId = table.Column<int>(type: "int", nullable: false),
+                    RewardId = table.Column<int>(type: "int", nullable: false),
+                    IssuedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    RedeemedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ExpiryDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    Status = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    PointsSpent = table.Column<int>(type: "int", nullable: false),
+                    ValueEgpAtRedemption = table.Column<decimal>(type: "decimal(18,2)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_VOUCHER", x => x.VoucherId);
+                    table.ForeignKey(
+                        name: "FK_VOUCHER_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_VOUCHER_Rewards_RewardId",
+                        column: x => x.RewardId,
+                        principalTable: "Rewards",
+                        principalColumn: "RewardId",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -493,6 +598,51 @@ namespace SmartBin.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "INSPECTION_REPORT",
+                columns: table => new
+                {
+                    ReportId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    SurveyId = table.Column<int>(type: "int", nullable: false),
+                    DisposalItemId = table.Column<int>(type: "int", nullable: false),
+                    Feedback = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true),
+                    ReviewDecision = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    RetrainingStatus = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ReviewedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    ReviewedByAdminId = table.Column<int>(type: "int", nullable: true),
+                    CorrectedWasteTypeId = table.Column<int>(type: "int", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_INSPECTION_REPORT", x => x.ReportId);
+                    table.ForeignKey(
+                        name: "FK_INSPECTION_REPORT_AspNetUsers_ReviewedByAdminId",
+                        column: x => x.ReviewedByAdminId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_INSPECTION_REPORT_DISPOSAL_ITEM_DisposalItemId",
+                        column: x => x.DisposalItemId,
+                        principalTable: "DISPOSAL_ITEM",
+                        principalColumn: "ItemId",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_INSPECTION_REPORT_DISPOSAL_SURVEY_SurveyId",
+                        column: x => x.SurveyId,
+                        principalTable: "DISPOSAL_SURVEY",
+                        principalColumn: "SurveyId",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_INSPECTION_REPORT_WASTE_TYPE_CorrectedWasteTypeId",
+                        column: x => x.CorrectedWasteTypeId,
+                        principalTable: "WASTE_TYPE",
+                        principalColumn: "WasteTypeId",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "SURVEY_RESPONSE",
                 columns: table => new
                 {
@@ -585,6 +735,21 @@ namespace SmartBin.Migrations
                 filter: "[NormalizedUserName] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
+                name: "IX_AUDIT_LOG_AdminId",
+                table: "AUDIT_LOG",
+                column: "AdminId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AUDIT_LOG_ResourceType_ResourceId",
+                table: "AUDIT_LOG",
+                columns: new[] { "ResourceType", "ResourceId" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AUDIT_LOG_Timestamp",
+                table: "AUDIT_LOG",
+                column: "Timestamp");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_AuthOtps_ExpiresAt",
                 table: "AuthOtps",
                 column: "ExpiresAt");
@@ -631,6 +796,32 @@ namespace SmartBin.Migrations
                 column: "Status");
 
             migrationBuilder.CreateIndex(
+                name: "IX_INSPECTION_REPORT_CorrectedWasteTypeId",
+                table: "INSPECTION_REPORT",
+                column: "CorrectedWasteTypeId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_INSPECTION_REPORT_DisposalItemId",
+                table: "INSPECTION_REPORT",
+                column: "DisposalItemId",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_INSPECTION_REPORT_ReviewDecision",
+                table: "INSPECTION_REPORT",
+                column: "ReviewDecision");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_INSPECTION_REPORT_ReviewedByAdminId",
+                table: "INSPECTION_REPORT",
+                column: "ReviewedByAdminId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_INSPECTION_REPORT_SurveyId",
+                table: "INSPECTION_REPORT",
+                column: "SurveyId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_LEDGER_TRANSACTION_CreatedByAdminId",
                 table: "LEDGER_TRANSACTION",
                 column: "CreatedByAdminId");
@@ -643,9 +834,21 @@ namespace SmartBin.Migrations
                 filter: "[SessionId] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
+                name: "IX_LEDGER_TRANSACTION_VoucherId",
+                table: "LEDGER_TRANSACTION",
+                column: "VoucherId",
+                unique: true,
+                filter: "[VoucherId] IS NOT NULL");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_LEDGER_TRANSACTION_WalletId_CreatedAt_TransactionId",
                 table: "LEDGER_TRANSACTION",
                 columns: new[] { "WalletId", "CreatedAt", "TransactionId" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_NOTIFICATION_RECIPIENT_UserId",
+                table: "NOTIFICATION_RECIPIENT",
+                column: "UserId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_RefreshTokens_ReplacedByTokenId",
@@ -730,6 +933,28 @@ namespace SmartBin.Migrations
                 column: "UserSelectedTypeId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_VOUCHER_Code",
+                table: "VOUCHER",
+                column: "Code",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_VOUCHER_RedemptionId",
+                table: "VOUCHER",
+                column: "RedemptionId",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_VOUCHER_RewardId",
+                table: "VOUCHER",
+                column: "RewardId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_VOUCHER_UserId_RedeemedAt",
+                table: "VOUCHER",
+                columns: new[] { "UserId", "RedeemedAt" });
+
+            migrationBuilder.CreateIndex(
                 name: "IX_WALLET_UserId",
                 table: "WALLET",
                 column: "UserId",
@@ -761,16 +986,22 @@ namespace SmartBin.Migrations
                 name: "AspNetUserTokens");
 
             migrationBuilder.DropTable(
+                name: "AUDIT_LOG");
+
+            migrationBuilder.DropTable(
                 name: "AuthOtps");
+
+            migrationBuilder.DropTable(
+                name: "INSPECTION_REPORT");
 
             migrationBuilder.DropTable(
                 name: "LEDGER_TRANSACTION");
 
             migrationBuilder.DropTable(
-                name: "RefreshTokens");
+                name: "NOTIFICATION_RECIPIENT");
 
             migrationBuilder.DropTable(
-                name: "Rewards");
+                name: "RefreshTokens");
 
             migrationBuilder.DropTable(
                 name: "SERVICE_RECORD");
@@ -779,13 +1010,16 @@ namespace SmartBin.Migrations
                 name: "SURVEY_RESPONSE");
 
             migrationBuilder.DropTable(
+                name: "VOUCHER");
+
+            migrationBuilder.DropTable(
                 name: "AspNetRoles");
 
             migrationBuilder.DropTable(
                 name: "WALLET");
 
             migrationBuilder.DropTable(
-                name: "RewardCategories");
+                name: "NOTIFICATION");
 
             migrationBuilder.DropTable(
                 name: "DISPOSAL_ITEM");
@@ -794,10 +1028,16 @@ namespace SmartBin.Migrations
                 name: "DISPOSAL_SURVEY");
 
             migrationBuilder.DropTable(
+                name: "Rewards");
+
+            migrationBuilder.DropTable(
                 name: "WASTE_TYPE");
 
             migrationBuilder.DropTable(
                 name: "DISPOSAL_SESSION");
+
+            migrationBuilder.DropTable(
+                name: "RewardCategories");
 
             migrationBuilder.DropTable(
                 name: "SMART_BIN");

@@ -68,7 +68,7 @@ namespace SmartBin.Tests
                     Purpose = "password_reset",
                     OtpHash = hash,
                     CreatedAt = DateTime.UtcNow.AddMinutes(-20),
-                    ExpiresAt = DateTime.UtcNow.AddMinutes(-10), // expired
+                    ExpiresAt = DateTime.UtcNow.AddMinutes(-10),
                     FailedAttempts = 0
                 };
                 db.AuthOtps.Add(otp);
@@ -84,7 +84,6 @@ namespace SmartBin.Tests
 
             Assert.Equal(HttpStatusCode.BadRequest, expiredResponse.StatusCode);
 
-            // Also test wrong OTP
             var wrongOtpResponse = await client.PostAsJsonAsync("/api/v1/auth/verify-reset-otp", new
             {
                 email = "citizen1@test.local",
@@ -112,7 +111,6 @@ namespace SmartBin.Tests
             Assert.False(string.IsNullOrWhiteSpace(data.GetProperty("ticketId").GetString()));
             Assert.Equal("open", data.GetProperty("status").GetString());
 
-            // Empty description validation check
             var invalidResponse = await client.PostAsJsonAsync("/api/v1/support/tickets", new CreateSupportTicketRequestDto
             {
                 Category = "general",
@@ -122,7 +120,7 @@ namespace SmartBin.Tests
         }
 
         [Fact]
-        public async Task Catalog_Redemption_DecrementsStock_AndDebitsPointsAtomically()
+        public async Task Catalog_Redemption_DecrementsStock_CreatesVoucher_AndDebitsPointsAtomically()
         {
             int rewardId = 0;
             await _factory.ExecuteDbAsync(async db =>
@@ -156,23 +154,24 @@ namespace SmartBin.Tests
 
             using var client = _factory.CreateAuthorizedClient(_factory.Citizen1Id);
 
-            // First redemption should succeed
             var response1 = await client.PostAsJsonAsync($"/api/v1/catalog/{rewardId}/redemptions", new { });
-            Assert.Equal(HttpStatusCode.OK, response1.StatusCode);
+            Assert.Equal(HttpStatusCode.Created, response1.StatusCode);
 
-            // Stock is now 0; second redemption should fail with 400 Bad Request (out of stock)
             var response2 = await client.PostAsJsonAsync($"/api/v1/catalog/{rewardId}/redemptions", new { });
-            Assert.Equal(HttpStatusCode.BadRequest, response2.StatusCode);
+            Assert.Equal(HttpStatusCode.Conflict, response2.StatusCode);
 
-            // Verify final wallet points and stock
             await _factory.ExecuteDbAsync(async db =>
             {
                 var reward = await db.Rewards.FindAsync(rewardId);
                 Assert.NotNull(reward);
-                Assert.Equal(0, reward.StockQuantity);
+                Assert.Equal(0, reward!.StockQuantity);
 
                 var wallet = await db.Wallets.FirstAsync(w => w.UserId == _factory.Citizen1Id);
-                Assert.Equal(50, wallet.AvailablePoints); // Debited once: 150 - 100 = 50
+                Assert.Equal(50, wallet.AvailablePoints);
+
+                var vouchers = await db.Vouchers.Where(v => v.UserId == _factory.Citizen1Id && v.RewardId == rewardId).ToListAsync();
+                Assert.Single(vouchers);
+                Assert.Equal(vouchers[0].VoucherId, vouchers[0].RedemptionId);
             });
         }
     }

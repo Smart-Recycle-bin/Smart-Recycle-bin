@@ -169,23 +169,40 @@ class MapBinsViewModel extends ChangeNotifier {
     _errorMessage = null;
     notifyListeners();
 
-    final result = await binsRepository.getNearbyBins(
+    var result = await binsRepository.getNearbyBins(
       latitude: userLatitude,
       longitude: userLongitude,
-      radiusKm: 1.0,
+      radiusKm: 10.0,
     );
+
+    // If no bins within 10km (e.g. emulator GPS offset), widen search before replacing
+    var shouldWiden = false;
+    result.when(
+      onSuccess: (data) => shouldWiden = data.isEmpty,
+      onFailure: (_) {},
+    );
+    if (shouldWiden) {
+      result = await binsRepository.getNearbyBins(
+        latitude: userLatitude,
+        longitude: userLongitude,
+        radiusKm: 50000.0,
+      );
+    }
 
     _isLoading = false;
     result.when(
       onSuccess: (data) {
-        _bins = data;
-        _updateBinsDistances();
-        if (_bins.isNotEmpty && _selectedBin == null) {
-          selectBin(_bins.first);
+        if (data.isNotEmpty || _bins.isEmpty) {
+          _bins = data;
+          _updateBinsDistances();
+          if (_bins.isNotEmpty && _selectedBin == null) {
+            selectBin(_bins.first);
+          }
         }
       },
       onFailure: (error) {
-        _errorMessage = error;
+        // Keep previously loaded bins so transient network drops don't blank the map
+        _errorMessage = error.replaceFirst('Exception: ', '');
       },
     );
     notifyListeners();
@@ -201,25 +218,68 @@ class MapBinsViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Build pedestrian walking route URL using OpenStreetMap's foot-routing server.
+  static String buildWalkingRouteUrl(LatLng start, LatLng end) {
+    return 'https://routing.openstreetmap.de/routed-foot/route/v1/foot/'
+        '${start.longitude},${start.latitude};${end.longitude},${end.latitude}'
+        '?overview=full&geometries=geojson';
+  }
+
+  /// Build external turn-by-turn navigation URI locked to walking mode.
+  static List<Uri> buildWalkingNavigationUris({
+    required double originLat,
+    required double originLng,
+    required double destLat,
+    required double destLng,
+    TargetPlatform? platformOverride,
+  }) {
+    final platform = platformOverride ?? defaultTargetPlatform;
+    final webUri = Uri.parse(
+      'https://www.google.com/maps/dir/?api=1'
+      '&origin=$originLat,$originLng'
+      '&destination=$destLat,$destLng'
+      '&travelmode=walking&dir_action=navigate',
+    );
+
+    if (!kIsWeb && platform == TargetPlatform.android) {
+      return [
+        Uri.parse('google.navigation:q=$destLat,$destLng&mode=w'),
+        webUri,
+      ];
+    }
+
+    if (!kIsWeb && platform == TargetPlatform.iOS) {
+      return [
+        Uri.parse(
+          'https://maps.apple.com/?saddr=$originLat,$originLng'
+          '&daddr=$destLat,$destLng&dirflg=w',
+        ),
+        webUri,
+      ];
+    }
+
+    return [webUri];
+  }
+
   /// Calculate walking route between current user GPS and selected bin
   Future<void> _generateRouteToBin(BinEntity bin) async {
     final start = userLatLng;
     final end = LatLng(bin.latitude, bin.longitude);
 
     try {
-      // Query Open Source Routing Machine (OSRM) free walking routing
-      final url =
-          'https://router.project-osrm.org/route/v1/foot/${start.longitude},${start.latitude};${end.longitude},${end.latitude}?overview=full&geometries=geojson';
+      // Query FOSSGIS OSM pedestrian routing engine (real sidewalks/footpaths, not car lanes)
+      final url = buildWalkingRouteUrl(start, end);
 
       final response = await Dio().get(
         url,
-        options: Options(receiveTimeout: const Duration(seconds: 4)),
+        options: Options(receiveTimeout: const Duration(seconds: 5)),
       );
 
       if (response.statusCode == 200 && response.data['routes'] != null) {
         final routes = response.data['routes'] as List;
         if (routes.isNotEmpty) {
-          final geometry = routes[0]['geometry'];
+          final route = routes[0];
+          final geometry = route['geometry'];
           final coordinates = geometry['coordinates'] as List;
 
           _routePoints = coordinates.map<LatLng>((coord) {
@@ -229,33 +289,49 @@ class MapBinsViewModel extends ChangeNotifier {
             );
           }).toList();
 
+          final distMeters = (route['distance'] as num?)?.round();
+          final durationSeconds = (route['duration'] as num?)?.toDouble();
+          if (distMeters != null && durationSeconds != null) {
+            final walkMin = (durationSeconds / 60.0).ceil().clamp(1, 999);
+            final updated = bin.copyWith(
+              distanceMeters: distMeters,
+              walkingMinutes: walkMin,
+            );
+            _selectedBin = updated;
+            _bins = _bins
+                .map((b) => b.binId == bin.binId ? updated : b)
+                .toList();
+          }
+
           notifyListeners();
           return;
         }
       }
     } catch (_) {
-      // Offline fallback: generate realistic walking waypoints
+      // Offline fallback: direct walking line
     }
 
-    // Fallback: direct waypoints with slight dogleg to emulate city streets
-    final midLat = (start.latitude + end.latitude) / 2;
-    _routePoints = [
-      start,
-      LatLng(midLat, start.longitude),
-      LatLng(midLat, end.longitude),
-      end,
-    ];
+    _routePoints = [start, end];
     notifyListeners();
   }
 
-  /// Open external turn-by-turn navigation in Google Maps / Apple Maps
+  /// Open external turn-by-turn walking navigation in Google Maps / Apple Maps
   Future<void> openExternalNavigation(BinEntity bin) async {
-    final url =
-        'https://www.google.com/maps/dir/?api=1&origin=$userLatitude,$userLongitude&destination=${bin.latitude},${bin.longitude}&travelmode=walking';
+    final uris = buildWalkingNavigationUris(
+      originLat: userLatitude,
+      originLng: userLongitude,
+      destLat: bin.latitude,
+      destLng: bin.longitude,
+    );
 
-    final uri = Uri.parse(url);
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    for (final uri in uris) {
+      if (await canLaunchUrl(uri)) {
+        final launched = await launchUrl(
+          uri,
+          mode: LaunchMode.externalApplication,
+        );
+        if (launched) return;
+      }
     }
   }
 

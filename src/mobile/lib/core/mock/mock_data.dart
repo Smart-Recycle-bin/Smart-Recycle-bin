@@ -17,7 +17,7 @@ class MockData {
     displayName: 'Youssef Mohamed',
     role: 'USER_CITIZEN',
     phoneNumber: '+201234567890',
-    profilePhotoUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300',
+    profilePhotoUrl: null,
     points: 1420,
   );
 

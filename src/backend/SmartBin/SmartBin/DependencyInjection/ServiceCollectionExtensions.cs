@@ -9,14 +9,19 @@ using SmartBin.Context;
 using SmartBin.Models;
 using SmartBin.Repositories;
 using SmartBin.Repositories.Abstractions;
+using SmartBin.Repositories.Audit;
 using SmartBin.Repositories.Auth;
 using SmartBin.Repositories.Bins;
+using SmartBin.Repositories.Inspections;
+using SmartBin.Repositories.Notifications;
 using SmartBin.Repositories.Sessions;
 using SmartBin.Repositories.Surveys;
 using SmartBin.Repositories.Wallet;
 using SmartBin.Services;
+using SmartBin.Services.Audit;
 using SmartBin.Services.Auth;
 using SmartBin.Services.Bins;
+using SmartBin.Services.Inspections;
 using SmartBin.Services.Profile;
 using SmartBin.Services.Sessions;
 using SmartBin.Services.Surveys;
@@ -95,6 +100,10 @@ namespace SmartBin.DependencyInjection
             services.AddScoped<IAuthOtpRepository, AuthOtpRepository>();
             services.AddScoped<IRewardRepository, RewardRepository>();
             services.AddScoped<IRewardCategoryRepository, RewardCategoryRepository>();
+            services.AddScoped<IVoucherRepository, VoucherRepository>();
+            services.AddScoped<IInspectionRepository, InspectionRepository>();
+            services.AddScoped<IAuditLogRepository, AuditLogRepository>();
+            services.AddScoped<INotificationRepository, NotificationRepository>();
             services.AddScoped<IWalletRepository, WalletRepository>();
             services.AddScoped<IBinRepository, BinRepository>();
             services.AddScoped<ISessionRepository, SessionRepository>();
@@ -115,15 +124,22 @@ namespace SmartBin.DependencyInjection
             services.AddScoped<EmailService>();
             services.AddScoped<ProfileService>();
 
-            // Catalog & Rewards
+            // Catalog, Vouchers & Rewards
             services.AddScoped<IRewardService, RewardService>();
             services.AddScoped<IRewardCategoryService, RewardCategoryService>();
+            services.AddScoped<ICatalogService, CatalogService>();
+            services.AddScoped<IVoucherService, VoucherService>();
+
+            // Audit & Inspections (Real Member 5 Integration)
+            services.AddScoped<IAuditLogService, AuditLogService>();
+            services.AddScoped<IInspectionService, InspectionService>();
+            services.AddScoped<IMember5InspectionService, Member5InspectionService>();
+            services.AddScoped<IMember5AnalyticsService, Member5AnalyticsService>();
 
             // Bin Management & Device Ingestion
             services.AddScoped<IBinService, BinService>();
             services.AddScoped<IIngestionService, IngestionService>();
             services.AddScoped<ISessionCoordinationService, SessionCoordinationService>();
-            services.AddSingleton<IMember5AnalyticsService, Member5AnalyticsService>();
             services.AddSingleton<IClassificationAdapter, ClassificationAdapter>();
             services.AddHostedService<BinHeartbeatSimulatorService>();
 
@@ -133,7 +149,6 @@ namespace SmartBin.DependencyInjection
             services.AddScoped<ISessionService, SessionService>();
             services.AddScoped<ISurveyService, SurveyService>();
             services.AddScoped<IWalletService, WalletService>();
-            services.AddScoped<IMember5InspectionService, UnavailableMember5InspectionService>();
             services.AddHostedService<SessionTimeoutBackgroundService>();
 
             return services;

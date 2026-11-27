@@ -1,26 +1,29 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using SmartBin.Common;
 using SmartBin.Dtos.Bins;
-using SmartBin.Services;
+using SmartBin.Models.Constants;
+using SmartBin.Services.Audit;
 using SmartBin.Services.Bins;
 
 namespace SmartBin.Controllers
 {
     [ApiController]
     [Route("api/v1/admin/bins")]
-    [Authorize(Roles = "SYS_ADMIN")]
+    [Authorize(Roles = RoleNames.Admin)]
     public class AdminBinsController : ControllerBase
     {
         private readonly IBinService _binService;
+        private readonly IAuditLogService _auditLogService;
 
-        public AdminBinsController(IBinService binService)
+        public AdminBinsController(
+            IBinService binService,
+            IAuditLogService auditLogService)
         {
             _binService = binService;
+            _auditLogService = auditLogService;
         }
 
-        /// <summary>
-        /// E50 — Admin bin table
-        /// </summary>
         [HttpGet]
         public async Task<IActionResult> GetAdminBins(
             [FromQuery] string? search,
@@ -60,15 +63,18 @@ namespace SmartBin.Controllers
             }
         }
 
-        /// <summary>
-        /// E51 — Register bin
-        /// </summary>
         [HttpPost]
         public async Task<IActionResult> RegisterBin([FromBody] RegisterBinRequestDto request)
         {
             try
             {
                 var result = await _binService.RegisterBinAsync(request);
+
+                if (User.TryGetUserId(out int adminId))
+                {
+                    await _auditLogService.LogAsync(adminId, "BIN_REGISTER", "SMART_BIN", result.BinId);
+                }
+
                 return StatusCode(201, new
                 {
                     success = true,
@@ -90,9 +96,6 @@ namespace SmartBin.Controllers
             }
         }
 
-        /// <summary>
-        /// E53 — Update bin metadata
-        /// </summary>
         [HttpPut("{binId:int}")]
         public async Task<IActionResult> UpdateBinMetadata(
             [FromRoute] int binId,
@@ -101,6 +104,12 @@ namespace SmartBin.Controllers
             try
             {
                 var result = await _binService.UpdateBinMetadataAsync(binId, request);
+
+                if (User.TryGetUserId(out int adminId))
+                {
+                    await _auditLogService.LogAsync(adminId, "BIN_UPDATE", "SMART_BIN", binId);
+                }
+
                 return Ok(new
                 {
                     success = true,

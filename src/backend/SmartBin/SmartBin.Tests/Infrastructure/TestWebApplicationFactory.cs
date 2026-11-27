@@ -36,6 +36,18 @@ namespace SmartBin.Tests.Infrastructure
 
             return Task.FromResult($"https://cdn.test/{folder}/{Guid.NewGuid():N}_{file.FileName}");
         }
+
+        public Task<string> UploadFileWithKeyAsync(Stream fileStream, string key, string contentType)
+        {
+            if (ShouldFail)
+            {
+                throw new InvalidOperationException("Simulated storage upload failure.");
+            }
+
+            return Task.FromResult($"https://cdn.test/{key}");
+        }
+
+        public Task DeleteFileAsync(string publicUrl) => Task.CompletedTask;
     }
 
     public class TestMember5InspectionService : IMember5InspectionService
@@ -81,6 +93,7 @@ namespace SmartBin.Tests.Infrastructure
         public int Citizen2Id { get; private set; }
         public int SuspendedCitizenId { get; private set; }
         public int CollectorId { get; private set; }
+        public int AdminId { get; private set; }
 
         public int AvailableBinId { get; private set; }
         public string AvailableBinQr { get; private set; } = string.Empty;
@@ -100,7 +113,6 @@ namespace SmartBin.Tests.Infrastructure
         {
             builder.UseEnvironment("Testing");
 
-            // Pre-create the SQLite schema before Program.Main executes role seeding
             var preOptions = new DbContextOptionsBuilder<AppDbContext>()
                 .UseSqlite($"Data Source={_dbPath};Pooling=False")
                 .Options;
@@ -119,7 +131,6 @@ namespace SmartBin.Tests.Infrastructure
                 services.AddDbContext<AppDbContext>(options =>
                     options.UseSqlite($"Data Source={_dbPath};Pooling=False"));
 
-                // Remove background polling services so tests remain deterministic
                 var hostedServices = services
                     .Where(d => d.ServiceType == typeof(IHostedService) &&
                                 (d.ImplementationType == typeof(SessionTimeoutBackgroundService) ||
@@ -152,6 +163,7 @@ namespace SmartBin.Tests.Infrastructure
             Citizen2Id = (await CreateUserAsync(userManager, "citizen2@test.local", "Citizen Two", "USER_CITIZEN", "active")).Id;
             SuspendedCitizenId = (await CreateUserAsync(userManager, "suspended@test.local", "Suspended User", "USER_CITIZEN", "suspended")).Id;
             CollectorId = (await CreateUserAsync(userManager, "collector@test.local", "Collector User", "OPS_COLLECTOR", "active")).Id;
+            AdminId = (await CreateUserAsync(userManager, "admin@test.local", "Admin User", "SYS_ADMIN", "active")).Id;
 
             await context.Wallets.AddRangeAsync(
                 new Wallet { UserId = Citizen1Id, AvailablePoints = 0, LifetimeEarnedPoints = 0 },

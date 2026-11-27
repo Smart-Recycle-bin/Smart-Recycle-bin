@@ -1,8 +1,6 @@
-using Microsoft.EntityFrameworkCore;
 using SmartBin.DTOs;
 using SmartBin.Models;
 using SmartBin.Repositories;
-using SmartBin.Services.Wallets;
 
 namespace SmartBin.Services
 {
@@ -10,18 +8,18 @@ namespace SmartBin.Services
     {
         private readonly IRewardRepository _rewardRepository;
         private readonly IRewardCategoryRepository _categoryRepository;
-        private readonly IWalletService _walletService;
+        private readonly IVoucherRepository _voucherRepository;
         private readonly IUnitOfWork _unitOfWork;
 
         public RewardService(
             IRewardRepository rewardRepository,
             IRewardCategoryRepository categoryRepository,
-            IWalletService walletService,
+            IVoucherRepository voucherRepository,
             IUnitOfWork unitOfWork)
         {
             _rewardRepository = rewardRepository;
             _categoryRepository = categoryRepository;
-            _walletService = walletService;
+            _voucherRepository = voucherRepository;
             _unitOfWork = unitOfWork;
         }
 
@@ -43,6 +41,9 @@ namespace SmartBin.Services
                 sortBy,
                 sortDir);
 
+            var counts = await _voucherRepository.GetRedemptionCountsByRewardIdsAsync(
+                rewards.Select(r => r.RewardId));
+
             var items = rewards.Select(r => new RewardResponseDto
             {
                 ItemId = r.RewardId,
@@ -53,7 +54,7 @@ namespace SmartBin.Services
                 VoucherCodeType = r.VoucherCodeType,
                 PointsCost = r.PointsCost,
                 Stock = r.StockQuantity,
-                RedemptionsCount = 0,
+                RedemptionsCount = counts.GetValueOrDefault(r.RewardId, 0),
                 Status = !r.IsActive
                     ? "archived"
                     : r.StockQuantity > 0
@@ -76,6 +77,8 @@ namespace SmartBin.Services
                 return null;
             }
 
+            var redemptionsCount = await _voucherRepository.GetRedemptionCountByRewardIdAsync(rewardId);
+
             return new RewardResponseDto
             {
                 ItemId = reward.RewardId,
@@ -86,7 +89,7 @@ namespace SmartBin.Services
                 VoucherCodeType = reward.VoucherCodeType,
                 PointsCost = reward.PointsCost,
                 Stock = reward.StockQuantity,
-                RedemptionsCount = 0,
+                RedemptionsCount = redemptionsCount,
                 Status = !reward.IsActive
                   ? "archived"
                   : reward.StockQuantity > 0
@@ -100,8 +103,7 @@ namespace SmartBin.Services
 
         public async Task<RewardResponseDto> CreateAsync(CreateRewardRequestDto request)
         {
-            var category = await _categoryRepository
-                .GetByIdAsync(request.CategoryId);
+            var category = await _categoryRepository.GetByIdAsync(request.CategoryId);
 
             if (category == null)
             {
@@ -149,8 +151,8 @@ namespace SmartBin.Services
         }
 
         public async Task<RewardResponseDto?> UpdateAsync(
-                 int rewardId,
-                 UpdateRewardRequestDto request)
+            int rewardId,
+            UpdateRewardRequestDto request)
         {
             var reward = await _rewardRepository.GetByIdAsync(rewardId);
 
@@ -215,6 +217,8 @@ namespace SmartBin.Services
             _rewardRepository.Update(reward);
             await _unitOfWork.SaveChangesAsync();
 
+            var redemptionsCount = await _voucherRepository.GetRedemptionCountByRewardIdAsync(rewardId);
+
             return new RewardResponseDto
             {
                 ItemId = reward.RewardId,
@@ -225,7 +229,7 @@ namespace SmartBin.Services
                 VoucherCodeType = reward.VoucherCodeType,
                 PointsCost = reward.PointsCost,
                 Stock = reward.StockQuantity,
-                RedemptionsCount = 0,
+                RedemptionsCount = redemptionsCount,
                 Status = !reward.IsActive
                    ? "archived"
                    : reward.StockQuantity > 0
@@ -273,7 +277,6 @@ namespace SmartBin.Services
                 return UnarchiveRewardResult.NotArchived;
             }
 
-            // Check if parent category is active
             var category = await _categoryRepository.GetByIdAsync(reward.CategoryId);
             if (category == null || !category.IsActive)
             {
@@ -288,71 +291,9 @@ namespace SmartBin.Services
             return UnarchiveRewardResult.Success;
         }
 
-        public async Task<bool> DecrementStockAsync(int rewardId, int quantity = 1)
+        public Task<bool> DecrementStockAsync(int rewardId, int quantity = 1, CancellationToken cancellationToken = default)
         {
-            return await _rewardRepository.DecrementStockIfAvailableAsync(rewardId, quantity);
-        }
-
-        public async Task<RedeemRewardResultDto> RedeemRewardAsync(
-            int userId,
-            int rewardId,
-            int? pointsCost,
-            CancellationToken cancellationToken = default)
-        {
-            var reward = await _rewardRepository.GetByIdAsync(rewardId);
-            if (reward == null)
-            {
-                throw new ApiException(
-                    StatusCodes.Status404NotFound,
-                    "NOT_FOUND",
-                    "Reward item not found.");
-            }
-
-            if (reward.StockQuantity <= 0)
-            {
-                throw new ApiException(
-                    StatusCodes.Status400BadRequest,
-                    "OUT_OF_STOCK",
-                    "Reward item is out of stock.");
-            }
-
-            var pointsRequired = pointsCost ?? reward.PointsCost;
-
-            await _unitOfWork.BeginTransactionAsync(cancellationToken);
-            try
-            {
-                var stockDecremented = await _rewardRepository.DecrementStockIfAvailableAsync(rewardId, 1, cancellationToken);
-                if (!stockDecremented)
-                {
-                    await _unitOfWork.RollbackTransactionAsync(cancellationToken);
-                    throw new ApiException(
-                        StatusCodes.Status400BadRequest,
-                        "OUT_OF_STOCK",
-                        "Reward item is out of stock.");
-                }
-
-                var debitResult = await _walletService.DebitPointsForVoucherAsync(
-                    userId,
-                    rewardId,
-                    pointsRequired,
-                    cancellationToken);
-
-                await _unitOfWork.CommitTransactionAsync(cancellationToken);
-
-                var voucherCode = $"ECO-{Guid.NewGuid().ToString("N")[..8].ToUpper()}";
-
-                return new RedeemRewardResultDto
-                {
-                    VoucherCode = voucherCode,
-                    PointsDeducted = debitResult.PointsDeducted,
-                    NewAvailablePoints = debitResult.NewAvailablePoints
-                };
-            }
-            catch
-            {
-                await _unitOfWork.RollbackTransactionAsync(cancellationToken);
-                throw;
-            }
+            return _rewardRepository.DecrementStockIfAvailableAsync(rewardId, quantity, cancellationToken);
         }
     }
 }

@@ -1,87 +1,67 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using SmartBin.Common;
+using SmartBin.DTOs;
+using SmartBin.DTOs.Common;
+using SmartBin.Models.Constants;
 using SmartBin.Services;
 
 namespace SmartBin.Controllers
 {
-    public class RedeemRewardRequestDto
-    {
-        public int DenominationEgp { get; set; } = 10;
-        public int? PointsCost { get; set; }
-    }
-
     [ApiController]
     [Route("api/v1/catalog")]
     public class CatalogController : ControllerBase
     {
-        private readonly IRewardService _rewardService;
+        private readonly ICatalogService _catalogService;
+        private readonly IVoucherService _voucherService;
 
-        public CatalogController(IRewardService rewardService)
+        public CatalogController(
+            ICatalogService catalogService,
+            IVoucherService voucherService)
         {
-            _rewardService = rewardService;
-        }
-
-        private static bool TryParseItemId(string raw, out int id)
-        {
-            var clean = raw.Replace("cat-", "", StringComparison.OrdinalIgnoreCase)
-                           .Replace("item-", "", StringComparison.OrdinalIgnoreCase)
-                           .Replace("rw-", "", StringComparison.OrdinalIgnoreCase);
-            return int.TryParse(clean, out id);
+            _catalogService = catalogService;
+            _voucherService = voucherService;
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetCatalog()
+        [Authorize(Roles = RoleNames.Citizen)]
+        [ProducesResponseType(typeof(PagedApiResponse<List<CatalogCardDto>>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> Browse(
+            [FromQuery] int? categoryId,
+            [FromQuery] bool affordableOnly = false,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10,
+            CancellationToken cancellationToken = default)
         {
-            try
+            if (!User.TryGetUserId(out int userId))
             {
-                var (items, _) = await _rewardService.GetAllAsync(
-                    categoryId: null,
-                    status: "active",
-                    search: null,
-                    page: 1,
-                    pageSize: 50,
-                    sortBy: null,
-                    sortDir: null);
-
-                var catalogList = items.Select(r => new
-                {
-                    itemId = r.ItemId.ToString(),
-                    brand = r.CategoryName,
-                    title = r.Title,
-                    description = r.Description ?? "Digital reward voucher redeemable with points.",
-                    logoUrl = r.ImageUrl ?? "assets/images/placeholder_reward.png",
-                    imageUrl = r.ImageUrl,
-                    pointsCost = r.PointsCost,
-                    defaultPointsCost = r.PointsCost,
-                    status = r.Stock > 0 ? "in_stock" : "out_of_stock",
-                    stock = r.Stock,
-                    denominations = new[]
-                    {
-                        new { valueEgp = 10, pointsCost = r.PointsCost },
-                        new { valueEgp = 20, pointsCost = r.PointsCost * 2 },
-                        new { valueEgp = 50, pointsCost = r.PointsCost * 5 }
-                    }
-                }).ToList();
-
-                return Ok(new
-                {
-                    success = true,
-                    data = catalogList
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
+                return Unauthorized(new
                 {
                     success = false,
-                    error = new { code = "SERVER_ERROR", message = ex.Message }
+                    error = new { code = "UNAUTHORIZED", message = "Access token is missing or invalid." }
                 });
             }
+
+            var (items, meta) = await _catalogService.BrowseAsync(
+                userId,
+                categoryId,
+                affordableOnly,
+                page,
+                pageSize,
+                cancellationToken);
+
+            return Ok(new
+            {
+                success = true,
+                data = items,
+                meta
+            });
         }
 
         [HttpGet("featured")]
-        public async Task<IActionResult> GetSpotlightBanners()
+        [AllowAnonymous]
+        public IActionResult GetSpotlightBanners()
         {
             var banners = new[]
             {
@@ -110,62 +90,33 @@ namespace SmartBin.Controllers
             });
         }
 
-        [HttpGet("{itemId}")]
-        public async Task<IActionResult> GetItemDetails([FromRoute] string itemId)
+        [HttpGet("{itemId:int}")]
+        [Authorize(Roles = RoleNames.Citizen)]
+        [ProducesResponseType(typeof(ApiResponse<CatalogDetailDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> Detail(
+            [FromRoute] int itemId,
+            CancellationToken cancellationToken = default)
         {
-            if (!TryParseItemId(itemId, out int id))
-            {
-                return BadRequest(new
-                {
-                    success = false,
-                    error = new { code = "VALIDATION_ERROR", message = "Invalid item ID." }
-                });
-            }
-
-            var reward = await _rewardService.GetByIdAsync(id);
-            if (reward == null)
-            {
-                return NotFound(new
-                {
-                    success = false,
-                    error = new { code = "NOT_FOUND", message = "Reward item not found." }
-                });
-            }
-
+            var detail = await _catalogService.GetDetailAsync(itemId, cancellationToken);
             return Ok(new
             {
                 success = true,
-                data = new
-                {
-                    itemId = reward.ItemId.ToString(),
-                    brand = reward.CategoryName,
-                    title = reward.Title,
-                    description = reward.Description ?? "Digital reward voucher redeemable with points.",
-                    logoUrl = reward.ImageUrl ?? "assets/images/placeholder_reward.png",
-                    imageUrl = reward.ImageUrl,
-                    pointsCost = reward.PointsCost,
-                    defaultPointsCost = reward.PointsCost,
-                    status = reward.Stock > 0 ? "in_stock" : "out_of_stock",
-                    stock = reward.Stock,
-                    denominations = new[]
-                    {
-                        new { valueEgp = 10, pointsCost = reward.PointsCost },
-                        new { valueEgp = 20, pointsCost = reward.PointsCost * 2 },
-                        new { valueEgp = 50, pointsCost = reward.PointsCost * 5 }
-                    }
-                }
+                data = detail
             });
         }
 
-        [HttpPost("{itemId}/redemptions")]
-        [Authorize(Roles = "USER_CITIZEN")]
-        public async Task<IActionResult> RedeemReward(
-            [FromRoute] string itemId,
-            [FromBody] RedeemRewardRequestDto? request,
-            CancellationToken cancellationToken)
+        [HttpPost("{itemId:int}/redemptions")]
+        [Authorize(Roles = RoleNames.Citizen)]
+        [ProducesResponseType(typeof(ApiResponse<RedemptionResultDto>), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status409Conflict)]
+        public async Task<IActionResult> Redeem(
+            [FromRoute] int itemId,
+            CancellationToken cancellationToken = default)
         {
-            var rawUserId = User.FindFirstValue("id") ?? User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (!int.TryParse(rawUserId, out int userId))
+            if (!User.TryGetUserId(out int userId))
             {
                 return Unauthorized(new
                 {
@@ -174,47 +125,13 @@ namespace SmartBin.Controllers
                 });
             }
 
-            if (!TryParseItemId(itemId, out int id))
-            {
-                return BadRequest(new
-                {
-                    success = false,
-                    error = new { code = "VALIDATION_ERROR", message = "Invalid item ID." }
-                });
-            }
+            var result = await _voucherService.RedeemAsync(userId, itemId, cancellationToken);
 
-            try
+            return StatusCode(StatusCodes.Status201Created, new
             {
-                var result = await _rewardService.RedeemRewardAsync(
-                    userId,
-                    id,
-                    request?.PointsCost,
-                    cancellationToken);
-
-                return Ok(new
-                {
-                    success = true,
-                    data = new
-                    {
-                        voucherCode = result.VoucherCode,
-                        pointsDeducted = result.PointsDeducted,
-                        newAvailablePoints = result.NewAvailablePoints
-                    }
-                });
-            }
-            catch (ApiException ex)
-            {
-                return StatusCode(ex.StatusCode, new
-                {
-                    success = false,
-                    error = new
-                    {
-                        code = ex.ErrorCode,
-                        message = ex.Message,
-                        details = ex.Details
-                    }
-                });
-            }
+                success = true,
+                data = result
+            });
         }
     }
 }

@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using SmartBin.Context;
 using SmartBin.DependencyInjection;
 using SmartBin.Hubs;
@@ -29,6 +30,16 @@ namespace SmartBin
 
             var app = builder.Build();
 
+            // Apply database migrations before running seed queries.
+            using (var scope = app.Services.CreateScope())
+            {
+                var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                if (context.Database.IsSqlServer())
+                {
+                    await context.Database.MigrateAsync();
+                }
+            }
+
             // Seed Roles, Users, Bins and Rewards
             await DataSeeder.SeedAsync(app.Services);
 
@@ -37,6 +48,7 @@ namespace SmartBin
             {
                 app.UseSwagger();
                 app.UseSwaggerUI();
+
             }
 
             app.UseCors();

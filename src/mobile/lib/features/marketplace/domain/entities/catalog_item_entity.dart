@@ -1,8 +1,17 @@
 class VoucherDenomination {
+  final String? itemId;
+  final String? label;
   final int valueEgp;
   final int pointsCost;
+  final bool inStock;
 
-  const VoucherDenomination({required this.valueEgp, required this.pointsCost});
+  const VoucherDenomination({
+    this.itemId,
+    this.label,
+    required this.valueEgp,
+    required this.pointsCost,
+    this.inStock = true,
+  });
 }
 
 class CatalogItemEntity {

@@ -1,15 +1,20 @@
 import 'package:flutter/foundation.dart';
 import '../../domain/entities/catalog_item_entity.dart';
 import '../../domain/repositories/marketplace_repository.dart';
+import '../../../wallet/domain/repositories/wallet_repository.dart';
 
 class MarketplaceViewModel extends ChangeNotifier {
   final MarketplaceRepository marketplaceRepository;
+  final WalletRepository? walletRepository;
 
-  MarketplaceViewModel({required this.marketplaceRepository});
+  MarketplaceViewModel({
+    required this.marketplaceRepository,
+    this.walletRepository,
+  }) : _balancePoints = walletRepository == null ? 1420 : 0;
 
   List<CatalogItemEntity> _items = [];
   List<SpotlightBannerEntity> _banners = [];
-  int _balancePoints = 1420;
+  int _balancePoints;
   bool _isLoading = false;
   String? _errorMessage;
 
@@ -31,6 +36,12 @@ class MarketplaceViewModel extends ChangeNotifier {
     return _balancePoints - _selectedDenomination!.pointsCost;
   }
 
+  void syncBalancePoints(int points) {
+    if (_balancePoints == points) return;
+    _balancePoints = points;
+    notifyListeners();
+  }
+
   Future<void> init() async {
     await fetchMarketplaceData();
   }
@@ -40,14 +51,27 @@ class MarketplaceViewModel extends ChangeNotifier {
     _errorMessage = null;
     notifyListeners();
 
-    final catalogResult = await marketplaceRepository.getCatalog();
-    final bannersResult = await marketplaceRepository.getSpotlightBanners();
+    final catalogFuture = marketplaceRepository.getCatalog();
+    final bannersFuture = marketplaceRepository.getSpotlightBanners();
+    final balanceFuture = walletRepository?.getWalletBalance();
+
+    final catalogResult = await catalogFuture;
+    final bannersResult = await bannersFuture;
+    if (balanceFuture != null) {
+      final balanceResult = await balanceFuture;
+      balanceResult.when(
+        onSuccess: (data) {
+          _balancePoints = (data['availablePoints'] as num?)?.toInt() ?? _balancePoints;
+        },
+        onFailure: (_) {},
+      );
+    }
 
     _isLoading = false;
 
     catalogResult.when(
       onSuccess: (data) => _items = data,
-      onFailure: (error) => _errorMessage = error,
+      onFailure: (error) => _errorMessage = error.replaceFirst('Exception: ', ''),
     );
 
     bannersResult.when(
@@ -60,19 +84,60 @@ class MarketplaceViewModel extends ChangeNotifier {
 
   void selectItemForRedemption(CatalogItemEntity item) {
     _selectedItem = item;
+    _errorMessage = null;
     if (item.denominations.isNotEmpty) {
-      _selectedDenomination = item.denominations.first;
+      _selectedDenomination = item.denominations.firstWhere(
+        (d) => d.inStock,
+        orElse: () => item.denominations.first,
+      );
+    } else {
+      _selectedDenomination = VoucherDenomination(
+        itemId: item.itemId,
+        label: item.title,
+        valueEgp: item.defaultPointsCost >= 100 ? item.defaultPointsCost ~/ 100 : 10,
+        pointsCost: item.defaultPointsCost,
+        inStock: item.inStock,
+      );
     }
     notifyListeners();
   }
 
+  /// Selects an item and refreshes full category options from `/catalog/{itemId}`.
+  Future<void> openItemForRedemption(CatalogItemEntity item) async {
+    selectItemForRedemption(item);
+    final detailResult = await marketplaceRepository.getItemDetails(item.itemId);
+    detailResult.when(
+      onSuccess: (detail) {
+        if (_selectedItem?.itemId == item.itemId) {
+          _selectedItem = detail;
+          if (detail.denominations.isNotEmpty) {
+            _selectedDenomination = detail.denominations.firstWhere(
+              (d) => d.inStock,
+              orElse: () => detail.denominations.first,
+            );
+          }
+          notifyListeners();
+        }
+      },
+      onFailure: (_) {},
+    );
+  }
+
   void selectDenomination(VoucherDenomination denomination) {
+    if (!denomination.inStock) return;
     _selectedDenomination = denomination;
+    _errorMessage = null;
     notifyListeners();
   }
 
   Future<String?> redeemSelected() async {
     if (_selectedItem == null || _selectedDenomination == null) return null;
+
+    if (!_selectedDenomination!.inStock) {
+      _errorMessage = 'Selected reward option is currently out of stock.';
+      notifyListeners();
+      return null;
+    }
 
     if (_balancePoints < _selectedDenomination!.pointsCost) {
       _errorMessage = 'Insufficient EcoPoints balance for this voucher';
@@ -81,27 +146,45 @@ class MarketplaceViewModel extends ChangeNotifier {
     }
 
     _isLoading = true;
+    _errorMessage = null;
     notifyListeners();
 
+    final targetItemId = _selectedDenomination!.itemId ?? _selectedItem!.itemId;
     final result = await marketplaceRepository.redeemReward(
-      itemId: _selectedItem!.itemId,
+      itemId: targetItemId,
       denominationEgp: _selectedDenomination!.valueEgp,
       pointsCost: _selectedDenomination!.pointsCost,
     );
 
-    _isLoading = false;
-
-    return result.when(
+    String? redeemedCode;
+    result.when(
       onSuccess: (voucherCode) {
-        _balancePoints -= _selectedDenomination!.pointsCost;
-        notifyListeners();
-        return voucherCode;
+        redeemedCode = voucherCode;
       },
       onFailure: (error) {
-        _errorMessage = error;
-        notifyListeners();
-        return null;
+        _errorMessage = error.replaceFirst('Exception: ', '');
       },
     );
+
+    if (redeemedCode != null) {
+      if (walletRepository != null) {
+        final refreshed = await walletRepository!.getWalletBalance();
+        refreshed.when(
+          onSuccess: (data) {
+            _balancePoints = (data['availablePoints'] as num?)?.toInt() ??
+                (_balancePoints - _selectedDenomination!.pointsCost);
+          },
+          onFailure: (_) {
+            _balancePoints -= _selectedDenomination!.pointsCost;
+          },
+        );
+      } else {
+        _balancePoints -= _selectedDenomination!.pointsCost;
+      }
+    }
+
+    _isLoading = false;
+    notifyListeners();
+    return redeemedCode;
   }
 }

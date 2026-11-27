@@ -1,3 +1,4 @@
+using SmartBin.DTOs;
 using SmartBin.Models;
 
 namespace SmartBin.Repositories
@@ -19,5 +20,8 @@ namespace SmartBin.Repositories
             CancellationToken cancellationToken = default);
         Task<bool> DecrementStockIfAvailableAsync(int rewardId, int quantity, CancellationToken cancellationToken = default);
         Task<bool> HasActiveRewardsInCategoryAsync(int categoryId);
+        Task<List<Reward>> GetActiveCatalogRewardsAsync(int? categoryId, DateTime now, CancellationToken cancellationToken = default);
+        Task<Reward?> GetActiveRewardWithCategoryAsync(int rewardId, DateTime now, CancellationToken cancellationToken = default);
+        Task<List<CatalogOptionDto>> GetActiveCategoryOptionsAsync(int categoryId, DateTime now, CancellationToken cancellationToken = default);
     }
 }

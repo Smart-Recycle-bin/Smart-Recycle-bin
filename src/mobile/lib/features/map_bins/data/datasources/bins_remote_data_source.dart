@@ -1,9 +1,9 @@
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 import 'package:ecobin/core/config/app_config.dart';
 import 'package:ecobin/core/constants/api_endpoints.dart';
 import 'package:ecobin/core/mock/mock_data.dart';
 import 'package:ecobin/core/network/api_client.dart';
+import 'package:ecobin/core/network/dio_error_helper.dart';
 import '../models/bin_model.dart';
 
 abstract class BinsRemoteDataSource {
@@ -31,12 +31,15 @@ class BinsRemoteDataSourceImpl implements BinsRemoteDataSource {
       );
       if (response.data['success'] == true) {
         final list = response.data['data'] as List;
-        return list.map((e) => BinModel.fromJson(e)).toList();
+        return list
+            .map((e) => BinModel.fromJson(Map<String, dynamic>.from(e as Map)))
+            .toList();
       }
-      return [];
+      throw Exception(
+        response.data['error']?['message'] ?? 'Failed to load nearby bins.',
+      );
     } on DioException catch (e) {
-      debugPrint('Error fetching nearby bins: $e');
-      return [];
+      throw Exception(extractDioErrorMessage(e, 'Failed to load nearby bins.'));
     }
   }
 
@@ -58,12 +61,15 @@ class BinsRemoteDataSourceImpl implements BinsRemoteDataSource {
       );
       if (response.data['success'] == true) {
         final list = response.data['data'] as List;
-        return list.map((e) => BinModel.fromJson(e)).toList();
+        return list
+            .map((e) => BinModel.fromJson(Map<String, dynamic>.from(e as Map)))
+            .toList();
       }
-      return [];
+      throw Exception(
+        response.data['error']?['message'] ?? 'Failed to search bins.',
+      );
     } on DioException catch (e) {
-      debugPrint('Error searching bins: $e');
-      return [];
+      throw Exception(extractDioErrorMessage(e, 'Failed to search bins.'));
     }
   }
 

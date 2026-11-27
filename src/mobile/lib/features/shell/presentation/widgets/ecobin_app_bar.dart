@@ -1,17 +1,21 @@
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/utils/provider_helpers.dart';
+import '../../../../core/widgets/profile_avatar.dart';
+import '../../../profile/presentation/viewmodels/profile_viewmodel.dart';
 import '../../../profile/presentation/views/profile_view.dart';
+import '../../../wallet/presentation/viewmodels/wallet_viewmodel.dart';
 
 class EcoBinAppBar extends StatelessWidget implements PreferredSizeWidget {
-  final int points;
+  final int? points;
   final String? avatarUrl;
   final VoidCallback? onAvatarTap;
   final bool showPointsAndAvatar;
 
   const EcoBinAppBar({
     super.key,
-    this.points = 1420,
+    this.points,
     this.avatarUrl,
     this.onAvatarTap,
     this.showPointsAndAvatar = true,
@@ -22,6 +26,10 @@ class EcoBinAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
+    final walletPoints = context.maybeWatch<WalletViewModel>()?.availablePoints;
+    final profilePhoto = context.maybeWatch<ProfileViewModel>()?.user?.profilePhotoUrl;
+    final effectivePoints = points ?? walletPoints ?? 0;
+    final effectiveAvatarUrl = avatarUrl ?? profilePhoto;
     return SafeArea(
       child: Container(
         height: 65,
@@ -63,7 +71,7 @@ class EcoBinAppBar extends StatelessWidget implements PreferredSizeWidget {
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
-                      '$points pts',
+                      '$effectivePoints pts',
                       style: AppTypography.badgeText.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
@@ -81,27 +89,11 @@ class EcoBinAppBar extends StatelessWidget implements PreferredSizeWidget {
                             MaterialPageRoute(builder: (_) => const ProfileView()),
                           );
                         },
-                    child: Container(
-                      width: 38,
-                      height: 38,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(color: AppColors.mintGreen, width: 2),
-                      ),
-                      child: ClipOval(
-                        child: Image.network(
-                          avatarUrl ?? 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
-                          width: 38,
-                          height: 38,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, _, _) => Container(
-                            width: 38,
-                            height: 38,
-                            color: AppColors.mintGreen,
-                            child: const Icon(Icons.person, color: AppColors.deepForest, size: 20),
-                          ),
-                        ),
-                      ),
+                    child: ProfileAvatar(
+                      imageUrl: effectiveAvatarUrl,
+                      size: 38,
+                      borderColor: AppColors.mintGreen,
+                      borderWidth: 2,
                     ),
                   ),
                 ],

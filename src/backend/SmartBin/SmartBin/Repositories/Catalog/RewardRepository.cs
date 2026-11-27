@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using SmartBin.Context;
+using SmartBin.DTOs;
 using SmartBin.Models;
 
 namespace SmartBin.Repositories
@@ -102,7 +103,7 @@ namespace SmartBin.Repositories
         public async Task<bool> DecrementStockIfAvailableAsync(int rewardId, int quantity, CancellationToken cancellationToken = default)
         {
             var updatedRows = await _context.Rewards
-                .Where(r => r.RewardId == rewardId && r.StockQuantity >= quantity)
+                .Where(r => r.RewardId == rewardId && r.IsActive && r.StockQuantity >= quantity)
                 .ExecuteUpdateAsync(setters => setters
                     .SetProperty(r => r.StockQuantity, r => r.StockQuantity - quantity),
                     cancellationToken);
@@ -116,9 +117,59 @@ namespace SmartBin.Repositories
                 .AnyAsync(r => r.CategoryId == categoryId && r.IsActive);
         }
 
-        public async Task SaveChangesAsync()
+        public async Task<List<Reward>> GetActiveCatalogRewardsAsync(
+            int? categoryId,
+            DateTime now,
+            CancellationToken cancellationToken = default)
         {
-            await _context.SaveChangesAsync();
+            return await _context.Rewards
+                .AsNoTracking()
+                .Include(r => r.Category)
+                .Where(r => r.IsActive
+                         && r.Category.IsActive
+                         && (r.ValidFrom == null || r.ValidFrom <= now)
+                         && (r.ValidUntil == null || r.ValidUntil >= now)
+                         && (categoryId == null || r.CategoryId == categoryId))
+                .ToListAsync(cancellationToken);
+        }
+
+        public async Task<Reward?> GetActiveRewardWithCategoryAsync(
+            int rewardId,
+            DateTime now,
+            CancellationToken cancellationToken = default)
+        {
+            return await _context.Rewards
+                .AsNoTracking()
+                .Include(r => r.Category)
+                .FirstOrDefaultAsync(r => r.RewardId == rewardId
+                                       && r.IsActive
+                                       && r.Category.IsActive
+                                       && (r.ValidFrom == null || r.ValidFrom <= now)
+                                       && (r.ValidUntil == null || r.ValidUntil >= now),
+                    cancellationToken);
+        }
+
+        public async Task<List<CatalogOptionDto>> GetActiveCategoryOptionsAsync(
+            int categoryId,
+            DateTime now,
+            CancellationToken cancellationToken = default)
+        {
+            return await _context.Rewards
+                .AsNoTracking()
+                .Where(r => r.CategoryId == categoryId
+                         && r.IsActive
+                         && (r.ValidFrom == null || r.ValidFrom <= now)
+                         && (r.ValidUntil == null || r.ValidUntil >= now))
+                .OrderBy(r => r.PointsCost)
+                .ThenBy(r => r.RewardId)
+                .Select(r => new CatalogOptionDto
+                {
+                    ItemId = r.RewardId,
+                    Title = r.Name,
+                    PointsCost = r.PointsCost,
+                    InStock = r.StockQuantity > 0
+                })
+                .ToListAsync(cancellationToken);
         }
     }
 }

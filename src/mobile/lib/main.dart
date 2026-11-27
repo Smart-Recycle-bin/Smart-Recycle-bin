@@ -107,7 +107,10 @@ void main() async {
           create: (_) => VerifySurveyViewModel(surveyRepository: surveyRepository),
         ),
         ChangeNotifierProvider(
-          create: (_) => MarketplaceViewModel(marketplaceRepository: marketplaceRepository),
+          create: (_) => MarketplaceViewModel(
+            marketplaceRepository: marketplaceRepository,
+            walletRepository: walletRepository,
+          ),
         ),
         ChangeNotifierProvider(
           create: (_) => WalletViewModel(walletRepository: walletRepository),

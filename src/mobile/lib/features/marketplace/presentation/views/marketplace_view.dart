@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_typography.dart';
+import '../../../../core/utils/provider_helpers.dart';
 import '../../../shell/presentation/widgets/ecobin_app_bar.dart';
+import '../../../wallet/presentation/viewmodels/wallet_viewmodel.dart';
 import '../viewmodels/marketplace_viewmodel.dart';
 import '../widgets/reward_details_sheet.dart';
 import '../../../wallet/presentation/views/wallet_view.dart';
@@ -19,12 +21,29 @@ class _MarketplaceViewState extends State<MarketplaceView> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<MarketplaceViewModel>().init();
+      _refreshMarketplace(context);
     });
   }
 
+  Future<void> _refreshMarketplace(BuildContext context) async {
+    final marketVm = context.read<MarketplaceViewModel>();
+    final walletVm = context.maybeRead<WalletViewModel>();
+    await Future.wait([
+      marketVm.fetchMarketplaceData(),
+      if (walletVm != null) walletVm.fetchWalletData(),
+    ]);
+    if (walletVm != null) {
+      marketVm.syncBalancePoints(walletVm.availablePoints);
+    }
+  }
+
   void _openRedemptionSheet(BuildContext context, dynamic item) {
-    context.read<MarketplaceViewModel>().selectItemForRedemption(item);
+    final marketVm = context.read<MarketplaceViewModel>();
+    final walletVm = context.maybeRead<WalletViewModel>();
+    if (walletVm != null) {
+      marketVm.syncBalancePoints(walletVm.availablePoints);
+    }
+    marketVm.openItemForRedemption(item);
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -36,25 +55,43 @@ class _MarketplaceViewState extends State<MarketplaceView> {
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<MarketplaceViewModel>();
+    final walletVm = context.maybeWatch<WalletViewModel>();
+    final displayPoints = walletVm?.availablePoints ?? vm.balancePoints;
+    final displayCashEgp = displayPoints / 100.0;
     final items = vm.items;
 
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
-      appBar: EcoBinAppBar(points: vm.balancePoints),
+      appBar: EcoBinAppBar(points: displayPoints),
       body: RefreshIndicator(
-        onRefresh: () => vm.fetchMarketplaceData(),
+        onRefresh: () => _refreshMarketplace(context),
+        color: AppColors.primaryGreen,
         child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'EcoBin Marketplace',
-                style: AppTypography.headlineCairo.copyWith(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.deepForest,
-                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
+                      'EcoBin Marketplace',
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTypography.headlineCairo.copyWith(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.deepForest,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.refresh_rounded, color: AppColors.deepForest),
+                    tooltip: 'Refresh',
+                    onPressed: vm.isLoading ? null : () => _refreshMarketplace(context),
+                  ),
+                ],
               ),
               const SizedBox(height: 14),
 
@@ -97,7 +134,7 @@ class _MarketplaceViewState extends State<MarketplaceView> {
                               const SizedBox(height: 4),
                               RichText(
                                 text: TextSpan(
-                                  text: '${vm.balancePoints} ',
+                                  text: '$displayPoints ',
                                   style: AppTypography.headlineCairo.copyWith(
                                     fontSize: 30,
                                     fontWeight: FontWeight.bold,
@@ -129,7 +166,7 @@ class _MarketplaceViewState extends State<MarketplaceView> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              'E£ ${vm.cashValueEgp.toStringAsFixed(2)}',
+                              'E£ ${displayCashEgp.toStringAsFixed(2)}',
                               style: AppTypography.titlePlex.copyWith(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
@@ -157,10 +194,13 @@ class _MarketplaceViewState extends State<MarketplaceView> {
                         ),
                         icon: const Icon(Icons.account_balance_wallet_outlined, size: 16),
                         label: const Text('Wallet', style: TextStyle(fontSize: 13)),
-                        onPressed: () {
-                          Navigator.of(context).push(
+                        onPressed: () async {
+                          await Navigator.of(context).push(
                             MaterialPageRoute(builder: (_) => const WalletView()),
                           );
+                          if (context.mounted) {
+                            await _refreshMarketplace(context);
+                          }
                         },
                       ),
                     ),

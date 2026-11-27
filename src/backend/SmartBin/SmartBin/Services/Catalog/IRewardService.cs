@@ -42,13 +42,6 @@ namespace SmartBin.Services
 
         Task<UnarchiveRewardResult> UnarchiveAsync(int rewardId);
 
-        Task<bool> DecrementStockAsync(int rewardId, int quantity = 1);
-
-        Task<RedeemRewardResultDto> RedeemRewardAsync(
-            int userId,
-            int rewardId,
-            int? pointsCost,
-            CancellationToken cancellationToken = default
-        );
+        Task<bool> DecrementStockAsync(int rewardId, int quantity = 1, CancellationToken cancellationToken = default);
     }
 }

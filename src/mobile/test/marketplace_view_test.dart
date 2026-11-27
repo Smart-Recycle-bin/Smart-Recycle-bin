@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
+import 'package:ecobin/features/marketplace/data/models/catalog_item_model.dart';
 import 'package:ecobin/features/marketplace/presentation/views/marketplace_view.dart';
 import 'package:ecobin/features/marketplace/presentation/viewmodels/marketplace_viewmodel.dart';
 import 'package:ecobin/features/marketplace/domain/repositories/marketplace_repository.dart';
 import 'package:ecobin/features/marketplace/domain/entities/catalog_item_entity.dart';
+import 'package:ecobin/features/wallet/domain/entities/ledger_entry_entity.dart';
+import 'package:ecobin/features/wallet/domain/repositories/wallet_repository.dart';
+import 'package:ecobin/features/wallet/presentation/viewmodels/wallet_viewmodel.dart';
 import 'package:ecobin/core/utils/result.dart';
 
 class MockMarketplaceRepo implements MarketplaceRepository {
@@ -52,6 +56,24 @@ class MockMarketplaceRepo implements MarketplaceRepository {
   }
 }
 
+class MockWalletRepo implements WalletRepository {
+  int currentPoints;
+  MockWalletRepo({this.currentPoints = 780});
+
+  @override
+  Future<Result<Map<String, dynamic>>> getWalletBalance() async {
+    return Result.success({
+      'availablePoints': currentPoints,
+      'lifetimeEarnedPoints': 3120,
+    });
+  }
+
+  @override
+  Future<Result<List<LedgerEntryEntity>>> getLedger() async {
+    return Result.success([]);
+  }
+}
+
 void main() {
   testWidgets('MarketplaceView renders reward card with points badge and redeem button', (tester) async {
     tester.view.physicalSize = const Size(1080, 2400);
@@ -85,5 +107,80 @@ void main() {
 
     // Verify Redeem buttons
     expect(find.text('Redeem'), findsNWidgets(2));
+  });
+
+  testWidgets('MarketplaceView syncs balance points with WalletViewModel and supports refresh', (tester) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 2.75;
+    addTearDown(() => tester.view.resetPhysicalSize());
+
+    final marketRepo = MockMarketplaceRepo();
+    final walletRepo = MockWalletRepo(currentPoints: 780);
+    final walletVm = WalletViewModel(walletRepository: walletRepo);
+    final marketVm = MarketplaceViewModel(
+      marketplaceRepository: marketRepo,
+      walletRepository: walletRepo,
+    );
+
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider<WalletViewModel>.value(value: walletVm),
+          ChangeNotifierProvider<MarketplaceViewModel>.value(value: marketVm),
+        ],
+        child: const MaterialApp(
+          home: MarketplaceView(),
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    expect(find.text('780 pts'), findsOneWidget);
+    expect(find.text('780 PTS', findRichText: true), findsOneWidget);
+
+    // Simulate backend points change and tap refresh button
+    walletRepo.currentPoints = 280;
+    await tester.tap(find.byTooltip('Refresh'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('280 pts'), findsOneWidget);
+    expect(find.text('280 PTS', findRichText: true), findsOneWidget);
+  });
+
+  test('CatalogItemModel parses MohamedF integer itemId, startingPointsCost, and options', () {
+    final card = CatalogItemModel.fromJson({
+      'itemId': 3,
+      'categoryId': 1,
+      'brand': 'Telecom',
+      'title': 'Vodafone 500MB',
+      'logoUrl': 'assets/images/vodafone_logo.png',
+      'startingPointsCost': 500,
+      'optionsCount': 2,
+      'status': 'in_stock',
+    });
+
+    expect(card.itemId, '3');
+    expect(card.defaultPointsCost, 500);
+    expect(card.inStock, true);
+    expect(card.denominations.first.pointsCost, 500);
+
+    final detail = CatalogItemModel.fromJson({
+      'itemId': 3,
+      'categoryId': 1,
+      'brand': 'Telecom',
+      'title': 'Vodafone 500MB',
+      'pointsCost': 500,
+      'inStock': true,
+      'options': [
+        {'itemId': 3, 'title': '500MB Pack', 'pointsCost': 500, 'inStock': true},
+        {'itemId': 4, 'title': '2GB Pack', 'pointsCost': 1000, 'inStock': true},
+      ],
+    });
+
+    expect(detail.denominations.length, 2);
+    expect(detail.denominations[1].itemId, '4');
+    expect(detail.denominations[1].label, '2GB Pack');
+    expect(detail.denominations[1].pointsCost, 1000);
   });
 }

@@ -38,7 +38,7 @@ class _VerifySurveyViewState extends State<VerifySurveyView> {
 
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
-      appBar: const EcoBinAppBar(points: 1420),
+      appBar: const EcoBinAppBar(),
       body: vm.isLoading
           ? const Center(
               child: CircularProgressIndicator(color: AppColors.primaryGreen),

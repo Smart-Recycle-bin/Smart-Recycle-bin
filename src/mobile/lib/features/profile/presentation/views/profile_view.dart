@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:ecobin/core/constants/app_colors.dart';
 import 'package:ecobin/core/constants/app_typography.dart';
+import 'package:ecobin/core/utils/provider_helpers.dart';
 import 'package:ecobin/features/shell/presentation/widgets/ecobin_app_bar.dart';
 import 'package:ecobin/features/shell/presentation/widgets/ecobin_bottom_nav_bar.dart';
 import 'package:ecobin/features/shell/presentation/views/main_shell_view.dart';
@@ -9,6 +10,8 @@ import 'package:ecobin/features/scan_session/presentation/views/scan_bin_view.da
 import 'package:ecobin/features/profile/presentation/viewmodels/profile_viewmodel.dart';
 import 'package:ecobin/features/auth/presentation/viewmodels/auth_viewmodel.dart';
 import 'package:ecobin/features/auth/presentation/views/login_view.dart';
+import 'package:ecobin/features/wallet/presentation/viewmodels/wallet_viewmodel.dart';
+import '../widgets/editable_profile_avatar.dart';
 import 'edit_profile_view.dart';
 import 'support_view.dart';
 
@@ -26,8 +29,17 @@ class _ProfileViewState extends State<ProfileView> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<ProfileViewModel>().init();
+      _refreshProfile(context);
     });
+  }
+
+  Future<void> _refreshProfile(BuildContext context) async {
+    final profileVm = context.read<ProfileViewModel>();
+    final walletVm = context.maybeRead<WalletViewModel>();
+    await Future.wait([
+      profileVm.fetchProfile(),
+      if (walletVm != null) walletVm.fetchWalletData(),
+    ]);
   }
 
   void _showLegalDialog(BuildContext context, String title, String content) {
@@ -57,20 +69,37 @@ class _ProfileViewState extends State<ProfileView> {
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
       appBar: const EcoBinAppBar(showPointsAndAvatar: false),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'My profile',
-              style: AppTypography.headlineCairo.copyWith(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: AppColors.deepForest,
+      body: RefreshIndicator(
+        onRefresh: () => _refreshProfile(context),
+        color: AppColors.primaryGreen,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
+                      'My profile',
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTypography.headlineCairo.copyWith(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.deepForest,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.refresh_rounded, color: AppColors.deepForest),
+                    tooltip: 'Refresh',
+                    onPressed: vm.isLoading ? null : () => _refreshProfile(context),
+                  ),
+                ],
               ),
-            ),
-            const SizedBox(height: 2),
+              const SizedBox(height: 2),
             Text(
               'Your account, your greener everyday.',
               style: AppTypography.subtitlePlex.copyWith(
@@ -107,60 +136,42 @@ class _ProfileViewState extends State<ProfileView> {
                   ),
                   const SizedBox(height: 18),
 
-                  // Avatar with Camera Badge
-                  Stack(
-                    children: [
-                      Container(
-                        width: 105,
-                        height: 105,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(color: AppColors.mintGreen, width: 3),
-                        ),
-                        child: ClipOval(
-                          child: (user?.profilePhotoUrl != null && user!.profilePhotoUrl!.startsWith('assets/'))
-                              ? Image.asset(user.profilePhotoUrl!, fit: BoxFit.cover)
-                              : Image.network(
-                                  user?.profilePhotoUrl ??
-                                      'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300',
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (_, _, _) => Container(
-                                    color: AppColors.mintGreen,
-                                    child: const Icon(Icons.person, color: AppColors.deepForest, size: 50),
-                                  ),
-                                ),
-                        ),
-                      ),
-                      Positioned(
-                        bottom: 0,
-                        right: 4,
-                        child: Container(
-                          width: 30,
-                          height: 30,
-                          decoration: const BoxDecoration(
-                            color: AppColors.deepForest,
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.camera_alt,
-                            color: Colors.white,
-                            size: 16,
-                          ),
-                        ),
-                      ),
-                    ],
+                  // Interactive Avatar with Camera Upload Button
+                  EditableProfileAvatar(
+                    imageUrl: user?.profilePhotoUrl,
+                    isUploading: vm.isUploadingPhoto,
                   ),
                   const SizedBox(height: 16),
 
-                  // User Full Name
+                  // User Full Name & Account Details
                   Text(
-                    user?.displayName ?? 'Youssef Mohamed',
+                    user?.displayName ?? (vm.isLoading ? 'Loading...' : 'User'),
                     style: AppTypography.headlineCairo.copyWith(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
                       color: AppColors.darkSlate,
                     ),
                   ),
+                  if (user?.email.isNotEmpty == true) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      user!.email,
+                      style: AppTypography.bodyPlex.copyWith(
+                        fontSize: 13.5,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                  if (user?.phoneNumber != null && user!.phoneNumber!.isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      user.phoneNumber!,
+                      style: AppTypography.bodyMedium.copyWith(
+                        fontSize: 13,
+                        color: AppColors.textMuted,
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -210,10 +221,13 @@ class _ProfileViewState extends State<ProfileView> {
                     ),
                   ),
                   trailing: const Icon(Icons.chevron_right, color: AppColors.textSecondary),
-                  onTap: () {
-                    Navigator.of(context).push(
+                  onTap: () async {
+                    await Navigator.of(context).push(
                       MaterialPageRoute(builder: (_) => const EditProfileView()),
                     );
+                    if (context.mounted) {
+                      await _refreshProfile(context);
+                    }
                   },
                 ),
               ),
@@ -332,8 +346,9 @@ class _ProfileViewState extends State<ProfileView> {
               },
               child: const Text('Logout'),
             ),
-            const SizedBox(height: 40),
-          ],
+              const SizedBox(height: 40),
+            ],
+          ),
         ),
       ),
       bottomNavigationBar: widget.isInsideShell
