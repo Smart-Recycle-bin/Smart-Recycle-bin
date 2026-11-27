@@ -14,6 +14,17 @@
         (valueChange)="handleViewModeChange($event)"
       />
 
+      <!-- Category Filter Select -->
+      <div class="status-filter-wrapper">
+        <app-select
+          [options]="categoryFilterOptions()"
+          [value]="selectedCategoryId()"
+          placeholder="All categories"
+          ariaLabel="Filter rewards by category"
+          (valueChange)="handleCategoryChange($event)"
+        />
+      </div>
+
       <!-- Status Filter Select -->
       <div class="status-filter-wrapper">
         <app-select
@@ -105,7 +116,7 @@
               <!-- Card Body Content -->
               <div class="card-body-content">
                 <div class="category-code-line">
-                  {{ getCategoryLabel(item.category) }} · {{ getCodeTypeLabel(item.voucherCodeType) }}
+                  {{ getCategoryDisplay(item) }} · {{ getCodeTypeLabel(item.voucherCodeType) }}
                 </div>
 
                 <h2 class="reward-title" [title]="item.title">
@@ -150,6 +161,15 @@
             </div>
           }
         </div>
+        @if (pagedList.total() > pagedList.pageSize()) {
+          <app-pagination
+            [page]="pagedList.page()"
+            [pageSize]="pagedList.pageSize()"
+            [total]="pagedList.total()"
+            [disabled]="pagedList.refreshing()"
+            (pageChange)="pagedList.setPage($event)"
+          />
+        }
       } @else {
         <!-- 2. Table View (p14) -->
         <div class="rewards-table-wrapper" data-testid="rewards-table">
@@ -157,23 +177,30 @@
             [columns]="tableColumns"
             [data]="rewards()"
             [actions]="tableActions"
-            mode="client"
+            [loading]="pagedList.refreshing() || pagedList.loading()"
+            mode="server"
             [showPagination]="true"
-            [pageSize]="10"
+            [page]="pagedList.page()"
+            [pageSize]="pagedList.pageSize()"
+            [total]="pagedList.total()"
+            [sortColumn]="pagedList.sortBy()"
+            [sortDir]="pagedList.sortDir()"
             [rowId]="getRowId"
+            (pageChange)="pagedList.setPage($event)"
+            (sortChange)="pagedList.setSort($event.key, $event.dir)"
             (actionClicked)="handleTableAction($event)"
           >
             <!-- Custom Item Cell: Title + Code -->
             <ng-template appCell="title" let-row>
               <div class="table-item-cell">
                 <span class="font-medium text-text-primary">{{ row.title }}</span>
-                <span class="font-mono text-xs text-text-muted">{{ row.code }}</span>
+                <span class="font-mono text-xs text-text-muted">{{ getItemCode(row) }}</span>
               </div>
             </ng-template>
 
             <!-- Custom Category Cell -->
             <ng-template appCell="category" let-row>
-              <span class="text-sm text-text-secondary">{{ getCategoryLabel(row.category) }}</span>
+              <span class="text-sm text-text-secondary">{{ getCategoryDisplay(row) }}</span>
             </ng-template>
 
             <!-- Custom Price Cell -->
@@ -240,9 +267,10 @@
 
           <!-- Category* -->
           <app-select
-            formControlName="category"
+            formControlName="categoryId"
             label="Category"
-            [options]="categoryOptions"
+            placeholder="Select a category"
+            [options]="categoryOptions()"
             [required]="true"
           />
 
@@ -296,12 +324,13 @@
             </p>
           }
 
-          <!-- Image Upload (PNG/JPG, min 800x600) -->
+          <!-- Image Upload (PNG/JPG/WEBP, min 800x600, max 4 MB) -->
           <div class="image-upload-wrapper">
             <app-file-upload
               label="Reward voucher image"
-              hint="PNG or JPG, min 800×600, max 5 MB"
-              accept="image/png,image/jpeg"
+              hint="PNG, JPG, or WEBP, min 800×600, max 4 MB"
+              accept="image/png,image/jpeg,image/webp"
+              [maxSizeBytes]="maxImageSizeBytes"
               (fileSelected)="onFileSelected($event)"
             />
 

@@ -1,20 +1,38 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of, throwError } from 'rxjs';
-import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import { Catalog } from './catalog';
 import { CatalogService } from '@services/reward/catalog.service';
 import { ToastService } from '@services/toast/toast.service';
 import { MOCK_REWARDS } from '@core/mock/data/reward/reward.mock';
 import { formatDate } from '@shared/utils/datetime';
 import { RewardStatus } from '@models/reward/reward-status.enum';
-import { RewardCategory } from '@models/reward/reward-category.enum';
 import { VoucherCodeType } from '@models/reward/voucher-code-type.enum';
+import { RewardCategoryItem } from '@models/reward/reward.dto';
+import { Page } from '@models/common/page.model';
+import { AdminRewardItem } from '@models/reward/reward.view-model';
+
+const MOCK_CATEGORIES: RewardCategoryItem[] = [
+  { categoryId: 1, name: 'Groceries', status: 'active', logoUrl: null },
+  { categoryId: 2, name: 'Food delivery', status: 'active', logoUrl: null },
+];
+
+function makePage(items: AdminRewardItem[], page = 1, pageSize = 10, totalItems = items.length): Page<AdminRewardItem> {
+  return {
+    items,
+    page,
+    pageSize,
+    totalItems,
+    totalPages: Math.max(1, Math.ceil(totalItems / pageSize)),
+  };
+}
 
 describe('Catalog', () => {
   let component: Catalog;
   let fixture: ComponentFixture<Catalog>;
   let catalogServiceMock: {
     getRewards: ReturnType<typeof vi.fn>;
+    getCategories: ReturnType<typeof vi.fn>;
     createReward: ReturnType<typeof vi.fn>;
     updateReward: ReturnType<typeof vi.fn>;
     archiveReward: ReturnType<typeof vi.fn>;
@@ -33,12 +51,14 @@ describe('Catalog', () => {
     });
 
     catalogServiceMock = {
-      getRewards: vi.fn().mockReturnValue(of(structuredClone(MOCK_REWARDS))),
+      getRewards: vi.fn().mockReturnValue(of(makePage(structuredClone(MOCK_REWARDS)))),
+      getCategories: vi.fn().mockReturnValue(of(MOCK_CATEGORIES)),
       createReward: vi.fn().mockImplementation((req) =>
         of({
           ...req,
-          itemId: 'rwd_new_123',
-          code: 'RWD-999',
+          itemId: 99,
+          code: 'RWD-099',
+          categoryName: 'Groceries',
           redemptionsCount: 0,
           status: req.stock > 0 ? RewardStatus.InStock : RewardStatus.OutOfStock,
         })
@@ -90,7 +110,7 @@ describe('Catalog', () => {
     vi.useRealTimers();
   });
 
-  it('should compute default dates and empty price/stock at drawer open time with fake timers', () => {
+  it('should compute default dates, default categoryId, and empty price/stock at drawer open time', () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2026-03-15T12:00:00Z'));
 
@@ -99,13 +119,15 @@ describe('Catalog', () => {
     const formVal = component.rewardForm.value;
     expect(formVal.validFrom).toBe('2026-03-15');
     expect(formVal.validUntil).toBe('2027-03-15');
+    expect(formVal.categoryId).toBe(1);
     expect(formVal.pointsCost).toBeNull();
     expect(formVal.stock).toBeNull();
   });
 
-  it('should create and load catalog items with dynamic subtitle', () => {
+  it('should create and load catalog items and categories with dynamic subtitle', () => {
     expect(component).toBeTruthy();
     expect(catalogServiceMock.getRewards).toHaveBeenCalledTimes(1);
+    expect(catalogServiceMock.getCategories).toHaveBeenCalledTimes(1);
     expect(component.rewards().length).toBe(8);
     expect(component.subtitle()).toBe('8 items · stock reaching zero is flagged automatically');
     expect(component.isLoading()).toBe(false);
@@ -132,7 +154,6 @@ describe('Catalog', () => {
     expect(compiled.querySelector('[data-testid="rewards-grid"]')).toBeTruthy();
     expect(compiled.querySelector('[data-testid="rewards-table"]')).toBeFalsy();
 
-    // Toggle to Table view
     component.handleViewModeChange('table');
     fixture.detectChanges();
 
@@ -141,7 +162,6 @@ describe('Catalog', () => {
     expect(compiled.querySelector('[data-testid="rewards-table"]')).toBeTruthy();
     expect(compiled.querySelector('[data-testid="rewards-grid"]')).toBeFalsy();
 
-    // Toggle back to Grid view
     component.handleViewModeChange('grid');
     fixture.detectChanges();
 
@@ -149,22 +169,48 @@ describe('Catalog', () => {
     expect(compiled.querySelector('[data-testid="rewards-grid"]')).toBeTruthy();
   });
 
-  it('should reload rewards when status filter changes', () => {
+  it('should reload rewards when status or categoryId filter changes', () => {
     component.handleStatusChange(RewardStatus.InStock);
     expect(component.selectedStatus()).toBe(RewardStatus.InStock);
-    expect(catalogServiceMock.getRewards).toHaveBeenLastCalledWith({
-      status: RewardStatus.InStock,
-    });
+    expect(catalogServiceMock.getRewards).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        page: 1,
+        pageSize: 10,
+        status: RewardStatus.InStock,
+      })
+    );
 
-    component.handleStatusChange(RewardStatus.OutOfStock);
-    expect(component.selectedStatus()).toBe(RewardStatus.OutOfStock);
-    expect(catalogServiceMock.getRewards).toHaveBeenLastCalledWith({
-      status: RewardStatus.OutOfStock,
-    });
+    component.handleCategoryChange(2);
+    expect(component.selectedCategoryId()).toBe(2);
+    expect(catalogServiceMock.getRewards).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        page: 1,
+        pageSize: 10,
+        status: RewardStatus.InStock,
+        categoryId: 2,
+      })
+    );
 
     component.handleStatusChange('');
+    component.handleCategoryChange('');
     expect(component.selectedStatus()).toBe('');
-    expect(catalogServiceMock.getRewards).toHaveBeenLastCalledWith({});
+    expect(component.selectedCategoryId()).toBe('');
+  });
+
+  it('supports server pagination in grid view when total exceeds pageSize', () => {
+    catalogServiceMock.getRewards.mockReturnValue(
+      of(makePage(structuredClone(MOCK_REWARDS), 1, 10, 22))
+    );
+    component.loadRewards();
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.querySelector('app-pagination')).toBeTruthy();
+
+    component.pagedList.setPage(2);
+    expect(catalogServiceMock.getRewards).toHaveBeenLastCalledWith(
+      expect.objectContaining({ page: 2, pageSize: 10 })
+    );
   });
 
   describe('Create and Edit Validation', () => {
@@ -175,7 +221,6 @@ describe('Catalog', () => {
 
       const form = component.rewardForm;
 
-      // Negative pointsCost should be invalid
       form.patchValue({
         title: 'Discount Coupon',
         pointsCost: -50,
@@ -184,11 +229,9 @@ describe('Catalog', () => {
       expect(form.get('pointsCost')?.valid).toBe(false);
       expect(form.get('pointsCost')?.hasError('positiveInt')).toBe(true);
 
-      // Zero pointsCost should also be invalid (must be positive)
       form.patchValue({ pointsCost: 0 });
       expect(form.get('pointsCost')?.hasError('positiveInt')).toBe(true);
 
-      // Negative stock should be invalid
       form.patchValue({
         pointsCost: 500,
         stock: -1,
@@ -196,18 +239,16 @@ describe('Catalog', () => {
       expect(form.get('stock')?.valid).toBe(false);
       expect(form.get('stock')?.hasError('nonNegativeInt')).toBe(true);
 
-      // Stock of 0 is valid (automatically marks item Out of Stock)
       form.patchValue({ stock: 0 });
       expect(form.get('stock')?.valid).toBe(true);
 
-      // Attempting to submit invalid form should not call service
-      form.patchValue({ title: '' }); // empty title
+      form.patchValue({ title: '' });
       component.submitDrawerForm();
       expect(catalogServiceMock.createReward).not.toHaveBeenCalled();
     });
 
-    it('should prefill form when editing an existing reward', () => {
-      const itemToEdit = MOCK_REWARDS[0]; // Carrefour Voucher EGP 50
+    it('should prefill form with categoryId when editing an existing reward', () => {
+      const itemToEdit = MOCK_REWARDS[0];
       component.openEditDrawer(itemToEdit);
 
       expect(component.isDrawerOpen()).toBe(true);
@@ -216,7 +257,7 @@ describe('Catalog', () => {
 
       const formVal = component.rewardForm.value;
       expect(formVal.title).toBe(itemToEdit.title);
-      expect(formVal.category).toBe(itemToEdit.category);
+      expect(formVal.categoryId).toBe(itemToEdit.categoryId);
       expect(formVal.voucherCodeType).toBe(itemToEdit.voucherCodeType);
       expect(formVal.pointsCost).toBe(itemToEdit.pointsCost);
       expect(formVal.stock).toBe(itemToEdit.stock);
@@ -226,11 +267,10 @@ describe('Catalog', () => {
   });
 
   describe('Image upload and submission with imageUrl', () => {
-    it('should upload image asset and include imageUrl in create payload', async () => {
+    it('should upload image asset and include imageUrl and categoryId in create payload', async () => {
       component.openNewItemDrawer();
       const mockFile = new File(['content'], 'voucher.png', { type: 'image/png' });
 
-      // Trigger image selection
       await component.onFileSelected(mockFile);
       expect(catalogServiceMock.uploadImage).toHaveBeenCalledWith(mockFile);
       expect(component.uploadedImageUrl()).toBe(
@@ -238,11 +278,10 @@ describe('Catalog', () => {
       );
       expect(toastServiceMock.success).toHaveBeenCalledWith('Reward image uploaded');
 
-      // Fill in valid form
       component.rewardForm.patchValue({
         title: '   Metro Market EGP 100   ',
         description: '   Groceries credit voucher   ',
-        category: RewardCategory.Groceries,
+        categoryId: 1,
         voucherCodeType: VoucherCodeType.Qr,
         pointsCost: 1800,
         stock: 30,
@@ -255,7 +294,7 @@ describe('Catalog', () => {
       expect(catalogServiceMock.createReward).toHaveBeenCalledWith({
         title: 'Metro Market EGP 100',
         description: 'Groceries credit voucher',
-        category: RewardCategory.Groceries,
+        categoryId: 1,
         voucherCodeType: VoucherCodeType.Qr,
         pointsCost: 1800,
         stock: 30,
@@ -268,7 +307,7 @@ describe('Catalog', () => {
       expect(component.isDrawerOpen()).toBe(false);
     });
 
-    it('should include updated imageUrl in update payload when editing', async () => {
+    it('should include updated imageUrl and categoryId in update payload when editing', async () => {
       const itemToEdit = MOCK_REWARDS[1];
       component.openEditDrawer(itemToEdit);
 
@@ -277,6 +316,7 @@ describe('Catalog', () => {
 
       component.rewardForm.patchValue({
         title: 'Talabat Credit EGP 150',
+        categoryId: 2,
         pointsCost: 2500,
       });
 
@@ -286,6 +326,7 @@ describe('Catalog', () => {
         itemToEdit.itemId,
         expect.objectContaining({
           title: 'Talabat Credit EGP 150',
+          categoryId: 2,
           pointsCost: 2500,
           imageUrl: 'https://storage.ecobin.com/rewards/uploaded_test.png',
         })
@@ -306,7 +347,6 @@ describe('Catalog', () => {
 
     it('rejects image files exceeding 5 MB', async () => {
       component.openNewItemDrawer();
-      // create a mock file with size > 5 MB
       const bigFile = new File([''], 'big.png', { type: 'image/png' });
       Object.defineProperty(bigFile, 'size', { value: 6 * 1024 * 1024 });
 
@@ -390,7 +430,7 @@ describe('Catalog', () => {
       component.openNewItemDrawer();
       component.rewardForm.patchValue({
         title: 'Duplicate Title',
-        category: RewardCategory.Groceries,
+        categoryId: 1,
         voucherCodeType: VoucherCodeType.Code,
         pointsCost: 500,
         stock: 10,
@@ -409,7 +449,7 @@ describe('Catalog', () => {
 
   describe('Archive confirm dialog', () => {
     it('should open confirm dialog for active item and archive on confirm', () => {
-      const itemToArchive = MOCK_REWARDS[0]; // InStock
+      const itemToArchive = MOCK_REWARDS[0];
       component.openArchiveDialog(itemToArchive);
 
       expect(component.isConfirmArchiveOpen()).toBe(true);
@@ -439,7 +479,6 @@ describe('Catalog', () => {
       fixture.detectChanges();
 
       const compiled = fixture.nativeElement as HTMLElement;
-      // Vodafone 1GB item has stock 0
       const outOfStockCard = compiled.querySelector('[data-testid="reward-card-RWD-003"]');
       expect(outOfStockCard).toBeTruthy();
 
@@ -470,8 +509,7 @@ describe('Catalog', () => {
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('app-error-state')).toBeTruthy();
 
-    // Successful retry
-    catalogServiceMock.getRewards.mockReturnValue(of(structuredClone(MOCK_REWARDS)));
+    catalogServiceMock.getRewards.mockReturnValue(of(makePage(structuredClone(MOCK_REWARDS))));
     component.loadRewards();
     fixture.detectChanges();
 

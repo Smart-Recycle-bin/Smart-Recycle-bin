@@ -3,40 +3,50 @@ import { RewardStatus } from './reward-status.enum';
 import { VoucherCodeType } from './voucher-code-type.enum';
 
 /**
- * Request payload for POST /api/v1/admin/catalog (APIs.md 6.2 + enriched per UI p13).
+ * Reward category item returned by GET /api/v1/admin/catalog/categories.
+ */
+export interface RewardCategoryItem {
+  categoryId: Id;
+  name: string;
+  status: string;
+  logoUrl?: string | null;
+}
+
+/**
+ * Request payload for POST /api/v1/admin/catalog.
  */
 export interface CreateRewardRequest {
   title: string;
-  description: string;
-  category: string;
+  description?: string;
+  categoryId: Id;
   pointsCost: number;
   stock: number;
   voucherCodeType?: VoucherCodeType;
   validFrom?: string; // ISO date string
   validUntil?: string; // ISO date string
-  imageUrl?: string; // PROPOSED: see gap_api.md -> Enriched endpoint
+  imageUrl?: string;
 }
 
 /**
- * Request payload for PUT /api/v1/admin/catalog/{itemId} (APIs.md 6.3 + enriched per UI p13).
+ * Request payload for PUT /api/v1/admin/catalog/{itemId}.
  */
 export interface UpdateRewardRequest {
   title?: string;
   description?: string;
-  category?: string;
+  categoryId?: Id;
   pointsCost?: number;
   stock?: number;
   voucherCodeType?: VoucherCodeType;
   validFrom?: string; // ISO date string
   validUntil?: string; // ISO date string
-  imageUrl?: string; // PROPOSED: see gap_api.md -> Enriched endpoint
+  imageUrl?: string;
 }
 
 /**
- * Response data for POST /api/v1/admin/catalog/{itemId}/archive (APIs.md 6.4).
+ * Response data for POST /api/v1/admin/catalog/{itemId}/archive.
  */
 export interface ArchiveRewardResponse {
   itemId: Id;
   status: RewardStatus;
-  message: string;
+  message?: string;
 }

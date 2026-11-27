@@ -1,4 +1,5 @@
 import { TableAction, TableColumn } from '@shared/components/table/data-table/data-table';
+import { Id } from '@models/common/id.model';
 import { AdminRewardItem } from '@models/reward/reward.view-model';
 import {
   RewardStatus,
@@ -127,11 +128,12 @@ export const REWARD_CURATED_GRADIENTS: string[] = [
 /**
  * Deterministically picks one of the 8 curated gradient pairs based on the reward ID.
  */
-export function getRewardCuratedGradient(rewardId: string | null | undefined): string {
-  if (!rewardId) {
+export function getRewardCuratedGradient(rewardId: Id | string | null | undefined): string {
+  if (rewardId === null || rewardId === undefined || rewardId === '') {
     return REWARD_CURATED_GRADIENTS[0];
   }
-  const numMatch = rewardId.match(/\d+/);
+  const idStr = String(rewardId);
+  const numMatch = idStr.match(/\d+/);
   if (numMatch) {
     const idx = (parseInt(numMatch[0], 10) - 1) % REWARD_CURATED_GRADIENTS.length;
     if (idx >= 0 && idx < REWARD_CURATED_GRADIENTS.length) {
@@ -139,8 +141,8 @@ export function getRewardCuratedGradient(rewardId: string | null | undefined): s
     }
   }
   let hash = 0;
-  for (let i = 0; i < rewardId.length; i++) {
-    hash = (hash * 31 + rewardId.charCodeAt(i)) >>> 0;
+  for (let i = 0; i < idStr.length; i++) {
+    hash = (hash * 31 + idStr.charCodeAt(i)) >>> 0;
   }
   return REWARD_CURATED_GRADIENTS[hash % REWARD_CURATED_GRADIENTS.length];
 }

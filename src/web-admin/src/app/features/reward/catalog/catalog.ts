@@ -12,11 +12,11 @@ import {
   FormBuilder,
   FormGroup,
   ReactiveFormsModule,
-  Validators,
 } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CatalogService } from '@services/reward/catalog.service';
 import { ToastService } from '@services/toast/toast.service';
+import { Id } from '@models/common/id.model';
 import {
   AdminRewardItem,
   RewardQuery,
@@ -36,6 +36,7 @@ import {
 import { pluralize } from '@shared/utils/format';
 import {
   CreateRewardRequest,
+  RewardCategoryItem,
   UpdateRewardRequest,
 } from '@models/reward/reward.dto';
 import { PageHeader } from '@shared/components/page-header/page-header';
@@ -44,7 +45,7 @@ import { IconButton } from '@shared/components/button/icon-button/icon-button';
 import { Icon } from '@shared/components/icon/icon';
 import { Badge, BadgeVariant } from '@shared/components/badge/badge';
 import { SegmentedControl } from '@shared/components/segmented-control/segmented-control';
-import { Select } from '@shared/components/form/select/select';
+import { Select, SelectOption } from '@shared/components/form/select/select';
 import { Input } from '@shared/components/form/input/input';
 import { Textarea } from '@shared/components/form/textarea/textarea';
 import { NumberInput } from '@shared/components/form/number-input/number-input';
@@ -54,8 +55,10 @@ import { Drawer } from '@shared/components/overlay/drawer/drawer';
 import { ConfirmDialog } from '@shared/components/overlay/confirm-dialog/confirm-dialog';
 import { DataTable } from '@shared/components/table/data-table/data-table';
 import { CellTemplateDirective } from '@shared/components/table/data-table/cell-template.directive';
+import { Pagination } from '@shared/components/table/pagination/pagination';
 import { ResourceState } from '@shared/components/resource-state/resource-state';
 import { formatDate } from '@shared/utils/datetime';
+import { createPagedList } from '@shared/utils/paged-list';
 import { Skeleton } from '@shared/components/skeleton/skeleton';
 import { getErrorMessage, getFieldErrors } from '@core/errors/error-message';
 import {
@@ -66,7 +69,6 @@ import {
   dateOrder,
 } from '@shared/validators';
 import {
-  CATEGORY_FORM_OPTIONS,
   CatalogViewMode,
   REWARD_STATUS_BADGE_VARIANTS,
   REWARD_TABLE_ACTIONS,
@@ -98,6 +100,7 @@ import {
     ConfirmDialog,
     DataTable,
     CellTemplateDirective,
+    Pagination,
     ResourceState,
     Skeleton,
   ],
@@ -113,22 +116,42 @@ export class Catalog implements OnInit {
 
   readonly viewModeOptions = VIEW_MODE_OPTIONS;
   readonly statusFilterOptions = STATUS_FILTER_OPTIONS;
-  readonly categoryOptions = CATEGORY_FORM_OPTIONS;
   readonly voucherCodeTypeOptions = VOUCHER_CODE_TYPE_OPTIONS;
   readonly tableColumns = REWARD_TABLE_COLUMNS;
   readonly tableActions = REWARD_TABLE_ACTIONS;
   readonly RewardStatus = RewardStatus;
   readonly getRewardGradient = getRewardCuratedGradient;
+  readonly maxImageSizeBytes = 4 * 1024 * 1024;
 
-  readonly rewards = signal<AdminRewardItem[]>([]);
-  readonly isLoading = signal<boolean>(true);
-  readonly error = signal<unknown>(null);
+  readonly pagedList = createPagedList<AdminRewardItem, RewardQuery>({
+    fetch: (query) => this.catalogService.getRewards(query),
+    initial: { pageSize: 10 },
+    debounceKeys: ['search'],
+    debounceMs: 300,
+  });
+
+  readonly rewards = this.pagedList.items;
+  readonly isLoading = this.pagedList.loading;
+  readonly error = this.pagedList.error;
+
+  readonly categories = signal<RewardCategoryItem[]>([]);
+  readonly categoryOptions = computed<SelectOption[]>(() =>
+    this.categories().map((cat) => ({
+      label: cat.name,
+      value: cat.categoryId,
+    }))
+  );
+  readonly categoryFilterOptions = computed<SelectOption[]>(() => [
+    { label: 'All categories', value: '' },
+    ...this.categoryOptions(),
+  ]);
 
   // Client-only view toggle ('grid' | 'table')
   readonly viewMode = signal<CatalogViewMode>('grid');
 
-  // Status filter query
+  // Filter queries
   readonly selectedStatus = signal<RewardStatus | ''>('');
+  readonly selectedCategoryId = signal<Id | ''>('');
 
   // Drawer state
   readonly isDrawerOpen = signal<boolean>(false);
@@ -145,14 +168,14 @@ export class Catalog implements OnInit {
 
   // Derived subtitle per p12
   readonly subtitle = computed(
-    () => `${pluralize(this.rewards().length, 'item')} · stock reaching zero is flagged automatically`
+    () => `${pluralize(this.pagedList.total(), 'item')} · stock reaching zero is flagged automatically`
   );
 
   readonly rewardForm: FormGroup = this.fb.group(
     {
       title: ['', [trimmedRequired, maxLen(100)]],
       description: ['', [maxLen(500)]],
-      category: [RewardCategory.Groceries, [trimmedRequired]],
+      categoryId: [null as Id | null, [trimmedRequired, positiveInt]],
       voucherCodeType: [VoucherCodeType.Code, [trimmedRequired]],
       pointsCost: [null, [trimmedRequired, positiveInt]],
       stock: [null, [trimmedRequired, nonNegativeInt]],
@@ -172,31 +195,32 @@ export class Catalog implements OnInit {
   }
 
   ngOnInit(): void {
-    this.loadRewards();
+    this.loadCategories();
+  }
+
+  loadCategories(): void {
+    this.catalogService
+      .getCategories()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (cats) => {
+          this.categories.set(cats);
+          const ctrl = this.rewardForm.controls['categoryId'];
+          if (ctrl && ctrl.value == null && cats.length > 0 && this.isDrawerOpen() && !this.editingReward()) {
+            ctrl.setValue(cats[0].categoryId);
+          }
+        },
+        error: (err) => {
+          const status = (err as { status?: number })?.status;
+          if (!status || (status >= 400 && status < 500 && status !== 401 && status !== 403)) {
+            this.toastService.error(getErrorMessage(err, 'Failed to load reward categories'));
+          }
+        },
+      });
   }
 
   loadRewards(): void {
-    this.isLoading.set(true);
-    this.error.set(null);
-
-    const query: RewardQuery = {};
-    if (this.selectedStatus()) {
-      query.status = this.selectedStatus() as RewardStatus;
-    }
-
-    this.catalogService
-      .getRewards(query)
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (items) => {
-          this.rewards.set(items);
-          this.isLoading.set(false);
-        },
-        error: (err) => {
-          this.error.set(err);
-          this.isLoading.set(false);
-        },
-      });
+    this.pagedList.reload();
   }
 
   handleViewModeChange(mode: string | number): void {
@@ -204,19 +228,33 @@ export class Catalog implements OnInit {
   }
 
   handleStatusChange(status: string | number): void {
-    this.selectedStatus.set(status as RewardStatus | '');
-    this.loadRewards();
+    const normalized = status as RewardStatus | '';
+    this.selectedStatus.set(normalized);
+    this.pagedList.patchFilters({ status: normalized ? normalized : undefined });
+  }
+
+  handleCategoryChange(categoryId: string | number): void {
+    const parsed = categoryId === '' || categoryId === null || categoryId === undefined
+      ? ''
+      : Number(categoryId);
+    this.selectedCategoryId.set(parsed);
+    this.pagedList.patchFilters({
+      categoryId: typeof parsed === 'number' && !Number.isNaN(parsed) && parsed > 0 ? parsed : undefined,
+    });
   }
 
   openNewItemDrawer(): void {
     this.editingReward.set(null);
     this.uploadedImageUrl.set(null);
     this.imageError.set('');
+    if (this.categories().length === 0) {
+      this.loadCategories();
+    }
     const { validFrom, validUntil } = this.computeDefaultDates();
     this.rewardForm.reset({
       title: '',
       description: '',
-      category: RewardCategory.Groceries,
+      categoryId: this.categories()[0]?.categoryId ?? null,
       voucherCodeType: VoucherCodeType.Code,
       pointsCost: null,
       stock: null,
@@ -230,12 +268,15 @@ export class Catalog implements OnInit {
     this.editingReward.set(item);
     this.uploadedImageUrl.set(item.imageUrl ?? null);
     this.imageError.set('');
+    if (this.categories().length === 0) {
+      this.loadCategories();
+    }
     const { validFrom, validUntil } = this.computeDefaultDates();
     this.rewardForm.reset({
       title: item.title,
-      description: item.description,
-      category: item.category,
-      voucherCodeType: item.voucherCodeType,
+      description: item.description ?? '',
+      categoryId: item.categoryId,
+      voucherCodeType: item.voucherCodeType ?? VoucherCodeType.Code,
       pointsCost: item.pointsCost,
       stock: item.stock,
       validFrom: item.validFrom ? formatDate(item.validFrom) : validFrom,
@@ -259,16 +300,22 @@ export class Catalog implements OnInit {
       return;
     }
 
-    if (file.type !== 'image/png' && file.type !== 'image/jpeg') {
+    const allowedTypes = new Set(['image/png', 'image/jpeg', 'image/webp']);
+    const ext = file.name.split('.').pop()?.toLowerCase() ?? '';
+    const allowedExts = new Set(['png', 'jpg', 'jpeg', 'webp']);
+    const validType = file.type
+      ? allowedTypes.has(file.type.toLowerCase())
+      : allowedExts.has(ext);
+
+    if (!validType) {
       this.uploadedImageUrl.set(null);
-      this.imageError.set('Image must be a PNG or JPG file');
+      this.imageError.set('Image must be a PNG, JPG, or WEBP file');
       return;
     }
 
-    const MAX_SIZE = 5 * 1024 * 1024;
-    if (file.size > MAX_SIZE) {
+    if (file.size > this.maxImageSizeBytes) {
       this.uploadedImageUrl.set(null);
-      this.imageError.set('Image file size must be 5 MB or less');
+      this.imageError.set('Image file size must be 4 MB or less');
       return;
     }
 
@@ -278,6 +325,13 @@ export class Catalog implements OnInit {
         this.uploadedImageUrl.set(null);
         this.imageError.set(
           `Image dimensions must be at least 800×600 pixels (uploaded: ${dimensions.width}×${dimensions.height})`
+        );
+        return;
+      }
+      if (dimensions.width > 4096 || dimensions.height > 4096) {
+        this.uploadedImageUrl.set(null);
+        this.imageError.set(
+          `Image dimensions must not exceed 4096×4096 pixels (uploaded: ${dimensions.width}×${dimensions.height})`
         );
         return;
       }
@@ -299,7 +353,9 @@ export class Catalog implements OnInit {
         },
         error: (err) => {
           this.isUploadingImage.set(false);
-          this.toastService.error(getErrorMessage(err) || 'Failed to upload image asset');
+          const msg = getErrorMessage(err, 'Failed to upload image asset');
+          this.imageError.set(msg);
+          this.toastService.error(msg);
         },
       });
   }
@@ -343,13 +399,13 @@ export class Catalog implements OnInit {
       const updateReq: UpdateRewardRequest = {
         title: formVal.title.trim(),
         description: formVal.description ? formVal.description.trim() : undefined,
-        category: formVal.category,
+        categoryId: Number(formVal.categoryId),
         voucherCodeType: formVal.voucherCodeType,
         pointsCost: Number(formVal.pointsCost),
         stock: Number(formVal.stock),
         validFrom: formVal.validFrom || undefined,
         validUntil: formVal.validUntil || undefined,
-        imageUrl: this.uploadedImageUrl() ?? undefined,
+        imageUrl: this.uploadedImageUrl() ?? (editing.imageUrl ? '' : undefined),
       };
 
       this.catalogService
@@ -360,7 +416,7 @@ export class Catalog implements OnInit {
             this.isSubmitting.set(false);
             this.toastService.success('Reward item updated successfully');
             this.closeDrawer();
-            this.loadRewards();
+            this.pagedList.reload();
           },
           error: (err) => this.handleSaveRewardError(err, 'Failed to update reward item'),
         });
@@ -368,7 +424,7 @@ export class Catalog implements OnInit {
       const createReq: CreateRewardRequest = {
         title: formVal.title.trim(),
         description: formVal.description ? formVal.description.trim() : undefined,
-        category: formVal.category,
+        categoryId: Number(formVal.categoryId),
         voucherCodeType: formVal.voucherCodeType,
         pointsCost: Number(formVal.pointsCost),
         stock: Number(formVal.stock),
@@ -385,7 +441,7 @@ export class Catalog implements OnInit {
             this.isSubmitting.set(false);
             this.toastService.success('Reward item created successfully');
             this.closeDrawer();
-            this.loadRewards();
+            this.pagedList.reload();
           },
           error: (err) => this.handleSaveRewardError(err, 'Failed to create reward item'),
         });
@@ -432,11 +488,11 @@ export class Catalog implements OnInit {
           this.isArchiving.set(false);
           this.toastService.success(`"${item.title}" archived`);
           this.closeArchiveDialog();
-          this.loadRewards();
+          this.pagedList.reload();
         },
         error: (err) => {
           this.isArchiving.set(false);
-          this.toastService.error(err?.message || 'Failed to archive reward item');
+          this.toastService.error(getErrorMessage(err, 'Failed to archive reward item'));
         },
       });
   }
@@ -449,7 +505,21 @@ export class Catalog implements OnInit {
     }
   }
 
-  readonly getRowId = (row: AdminRewardItem): string => row.itemId;
+  readonly getRowId = (row: AdminRewardItem): string => String(row.itemId);
+
+  getItemCode(item: AdminRewardItem): string {
+    if (item.code && item.code.trim().length > 0) {
+      return item.code;
+    }
+    return `RWD-${String(item.itemId).padStart(3, '0')}`;
+  }
+
+  getCategoryDisplay(item: AdminRewardItem): string {
+    if (item.categoryName && item.categoryName.trim().length > 0) {
+      return item.categoryName;
+    }
+    return this.getCategoryLabel(item.category ?? '');
+  }
 
   getStatusBadgeVariant(status: RewardStatus): BadgeVariant {
     return REWARD_STATUS_BADGE_VARIANTS[status] ?? 'neutral';
@@ -463,7 +533,8 @@ export class Catalog implements OnInit {
     return REWARD_CATEGORY_LABELS[category as RewardCategory] ?? category;
   }
 
-  getCodeTypeLabel(type: VoucherCodeType | string): string {
+  getCodeTypeLabel(type: VoucherCodeType | string | null): string {
+    if (!type) return '';
     return VOUCHER_CODE_TYPE_LABELS[type as VoucherCodeType] ?? type;
   }
 }
