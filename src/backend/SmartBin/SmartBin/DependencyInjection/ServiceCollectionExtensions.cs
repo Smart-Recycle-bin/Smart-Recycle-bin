@@ -10,12 +10,14 @@ using SmartBin.Context;
 using SmartBin.Models;
 using SmartBin.Repositories;
 using SmartBin.Repositories.Abstractions;
+using SmartBin.Repositories.Audit;
 using SmartBin.Repositories.Auth;
 using SmartBin.Repositories.Bins;
 using SmartBin.Repositories.Sessions;
 using SmartBin.Repositories.Surveys;
 using SmartBin.Repositories.Wallet;
 using SmartBin.Services;
+using SmartBin.Services.Audit;
 using SmartBin.Services.Auth;
 using SmartBin.Services.Bins;
 using SmartBin.Services.Profile;
@@ -183,6 +185,7 @@ namespace SmartBin.DependencyInjection
             services.AddScoped<IAdminCollectorRepository, AdminCollectorRepository>();
             services.AddScoped<IAdminLookupRepository, AdminLookupRepository>();
             services.AddScoped<IAdminInspectionRepository, AdminInspectionRepository>();
+            services.AddScoped<IAuditLogRepository, AuditLogRepository>();
             services.AddScoped<IAdminNotificationRepository, AdminNotificationRepository>();
 
             return services;
@@ -224,6 +227,7 @@ namespace SmartBin.DependencyInjection
             services.AddScoped<IWalletService, WalletService>();
             services.AddScoped<IMember5InspectionService, UnavailableMember5InspectionService>();
             services.AddScoped<IAdminInspectionService, AdminInspectionService>();
+            services.AddScoped<IAuditLogService, AuditLogService>();
             services.AddScoped<IAdminNotificationService, AdminNotificationService>();
             services.AddHostedService<SessionTimeoutBackgroundService>();
 
