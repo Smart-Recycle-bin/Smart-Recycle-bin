@@ -71,4 +71,30 @@ namespace SmartBin.Configurations
                 .OnDelete(DeleteBehavior.Restrict);
         }
     }
+
+    public class LedgerAdjustmentIdempotencyConfiguration : IEntityTypeConfiguration<LedgerAdjustmentIdempotency>
+    {
+        public void Configure(EntityTypeBuilder<LedgerAdjustmentIdempotency> builder)
+        {
+            builder.ToTable("LEDGER_ADJUSTMENT_IDEMPOTENCY");
+            builder.HasKey(x => x.Id);
+
+            builder.Property(x => x.IdempotencyKey).IsRequired().HasMaxLength(128);
+            builder.Property(x => x.RequestHash).IsRequired().HasMaxLength(64);
+            builder.Property(x => x.CreatedAt).IsRequired();
+
+            builder.HasIndex(x => x.IdempotencyKey).IsUnique();
+            builder.HasIndex(x => x.TransactionId).IsUnique();
+
+            builder.HasOne(x => x.AdminUser)
+                .WithMany()
+                .HasForeignKey(x => x.AdminUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasOne(x => x.Transaction)
+                .WithMany()
+                .HasForeignKey(x => x.TransactionId)
+                .OnDelete(DeleteBehavior.Restrict);
+        }
+    }
 }

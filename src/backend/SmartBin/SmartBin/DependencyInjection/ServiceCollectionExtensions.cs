@@ -188,6 +188,7 @@ namespace SmartBin.DependencyInjection
             services.AddScoped<IRewardRepository, RewardRepository>();
             services.AddScoped<IRewardCategoryRepository, RewardCategoryRepository>();
             services.AddScoped<IWalletRepository, WalletRepository>();
+            services.AddScoped<IAdminLedgerRepository, AdminLedgerRepository>();
             services.AddScoped<IBinRepository, BinRepository>();
             services.AddScoped<ISessionRepository, SessionRepository>();
             services.AddScoped<ISurveyRepository, SurveyRepository>();
@@ -237,6 +238,7 @@ namespace SmartBin.DependencyInjection
             services.AddScoped<ISurveyService, SurveyService>();
             services.AddScoped<IAdminSurveyQaService, AdminSurveyQaService>();
             services.AddScoped<IWalletService, WalletService>();
+            services.AddScoped<IAdminLedgerService, AdminLedgerService>();
             services.AddScoped<IMember5InspectionService, LocalInspectionService>();
             services.AddScoped<IAdminInspectionService, AdminInspectionService>();
             services.AddScoped<IAuditLogService, AuditLogService>();
