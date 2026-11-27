@@ -48,6 +48,17 @@
         />
       </div>
 
+      <!-- Resource Type Select -->
+      <div class="filter-item">
+        <app-select
+          [options]="resourceTypeFilterOptions"
+          [value]="pagedList.filters().resourceType || ''"
+          placeholder="All resources"
+          ariaLabel="Filter by resource type"
+          (valueChange)="handleResourceTypeChange($event)"
+        />
+      </div>
+
       <!-- Resource ID Input -->
       <div class="filter-item">
         <app-input
@@ -145,7 +156,12 @@
 
           <!-- Resource ID Column (Monospace) -->
           <ng-template appCell="resourceId" let-row>
-            <app-mono-id-cell [value]="row.resourceId" />
+            <div class="resource-cell">
+              <app-mono-id-cell [value]="row.resourceId" />
+              @if (row.resourceType) {
+                <span class="resource-type-sublabel">{{ getResourceTypeLabel(row.resourceType) }}</span>
+              }
+            </div>
           </ng-template>
 
           <!-- Justification Column -->

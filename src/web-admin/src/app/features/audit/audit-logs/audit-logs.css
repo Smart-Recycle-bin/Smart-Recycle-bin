@@ -36,12 +36,25 @@
 
 @media (min-width: 1024px) {
   .filters-grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: 1fr 1fr 1fr 1fr 1.4fr;
   }
 }
 
 .filter-item {
   width: 100%;
+}
+
+.resource-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.resource-type-sublabel {
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
 }
 
 .table-container {

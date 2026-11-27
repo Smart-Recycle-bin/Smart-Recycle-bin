@@ -4,7 +4,7 @@ import {
   inject,
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { map } from 'rxjs';
+import { catchError, map, of } from 'rxjs';
 import { AuditLogService } from '@services/audit/audit-log.service';
 import { LookupsService } from '@services/lookup/lookups.service';
 import {
@@ -37,7 +37,9 @@ import { createPagedList } from '@shared/utils/paged-list';
 import {
   ACTION_TYPE_FILTER_OPTIONS,
   AUDIT_ACTION_BADGE_VARIANTS,
+  AUDIT_RESOURCE_TYPE_LABELS,
   AUDIT_TABLE_COLUMNS,
+  RESOURCE_TYPE_FILTER_OPTIONS,
 } from './audit-logs.config';
 
 @Component({
@@ -69,6 +71,7 @@ export class AuditLogs {
 
   readonly columns = AUDIT_TABLE_COLUMNS;
   readonly actionTypeFilterOptions = ACTION_TYPE_FILTER_OPTIONS;
+  readonly resourceTypeFilterOptions = RESOURCE_TYPE_FILTER_OPTIONS;
 
   readonly pagedList = createPagedList<AuditLogRow, AuditLogQuery>({
     fetch: (query) => this.auditLogService.getAuditLogs(query),
@@ -89,6 +92,7 @@ export class AuditLogs {
   // Admin options from LookupsService
   readonly adminOptions = toSignal(
     this.lookupsService.getAdmins().pipe(
+      catchError(() => of([])),
       map((admins): SelectOption[] => [
         { label: 'All admins', value: '' },
         ...admins.map((a) => ({
@@ -101,11 +105,21 @@ export class AuditLogs {
   );
 
   handleAdminChange(adminId: string | number): void {
-    this.pagedList.patchFilters({ adminId: adminId ? String(adminId) : undefined });
+    const parsed =
+      adminId === '' || adminId === null || adminId === undefined
+        ? undefined
+        : Number(adminId);
+    this.pagedList.patchFilters({
+      adminId: parsed !== undefined && !Number.isNaN(parsed) ? parsed : undefined,
+    });
   }
 
   handleActionChange(action: string | number): void {
     this.pagedList.patchFilters({ actionType: action ? (action as AuditActionType) : undefined });
+  }
+
+  handleResourceTypeChange(resourceType: string | number): void {
+    this.pagedList.patchFilters({ resourceType: resourceType ? String(resourceType) : undefined });
   }
 
   handleResourceIdChange(resourceId: string): void {
@@ -134,5 +148,9 @@ export class AuditLogs {
     return AUDIT_ACTION_TYPE_LABELS[action] ?? action;
   }
 
-  readonly getRowId = (row: AuditLogRow): string => row.auditId;
+  getResourceTypeLabel(resourceType: string | undefined): string {
+    return resourceType ? (AUDIT_RESOURCE_TYPE_LABELS[resourceType] ?? resourceType) : '';
+  }
+
+  readonly getRowId = (row: AuditLogRow): string => String(row.auditId);
 }

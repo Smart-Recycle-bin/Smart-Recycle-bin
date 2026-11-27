@@ -3,8 +3,10 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { AuditLogService } from './audit-log.service';
 import { ApiClientService } from '../api/api-client.service';
-import { environment } from '@env/environment';
+import { resolveApiBaseUrl } from '@core/interceptors/shared/api-url';
 import { AuditActionType } from '@models/audit/audit-action-type.enum';
+
+const apiBaseUrl = resolveApiBaseUrl();
 
 describe('AuditLogService', () => {
   let service: AuditLogService;
@@ -29,7 +31,7 @@ describe('AuditLogService', () => {
     });
 
     const req = httpMock.expectOne(
-      `${environment.apiBaseUrl}/admin/audit-logs?actionType=BIN_ASSIGN`
+      `${apiBaseUrl}/admin/audit-logs?actionType=BIN_ASSIGN`
     );
     expect(req.request.method).toBe('GET');
     req.flush({ success: true, data: [] });

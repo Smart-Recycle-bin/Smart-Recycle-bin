@@ -7,8 +7,9 @@ import { AuditActionType } from './audit-action-type.enum';
  * Filter query parameters for the audit logs screen (UI p16).
  */
 export interface AuditLogQuery extends PageQuery {
-  adminId?: string;
+  adminId?: Id;
   actionType?: AuditActionType;
+  resourceType?: string;
   resourceId?: string;
   from?: string; // ISO date string
   to?: string;   // ISO date string
@@ -24,6 +25,7 @@ export interface AuditLogRow {
   adminName: string;
   adminInitials: string;
   actionType: AuditActionType;
+  resourceType?: string;
   resourceId: string;
   justification: string;
   ipAddress: string;

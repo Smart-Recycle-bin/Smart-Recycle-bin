@@ -5,9 +5,9 @@ import { cairoLocalToIso } from '../_dates';
 export const MOCK_AUDIT_LOGS: AuditLogRow[] = [
   // 8 visible rows from PDF p16 (Showing 1-8 of 10)
   {
-    auditId: 'AUD-1001',
+    auditId: 1001,
     timestamp: cairoLocalToIso('2025-06-14 09:58'),
-    adminId: 'ADM-001',
+    adminId: 1,
     adminName: 'Laila Hamdy',
     adminInitials: 'LH',
     actionType: AuditActionType.BinAssignment,
@@ -16,9 +16,9 @@ export const MOCK_AUDIT_LOGS: AuditLogRow[] = [
     ipAddress: '41.33.12.9',
   },
   {
-    auditId: 'AUD-1002',
+    auditId: 1002,
     timestamp: cairoLocalToIso('2025-06-14 09:21'),
-    adminId: 'ADM-001',
+    adminId: 1,
     adminName: 'Laila Hamdy',
     adminInitials: 'LH',
     actionType: AuditActionType.FleetUpdate,
@@ -27,9 +27,9 @@ export const MOCK_AUDIT_LOGS: AuditLogRow[] = [
     ipAddress: '41.33.12.9',
   },
   {
-    auditId: 'AUD-1003',
+    auditId: 1003,
     timestamp: cairoLocalToIso('2025-06-14 08:47'),
-    adminId: 'ADM-002',
+    adminId: 2,
     adminName: 'Amr Shawky',
     adminInitials: 'AS',
     actionType: AuditActionType.LedgerAdjustment,
@@ -38,9 +38,9 @@ export const MOCK_AUDIT_LOGS: AuditLogRow[] = [
     ipAddress: '197.55.20.4',
   },
   {
-    auditId: 'AUD-1004',
+    auditId: 1004,
     timestamp: cairoLocalToIso('2025-06-13 16:30'),
-    adminId: 'ADM-001',
+    adminId: 1,
     adminName: 'Laila Hamdy',
     adminInitials: 'LH',
     actionType: AuditActionType.UserSuspension,
@@ -49,9 +49,9 @@ export const MOCK_AUDIT_LOGS: AuditLogRow[] = [
     ipAddress: '41.33.12.9',
   },
   {
-    auditId: 'AUD-1005',
+    auditId: 1005,
     timestamp: cairoLocalToIso('2025-06-13 14:12'),
-    adminId: 'ADM-002',
+    adminId: 2,
     adminName: 'Amr Shawky',
     adminInitials: 'AS',
     actionType: AuditActionType.CatalogChange,
@@ -60,9 +60,9 @@ export const MOCK_AUDIT_LOGS: AuditLogRow[] = [
     ipAddress: '197.55.20.4',
   },
   {
-    auditId: 'AUD-1006',
+    auditId: 1006,
     timestamp: cairoLocalToIso('2025-06-13 11:05'),
-    adminId: 'ADM-001',
+    adminId: 1,
     adminName: 'Laila Hamdy',
     adminInitials: 'LH',
     actionType: AuditActionType.CollectorProvisioning,
@@ -71,9 +71,9 @@ export const MOCK_AUDIT_LOGS: AuditLogRow[] = [
     ipAddress: '41.33.12.9',
   },
   {
-    auditId: 'AUD-1007',
+    auditId: 1007,
     timestamp: cairoLocalToIso('2025-06-12 17:40'),
-    adminId: 'ADM-001',
+    adminId: 1,
     adminName: 'Laila Hamdy',
     adminInitials: 'LH',
     actionType: AuditActionType.UserBan,
@@ -82,9 +82,9 @@ export const MOCK_AUDIT_LOGS: AuditLogRow[] = [
     ipAddress: '41.33.12.9',
   },
   {
-    auditId: 'AUD-1008',
+    auditId: 1008,
     timestamp: cairoLocalToIso('2025-06-12 10:15'),
-    adminId: 'ADM-002',
+    adminId: 2,
     adminName: 'Amr Shawky',
     adminInitials: 'AS',
     actionType: AuditActionType.FleetUpdate,
@@ -94,9 +94,9 @@ export const MOCK_AUDIT_LOGS: AuditLogRow[] = [
   },
   // Additional rows to complete the 10 total indicated on p16 ("1-8 of 10")
   {
-    auditId: 'AUD-1009',
+    auditId: 1009,
     timestamp: cairoLocalToIso('2025-06-11 15:00'),
-    adminId: 'ADM-001',
+    adminId: 1,
     adminName: 'Laila Hamdy',
     adminInitials: 'LH',
     actionType: AuditActionType.BinAssignment,
@@ -105,9 +105,9 @@ export const MOCK_AUDIT_LOGS: AuditLogRow[] = [
     ipAddress: '41.33.12.9', // synthetic
   },
   {
-    auditId: 'AUD-1010',
+    auditId: 1010,
     timestamp: cairoLocalToIso('2025-06-11 09:30'),
-    adminId: 'ADM-002',
+    adminId: 2,
     adminName: 'Amr Shawky',
     adminInitials: 'AS',
     actionType: AuditActionType.CatalogChange,
