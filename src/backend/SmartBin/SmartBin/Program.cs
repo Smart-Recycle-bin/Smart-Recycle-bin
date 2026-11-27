@@ -1,5 +1,6 @@
 using Microsoft.Extensions.FileProviders;
 using SmartBin.Context;
+using SmartBin.Context.Seeding;
 using SmartBin.DependencyInjection;
 using SmartBin.Hubs;
 
@@ -30,8 +31,14 @@ namespace SmartBin
 
             var app = builder.Build();
 
-            // Seed Roles, Users, Bins and Rewards
-            await DataSeeder.SeedAsync(app.Services);
+            // Core role initialization across environments
+            await DataSeeder.SeedRolesAsync(app.Services);
+
+            // Demo users and sample records only in Development
+            if (app.Environment.IsDevelopment())
+            {
+                await AdminDemoDataSeeder.SeedAsync(app.Services);
+            }
 
             // HTTP Request Pipeline
             if (app.Environment.IsDevelopment())
