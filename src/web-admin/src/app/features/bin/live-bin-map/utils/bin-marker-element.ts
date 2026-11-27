@@ -1,11 +1,12 @@
 import { Recycle } from 'lucide';
 import { BinMapItem } from '@models/bin/bin-map.model';
+import { Id } from '@models/common/id.model';
 import { BinStatus } from '@models/bin/bin-status.enum';
 import { getStatusSeverity, StatusSeverity } from './bin-cluster-renderer';
 
 export interface BinMarkerElementOptions {
   selected?: boolean;
-  onSelect?: (binId: string) => void;
+  onSelect?: (binId: Id) => void;
 }
 
 /**
@@ -13,7 +14,7 @@ export interface BinMarkerElementOptions {
  * Centralized so the format can be customized or configured (e.g. 'Bin#420' or binId).
  */
 export function formatBinMarkerLabel(bin: BinMapItem): string {
-  return bin.binId;
+  return String(bin.binId);
 }
 
 /**
@@ -46,7 +47,7 @@ export function createBinMarkerElement(
   el.className = `bin-marker marker-${sev}${opts?.selected ? ' marker-selected' : ''}`;
   el.setAttribute('role', 'button');
   el.setAttribute('tabindex', '0');
-  el.setAttribute('data-bin-id', bin.binId);
+  el.setAttribute('data-bin-id', String(bin.binId));
 
   const title = buildAccessibleTitle(bin);
   el.setAttribute('aria-label', title);
@@ -125,7 +126,7 @@ export function updateBinMarkerElement(
 ): void {
   const sev = getStatusSeverity(bin.status);
   el.className = `bin-marker marker-${sev}${opts?.selected ? ' marker-selected' : ''}`;
-  el.setAttribute('data-bin-id', bin.binId);
+  el.setAttribute('data-bin-id', String(bin.binId));
 
   const title = buildAccessibleTitle(bin);
   el.setAttribute('aria-label', title);

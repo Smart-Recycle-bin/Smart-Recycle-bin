@@ -1,4 +1,5 @@
 import { BinMapItem } from '@models/bin/bin-map.model';
+import { Id } from '@models/common/id.model';
 
 export interface BinChange {
   item: BinMapItem;
@@ -35,12 +36,12 @@ export function diffBins(
   prev: BinMapItem[] = [],
   next: BinMapItem[] = []
 ): BinDiffResult {
-  const prevMap = new Map<string, BinMapItem>();
+  const prevMap = new Map<Id, BinMapItem>();
   for (const item of prev) {
     prevMap.set(item.binId, item);
   }
 
-  const nextMap = new Map<string, BinMapItem>();
+  const nextMap = new Map<Id, BinMapItem>();
   for (const item of next) {
     nextMap.set(item.binId, item);
   }

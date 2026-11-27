@@ -7,11 +7,13 @@ import {
 } from '@angular/core';
 import {
   FormBuilder,
+  FormGroup,
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { map } from 'rxjs/operators';
+import { BehaviorSubject, of } from 'rxjs';
+import { catchError, map, switchMap } from 'rxjs/operators';
 import { BinsService } from '@services/bin/bins.service';
 import { LookupsService } from '@services/lookup/lookups.service';
 import { ToastService } from '@services/toast/toast.service';
@@ -20,7 +22,11 @@ import {
   BinStatus,
   BIN_STATUS_LABELS,
 } from '@models/bin/bin-status.enum';
-import { RegisterBinRequest } from '@models/bin/bin.dto';
+import {
+  RegisterBinRequest,
+  UpdateBinMetadataRequest,
+} from '@models/bin/bin.dto';
+import { Id } from '@models/common/id.model';
 import { ApiErrorCode } from '@models/common/api-error-code.enum';
 import { isApiErrorCode, getErrorMessage, getFieldErrors } from '@core/errors/error-message';
 import {
@@ -28,10 +34,9 @@ import {
   maxLen,
   latitude,
   longitude,
-  positiveInt,
-  getValidationErrorMessage,
 } from '@shared/validators';
 import {
+  BIN_TABLE_ACTIONS,
   BIN_TABLE_COLUMNS,
   getBinStatusBadgeVariant,
   getBinStatusLabel,
@@ -49,7 +54,6 @@ import { Badge } from '@shared/components/badge/badge';
 import { Drawer } from '@shared/components/overlay/drawer/drawer';
 import { Input } from '@shared/components/form/input/input';
 import { ResourceState } from '@shared/components/resource-state/resource-state';
-import { Icon } from '@shared/components/icon/icon';
 import { DateTimePipe } from '@shared/pipes';
 import { createPagedList } from '@shared/utils/paged-list';
 import { pluralNoun } from '@shared/utils/format';
@@ -84,6 +88,8 @@ export class BinsList {
   private readonly fb = inject(FormBuilder);
 
   readonly tableColumns = BIN_TABLE_COLUMNS;
+  readonly tableActions = BIN_TABLE_ACTIONS;
+  readonly getRowId = (row: BinListItem): Id => row.binId;
   readonly getStatusBadgeVariant = getBinStatusBadgeVariant;
   readonly getStatusLabel = getBinStatusLabel;
   readonly binStatusLabels = BIN_STATUS_LABELS;
@@ -100,8 +106,11 @@ export class BinsList {
   /**
    * Filter dropdown options from LookupsService
    */
+  private readonly districtsRefresh$ = new BehaviorSubject<void>(undefined);
+
   readonly districtOptions = toSignal(
-    this.lookupsService.getDistricts().pipe(
+    this.districtsRefresh$.pipe(
+      switchMap(() => this.lookupsService.getDistricts().pipe(catchError(() => of([])))),
       map((districts) => [
         { label: 'All districts', value: '' },
         ...districts.map((d) => ({ label: d.name, value: d.name })),
@@ -120,6 +129,7 @@ export class BinsList {
 
   readonly collectorOptions = toSignal(
     this.lookupsService.getCollectors().pipe(
+      catchError(() => of([])),
       map((collectors) => [
         { label: 'All collectors', value: '' },
         ...collectors.map((c) => ({ label: c.displayName, value: c.collectorId })),
@@ -128,11 +138,6 @@ export class BinsList {
     { initialValue: [{ label: 'All collectors', value: '' }] }
   );
 
-  readonly drawerDistrictOptions = computed<SelectOption[]>(() => [
-    { label: 'Select a district', value: '' },
-    ...this.districtOptions().filter((d) => d.value !== ''),
-  ]);
-
   /**
    * Header subtitle: "N registered smart bins across M districts"
    */
@@ -140,23 +145,47 @@ export class BinsList {
     const count = this.pagedList.total();
     const districtsCount = Math.max(0, this.districtOptions().length - 1);
     const binWord = pluralNoun(count, 'smart bin', 'smart bins');
+    if (districtsCount === 0) {
+      return `${count} registered ${binWord}`;
+    }
     const districtWord = pluralNoun(districtsCount, 'district', 'districts');
     return `${count} registered ${binWord} across ${districtsCount} ${districtWord}`;
   });
 
+  private readonly capacityValidators = [
+    trimmedRequired,
+    Validators.min(0.1),
+    Validators.max(10000),
+  ];
+
   /**
-   * Register Bin Drawer State
+   * Register & Edit Bin Drawer State
    */
   readonly isDrawerOpen = signal<boolean>(false);
   readonly isSubmitting = signal<boolean>(false);
   readonly serialServerError = signal<string>('');
 
+  readonly isEditDrawerOpen = signal<boolean>(false);
+  readonly isEditSubmitting = signal<boolean>(false);
+  readonly editingBin = signal<BinListItem | null>(null);
+
   readonly registerForm = this.fb.group({
-    deviceSerial: ['', [trimmedRequired, maxLen(64)]],
-    district: ['', [trimmedRequired]],
+    deviceSerial: ['', [trimmedRequired, maxLen(100)]],
+    name: ['', [trimmedRequired, maxLen(150)]],
+    area: ['', [maxLen(150)]],
+    district: ['', [trimmedRequired, maxLen(150)]],
     latitude: [null as number | null, [trimmedRequired, latitude]],
     longitude: [null as number | null, [trimmedRequired, longitude]],
-    capacityThresholdKg: [120 as number | null, [trimmedRequired, positiveInt]],
+    capacityThresholdKg: [120 as number | null, this.capacityValidators],
+  });
+
+  readonly editForm = this.fb.group({
+    name: ['', [trimmedRequired, maxLen(150)]],
+    area: ['', [maxLen(150)]],
+    district: ['', [trimmedRequired, maxLen(150)]],
+    latitude: [null as number | null, [trimmedRequired, latitude]],
+    longitude: [null as number | null, [trimmedRequired, longitude]],
+    capacityThresholdKg: [null as number | null, this.capacityValidators],
   });
 
   handleSearch(val: string): void {
@@ -172,12 +201,24 @@ export class BinsList {
   }
 
   handleCollectorChange(val: string | number): void {
-    this.pagedList.patchFilters({ collectorId: val ? String(val) : undefined });
+    const parsed =
+      val === '' || val === null || val === undefined ? undefined : Number(val);
+    this.pagedList.patchFilters({
+      collectorId: parsed !== undefined && !Number.isNaN(parsed) ? parsed : undefined,
+    });
+  }
+
+  handleTableAction(event: { action: string; row: BinListItem }): void {
+    if (event.action === 'edit') {
+      this.openEditDrawer(event.row);
+    }
   }
 
   openRegisterDrawer(): void {
     this.registerForm.reset({
       deviceSerial: '',
+      name: '',
+      area: '',
       district: '',
       latitude: null,
       longitude: null,
@@ -207,8 +248,11 @@ export class BinsList {
     this.isSubmitting.set(true);
 
     const raw = this.registerForm.getRawValue();
+    const trimmedArea = raw.area?.trim();
     const payload: RegisterBinRequest = {
       deviceSerial: raw.deviceSerial!.trim(),
+      name: raw.name!.trim(),
+      area: trimmedArea || undefined,
       district: raw.district!.trim(),
       latitude: Number(raw.latitude),
       longitude: Number(raw.longitude),
@@ -222,25 +266,93 @@ export class BinsList {
         this.closeRegisterDrawer();
         this.pagedList.reload();
         this.lookupsService.invalidate('districts');
+        this.districtsRefresh$.next();
       },
       error: (err: unknown) => {
         this.isSubmitting.set(false);
-        const fieldErrors = getFieldErrors(err);
-        if (fieldErrors) {
-          for (const [field, message] of Object.entries(fieldErrors)) {
-            const ctrl = this.registerForm.get(field);
-            if (ctrl) {
-              ctrl.setErrors({ serverError: message });
-            }
-          }
-        }
+        const appliedFieldErrors = this.applyServerFieldErrors(this.registerForm, err);
         if (isApiErrorCode(err, ApiErrorCode.DeviceAlreadyRegistered)) {
           this.registerForm.controls.deviceSerial.setErrors({ duplicate: true });
           this.serialServerError.set('A bin with this device serial is already registered.');
-        } else if (!fieldErrors) {
+        } else if (!appliedFieldErrors) {
           this.toastService.error(getErrorMessage(err));
         }
       },
     });
+  }
+
+  openEditDrawer(row: BinListItem): void {
+    this.editingBin.set(row);
+    this.editForm.reset({
+      name: row.name ?? '',
+      area: row.area ?? '',
+      district: row.district ?? '',
+      latitude: row.latitude ?? null,
+      longitude: row.longitude ?? null,
+      capacityThresholdKg: row.capacityThresholdKg ?? null,
+    });
+    this.isEditSubmitting.set(false);
+    this.isEditDrawerOpen.set(true);
+  }
+
+  closeEditDrawer(): void {
+    this.isEditDrawerOpen.set(false);
+    this.editingBin.set(null);
+  }
+
+  submitEditBin(): void {
+    const target = this.editingBin();
+    if (!target || this.isEditSubmitting()) {
+      return;
+    }
+
+    if (this.editForm.invalid) {
+      this.editForm.markAllAsTouched();
+      return;
+    }
+
+    this.isEditSubmitting.set(true);
+
+    const raw = this.editForm.getRawValue();
+    const payload: UpdateBinMetadataRequest = {
+      name: raw.name!.trim(),
+      area: raw.area?.trim() || '',
+      district: raw.district!.trim(),
+      latitude: Number(raw.latitude),
+      longitude: Number(raw.longitude),
+      capacityThresholdKg: Number(raw.capacityThresholdKg),
+    };
+
+    this.binsService.updateBinMetadata(target.binId, payload).subscribe({
+      next: () => {
+        this.isEditSubmitting.set(false);
+        this.toastService.success('Smart bin updated successfully.');
+        this.closeEditDrawer();
+        this.pagedList.reload();
+        this.lookupsService.invalidate('districts');
+        this.districtsRefresh$.next();
+      },
+      error: (err: unknown) => {
+        this.isEditSubmitting.set(false);
+        const appliedFieldErrors = this.applyServerFieldErrors(this.editForm, err);
+        if (!appliedFieldErrors) {
+          this.toastService.error(getErrorMessage(err));
+        }
+      },
+    });
+  }
+
+  private applyServerFieldErrors(form: FormGroup, err: unknown): boolean {
+    const fieldErrors = getFieldErrors(err);
+    if (!fieldErrors) {
+      return false;
+    }
+    for (const [field, message] of Object.entries(fieldErrors)) {
+      const ctrl = form.get(field);
+      if (ctrl) {
+        ctrl.setErrors({ serverError: message });
+      }
+    }
+    return true;
   }
 }

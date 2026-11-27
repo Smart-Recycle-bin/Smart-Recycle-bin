@@ -1,4 +1,5 @@
 import { BinMapItem } from '@models/bin/bin-map.model';
+import { Id } from '@models/common/id.model';
 import { BinStatus } from '@models/bin/bin-status.enum';
 
 export interface SanitizeResult {
@@ -12,6 +13,8 @@ const VALID_STATUSES: Set<string> = new Set([
   BinStatus.NeedsServicing,
   BinStatus.Offline,
   'AVAILABLE',
+  'FULL_80',
+  'NEEDS_SERVICE_95',
   '≥80% FULL',
   '≥95% FULL / NEEDS SERVICING',
   '≥95% FULL',
@@ -35,14 +38,19 @@ function cleanString(val: unknown, maxLength: number, fallback = ''): string {
 /**
  * Normalizes wire status strings to standard domain BinStatus.
  */
-function normalizeStatus(rawStatus: unknown, binId: string): BinStatus {
+function normalizeStatus(rawStatus: unknown, binId: Id): BinStatus {
   if (typeof rawStatus === 'string') {
     const trimmed = rawStatus.trim();
     if (VALID_STATUSES.has(trimmed)) {
-      if (trimmed.toUpperCase() === 'AVAILABLE') return BinStatus.Available;
-      if (trimmed === '≥80% FULL' || trimmed === '80%') return BinStatus.EightyPercentFull;
-      if (trimmed.startsWith('≥95%')) return BinStatus.NeedsServicing;
-      if (trimmed.toLowerCase() === 'offline') return BinStatus.Offline;
+      const upper = trimmed.toUpperCase();
+      if (upper === 'AVAILABLE') return BinStatus.Available;
+      if (upper === 'FULL_80' || trimmed === '≥80% FULL' || trimmed === '80%') {
+        return BinStatus.EightyPercentFull;
+      }
+      if (upper === 'NEEDS_SERVICE_95' || trimmed.startsWith('≥95%')) {
+        return BinStatus.NeedsServicing;
+      }
+      if (upper === 'OFFLINE') return BinStatus.Offline;
     }
   }
 
@@ -71,7 +79,7 @@ export function sanitizeMapBins(rawItems: unknown): SanitizeResult {
     }
 
     const items: BinMapItem[] = [];
-    const seenBinIds = new Set<string>();
+    const seenBinIds = new Set<Id>();
     let dropped = 0;
 
     for (const raw of rawItems) {
@@ -84,11 +92,11 @@ export function sanitizeMapBins(rawItems: unknown): SanitizeResult {
 
       // 1. binId validation
       const binIdRaw = obj['binId'];
-      if (typeof binIdRaw !== 'string' || binIdRaw.trim() === '') {
+      if (typeof binIdRaw !== 'number' || !Number.isInteger(binIdRaw) || binIdRaw <= 0) {
         dropped++;
         continue;
       }
-      const binId = binIdRaw.trim();
+      const binId: Id = binIdRaw;
 
       // 2. Deduplication
       if (seenBinIds.has(binId)) {

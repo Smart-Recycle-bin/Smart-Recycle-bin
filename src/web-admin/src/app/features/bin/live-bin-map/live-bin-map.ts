@@ -13,6 +13,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { BinMapItem, BinMapQuery } from '@models/bin/bin-map.model';
+import { Id } from '@models/common/id.model';
 import { BinStatus, BIN_STATUS_LABELS } from '@models/bin/bin-status.enum';
 import { BIN_LIVE_FEED } from '@services/bin/bin-live-feed.interface';
 import { PollingBinLiveFeed } from '@services/bin/polling-bin-live-feed.service';
@@ -58,7 +59,7 @@ export class LiveBinMap implements OnInit {
   // Raw bin items and metadata from feed
   readonly allBins = signal<BinMapItem[]>([]);
   readonly isTruncated = signal<boolean>(false);
-  readonly selectedBinId = signal<string | null>(null);
+  readonly selectedBinId = signal<Id | null>(null);
 
   // Active region tab
   readonly activeRegion = signal<string>('');
@@ -343,7 +344,7 @@ export class LiveBinMap implements OnInit {
     }));
   }
 
-  onBinSelect(binId: string): void {
+  onBinSelect(binId: Id): void {
     this.selectedBinId.set(binId);
 
     // Scroll list item into view

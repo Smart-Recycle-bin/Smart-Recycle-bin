@@ -3,8 +3,10 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { BinsService } from './bins.service';
 import { ApiClientService } from '../api/api-client.service';
-import { environment } from '@env/environment';
+import { resolveApiBaseUrl } from '@core/interceptors/shared/api-url';
 import { BinStatus } from '@models/bin/bin-status.enum';
+
+const apiBaseUrl = resolveApiBaseUrl();
 
 describe('BinsService', () => {
   let service: BinsService;
@@ -28,7 +30,7 @@ describe('BinsService', () => {
       expect(page.totalItems).toBe(0);
     });
 
-    const req = httpMock.expectOne(`${environment.apiBaseUrl}/admin/bins?status=AVAILABLE`);
+    const req = httpMock.expectOne(`${apiBaseUrl}/admin/bins?status=AVAILABLE`);
     expect(req.request.method).toBe('GET');
     req.flush({ success: true, data: [] });
   });
@@ -43,7 +45,7 @@ describe('BinsService', () => {
     };
     service.registerBin(payload).subscribe();
 
-    const req = httpMock.expectOne(`${environment.apiBaseUrl}/admin/bins`);
+    const req = httpMock.expectOne(`${apiBaseUrl}/admin/bins`);
     expect(req.request.method).toBe('POST');
     expect(req.request.body).toEqual(payload);
     req.flush({ success: true, data: { binId: 'bin_100', deviceSerial: 'SN-1002', fillLevel: 0, status: 'AVAILABLE' } });
@@ -53,7 +55,7 @@ describe('BinsService', () => {
     const payload = { collectorId: 'C-002' };
     service.assignCollector('BIN-0007', payload).subscribe();
 
-    const req = httpMock.expectOne(`${environment.apiBaseUrl}/admin/bins/BIN-0007/assignment`);
+    const req = httpMock.expectOne(`${apiBaseUrl}/admin/bins/BIN-0007/assignment`);
     expect(req.request.method).toBe('POST');
     expect(req.request.body).toEqual(payload);
     req.flush({ success: true, data: { binId: 'BIN-0007', assignedCollectorId: 'C-002' } });
@@ -70,7 +72,7 @@ describe('BinsService', () => {
 
     const req = httpMock.expectOne(
       (r) =>
-        r.url === `${environment.apiBaseUrl}/admin/bins/map` &&
+        r.url === `${apiBaseUrl}/admin/bins/map` &&
         r.params.get('region') === 'Greater Cairo' &&
         r.params.get('bbox') === '29.9,31.1,30.2,31.4'
     );

@@ -5,11 +5,14 @@ export type StatusSeverity = 'danger' | 'warning' | 'neutral' | 'success';
 
 export const STATUS_SEVERITY_ORDER: Record<string, number> = {
   [BinStatus.NeedsServicing]: 4,
+  '≥95% FULL / NEEDS SERVICING': 4,
   '≥95% FULL': 4,
   [BinStatus.EightyPercentFull]: 3,
+  '≥80% FULL': 3,
   '80%': 3,
   [BinStatus.Offline]: 2,
-  'OFFLINE': 2,
+  'Offline': 2,
+  'offline': 2,
   [BinStatus.Available]: 1,
 };
 

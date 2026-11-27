@@ -52,9 +52,9 @@ describe('Models Root Barrel Runtime Exports & Label Maps', () => {
 
   it('should export BinStatus and its label map matching its enum values', () => {
     expect(BinStatus.Available).toBe('AVAILABLE');
-    expect(BinStatus.EightyPercentFull).toBe('≥80% FULL');
-    expect(BinStatus.NeedsServicing).toBe('≥95% FULL / NEEDS SERVICING');
-    expect(BinStatus.Offline).toBe('offline');
+    expect(BinStatus.EightyPercentFull).toBe('FULL_80');
+    expect(BinStatus.NeedsServicing).toBe('NEEDS_SERVICE_95');
+    expect(BinStatus.Offline).toBe('OFFLINE');
     expect(Object.keys(BIN_STATUS_LABELS).sort()).toEqual(Object.values(BinStatus).sort());
   });
 

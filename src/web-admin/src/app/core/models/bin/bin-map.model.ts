@@ -1,3 +1,4 @@
+import { Id } from '../common/id.model';
 import { BinStatus } from './bin-status.enum';
 
 /**
@@ -5,7 +6,7 @@ import { BinStatus } from './bin-status.enum';
  * (GET /api/v1/admin/bins/map).
  */
 export interface BinMapItem {
-  binId: string;
+  binId: Id;
   name: string;
   area: string;
   district: string;

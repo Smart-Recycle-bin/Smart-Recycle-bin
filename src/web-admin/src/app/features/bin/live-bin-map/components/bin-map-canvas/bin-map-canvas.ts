@@ -19,6 +19,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { GoogleMap, GoogleMapsModule } from '@angular/google-maps';
 import { BinMapItem } from '@models/bin/bin-map.model';
+import { Id } from '@models/common/id.model';
 import { BinStatus } from '@models/bin/bin-status.enum';
 import { GoogleMapsLoaderService, GoogleMapsLoaderState } from '@services/maps/google-maps-loader.service';
 import { MapLoadBudgetService } from '@services/maps/map-load-budget.service';
@@ -52,11 +53,11 @@ export class BinMapCanvas implements OnInit, OnDestroy {
   readonly googleMapComponent = viewChild<GoogleMap>('googleMapComponent');
 
   readonly bins = input<BinMapItem[]>([]);
-  readonly selectedBinId = input<string | null>(null);
+  readonly selectedBinId = input<Id | null>(null);
   readonly activeRegion = input<string>('All');
   readonly allowedStatuses = input<Set<string>>(new Set());
 
-  readonly binSelected = output<string>();
+  readonly binSelected = output<Id>();
   readonly emptyMapClicked = output<void>();
   readonly boundsChanged = output<string>(); // bbox formatted as south,west,north,east
 
@@ -89,7 +90,7 @@ export class BinMapCanvas implements OnInit, OnDestroy {
   private isFirstThemeRun = true;
 
   // Markers storage and diff tracking
-  private markerRecords = new Map<string, MarkerRecord>();
+  private markerRecords = new Map<Id, MarkerRecord>();
   private previousBins: BinMapItem[] = [];
   readonly clusterRenderer = new BinClusterRenderer();
 
@@ -423,12 +424,12 @@ export class BinMapCanvas implements OnInit, OnDestroy {
     });
   }
 
-  private selectBin(binId: string): void {
+  private selectBin(binId: Id): void {
     this.binSelected.emit(binId);
     this.panToBin(binId);
   }
 
-  panToBin(binId: string): void {
+  panToBin(binId: Id): void {
     const record = this.markerRecords.get(binId);
     if (record && this.googleMapInstance) {
       const pos = {
@@ -443,7 +444,7 @@ export class BinMapCanvas implements OnInit, OnDestroy {
     }
   }
 
-  private updateSelectionHighlights(selectedId: string | null): void {
+  private updateSelectionHighlights(selectedId: Id | null): void {
     for (const [id, record] of this.markerRecords.entries()) {
       const isSelected = id === selectedId;
       if (isSelected) {

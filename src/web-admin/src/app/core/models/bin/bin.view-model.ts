@@ -9,7 +9,7 @@ import { BinStatus } from './bin-status.enum';
 export interface BinQuery extends PageQuery {
   district?: string;
   status?: BinStatus;
-  collectorId?: string;
+  collectorId?: Id;
   search?: string;
 }
 
@@ -19,14 +19,15 @@ export interface BinQuery extends PageQuery {
 export interface BinListItem {
   binId: Id;
   name: string;
-  area: string;
-  district: string;
-  region?: string;
-  latitude: number;
-  longitude: number;
+  area?: string | null;
+  district: string | null;
+  region?: string | null;
+  latitude: number | null;
+  longitude: number | null;
   fillLevel: number; // percentage (0 - 100)
+  capacityThresholdKg?: number | null;
   status: BinStatus;
-  collectorId?: Id;
-  collectorName?: string;
-  lastServicedAt: string; // ISO 8601 string or formatted string
+  collectorId?: Id | null;
+  collectorName?: string | null;
+  lastServicedAt: string | null; // ISO 8601 string or formatted string
 }

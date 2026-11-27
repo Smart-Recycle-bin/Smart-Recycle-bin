@@ -6,6 +6,8 @@ import { BinStatus } from './bin-status.enum';
  */
 export interface RegisterBinRequest {
   deviceSerial: string;
+  name?: string;
+  area?: string;
   latitude: number;
   longitude: number;
   district: string;
@@ -18,8 +20,36 @@ export interface RegisterBinRequest {
 export interface RegisterBinResponse {
   binId: Id;
   deviceSerial: string;
+  name?: string | null;
+  area?: string | null;
+  district?: string | null;
   status: BinStatus;
   fillLevel: number;
+}
+
+/**
+ * Request payload for PUT /api/v1/admin/bins/{binId} (E53).
+ */
+export interface UpdateBinMetadataRequest {
+  name?: string;
+  area?: string;
+  latitude: number;
+  longitude: number;
+  district: string;
+  capacityThresholdKg: number;
+}
+
+/**
+ * Response data for PUT /api/v1/admin/bins/{binId} (E53).
+ */
+export interface UpdateBinMetadataResponse {
+  binId: Id;
+  name?: string | null;
+  area?: string | null;
+  latitude: number;
+  longitude: number;
+  district: string;
+  capacityThresholdKg: number;
 }
 
 /**

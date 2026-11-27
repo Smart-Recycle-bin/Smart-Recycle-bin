@@ -4,12 +4,15 @@ import { ApiClientService } from '../api/api-client.service';
 import { API_ENDPOINTS } from '../api/api-endpoints';
 import { BinListItem, BinQuery } from '@models/bin/bin.view-model';
 import { BinMapQuery, BinMapResponse } from '@models/bin/bin-map.model';
+import { Id } from '@models/common/id.model';
 import { Page } from '@models/common/page.model';
 import {
   AssignBinRequest,
   AssignBinResponse,
   RegisterBinRequest,
   RegisterBinResponse,
+  UpdateBinMetadataRequest,
+  UpdateBinMetadataResponse,
 } from '@models/bin/bin.dto';
 
 @Injectable({
@@ -43,9 +46,19 @@ export class BinsService {
   }
 
   /**
+   * Updates editable metadata for an existing smart bin (E53).
+   */
+  updateBinMetadata(
+    binId: Id,
+    req: UpdateBinMetadataRequest
+  ): Observable<UpdateBinMetadataResponse> {
+    return this.apiClient.put<UpdateBinMetadataResponse>(API_ENDPOINTS.bin.update(binId), req);
+  }
+
+  /**
    * Assigns a field collector to an existing smart bin (APIs.md 7.3).
    */
-  assignCollector(binId: string, req: AssignBinRequest): Observable<AssignBinResponse> {
+  assignCollector(binId: Id, req: AssignBinRequest): Observable<AssignBinResponse> {
     return this.apiClient.post<AssignBinResponse>(API_ENDPOINTS.bin.assign(binId), req);
   }
 }

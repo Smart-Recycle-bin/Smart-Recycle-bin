@@ -74,6 +74,8 @@
         ariaLabel="Smart bins list"
         [columns]="tableColumns"
         [data]="pagedList.items()"
+        [actions]="tableActions"
+        [rowId]="getRowId"
         [loading]="pagedList.refreshing() || pagedList.loading()"
         mode="server"
         [page]="pagedList.page()"
@@ -84,6 +86,7 @@
         [showPagination]="true"
         (pageChange)="pagedList.setPage($event)"
         (sortChange)="pagedList.setSort($event.key, $event.dir)"
+        (actionClicked)="handleTableAction($event)"
         emptyTitle="No smart bins found"
         emptyDescription="No bins match the selected filter criteria."
       >
@@ -96,7 +99,9 @@
         <ng-template appCell="name" let-row>
           <div class="bin-name-cell">
             <span class="bin-primary-name">{{ row.name }}</span>
-            <span class="bin-sub-area">{{ row.area }}</span>
+            @if (row.area) {
+              <span class="bin-sub-area">{{ row.area }}</span>
+            }
           </div>
         </ng-template>
 
@@ -120,15 +125,15 @@
 
         <!-- Custom District Cell Template -->
         <ng-template appCell="district" let-row>
-          <span class="district-text">{{ row.district }}</span>
+          <span class="district-text">{{ row.district || '—' }}</span>
         </ng-template>
 
         <!-- Custom Collector Cell Template -->
-        <ng-template appCell="collector" let-row>
+        <ng-template appCell="collectorName" let-row>
           @if (row.collectorId && row.collectorName) {
             <app-user-cell
               [name]="row.collectorName"
-              [subtitle]="row.collectorId"
+              [subtitle]="'' + row.collectorId"
             />
           } @else {
             <span class="unassigned-text">Unassigned</span>
@@ -165,11 +170,27 @@
           </div>
 
           <div class="form-field-group">
-            <app-select
+            <app-input
+              formControlName="name"
+              label="Bin Name"
+              placeholder="e.g. Downtown Cairo Square"
+              [required]="true"
+            />
+          </div>
+
+          <div class="form-field-group">
+            <app-input
+              formControlName="area"
+              label="Area"
+              placeholder="e.g. Tahrir Square"
+            />
+          </div>
+
+          <div class="form-field-group">
+            <app-input
               formControlName="district"
-              label="District / Area"
-              placeholder="Select a district"
-              [options]="drawerDistrictOptions()"
+              label="District"
+              placeholder="e.g. Downtown Cairo"
               [required]="true"
             />
           </div>
@@ -220,6 +241,93 @@
         [disabled]="registerForm.invalid || isSubmitting()"
       >
         Register bin
+      </app-button>
+    </div>
+  </app-drawer>
+
+  <!-- Edit Smart Bin Drawer -->
+  <app-drawer
+    [open]="isEditDrawerOpen()"
+    title="Edit Smart Bin"
+    [description]="'Update metadata and location for ' + (editingBin()?.name || 'selected bin') + '.'"
+    size="md"
+    (closed)="closeEditDrawer()"
+  >
+    <div class="drawer-content">
+      <form [formGroup]="editForm" (ngSubmit)="submitEditBin()" class="register-form">
+        <div class="form-fields">
+          <div class="form-field-group">
+            <app-input
+              formControlName="name"
+              label="Bin Name"
+              placeholder="e.g. Downtown Cairo Square"
+              [required]="true"
+            />
+          </div>
+
+          <div class="form-field-group">
+            <app-input
+              formControlName="area"
+              label="Area"
+              placeholder="e.g. Tahrir Square"
+            />
+          </div>
+
+          <div class="form-field-group">
+            <app-input
+              formControlName="district"
+              label="District"
+              placeholder="e.g. Downtown Cairo"
+              [required]="true"
+            />
+          </div>
+
+          <div class="coordinates-grid">
+            <app-input
+              formControlName="latitude"
+              type="number"
+              label="Latitude"
+              placeholder="30.0444"
+              [required]="true"
+            />
+            <app-input
+              formControlName="longitude"
+              type="number"
+              label="Longitude"
+              placeholder="31.2357"
+              [required]="true"
+            />
+          </div>
+
+          <div class="form-field-group">
+            <app-input
+              formControlName="capacityThresholdKg"
+              type="number"
+              label="Capacity Threshold (kg)"
+              placeholder="120"
+              [required]="true"
+              hint="Maximum rated capacity before triggering maintenance alerts"
+            />
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <div drawer-footer class="drawer-footer-actions">
+      <app-button
+        variant="ghost"
+        (clicked)="closeEditDrawer()"
+        [disabled]="isEditSubmitting()"
+      >
+        Cancel
+      </app-button>
+      <app-button
+        variant="primary"
+        (clicked)="submitEditBin()"
+        [loading]="isEditSubmitting()"
+        [disabled]="editForm.invalid || isEditSubmitting()"
+      >
+        Save changes
       </app-button>
     </div>
   </app-drawer>
