@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace SmartBin.Dtos.Bins
 {
     public class AdminBinDto
@@ -10,6 +12,7 @@ namespace SmartBin.Dtos.Bins
         public decimal? Latitude { get; set; }
         public decimal? Longitude { get; set; }
         public decimal FillLevel { get; set; }
+        public decimal? CapacityThresholdKg { get; set; }
         public string Status { get; set; } = string.Empty;
         public int? CollectorId { get; set; }
         public string? CollectorName { get; set; }
@@ -18,7 +21,7 @@ namespace SmartBin.Dtos.Bins
 
     public class BinMapItemDto
     {
-        public string BinId { get; set; } = string.Empty;
+        public int BinId { get; set; }
         public string Name { get; set; } = string.Empty;
         public string Area { get; set; } = string.Empty;
         public string District { get; set; } = string.Empty;
@@ -42,13 +45,15 @@ namespace SmartBin.Dtos.Bins
 
     public class AssignBinRequestDto
     {
-        public string CollectorId { get; set; } = string.Empty;
+        [Required(ErrorMessage = "collectorId is required.")]
+        [Range(1, int.MaxValue, ErrorMessage = "collectorId must be a positive integer.")]
+        public int? CollectorId { get; set; }
     }
 
     public class AssignBinResponseDto
     {
-        public string BinId { get; set; } = string.Empty;
-        public string AssignedCollectorId { get; set; } = string.Empty;
+        public int BinId { get; set; }
+        public int AssignedCollectorId { get; set; }
         public string AssignedAt { get; set; } = string.Empty;
     }
 

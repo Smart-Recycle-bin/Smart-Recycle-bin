@@ -13,6 +13,12 @@ namespace SmartBin.Models
         [MaxLength(100)]
         public string SerialNumber { get; set; } = string.Empty;
 
+        [MaxLength(150)]
+        public string? Name { get; set; }
+
+        [MaxLength(150)]
+        public string? Area { get; set; }
+
         [Required]
         [MaxLength(255)] 
         public string QRCode { get; set; } = string.Empty;
@@ -37,6 +43,8 @@ namespace SmartBin.Models
         public decimal? CapacityThreshold { get; set; }
 
         public int? CollectorId { get; set; }
+
+        public DateTime? AssignedAt { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

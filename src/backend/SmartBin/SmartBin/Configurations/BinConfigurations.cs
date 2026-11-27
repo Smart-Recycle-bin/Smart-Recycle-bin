@@ -10,6 +10,8 @@ namespace SmartBin.Configurations
         {
             builder.ToTable("SMART_BIN");
             builder.HasKey(b => b.BinId);
+            builder.Property(b => b.Name).HasMaxLength(150);
+            builder.Property(b => b.Area).HasMaxLength(150);
             builder.HasIndex(b => b.SerialNumber).IsUnique();
             builder.HasIndex(b => b.QRCode).IsUnique();
             builder.HasIndex(b => b.Status);
