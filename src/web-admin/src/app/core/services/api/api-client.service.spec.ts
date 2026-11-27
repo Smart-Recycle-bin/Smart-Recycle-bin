@@ -2,7 +2,9 @@ import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ApiClientService } from './api-client.service';
-import { environment } from '@env/environment';
+import { resolveApiBaseUrl } from '@core/interceptors/shared/api-url';
+
+const apiBaseUrl = resolveApiBaseUrl();
 
 describe('ApiClientService', () => {
   let service: ApiClientService;
@@ -28,7 +30,7 @@ describe('ApiClientService', () => {
       result = data;
     });
 
-    const req = httpMock.expectOne(`${environment.apiBaseUrl}/test-endpoint`);
+    const req = httpMock.expectOne(`${apiBaseUrl}/test-endpoint`);
     expect(req.request.method).toBe('GET');
 
     req.flush({ success: true, data: mockData });
@@ -50,7 +52,7 @@ describe('ApiClientService', () => {
 
     const req = httpMock.expectOne(
       (r) =>
-        r.url === `${environment.apiBaseUrl}/test-params` &&
+        r.url === `${apiBaseUrl}/test-params` &&
         r.params.has('search') &&
         r.params.get('search') === 'clean' &&
         r.params.has('count') &&
@@ -66,22 +68,22 @@ describe('ApiClientService', () => {
   it('should unwrap data on POST, PUT, PATCH, and DELETE', () => {
     service.post('/test-post', { name: 'item' }).subscribe((d) => expect(d).toBe('posted'));
     httpMock
-      .expectOne(`${environment.apiBaseUrl}/test-post`)
+      .expectOne(`${apiBaseUrl}/test-post`)
       .flush({ success: true, data: 'posted' });
 
     service.put('/test-put', { name: 'update' }).subscribe((d) => expect(d).toBe('updated'));
     httpMock
-      .expectOne(`${environment.apiBaseUrl}/test-put`)
+      .expectOne(`${apiBaseUrl}/test-put`)
       .flush({ success: true, data: 'updated' });
 
     service.patch('/test-patch', { field: 1 }).subscribe((d) => expect(d).toBe('patched'));
     httpMock
-      .expectOne(`${environment.apiBaseUrl}/test-patch`)
+      .expectOne(`${apiBaseUrl}/test-patch`)
       .flush({ success: true, data: 'patched' });
 
     service.delete('/test-delete').subscribe((d) => expect(d).toBe('deleted'));
     httpMock
-      .expectOne(`${environment.apiBaseUrl}/test-delete`)
+      .expectOne(`${apiBaseUrl}/test-delete`)
       .flush({ success: true, data: 'deleted' });
   });
 
@@ -95,7 +97,7 @@ describe('ApiClientService', () => {
         result = p;
       });
 
-      const req = httpMock.expectOne(`${environment.apiBaseUrl}/items?page=2&pageSize=2`);
+      const req = httpMock.expectOne(`${apiBaseUrl}/items?page=2&pageSize=2`);
       expect(req.request.method).toBe('GET');
 
       req.flush({ success: true, data: items, meta });
@@ -117,7 +119,7 @@ describe('ApiClientService', () => {
         result = p;
       });
 
-      const req = httpMock.expectOne(`${environment.apiBaseUrl}/items-no-meta`);
+      const req = httpMock.expectOne(`${apiBaseUrl}/items-no-meta`);
       expect(req.request.method).toBe('GET');
 
       req.flush({ success: true, data: items });
@@ -138,7 +140,7 @@ describe('ApiClientService', () => {
         result = p;
       });
 
-      const req = httpMock.expectOne(`${environment.apiBaseUrl}/empty`);
+      const req = httpMock.expectOne(`${apiBaseUrl}/empty`);
       req.flush({ success: true, data: [] });
 
       expect(result).toEqual({

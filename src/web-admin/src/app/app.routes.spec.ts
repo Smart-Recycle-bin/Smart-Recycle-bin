@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { routes } from './app.routes';
 import { authGuard, guestGuard, roleGuard } from './core/guards';
 import { UserRole } from './core/models/user/user-role.enum';
@@ -9,9 +10,7 @@ import { AuthService } from './core/services/auth/auth.service';
 import { TokenStorageService } from './core/services/auth/token-storage.service';
 import { ToastService } from './core/services/toast/toast.service';
 import { authInterceptor, errorInterceptor } from './core/interceptors';
-import { mockBackendInterceptor } from './core/interceptors/mock-backend/engine/mock-backend.interceptor';
-import { generateMockAccessToken } from './core/interceptors/mock-backend/engine/mock-auth';
-import { resetMockDb } from './core/mock/db/mock-db';
+import { resolveApiBaseUrl } from './core/interceptors/shared/api-url';
 import { environment } from '../environments/environment';
 
 describe('App Routes', () => {
@@ -19,6 +18,7 @@ describe('App Routes', () => {
   let harness: RouterTestingHarness;
   let authService: AuthService;
   let tokenStorage: TokenStorageService;
+  let httpMock: HttpTestingController;
 
   beforeAll(async () => {
     await Promise.all([
@@ -30,12 +30,12 @@ describe('App Routes', () => {
 
   beforeEach(async () => {
     localStorage.removeItem(environment.sessionStorageKey);
-    resetMockDb();
 
     await TestBed.configureTestingModule({
       providers: [
         provideRouter(routes),
-        provideHttpClient(withInterceptors([errorInterceptor, authInterceptor, mockBackendInterceptor])),
+        provideHttpClient(withInterceptors([errorInterceptor, authInterceptor])),
+        provideHttpClientTesting(),
         AuthService,
         TokenStorageService,
         ToastService,
@@ -45,14 +45,11 @@ describe('App Routes', () => {
     router = TestBed.inject(Router);
     authService = TestBed.inject(AuthService);
     tokenStorage = TestBed.inject(TokenStorageService);
+    httpMock = TestBed.inject(HttpTestingController);
 
     // Seed active admin session by default so admin routes are reachable in basic render tests
-    const validToken = generateMockAccessToken(
-      { userId: 'ADM-001', role: UserRole.Admin, displayName: 'Sarah Connor' },
-      3600
-    );
     tokenStorage.saveSession({
-      accessToken: validToken,
+      accessToken: 'test_admin_jwt_token',
       expiresAt: new Date(Date.now() + 3600000).toISOString(),
       refreshToken: 'valid_refresh_token',
       user: {
@@ -67,8 +64,8 @@ describe('App Routes', () => {
   });
 
   afterEach(() => {
+    httpMock.match(() => true);
     localStorage.removeItem(environment.sessionStorageKey);
-    resetMockDb();
   });
 
   describe('Route Configuration Declarations', () => {
@@ -135,7 +132,7 @@ describe('App Routes', () => {
     });
   });
 
-  describe('Guards Integration (with Mock Backend)', () => {
+  describe('Guards Integration', () => {
     it('redirects to /login?returnUrl=%2Fbins when visiting /bins while logged out', async () => {
       authService.clearSession();
 
@@ -159,22 +156,7 @@ describe('App Routes', () => {
     });
 
     it('refreshes token and opens /bins when access token is expired but refresh token is valid', async () => {
-      // 1. Login via mock backend to obtain genuine refresh token recorded in mockDb
-      let loginSuccess = false;
-      await new Promise<void>((resolve, reject) => {
-        authService
-          .login({ email: 'admin@ecobin.eg', password: 'password123' })
-          .subscribe({
-            next: () => {
-              loginSuccess = true;
-              resolve();
-            },
-            error: reject,
-          });
-      });
-      expect(loginSuccess).toBe(true);
-
-      // 2. Expire access token artificially in storage
+      // Expire access token artificially in storage while keeping valid refresh token
       const session = tokenStorage.getSession();
       expect(session).not.toBeNull();
       if (session) {
@@ -188,8 +170,21 @@ describe('App Routes', () => {
       expect(authService.isAuthenticated()).toBe(false);
       expect(authService.hasRefreshToken()).toBe(true);
 
-      // 3. Navigate to /bins — authGuard must refresh and allow access
-      await harness.navigateByUrl('/bins');
+      // Navigate to /bins — authGuard must refresh via HTTP and allow access
+      const navPromise = harness.navigateByUrl('/bins');
+      await new Promise((r) => setTimeout(r, 0));
+      const refreshReq = httpMock.expectOne(`${resolveApiBaseUrl()}/auth/refresh`);
+      expect(refreshReq.request.method).toBe('POST');
+      refreshReq.flush({
+        success: true,
+        data: {
+          accessToken: 'refreshed_jwt_token',
+          expiresIn: 900,
+          refreshToken: 'rotated_refresh_token',
+        },
+      });
+
+      await navPromise;
       expect(router.url).toBe('/bins');
       expect(harness.routeNativeElement?.textContent).toContain('Bins List');
       expect(authService.isAuthenticated()).toBe(true);

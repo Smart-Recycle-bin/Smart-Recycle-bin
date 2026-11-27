@@ -1,7 +1,7 @@
 import { HttpClient, HttpContext, HttpHeaders, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { map, Observable } from 'rxjs';
-import { environment } from '@env/environment';
+import { resolveApiBaseUrl } from '@core/interceptors/shared/api-url';
 import { ApiResponse } from '@models/common/api-response.dto';
 import { Page, PageQuery } from '@models/common/page.model';
 
@@ -16,7 +16,7 @@ export interface RequestOptions {
 })
 export class ApiClientService {
   private readonly http = inject(HttpClient);
-  private readonly baseUrl = environment.apiBaseUrl.replace(/\/+$/, '');
+  private readonly baseUrl = resolveApiBaseUrl();
 
   /**
    * Performs an HTTP GET request, unwrapping ApiResponse<T> to T.

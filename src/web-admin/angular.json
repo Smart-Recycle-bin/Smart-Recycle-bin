@@ -83,35 +83,7 @@
             "development": {
               "optimization": false,
               "extractLicenses": false,
-              "sourceMap": true,
-              "fileReplacements": [
-                {
-                  "replace": "src/environments/environment.ts",
-                  "with": "src/environments/environment.development.ts"
-                }
-              ]
-            },
-            "e2e": {
-              "optimization": false,
-              "extractLicenses": false,
-              "sourceMap": true,
-              "fileReplacements": [
-                {
-                  "replace": "src/environments/environment.ts",
-                  "with": "src/environments/environment.e2e.ts"
-                }
-              ]
-            },
-            "local-api": {
-              "optimization": false,
-              "extractLicenses": false,
-              "sourceMap": true,
-              "fileReplacements": [
-                {
-                  "replace": "src/environments/environment.ts",
-                  "with": "src/environments/environment.local-api.ts"
-                }
-              ]
+              "sourceMap": true
             }
           },
           "defaultConfiguration": "production"
@@ -123,20 +95,12 @@
               "buildTarget": "ecobin-admin:build:production"
             },
             "development": {
-              "buildTarget": "ecobin-admin:build:development",
-              "proxyConfig": "proxy.conf.json"
-            },
-            "local-api": {
-              "buildTarget": "ecobin-admin:build:local-api",
-              "proxyConfig": "proxy.conf.json"
-            },
-            "e2e": {
-              "buildTarget": "ecobin-admin:build:e2e"
+              "buildTarget": "ecobin-admin:build:development"
             },
             "csp": {
               "buildTarget": "ecobin-admin:build:development",
               "headers": {
-                "Content-Security-Policy": "default-src 'self'; script-src 'self' https://maps.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https: blob: https://maps.gstatic.com https://*.googleapis.com https://*.ggpht.com; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https: https://maps.googleapis.com https://*.googleapis.com; worker-src 'self' blob:; frame-ancestors 'none'; base-uri 'self'; form-action 'self';"
+                "Content-Security-Policy": "default-src 'self'; script-src 'self' https://maps.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https: blob: https://maps.gstatic.com https://*.googleapis.com https://*.ggpht.com; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' http://localhost:5121 https: https://maps.googleapis.com https://*.googleapis.com; worker-src 'self' blob:; frame-ancestors 'none'; base-uri 'self'; form-action 'self';"
               }
             }
           },
