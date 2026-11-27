@@ -16,12 +16,14 @@ export interface InspectionReportQuery extends PageQuery {
  */
 export interface InspectionReportListItem {
   reportId: Id;
-  airId: string; // e.g. 'AIR-2048'
+  airId?: string | null;
   sessionId: Id;
   binId: Id;
-  imageThumbnailUrl: string;
+  binName?: string | null;
+  imageThumbnailUrl: string | null;
   mlPredictedWasteType: string;
-  mlConfidence: number; // 0.0 to 1.0 (e.g. 0.62)
+  mlConfidence: number | null; // 0.0 to 1.0 or null if unavailable
+  userSelectedWasteType?: string | null;
   userFeedback: string;
   date: string; // ISO 8601 string
   status: InspectionReportStatus;
@@ -32,29 +34,39 @@ export interface InspectionReportListItem {
  */
 export interface InspectionReportDetail {
   reportId: Id;
-  airId: string;
+  airId?: string | null;
   sessionId: Id;
   binId: Id;
+  binName?: string | null;
   userName: string;
   date: string; // ISO 8601 string
   status: InspectionReportStatus;
   capturedFrames: string[];
   userFeedback: string;
-  mlModelVersion: string;
+  userSelectedWasteType?: string | null;
+  aiRating?: number | null;
+  mlModelVersion?: string | null;
   predictedWasteType: string;
+  predictedConfidence?: number | null;
   estimatedPoints: number;
-  classConfidences: Record<string, number>;
+  classConfidences?: Record<string, number> | null;
+  reviewDecision?: string | null;
+  confirmedWasteType?: string | null;
+  adminJustification?: string | null;
+  reviewedAt?: string | null;
+  retrainingStatus?: string | null;
 }
 
 /**
  * Dataset retraining widget metrics displayed above the inspection queue (UI p9).
  */
 export interface InspectionSummary {
-  labelledImagesCount: number;
-  targetImagesThreshold: number;
-  remainingUntilRetrain: number;
+  labelledImagesCount: number | null;
+  targetImagesThreshold: number | null;
+  remainingUntilRetrain: number | null;
   pendingReviewCount: number;
   reviewedCount: number;
+  sentToRetrainingCount?: number;
 }
 
 /**
@@ -64,4 +76,5 @@ export interface WasteTypeOption {
   wasteTypeId: Id;
   name: string;
   description?: string;
+  basePoints?: number;
 }

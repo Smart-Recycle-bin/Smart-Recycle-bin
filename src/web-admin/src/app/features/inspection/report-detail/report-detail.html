@@ -48,36 +48,44 @@
               <app-icon name="camera" size="sm" />
               <h2 class="card-title">Captured frames</h2>
             </div>
-            <span class="card-helper-tag">{{ d.capturedFrames.length }} frames · click to enlarge</span>
-          </div>
-
-          <div class="frames-grid">
-            @for (frame of d.capturedFrames; track $index) {
-              <div
-                class="frame-card"
-                (click)="openZoomModal(frame)"
-                role="button"
-                tabindex="0"
-                (keydown.enter)="openZoomModal(frame)"
-                (keydown.space)="openZoomModal(frame)"
-              >
-                <img
-                  [src]="frame"
-                  alt="Inspection frame {{$index + 1}}"
-                  class="frame-image"
-                  (error)="$any($event.target).style.display='none'"
-                />
-                <div class="frame-fallback">
-                  <app-icon name="camera" size="md" />
-                  <span>Frame {{ $index + 1 }}</span>
-                </div>
-                <div class="frame-hover-overlay">
-                  <app-icon name="eye" size="sm" />
-                  <span>Enlarge</span>
-                </div>
-              </div>
+            @if (d.capturedFrames.length > 0) {
+              <span class="card-helper-tag">{{ d.capturedFrames.length }} frames · click to enlarge</span>
+            } @else {
+              <span class="card-helper-tag">No frame URL stored</span>
             }
           </div>
+
+          @if (d.capturedFrames.length > 0) {
+            <div class="frames-grid">
+              @for (frame of d.capturedFrames; track $index) {
+                <div
+                  class="frame-card"
+                  (click)="openZoomModal(frame)"
+                  role="button"
+                  tabindex="0"
+                  (keydown.enter)="openZoomModal(frame)"
+                  (keydown.space)="openZoomModal(frame)"
+                >
+                  <img
+                    [src]="frame"
+                    alt="Inspection frame {{$index + 1}}"
+                    class="frame-image"
+                    (error)="$any($event.target).style.display='none'"
+                  />
+                  <div class="frame-fallback">
+                    <app-icon name="camera" size="md" />
+                    <span>Frame {{ $index + 1 }}</span>
+                  </div>
+                  <div class="frame-hover-overlay">
+                    <app-icon name="eye" size="sm" />
+                    <span>Enlarge</span>
+                  </div>
+                </div>
+              }
+            </div>
+          } @else {
+            <p class="confidence-note">No captured frame image URL was recorded for this disposal item.</p>
+          }
         </div>
 
         <!-- User Rejection Feedback Card -->
@@ -111,7 +119,7 @@
               <app-icon name="cpu" size="sm" />
               <h2 class="card-title">ML inference output</h2>
             </div>
-            <span class="model-tag">{{ d.mlModelVersion }}</span>
+            <span class="model-tag">{{ d.mlModelVersion || 'Model version: Not Tracked' }}</span>
           </div>
 
           <div class="ml-meta-grid">
@@ -127,22 +135,29 @@
 
           <div class="confidence-section">
             <h3 class="confidence-title">Classification confidence</h3>
-            <div class="confidence-list">
-              @for (entry of confidenceEntries(); track entry.className) {
-                <div class="confidence-row">
-                  <div class="confidence-row-header">
-                    <span class="class-name">{{ entry.className }}</span>
-                    <span class="class-pct">{{ entry.percent }}%</span>
+            @if (confidenceEntries().length > 0) {
+              <div class="confidence-list">
+                @for (entry of confidenceEntries(); track entry.className) {
+                  <div class="confidence-row">
+                    <div class="confidence-row-header">
+                      <span class="class-name">{{ entry.className }}</span>
+                      <span class="class-pct">{{ entry.percent }}%</span>
+                    </div>
+                    <app-progress
+                      [value]="entry.percent"
+                      [max]="100"
+                      [color]="entry.color"
+                      size="sm"
+                    />
                   </div>
-                  <app-progress
-                    [value]="entry.percent"
-                    [max]="100"
-                    [color]="entry.color"
-                    size="sm"
-                  />
-                </div>
+                }
+              </div>
+              @if (!hasClassDistribution()) {
+                <p class="confidence-note">Only single predicted-class confidence is persisted; multi-class distribution is Not Tracked.</p>
               }
-            </div>
+            } @else {
+              <p class="confidence-note">Not Tracked</p>
+            }
           </div>
         </div>
 
@@ -153,18 +168,52 @@
               <app-icon name="shield" size="sm" />
               <h2 class="card-title">Admin actions</h2>
             </div>
-            @if (!isPending()) {
+            @if (isQueuedForRetraining()) {
+              <span class="resolved-note">Queued for retraining</span>
+            } @else if (!isPending()) {
               <span class="resolved-note">Resolved</span>
             }
           </div>
 
-          @if (!isPending()) {
+          @if (isQueuedForRetraining()) {
             <p class="resolved-alert">
-              This report has already been reviewed. Actions are locked.
+              Report resolved and recorded in the local retraining queue. No automated ML training worker is connected.
+            </p>
+          } @else if (!isPending()) {
+            <p class="resolved-alert">
+              This report has already been reviewed. Resolution actions are locked; you may still queue the confirmed label locally.
             </p>
           }
 
+          @if (!isPending() && (d.reviewDecision || d.adminJustification)) {
+            <div class="resolution-summary">
+              @if (d.reviewDecision) {
+                <p class="confidence-note">
+                  <strong>Decision:</strong> {{ d.reviewDecision }}
+                  @if (d.confirmedWasteType) {
+                    · <strong>Confirmed type:</strong> {{ d.confirmedWasteType }}
+                  }
+                </p>
+              }
+              @if (d.adminJustification) {
+                <p class="confidence-note"><strong>Justification:</strong> {{ d.adminJustification }}</p>
+              }
+            </div>
+          }
+
           <div class="actions-body">
+            @if (isPending()) {
+              <app-textarea
+                label="Admin justification"
+                placeholder="Optional justification note (defaults to standard review note if left blank)..."
+                [rows]="2"
+                [maxLength]="500"
+                [value]="adminJustification()"
+                [disabled]="isSubmittingAction()"
+                (valueChange)="adminJustification.set($event)"
+              />
+            }
+
             <!-- Action 1: Correct Category -->
             <div class="action-section">
               <label class="action-label" for="report-correct-category-select">Set correct category</label>
@@ -191,7 +240,7 @@
 
             <div class="divider"></div>
 
-            <!-- Action 2 & 3: Dismiss & Retrain -->
+            <!-- Action 2 & 3: Dismiss & Queue for Local Retraining -->
             <div class="secondary-actions-row">
               <app-button
                 variant="ghost"
@@ -203,12 +252,15 @@
 
               <app-button
                 variant="secondary"
-                [disabled]="!isPending() || isSubmittingAction()"
+                [disabled]="!canSendToRetraining() || isSubmittingAction()"
                 (clicked)="applyRetrain()"
               >
-                Send to retraining
+                Queue for retraining
               </app-button>
             </div>
+            @if (isPending()) {
+              <p class="confidence-note">Resolve with Correct or Dismiss before queuing this report for retraining.</p>
+            }
           </div>
         </div>
       </div>

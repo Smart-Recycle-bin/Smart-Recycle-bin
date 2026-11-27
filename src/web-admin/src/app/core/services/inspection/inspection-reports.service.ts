@@ -9,9 +9,11 @@ import {
   InspectionSummary,
   WasteTypeOption,
 } from '@models/inspection/inspection.view-model';
+import { Id } from '@models/common/id.model';
 import { Page } from '@models/common/page.model';
 import {
   CorrectCategoryRequest,
+  DismissInspectionReportRequest,
   InspectionActionResponse,
 } from '@models/inspection/inspection.dto';
 
@@ -38,7 +40,7 @@ export class InspectionReportsService {
   /**
    * Retrieves detailed inspection report including captured frames (PROPOSED, gap_api.md 1.6).
    */
-  getReportDetail(reportId: string): Observable<InspectionReportDetail> {
+  getReportDetail(reportId: Id): Observable<InspectionReportDetail> {
     return this.apiClient.get<InspectionReportDetail>(API_ENDPOINTS.inspection.detail(reportId));
   }
 
@@ -46,7 +48,7 @@ export class InspectionReportsService {
    * Sets correct category for an inspection report (PROPOSED, gap_api.md 1.6).
    */
   correctCategory(
-    reportId: string,
+    reportId: Id,
     req: CorrectCategoryRequest
   ): Observable<InspectionActionResponse> {
     return this.apiClient.post<InspectionActionResponse>(
@@ -56,25 +58,25 @@ export class InspectionReportsService {
   }
 
   /**
-   * Confirms ML inference was correct and dismisses dispute (PROPOSED, gap_api.md 1.6).
+   * Confirms ML inference was correct and dismisses dispute with required justification (E69).
    */
-  dismissReport(reportId: string): Observable<InspectionActionResponse> {
+  dismissReport(
+    reportId: Id,
+    req: DismissInspectionReportRequest
+  ): Observable<InspectionActionResponse> {
     return this.apiClient.post<InspectionActionResponse>(
       API_ENDPOINTS.inspection.dismiss(reportId),
-      {}
+      req
     );
   }
 
   /**
-   * Exports report to retraining dataset with confirmed category (PROPOSED, gap_api.md 1.6).
+   * Records a resolved report in the local retraining queue with no request body (E70).
    */
-  sendToRetraining(
-    reportId: string,
-    confirmedCategory: string
-  ): Observable<InspectionActionResponse> {
+  sendToRetraining(reportId: Id): Observable<InspectionActionResponse> {
     return this.apiClient.post<InspectionActionResponse>(
       API_ENDPOINTS.inspection.retrain(reportId),
-      { confirmedCategory }
+      {}
     );
   }
 

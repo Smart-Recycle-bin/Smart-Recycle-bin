@@ -17,21 +17,31 @@
         <span class="card-badge">Model Retraining</span>
         <app-icon name="cpu" size="sm" />
       </div>
-      <div class="metric-block">
-        <span class="metric-value">{{ summary()?.labelledImagesCount | number }}</span>
-        <span class="metric-label">labelled images</span>
-      </div>
-      <div class="progress-wrapper">
-        <app-progress
-          [value]="summary()?.labelledImagesCount || 0"
-          [max]="summary()?.targetImagesThreshold || 1500"
-          color="brand"
-          size="sm"
-        />
-      </div>
-      <p class="retrain-note">
-        {{ summary()?.remainingUntilRetrain }} more until the next scheduled model retrain ({{ summary()?.targetImagesThreshold | number }})
-      </p>
+      @if (summary()?.targetImagesThreshold != null && summary()?.labelledImagesCount != null) {
+        <div class="metric-block">
+          <span class="metric-value">{{ summary()?.labelledImagesCount | number }}</span>
+          <span class="metric-label">labelled images</span>
+        </div>
+        <div class="progress-wrapper">
+          <app-progress
+            [value]="summary()?.labelledImagesCount || 0"
+            [max]="summary()?.targetImagesThreshold || 1"
+            color="brand"
+            size="sm"
+          />
+        </div>
+        <p class="retrain-note">
+          {{ summary()?.remainingUntilRetrain }} more until the next scheduled model retrain ({{ summary()?.targetImagesThreshold | number }})
+        </p>
+      } @else {
+        <div class="metric-block">
+          <span class="metric-value">Not Tracked</span>
+          <span class="metric-label">automated retraining threshold</span>
+        </div>
+        <p class="retrain-note">
+          Queued for retraining: {{ summary()?.sentToRetrainingCount ?? 0 }} reports. No external ML training pipeline is connected.
+        </p>
+      }
     </div>
 
     <!-- Pending Reviews Card -->
@@ -78,7 +88,7 @@
     <div class="filters-grid">
       <div class="filter-item search-filter">
         <app-search-input
-          placeholder="Search by AIR ID, bin, waste category..."
+          placeholder="Search by report ID, session, bin, waste category..."
           ariaLabel="Search inspection reports"
           [value]="pagedList.filters().search || ''"
           (valueChange)="handleSearch($event)"
@@ -131,13 +141,15 @@
         <ng-template appCell="imageThumbnailUrl" let-row>
           <div class="thumbnail-cell">
             <div class="thumb-container">
-              <img
-                [src]="row.imageThumbnailUrl"
-                [alt]="'Thumbnail for report ' + row.reportId"
-                class="report-thumb"
-                loading="lazy"
-                (error)="$any($event.target).style.display='none'"
-              />
+              @if (row.imageThumbnailUrl) {
+                <img
+                  [src]="row.imageThumbnailUrl"
+                  [alt]="'Thumbnail for report ' + row.reportId"
+                  class="report-thumb"
+                  loading="lazy"
+                  (error)="$any($event.target).style.display='none'"
+                />
+              }
               <div class="thumb-fallback">
                 <app-icon name="camera" size="sm" />
               </div>
@@ -149,7 +161,7 @@
         <ng-template appCell="sessionId" let-row>
           <div class="session-report-cell">
             <span class="session-id">{{ row.sessionId }}</span>
-            <span class="air-id">{{ row.airId }}</span>
+            <span class="air-id">{{ row.airId || ('Report #' + row.reportId) }}</span>
           </div>
         </ng-template>
 
@@ -163,14 +175,20 @@
           <div class="ml-prediction-cell">
             <div class="prediction-header">
               <span class="prediction-name">{{ row.mlPredictedWasteType }}</span>
-              <span class="prediction-pct">{{ formatConfidencePercent(row.mlConfidence) }}%</span>
+              @if (row.mlConfidence !== null && row.mlConfidence !== undefined) {
+                <span class="prediction-pct">{{ formatConfidencePercent(row.mlConfidence) }}%</span>
+              } @else {
+                <span class="prediction-pct">Not Tracked</span>
+              }
             </div>
-            <app-progress
-              [value]="formatConfidencePercent(row.mlConfidence)"
-              [max]="100"
-              [color]="getConfidenceColor(row.mlConfidence)"
-              size="sm"
-            />
+            @if (row.mlConfidence !== null && row.mlConfidence !== undefined) {
+              <app-progress
+                [value]="formatConfidencePercent(row.mlConfidence)"
+                [max]="100"
+                [color]="getConfidenceColor(row.mlConfidence)"
+                size="sm"
+              />
+            }
           </div>
         </ng-template>
 

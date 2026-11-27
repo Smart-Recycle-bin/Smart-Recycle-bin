@@ -254,6 +254,13 @@
   color: var(--text-muted);
 }
 
+.confidence-note {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
 /* Admin Actions Card */
 .actions-card {
   border-color: var(--primary);
@@ -271,6 +278,15 @@
   font-size: 0.8125rem;
   color: var(--text-muted);
   font-style: italic;
+}
+
+.resolution-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.625rem 0.75rem;
+  background-color: var(--surface-muted);
+  border-radius: 0.375rem;
 }
 
 .actions-body {

@@ -111,11 +111,11 @@ export class ReviewQueue implements OnInit {
     this.router.navigate(['/review-queue', row.reportId]);
   }
 
-  getConfidenceColor(confidence: number): ProgressColor {
-    return confidence >= 0.7 ? 'success' : 'warning';
+  getConfidenceColor(confidence: number | null | undefined): ProgressColor {
+    return (confidence ?? 0) >= 0.7 ? 'success' : 'warning';
   }
 
-  formatConfidencePercent(confidence: number): number {
-    return Math.round(confidence * 100);
+  formatConfidencePercent(confidence: number | null | undefined): number {
+    return Math.round((confidence ?? 0) * 100);
   }
 }
