@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity;
 using System.ComponentModel.DataAnnotations;
 
 namespace SmartBin.Models
@@ -16,5 +16,23 @@ namespace SmartBin.Models
         public int WarningCount { get; set; } = 0;
 
         public DateTime LastActiveAt { get; set; }
+
+        [MaxLength(150)]
+
+
+
+        public DateTime? SuspendedAt { get; set; }
+
+        [MaxLength(500)]
+        public string? SuspensionReason { get; set; }
+
+        public int? SuspendedByAdminId { get; set; }
+
+        public DateTime? UnsuspendedAt { get; set; }
+
+        [MaxLength(500)]
+        public string? UnsuspensionReason { get; set; }
+
+        public int? UnsuspendedByAdminId { get; set; }
     }
 }

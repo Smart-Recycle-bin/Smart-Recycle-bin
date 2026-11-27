@@ -16,6 +16,7 @@ using SmartBin.Repositories.Bins;
 using SmartBin.Repositories.Notifications;
 using SmartBin.Repositories.Sessions;
 using SmartBin.Repositories.Surveys;
+using SmartBin.Repositories.Users;
 using SmartBin.Repositories.Wallet;
 using SmartBin.Services;
 using SmartBin.Services.Audit;
@@ -25,6 +26,7 @@ using SmartBin.Services.Notifications;
 using SmartBin.Services.Profile;
 using SmartBin.Services.Sessions;
 using SmartBin.Services.Surveys;
+using SmartBin.Services.Users;
 using SmartBin.Services.Wallets;
 
 namespace SmartBin.DependencyInjection
