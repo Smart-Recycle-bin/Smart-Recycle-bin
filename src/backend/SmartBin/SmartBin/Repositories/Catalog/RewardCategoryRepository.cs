@@ -28,7 +28,9 @@ namespace SmartBin.Repositories
         public async Task<List<RewardCategory>> GetActiveAsync()
         {
             return await _context.RewardCategories
+                .AsNoTracking()
                 .Where(c => c.IsActive)
+                .OrderBy(c => c.CategoryId)
                 .ToListAsync();
         }
 

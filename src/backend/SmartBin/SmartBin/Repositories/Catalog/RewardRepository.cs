@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using SmartBin.Context;
+using SmartBin.DTOs;
 using SmartBin.Models;
+using SmartBin.Models.Constants;
 
 namespace SmartBin.Repositories
 {
@@ -37,7 +39,7 @@ namespace SmartBin.Repositories
             _context.Rewards.Update(reward);
         }
 
-        public async Task<(List<Reward> Items, int TotalItems)> GetAllPagedAsync(
+        public async Task<(List<RewardResponseDto> Items, int TotalItems)> GetAllPagedAsync(
             int? categoryId,
             string? status,
             string? search,
@@ -48,7 +50,7 @@ namespace SmartBin.Repositories
             CancellationToken cancellationToken = default)
         {
             var query = _context.Rewards
-                .Include(r => r.Category)
+                .AsNoTracking()
                 .AsQueryable();
 
             if (categoryId.HasValue)
@@ -58,12 +60,16 @@ namespace SmartBin.Repositories
 
             if (!string.IsNullOrWhiteSpace(search))
             {
-                query = query.Where(r => r.Name.Contains(search));
+                var s = search.Trim();
+                query = query.Where(r =>
+                    r.Name.Contains(s) ||
+                    (r.Description != null && r.Description.Contains(s)) ||
+                    r.Category.Name.Contains(s));
             }
 
             if (!string.IsNullOrWhiteSpace(status))
             {
-                query = status.ToLower() switch
+                query = status.Trim().ToLower() switch
                 {
                     "archived" => query.Where(r => !r.IsActive),
                     "in_stock" => query.Where(r => r.IsActive && r.StockQuantity > 0),
@@ -72,31 +78,77 @@ namespace SmartBin.Repositories
                 };
             }
 
-            query = sortBy?.ToLower() switch
+            int totalItems = await query.CountAsync(cancellationToken);
+
+            var projected = query.Select(r => new RewardResponseDto
             {
-                "title" => sortDir?.ToLower() == "desc"
-                    ? query.OrderByDescending(r => r.Name)
-                    : query.OrderBy(r => r.Name),
+                ItemId = r.RewardId,
+                Title = r.Name,
+                Description = r.Description,
+                CategoryId = r.CategoryId,
+                CategoryName = r.Category.Name,
+                VoucherCodeType = r.VoucherCodeType,
+                PointsCost = r.PointsCost,
+                Stock = r.StockQuantity,
+                RedemptionsCount = _context.LedgerTransactions.Count(lt =>
+                    lt.Source == LedgerSource.VoucherRedemption &&
+                    lt.VoucherId == r.RewardId),
+                Status = !r.IsActive
+                    ? "archived"
+                    : r.StockQuantity > 0
+                        ? "in_stock"
+                        : "out_of_stock",
+                ImageUrl = r.ImageUrl,
+                ValidFrom = r.ValidFrom,
+                ValidUntil = r.ValidUntil
+            });
 
-                "pointscost" => sortDir?.ToLower() == "desc"
-                    ? query.OrderByDescending(r => r.PointsCost)
-                    : query.OrderBy(r => r.PointsCost),
+            bool isDesc = string.Equals(sortDir?.Trim(), "desc", StringComparison.OrdinalIgnoreCase);
 
-                "stock" => sortDir?.ToLower() == "desc"
-                    ? query.OrderByDescending(r => r.StockQuantity)
-                    : query.OrderBy(r => r.StockQuantity),
+            IOrderedQueryable<RewardResponseDto> orderedQuery = sortBy?.Trim().ToLowerInvariant() switch
+            {
+                "title" => isDesc
+                    ? projected.OrderByDescending(x => x.Title).ThenByDescending(x => x.ItemId)
+                    : projected.OrderBy(x => x.Title).ThenBy(x => x.ItemId),
 
-                _ => query.OrderBy(r => r.RewardId)
+                "category" => isDesc
+                    ? projected.OrderByDescending(x => x.CategoryName).ThenByDescending(x => x.ItemId)
+                    : projected.OrderBy(x => x.CategoryName).ThenBy(x => x.ItemId),
+
+                "pointscost" => isDesc
+                    ? projected.OrderByDescending(x => x.PointsCost).ThenByDescending(x => x.ItemId)
+                    : projected.OrderBy(x => x.PointsCost).ThenBy(x => x.ItemId),
+
+                "stock" => isDesc
+                    ? projected.OrderByDescending(x => x.Stock).ThenByDescending(x => x.ItemId)
+                    : projected.OrderBy(x => x.Stock).ThenBy(x => x.ItemId),
+
+                "redemptionscount" => isDesc
+                    ? projected.OrderByDescending(x => x.RedemptionsCount).ThenByDescending(x => x.ItemId)
+                    : projected.OrderBy(x => x.RedemptionsCount).ThenBy(x => x.ItemId),
+
+                "status" => isDesc
+                    ? projected.OrderByDescending(x => x.Status).ThenByDescending(x => x.ItemId)
+                    : projected.OrderBy(x => x.Status).ThenBy(x => x.ItemId),
+
+                _ => projected.OrderBy(x => x.ItemId)
             };
 
-            var totalItems = await query.CountAsync(cancellationToken);
-
-            var items = await query
+            var items = await orderedQuery
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync(cancellationToken);
 
             return (items, totalItems);
+        }
+
+        public async Task<int> GetRedemptionsCountAsync(int rewardId, CancellationToken cancellationToken = default)
+        {
+            return await _context.LedgerTransactions
+                .AsNoTracking()
+                .CountAsync(
+                    lt => lt.Source == LedgerSource.VoucherRedemption && lt.VoucherId == rewardId,
+                    cancellationToken);
         }
 
         public async Task<bool> DecrementStockIfAvailableAsync(int rewardId, int quantity, CancellationToken cancellationToken = default)
@@ -108,6 +160,15 @@ namespace SmartBin.Repositories
                     cancellationToken);
 
             return updatedRows > 0;
+        }
+
+        public async Task<int?> GetStockQuantityAsync(int rewardId, CancellationToken cancellationToken = default)
+        {
+            return await _context.Rewards
+                .AsNoTracking()
+                .Where(r => r.RewardId == rewardId)
+                .Select(r => (int?)r.StockQuantity)
+                .FirstOrDefaultAsync(cancellationToken);
         }
 
         public async Task<bool> HasActiveRewardsInCategoryAsync(int categoryId)

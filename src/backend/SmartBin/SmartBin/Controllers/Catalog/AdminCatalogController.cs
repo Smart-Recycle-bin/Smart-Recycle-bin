@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using SmartBin.Common;
 using SmartBin.DTOs;
 using SmartBin.DTOs.Common;
 using SmartBin.Services;
@@ -39,19 +40,22 @@ namespace SmartBin.Controllers
 			[FromQuery] string? sortBy = null,
 			[FromQuery] string? sortDir = "asc")
 		{
-			if (page < 1 || pageSize < 1 || pageSize > 100)
+			if (page < 1)
 			{
-				return BadRequest(new
-				{
-					success = false,
-					error = new
-					{
-						code = "VALIDATION_ERROR",
-						message = "Invalid pagination values."
-					}
-				});
+				return CatalogError(StatusCodes.Status400BadRequest, "VALIDATION_ERROR", "Invalid pagination values.", "page", "page must be greater than or equal to 1.");
 			}
 
+			if (pageSize < 1 || pageSize > 100)
+			{
+				return CatalogError(StatusCodes.Status400BadRequest, "VALIDATION_ERROR", "Invalid pagination values.", "pageSize", "pageSize must be between 1 and 100.");
+			}
+
+			if (categoryId is <= 0)
+			{
+				return CatalogError(StatusCodes.Status400BadRequest, "VALIDATION_ERROR", "Invalid categoryId filter.", "categoryId", "categoryId must be greater than 0.");
+			}
+
+			var normalizedStatus = string.IsNullOrWhiteSpace(status) ? null : status.Trim().ToLowerInvariant();
 			var allowedStatuses = new[]
 			{
 				"in_stock",
@@ -59,64 +63,41 @@ namespace SmartBin.Controllers
 				"archived"
 			};
 
-			if (!string.IsNullOrWhiteSpace(status) &&
-				!allowedStatuses.Contains(status.ToLowerInvariant()))
+			if (normalizedStatus != null && !allowedStatuses.Contains(normalizedStatus))
 			{
-				return BadRequest(new
-				{
-					success = false,
-					error = new
-					{
-						code = "VALIDATION_ERROR",
-						message = "Invalid status value."
-					}
-				});
+				return CatalogError(StatusCodes.Status400BadRequest, "VALIDATION_ERROR", "Invalid status value.", "status", "Must be in_stock, out_of_stock, or archived.");
 			}
 
+			var normalizedSortBy = string.IsNullOrWhiteSpace(sortBy) ? null : sortBy.Trim().ToLowerInvariant();
 			var allowedSortFields = new[]
 			{
 				"title",
+				"category",
 				"pointscost",
-				"stock"
+				"stock",
+				"redemptionscount",
+				"status"
 			};
 
-			if (!string.IsNullOrWhiteSpace(sortBy) &&
-				!allowedSortFields.Contains(sortBy.ToLowerInvariant()))
+			if (normalizedSortBy != null && !allowedSortFields.Contains(normalizedSortBy))
 			{
-				return BadRequest(new
-				{
-					success = false,
-					error = new
-					{
-						code = "VALIDATION_ERROR",
-						message = "Invalid sortBy value."
-					}
-				});
+				return CatalogError(StatusCodes.Status400BadRequest, "VALIDATION_ERROR", "Invalid sortBy value.", "sortBy", "Must be one of: title, category, pointsCost, stock, redemptionsCount, status.");
 			}
 
-			if (!string.IsNullOrWhiteSpace(sortDir) &&
-				sortDir.ToLowerInvariant() != "asc" &&
-				sortDir.ToLowerInvariant() != "desc")
+			var normalizedSortDir = string.IsNullOrWhiteSpace(sortDir) ? "asc" : sortDir.Trim().ToLowerInvariant();
+			if (normalizedSortDir != "asc" && normalizedSortDir != "desc")
 			{
-				return BadRequest(new
-				{
-					success = false,
-					error = new
-					{
-						code = "VALIDATION_ERROR",
-						message = "Invalid sortDir value."
-					}
-				});
+				return CatalogError(StatusCodes.Status400BadRequest, "VALIDATION_ERROR", "Invalid sortDir value.", "sortDir", "Must be asc or desc.");
 			}
 
 			var result = await _rewardService.GetAllAsync(
 				categoryId,
-				status,
+				normalizedStatus,
 				search,
 				page,
 				pageSize,
-				sortBy,
-				sortDir
+				normalizedSortBy,
+				normalizedSortDir
 			);
 
 			return Ok(new
@@ -140,30 +121,21 @@ namespace SmartBin.Controllers
 		[ProducesResponseType(typeof(ApiResponse<RewardResponseDto>), StatusCodes.Status201Created)]
 		[ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
 		public async Task<IActionResult> Create(
-			[FromBody] CreateRewardRequestDto request)
+			[FromBody] CreateRewardRequestDto request,
+			CancellationToken cancellationToken = default)
 		{
-			try
+			if (!User.TryGetUserId(out var actorAdminId) || actorAdminId <= 0)
 			{
-				var result = await _rewardService.CreateAsync(request);
+				return UnauthorizedError();
+			}
 
-				return StatusCode(201, new
-				{
-					success = true,
-					data = result
-				});
-			}
-			catch (ArgumentException)
+			var result = await _rewardService.CreateAsync(request, actorAdminId, cancellationToken);
+
+			return StatusCode(201, new
 			{
-				return BadRequest(new
-				{
-					success = false,
-					error = new
-					{
-						code = "VALIDATION_ERROR",
-						message = "The specified category does not exist."
-					}
-				});
-			}
+				success = true,
+				data = result
+			});
 		}
 
 		// E36: Get active reward categories
@@ -399,45 +371,27 @@ namespace SmartBin.Controllers
 		{
 			if (file == null || file.Length == 0)
 			{
-				return BadRequest(new
-				{
-					success = false,
-					error = new
-					{
-						code = "VALIDATION_ERROR",
-						message = "File is required."
-					}
-				});
+				return CatalogError(StatusCodes.Status400BadRequest, "VALIDATION_ERROR", "File is required.", "file", "File is required.");
 			}
 
-			// Max file size: 5 MB
-			const long maxSizeBytes = 5 * 1024 * 1024;
+			// Max file size: 4 MB (matches CloudflareR2StorageService.MaxPhotoBytes)
+			const long maxSizeBytes = 4 * 1024 * 1024;
 			if (file.Length > maxSizeBytes)
 			{
-				return StatusCode(413, new
-				{
-					success = false,
-					error = new
-					{
-						code = "PAYLOAD_TOO_LARGE",
-						message = "File size exceeds the allowed limit (5MB)."
-					}
-				});
+				return CatalogError(StatusCodes.Status413PayloadTooLarge, "PAYLOAD_TOO_LARGE", "File size exceeds the allowed limit (4 MB).", "file", "File size exceeds the allowed limit (4 MB).");
 			}
 
 			var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp" };
 			var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
-			if (!allowedExtensions.Contains(extension))
+			var allowedContentTypes = new[] { "image/jpeg", "image/jpg", "image/png", "image/webp" };
+			var contentType = file.ContentType?.Trim();
+			var hasExplicitNonGenericMime = !string.IsNullOrWhiteSpace(contentType) &&
+				!string.Equals(contentType, "application/octet-stream", StringComparison.OrdinalIgnoreCase);
+
+			if (!allowedExtensions.Contains(extension) ||
+				(hasExplicitNonGenericMime && !allowedContentTypes.Contains(contentType!, StringComparer.OrdinalIgnoreCase)))
 			{
-				return StatusCode(415, new
-				{
-					success = false,
-					error = new
-					{
-						code = "UNSUPPORTED_MEDIA_TYPE",
-						message = "Only JPEG, PNG and WEBP images are accepted."
-					}
-				});
+				return CatalogError(StatusCodes.Status415UnsupportedMediaType, "UNSUPPORTED_MEDIA_TYPE", "Only JPEG, PNG and WEBP images are accepted.", "file", "Only JPEG, PNG and WEBP images are accepted.");
 			}
 
 			var targetFolder = string.Equals(folder, "categories", StringComparison.OrdinalIgnoreCase)
@@ -463,43 +417,39 @@ namespace SmartBin.Controllers
 		[ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
 		public async Task<IActionResult> Update(
 			int itemId,
-			[FromBody] UpdateRewardRequestDto request)
+			[FromBody] UpdateRewardRequestDto request,
+			CancellationToken cancellationToken = default)
 		{
-			try
+			if (itemId <= 0)
 			{
-				var result = await _rewardService.UpdateAsync(itemId, request);
-
-				if (result == null)
-				{
-					return NotFound(new
-					{
-						success = false,
-						error = new
-						{
-							code = "NOT_FOUND",
-							message = "Catalog item not found."
-						}
-					});
-				}
-
-				return Ok(new
-				{
-					success = true,
-					data = result
-				});
+				return CatalogError(StatusCodes.Status400BadRequest, "VALIDATION_ERROR", "itemId must be greater than 0.", "itemId", "itemId must be greater than 0.");
 			}
-			catch (ArgumentException ex)
+
+			if (!User.TryGetUserId(out var actorAdminId) || actorAdminId <= 0)
 			{
-				return BadRequest(new
+				return UnauthorizedError();
+			}
+
+			var result = await _rewardService.UpdateAsync(itemId, request, actorAdminId, cancellationToken);
+
+			if (result == null)
+			{
+				return NotFound(new
 				{
 					success = false,
 					error = new
 					{
-						code = "VALIDATION_ERROR",
-						message = ex.Message
+						code = "NOT_FOUND",
+						message = "Catalog item not found."
 					}
 				});
 			}
+
+			return Ok(new
+			{
+				success = true,
+				data = result
+			});
 		}
 
 		// E40: Archive catalog item
@@ -507,9 +457,21 @@ namespace SmartBin.Controllers
 		[ProducesResponseType(typeof(ApiResponse<ItemArchiveStatusDto>), StatusCodes.Status200OK)]
 		[ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
 		[ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status409Conflict)]
-		public async Task<IActionResult> Archive(int itemId)
+		public async Task<IActionResult> Archive(
+			int itemId,
+			CancellationToken cancellationToken = default)
 		{
-			var result = await _rewardService.ArchiveAsync(itemId);
+			if (itemId <= 0)
+			{
+				return CatalogError(StatusCodes.Status400BadRequest, "VALIDATION_ERROR", "itemId must be greater than 0.", "itemId", "itemId must be greater than 0.");
+			}
+
+			if (!User.TryGetUserId(out var actorAdminId) || actorAdminId <= 0)
+			{
+				return UnauthorizedError();
+			}
+
+			var result = await _rewardService.ArchiveAsync(itemId, actorAdminId, cancellationToken);
 
 			if (result == ArchiveRewardResult.NotFound)
 			{
@@ -603,6 +565,36 @@ namespace SmartBin.Controllers
 				{
 					itemId,
 					status = "active"
+				}
+			});
+		}
+
+		private IActionResult CatalogError(int statusCode, string code, string message, string field, string detailMessage)
+		{
+			return StatusCode(statusCode, new
+			{
+				success = false,
+				error = new
+				{
+					code,
+					message,
+					details = new[]
+					{
+						new { field, message = detailMessage }
+					}
+				}
+			});
+		}
+
+		private UnauthorizedObjectResult UnauthorizedError()
+		{
+			return Unauthorized(new
+			{
+				success = false,
+				error = new
+				{
+					code = "UNAUTHORIZED",
+					message = "Access token is missing or invalid."
 				}
 			});
 		}

@@ -1,3 +1,4 @@
+using SmartBin.DTOs;
 using SmartBin.Models;
 
 namespace SmartBin.Repositories
@@ -8,7 +9,7 @@ namespace SmartBin.Repositories
         Task<List<Reward>> GetAllAsync();
         Task AddAsync(Reward reward);
         void Update(Reward reward);
-        Task<(List<Reward> Items, int TotalItems)> GetAllPagedAsync(
+        Task<(List<RewardResponseDto> Items, int TotalItems)> GetAllPagedAsync(
             int? categoryId,
             string? status,
             string? search,
@@ -17,7 +18,9 @@ namespace SmartBin.Repositories
             string? sortBy,
             string? sortDir,
             CancellationToken cancellationToken = default);
+        Task<int> GetRedemptionsCountAsync(int rewardId, CancellationToken cancellationToken = default);
         Task<bool> DecrementStockIfAvailableAsync(int rewardId, int quantity, CancellationToken cancellationToken = default);
+        Task<int?> GetStockQuantityAsync(int rewardId, CancellationToken cancellationToken = default);
         Task<bool> HasActiveRewardsInCategoryAsync(int categoryId);
     }
 }

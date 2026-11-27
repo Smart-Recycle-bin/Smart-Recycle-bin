@@ -31,14 +31,21 @@ namespace SmartBin.Services
 
         Task<RewardResponseDto?> GetByIdAsync(int rewardId);
 
-        Task<RewardResponseDto> CreateAsync(CreateRewardRequestDto request);
+        Task<RewardResponseDto> CreateAsync(
+            CreateRewardRequestDto request,
+            int actorAdminId,
+            CancellationToken cancellationToken = default);
 
         Task<RewardResponseDto?> UpdateAsync(
             int rewardId,
-            UpdateRewardRequestDto request
-        );
+            UpdateRewardRequestDto request,
+            int actorAdminId,
+            CancellationToken cancellationToken = default);
 
-        Task<ArchiveRewardResult> ArchiveAsync(int rewardId);
+        Task<ArchiveRewardResult> ArchiveAsync(
+            int rewardId,
+            int actorAdminId,
+            CancellationToken cancellationToken = default);
 
         Task<UnarchiveRewardResult> UnarchiveAsync(int rewardId);
 
