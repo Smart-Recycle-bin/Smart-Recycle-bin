@@ -34,7 +34,7 @@
 
 @media (min-width: 1024px) {
   .filters-grid {
-    grid-template-columns: 2fr 1fr 1.5fr;
+    grid-template-columns: 1.6fr 1fr 1fr 1.6fr;
   }
 }
 

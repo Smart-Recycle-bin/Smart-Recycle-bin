@@ -8,7 +8,7 @@ import { LedgerSource } from './ledger-source.enum';
  * Filter query parameters for the global ledger (UI p8).
  */
 export interface LedgerQuery extends PageQuery {
-  userId?: string;
+  userId?: Id;
   from?: string; // ISO date string
   to?: string;   // ISO date string
   type?: LedgerEntryType;
@@ -25,10 +25,13 @@ export interface LedgerRow {
   userId: Id;
   userName: string;
   binId?: Id | null;
+  binName?: string | null;
   detailText: string;
   pointsDelta: number;
   runningBalance: number;
   entryType: LedgerEntryType;
   source: LedgerSource;
   isManualAdjustment: boolean;
+  reasonCode?: string | null;
+  reasonNote?: string | null;
 }

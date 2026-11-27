@@ -9,6 +9,7 @@ import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { map } from 'rxjs/operators';
 import { environment } from '@env/environment';
+import { Id } from '@models/common/id.model';
 import { LedgerRow, LedgerQuery } from '@models/wallet/ledger.view-model';
 import { LedgerSource } from '@models/wallet/ledger-source.enum';
 import { LedgerEntryType } from '@models/wallet/ledger-entry-type.enum';
@@ -26,6 +27,7 @@ import {
 import {
   LEDGER_TABLE_COLUMNS,
   LEDGER_TYPE_OPTIONS,
+  LEDGER_ENTRY_TYPE_OPTIONS,
   ADJUSTMENT_TYPE_OPTIONS,
   formatSignedPoints,
   getPointsTone,
@@ -96,6 +98,7 @@ export class Ledger {
 
   readonly tableColumns = LEDGER_TABLE_COLUMNS;
   readonly typeOptions = LEDGER_TYPE_OPTIONS;
+  readonly entryTypeOptions = LEDGER_ENTRY_TYPE_OPTIONS;
   readonly adjustmentTypeOptions = ADJUSTMENT_TYPE_OPTIONS;
   readonly formatPoints = formatSignedPoints;
   readonly getPointsTone = getPointsTone;
@@ -131,8 +134,8 @@ export class Ledger {
   readonly formTouched = signal<boolean>(false);
 
   private readonly knownRecyclers = new Map<
-    string,
-    { userId: string; name: string; availablePoints: number }
+    Id,
+    { userId: Id; name: string; availablePoints: number }
   >();
 
   /**
@@ -160,15 +163,37 @@ export class Ledger {
    * Form for manual points adjustment
    */
   readonly adjustmentForm = this.fb.group({
-    userId: this.fb.nonNullable.control('', [trimmedRequired]),
+    userId: this.fb.control<Id | null>(null, [trimmedRequired]),
     amount: this.fb.control<number | null>(null, [
       trimmedRequired,
       positiveInt,
       Validators.max(environment.manualAdjustmentMaxPoints),
     ]),
-    reasonCode: this.fb.nonNullable.control('ADMIN_CORRECTION'),
+    reasonCode: this.fb.nonNullable.control('ADMIN_CORRECTION', [trimmedRequired, maxLen(100)]),
     reasonNote: this.fb.nonNullable.control('', [trimmedRequired, maxLen(500)]),
   });
+
+  readonly reasonCodeFieldError = computed(() => {
+    this.formTouched();
+    const ctrl = this.adjustmentForm.controls.reasonCode;
+    if (!ctrl.touched && !ctrl.dirty) return '';
+    if (ctrl.hasError('trimmedRequired') || ctrl.hasError('required')) return 'Reason code is required';
+    if (ctrl.hasError('maxLen')) return 'Reason code cannot exceed 100 characters';
+    if (ctrl.hasError('serverError')) return ctrl.getError('serverError');
+    return '';
+  });
+
+  readonly reasonNoteFieldError = computed(() => {
+    this.formTouched();
+    const ctrl = this.adjustmentForm.controls.reasonNote;
+    if (!ctrl.touched && !ctrl.dirty) return '';
+    if (ctrl.hasError('trimmedRequired') || ctrl.hasError('required')) return 'Reason note is required';
+    if (ctrl.hasError('maxLen')) return 'Reason note cannot exceed 500 characters';
+    if (ctrl.hasError('serverError')) return ctrl.getError('serverError');
+    return '';
+  });
+
+  readonly getRowId = (row: LedgerRow): string => String(row.transactionId);
 
   readonly userFieldError = computed(() => {
     this.formTouched();
@@ -206,8 +231,16 @@ export class Ledger {
     const val = this.adjustmentForm.getRawValue();
     const typeLabel = this.adjustmentType() === LedgerEntryType.Debit ? 'Debit' : 'Credit';
     const amount = val.amount ?? 0;
-    const user = this.knownRecyclers.get(val.userId);
-    const userInfo = user ? `${user.name} (${val.userId})` : val.userId;
+    const parsedUserId = val.userId === null ? null : Number(val.userId);
+    const user =
+      parsedUserId !== null && !Number.isNaN(parsedUserId)
+        ? this.knownRecyclers.get(parsedUserId)
+        : undefined;
+    const userInfo = user
+      ? `${user.name} (${val.userId})`
+      : val.userId !== null
+        ? String(val.userId)
+        : 'No user selected';
     let balanceText = '';
     if (user?.availablePoints !== undefined) {
       const before = user.availablePoints;
@@ -227,6 +260,10 @@ export class Ledger {
 
   handleSourceChange(source: string | number): void {
     this.pagedList.patchFilters({ source: source ? (source as LedgerSource) : undefined });
+  }
+
+  handleEntryTypeChange(entryType: string | number): void {
+    this.pagedList.patchFilters({ type: entryType ? (entryType as LedgerEntryType) : undefined });
   }
 
   handleDateRangeChange(range: DateRangeValue): void {
@@ -250,7 +287,7 @@ export class Ledger {
     this.currentIdempotencyKey.set(crypto.randomUUID());
     this.adjustmentType.set(LedgerEntryType.Credit);
     this.adjustmentForm.reset({
-      userId: '',
+      userId: null,
       amount: null,
       reasonCode: 'ADMIN_CORRECTION',
       reasonNote: '',
@@ -288,12 +325,15 @@ export class Ledger {
     }
 
     const val = this.adjustmentForm.getRawValue();
-    const isDebit = this.adjustmentType() === LedgerEntryType.Debit;
-    const pointsDelta = isDebit ? -Math.abs(val.amount!) : Math.abs(val.amount!);
+    const userId = val.userId === null ? Number.NaN : Number(val.userId);
+    if (!Number.isInteger(userId) || userId <= 0) {
+      return;
+    }
+    const amount = Math.abs(val.amount!);
 
     const req: ManualAdjustmentRequest = {
-      userId: val.userId,
-      amount: pointsDelta,
+      userId,
+      amount,
       type: this.adjustmentType(),
       reasonCode: val.reasonCode.trim(),
       reasonNote: val.reasonNote.trim(),
@@ -322,7 +362,10 @@ export class Ledger {
             }
           });
         }
-        if (isApiErrorCode(err, ApiErrorCode.InsufficientBalance)) {
+        if (isApiErrorCode(err, ApiErrorCode.IdempotencyKeyReused)) {
+          this.currentIdempotencyKey.set(crypto.randomUUID());
+          this.toastService.error(getErrorMessage(err));
+        } else if (isApiErrorCode(err, ApiErrorCode.InsufficientBalance)) {
           this.adjustmentForm.controls.amount.setErrors({ insufficientBalance: true });
           this.amountServerError.set('User has insufficient available points for this debit adjustment');
         } else if (isApiErrorCode(err, ApiErrorCode.NotFound)) {

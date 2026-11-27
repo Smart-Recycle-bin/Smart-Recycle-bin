@@ -41,9 +41,19 @@
         <app-select
           [options]="typeOptions"
           [value]="pagedList.filters().source || ''"
-          placeholder="All transaction types"
-          ariaLabel="Filter by transaction type"
+          placeholder="All sources"
+          ariaLabel="Filter by source"
           (valueChange)="handleSourceChange($event)"
+        />
+      </div>
+
+      <div class="filter-item entry-type-filter">
+        <app-select
+          [options]="entryTypeOptions"
+          [value]="pagedList.filters().type || ''"
+          placeholder="All entry types"
+          ariaLabel="Filter by credit or debit"
+          (valueChange)="handleEntryTypeChange($event)"
         />
       </div>
 
@@ -80,12 +90,13 @@
         [showPagination]="true"
         (pageChange)="pagedList.setPage($event)"
         (sortChange)="pagedList.setSort($event.key, $event.dir)"
+        [rowId]="getRowId"
         emptyTitle="No ledger records found"
         emptyDescription="No transaction records match the specified search or filter parameters."
       >
         <!-- Custom Transaction ID Cell -->
-        <ng-template appCell="id" let-row>
-          <app-mono-id-cell [value]="row.id" />
+        <ng-template appCell="transactionId" let-row>
+          <app-mono-id-cell [value]="row.transactionId" />
         </ng-template>
 
         <!-- Custom Timestamp Cell -->
@@ -94,16 +105,16 @@
         </ng-template>
 
         <!-- Custom User Cell -->
-        <ng-template appCell="user" let-row>
+        <ng-template appCell="userName" let-row>
           <app-user-cell
             [name]="row.userName"
-            [subtitle]="row.userId"
+            [subtitle]="'#' + row.userId"
           />
         </ng-template>
 
         <!-- Custom Bin Cell -->
         <ng-template appCell="binId" let-row>
-          <span class="bin-text">{{ row.binId || '—' }}</span>
+          <span class="bin-text">{{ row.binName ? row.binName : (row.binId ? '#' + row.binId : '—') }}</span>
         </ng-template>
 
         <!-- Custom Items / Detail Cell -->
@@ -193,7 +204,9 @@
             <app-input
               formControlName="reasonCode"
               label="Reason code"
+              [required]="true"
               placeholder="e.g. CORRECTION_CLAWBACK, PROMOTION_BONUS"
+              [error]="reasonCodeFieldError()"
             />
           </div>
 
@@ -204,6 +217,8 @@
               placeholder="Mandatory administrative justification explaining the adjustment..."
               [required]="true"
               [rows]="3"
+              [maxLength]="500"
+              [error]="reasonNoteFieldError()"
             />
           </div>
         </div>

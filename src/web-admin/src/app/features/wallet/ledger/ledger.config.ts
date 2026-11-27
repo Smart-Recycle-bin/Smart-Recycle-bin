@@ -57,10 +57,16 @@ export const LEDGER_TABLE_COLUMNS: TableColumn<LedgerRow>[] = [
 ];
 
 export const LEDGER_TYPE_OPTIONS: SelectOption[] = [
-  { label: 'All types', value: '' },
+  { label: 'All sources', value: '' },
   { label: LEDGER_SOURCE_LABELS[LedgerSource.SessionConfirm], value: LedgerSource.SessionConfirm },
   { label: LEDGER_SOURCE_LABELS[LedgerSource.VoucherRedemption], value: LedgerSource.VoucherRedemption },
   { label: LEDGER_SOURCE_LABELS[LedgerSource.ManualAdjustment], value: LedgerSource.ManualAdjustment },
+];
+
+export const LEDGER_ENTRY_TYPE_OPTIONS: SelectOption[] = [
+  { label: 'All entry types', value: '' },
+  { label: 'Credit (+)', value: LedgerEntryType.Credit },
+  { label: 'Debit (-)', value: LedgerEntryType.Debit },
 ];
 
 export const ADJUSTMENT_TYPE_OPTIONS: SegmentedOption<LedgerEntryType>[] = [
@@ -95,6 +101,12 @@ export function getLedgerSourceBadgeVariant(source: unknown): BadgeVariant {
 }
 
 export function getLedgerSourceLabel(source: unknown): string {
+  if (source === 'session_award') {
+    return LEDGER_SOURCE_LABELS[LedgerSource.SessionConfirm];
+  }
+  if (source === 'reward_redemption') {
+    return LEDGER_SOURCE_LABELS[LedgerSource.VoucherRedemption];
+  }
   if (typeof source === 'string' && Object.prototype.hasOwnProperty.call(LEDGER_SOURCE_LABELS, source)) {
     return LEDGER_SOURCE_LABELS[source as LedgerSource];
   }
