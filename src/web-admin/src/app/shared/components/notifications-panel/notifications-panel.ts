@@ -1,15 +1,19 @@
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
+import { Id } from '@models/common/id.model';
+import { formatDateTime } from '@shared/utils/datetime';
 import { Icon, IconName } from '../icon/icon';
 
 export type NotificationType = 'info' | 'success' | 'warning' | 'danger';
 
 export interface NotificationItem {
-  id: string;
+  id: Id;
   title: string;
   message?: string;
   time: string;
   unread?: boolean;
   type?: NotificationType;
+  sourceType?: string;
+  sourceReferenceId?: string | null;
 }
 
 @Component({
@@ -23,12 +27,19 @@ export class NotificationsPanel {
   readonly items = input<NotificationItem[]>([]);
   readonly title = input<string>('Notifications');
   readonly emptyText = input<string>('No notifications');
+  readonly errorText = input<string | null>(null);
 
   readonly itemClicked = output<NotificationItem>();
-  readonly markRead = output<string>();
+  readonly markRead = output<Id>();
   readonly markAllRead = output<void>();
+  readonly retry = output<void>();
 
   readonly hasUnread = computed(() => this.items().some((item) => !!item.unread));
+
+  formatTime(value: string): string {
+    const formatted = formatDateTime(value);
+    return formatted !== '—' ? formatted : value;
+  }
 
   getIcon(type: NotificationType | undefined): IconName {
     switch (type) {

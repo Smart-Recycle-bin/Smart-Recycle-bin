@@ -57,8 +57,10 @@
         <div class="notif-popover fade-up">
           <app-notifications-panel
             [items]="notifications()"
+            [errorText]="notificationsError()"
             (itemClicked)="notificationItemClicked.emit($event); notificationsOpen.set(false)"
             (markAllRead)="notificationsMarkAllRead.emit()"
+            (retry)="notificationsRetry.emit()"
           />
         </div>
       }

@@ -33,6 +33,7 @@
     <app-topbar
       [notifications]="notifications()"
       [unreadNotifications]="unreadNotifications()"
+      [notificationsError]="notificationsError()"
       [userMenuItems]="userMenuItems"
       [userName]="activeUser()?.name ?? ''"
       [userRole]="activeUser()?.role ?? ''"
@@ -41,6 +42,7 @@
       (notificationClicked)="loadNotifications()"
       (notificationItemClicked)="handleNotificationItemClick($event)"
       (notificationsMarkAllRead)="handleNotificationsMarkAllRead()"
+      (notificationsRetry)="loadNotifications()"
       (userMenuAction)="handleUserMenuAction($event)"
     />
 

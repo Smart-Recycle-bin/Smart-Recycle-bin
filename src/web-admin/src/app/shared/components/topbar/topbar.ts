@@ -37,6 +37,7 @@ export class Topbar {
   readonly showSearch = input<boolean>(true);
   readonly unreadNotifications = input<number>(0);
   readonly notifications = input<NotificationItem[]>([]);
+  readonly notificationsError = input<string | null>(null);
   readonly userName = input<string>('');
   readonly userRole = input<string>('');
   readonly userAvatar = input<string>('');
@@ -52,6 +53,7 @@ export class Topbar {
   readonly notificationClicked = output<void>();
   readonly notificationItemClicked = output<NotificationItem>();
   readonly notificationsMarkAllRead = output<void>();
+  readonly notificationsRetry = output<void>();
   readonly userMenuClicked = output<void>();
   readonly userMenuAction = output<string>();
 

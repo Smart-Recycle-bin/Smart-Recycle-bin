@@ -199,7 +199,7 @@ export class ComponentsShowcase {
 
   readonly demoNotifications = signal<NotificationItem[]>([
     {
-      id: 'n1',
+      id: 1,
       title: 'Overflow alert on BIN-0007',
       message: 'Fill level reached 97% in Downtown.',
       time: '2m ago',
@@ -207,7 +207,7 @@ export class ComponentsShowcase {
       type: 'danger',
     },
     {
-      id: 'n2',
+      id: 2,
       title: 'AI Review Queue updated',
       message: '5 new survey rejection reports pending.',
       time: '18m ago',
@@ -215,7 +215,7 @@ export class ComponentsShowcase {
       type: 'warning',
     },
     {
-      id: 'n3',
+      id: 3,
       title: 'Collector provisioned',
       message: 'Invite link dispatched to new field operator.',
       time: '1h ago',
@@ -229,7 +229,7 @@ export class ComponentsShowcase {
     this.toastService.success('Marked all notifications as read');
   }
 
-  markDemoNotificationRead(id: string): void {
+  markDemoNotificationRead(id: number): void {
     this.demoNotifications.update((items) =>
       items.map((i) => (i.id === id ? { ...i, unread: false } : i))
     );

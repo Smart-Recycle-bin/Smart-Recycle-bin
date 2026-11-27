@@ -12,7 +12,13 @@
     }
   </header>
 
-  @if (items().length === 0) {
+  @if (errorText() && items().length === 0) {
+    <div class="notif-empty" role="alert">
+      <app-icon name="alert-circle" size="md" />
+      <span>{{ errorText() }}</span>
+      <button type="button" class="mark-all-btn" (click)="retry.emit()">Retry</button>
+    </div>
+  } @else if (items().length === 0) {
     <div class="notif-empty">
       <app-icon name="bell" size="md" />
       <span>{{ emptyText() }}</span>
@@ -35,7 +41,7 @@
               @if (item.message) {
                 <span class="notif-item-msg">{{ item.message }}</span>
               }
-              <span class="notif-item-time">{{ item.time }}</span>
+              <span class="notif-item-time">{{ formatTime(item.time) }}</span>
             </span>
 
             @if (item.unread) {

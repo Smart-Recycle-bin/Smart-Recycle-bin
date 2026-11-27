@@ -12,6 +12,8 @@ export interface NotificationItem {
   time: string;
   unread?: boolean;
   type?: NotificationType;
+  sourceType?: string;
+  sourceReferenceId?: string | null;
 }
 
 /**

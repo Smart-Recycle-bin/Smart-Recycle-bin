@@ -39,6 +39,7 @@ export class AdminLayout implements OnInit {
 
   readonly notifications = signal<NotificationItem[]>([]);
   readonly unreadNotifications = signal<number>(0);
+  readonly notificationsError = signal<string | null>(null);
 
   readonly sidebarCollapsed = signal<boolean>(false);
   readonly mobileSidebarOpen = signal<boolean>(false);
@@ -104,13 +105,14 @@ export class AdminLayout implements OnInit {
   }
 
   loadNotifications(): void {
+    this.notificationsError.set(null);
     this.notificationsService.getNotifications().subscribe({
       next: (res) => {
         this.notifications.set(res.items);
         this.unreadNotifications.set(res.unreadCount);
       },
       error: () => {
-        // Silently handle
+        this.notificationsError.set('Unable to load notifications.');
       },
     });
   }
