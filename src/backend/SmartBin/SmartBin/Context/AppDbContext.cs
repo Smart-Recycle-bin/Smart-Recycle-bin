@@ -26,6 +26,7 @@ namespace SmartBin.Context
         public DbSet<SurveyResponse> SurveyResponses { get; set; }
         public DbSet<LedgerTransaction> LedgerTransactions { get; set; }
         public DbSet<AuditLog> AuditLogs { get; set; }
+        public DbSet<AdminNotification> AdminNotifications { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
