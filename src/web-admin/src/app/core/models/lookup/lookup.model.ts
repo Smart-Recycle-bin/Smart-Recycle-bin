@@ -1,14 +1,16 @@
+import { Id } from '../common/id.model';
+
 export interface DistrictLookupItem {
   name: string;
-  region: string;
+  region: string | null;
 }
 
 export interface CollectorLookupItem {
-  collectorId: string;
+  collectorId: Id;
   displayName: string;
 }
 
 export interface AdminLookupItem {
-  adminId: string;
+  adminId: Id;
   displayName: string;
 }

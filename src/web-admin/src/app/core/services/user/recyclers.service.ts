@@ -3,6 +3,7 @@ import { Observable } from 'rxjs';
 import { ApiClientService } from '../api/api-client.service';
 import { API_ENDPOINTS } from '../api/api-endpoints';
 import { RecyclerListItem, RecyclerQuery } from '@models/user/recycler.view-model';
+import { Id } from '@models/common/id.model';
 import { Page } from '@models/common/page.model';
 import {
   SuspendUserRequest,
@@ -36,7 +37,7 @@ export class RecyclersService {
   /**
    * Suspends a recycler account with justification (APIs.md 2.13).
    */
-  suspendRecycler(userId: string, reason: string): Observable<SuspendUserResponse> {
+  suspendRecycler(userId: Id, reason: string): Observable<SuspendUserResponse> {
     const payload: SuspendUserRequest = { reason };
     return this.apiClient.post<SuspendUserResponse>(API_ENDPOINTS.user.suspend(userId), payload);
   }
@@ -44,7 +45,7 @@ export class RecyclersService {
   /**
    * Restores a previously suspended recycler account (APIs.md 2.14).
    */
-  unsuspendRecycler(userId: string): Observable<UnsuspendUserResponse> {
+  unsuspendRecycler(userId: Id): Observable<UnsuspendUserResponse> {
     const payload: UnsuspendUserRequest = {};
     return this.apiClient.post<UnsuspendUserResponse>(API_ENDPOINTS.user.unsuspend(userId), payload);
   }

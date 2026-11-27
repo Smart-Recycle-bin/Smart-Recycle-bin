@@ -17,12 +17,12 @@ export interface RecyclerQuery extends PageQuery {
 export interface RecyclerListItem {
   userId: Id;
   name: string;
-  initials: string;
+  initials?: string;
   email: string;
-  phoneNumber?: string; // Enriched field for backend search (gap_api.md)
+  phone?: string | null; // Aligned with E14 GET /admin/users
   availablePoints: number;
   lifetimePoints: number;
-  sessions: number;
+  totalSessions: number;
   status: AccountStatus;
-  joined: string; // ISO date string
+  joinedAt: string; // ISO date string
 }

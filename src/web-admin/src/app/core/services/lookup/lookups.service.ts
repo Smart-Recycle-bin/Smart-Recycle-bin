@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable, shareReplay } from 'rxjs';
+import { Observable, catchError, shareReplay, throwError } from 'rxjs';
 import { ApiClientService } from '../api/api-client.service';
+import { API_ENDPOINTS } from '../api/api-endpoints';
 import {
   AdminLookupItem,
   CollectorLookupItem,
@@ -20,11 +21,24 @@ export class LookupsService {
   /**
    * Fetches district lookup items ({ name, region }), cached with shareReplay(1).
    */
+  private fetchCached<T>(endpoint: string, clearCache: () => void): Observable<T> {
+    return this.api.get<T>(endpoint).pipe(
+      catchError((error) => {
+        clearCache();
+        return throwError(() => error);
+      }),
+      shareReplay(1)
+    );
+  }
+
   getDistricts(): Observable<DistrictLookupItem[]> {
     if (!this.districts$) {
-      this.districts$ = this.api
-        .get<DistrictLookupItem[]>('/admin/lookups/districts')
-        .pipe(shareReplay(1));
+      this.districts$ = this.fetchCached<DistrictLookupItem[]>(
+        API_ENDPOINTS.lookups.districts,
+        () => {
+          this.districts$ = undefined;
+        }
+      );
     }
     return this.districts$;
   }
@@ -34,9 +48,12 @@ export class LookupsService {
    */
   getCollectors(): Observable<CollectorLookupItem[]> {
     if (!this.collectors$) {
-      this.collectors$ = this.api
-        .get<CollectorLookupItem[]>('/admin/lookups/collectors')
-        .pipe(shareReplay(1));
+      this.collectors$ = this.fetchCached<CollectorLookupItem[]>(
+        API_ENDPOINTS.lookups.collectors,
+        () => {
+          this.collectors$ = undefined;
+        }
+      );
     }
     return this.collectors$;
   }
@@ -46,9 +63,12 @@ export class LookupsService {
    */
   getAdmins(): Observable<AdminLookupItem[]> {
     if (!this.admins$) {
-      this.admins$ = this.api
-        .get<AdminLookupItem[]>('/admin/lookups/admins')
-        .pipe(shareReplay(1));
+      this.admins$ = this.fetchCached<AdminLookupItem[]>(
+        API_ENDPOINTS.lookups.admins,
+        () => {
+          this.admins$ = undefined;
+        }
+      );
     }
     return this.admins$;
   }

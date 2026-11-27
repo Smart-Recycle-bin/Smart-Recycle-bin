@@ -28,7 +28,7 @@ export const RECYCLER_TABLE_COLUMNS: TableColumn<RecyclerListItem>[] = [
     align: 'right',
   },
   {
-    key: 'sessions',
+    key: 'totalSessions',
     label: 'Sessions',
     sortable: true,
     align: 'right',
@@ -40,10 +40,10 @@ export const RECYCLER_TABLE_COLUMNS: TableColumn<RecyclerListItem>[] = [
     width: '140px',
   },
   {
-    key: 'joined',
+    key: 'joinedAt',
     label: 'Joined',
     sortable: true,
-    value: (row) => (row.joined ? new Date(row.joined).getTime() : 0),
+    value: (row) => (row.joinedAt ? new Date(row.joinedAt).getTime() : 0),
     width: '140px',
   },
 ];
