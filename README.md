@@ -4,7 +4,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Repository Status](https://img.shields.io/badge/Repository-Public-brightgreen.svg)](https://github.com/Smart-Recycle-bin/Smart-Recycle-bin)
 [![Architecture](https://img.shields.io/badge/Architecture-Clean%20Architecture%20%2F%20Modular-blue.svg)](#)
-[![Stack](https://img.shields.io/badge/Tech-ASP.NET%20Core%20%7C%20Flutter%20%7C%20ML.NET%20%7C%20IoT-purple.svg)](#)
+[![Stack](https://img.shields.io/badge/Tech-ASP.NET%20Core%20%7C%20Flutter%20%7C%20ML.NET%20(ResNet--v2%2050)%20%7C%20Cloudflare%20R2%20%7C%20IoT-purple.svg)](#)
 
 ---
 
@@ -35,8 +35,8 @@ The system addresses solid waste accumulation and lack of source-segregation acr
 
 1. **AI-Enabled IoT Smart Bins:**
    - Embedded sensors and cameras automatically unlock the bin lid upon scanning a dynamic QR code via the mobile app.
-   - High-speed onboard cameras capture images of inserted items.
-   - An integrated machine learning engine classifies waste types (`PLASTIC_BOTTLE`, `ALUMINUM_CAN`, `GLASS`, `PAPER`, `ORGANIC`) in real time, calculating reward points within an active 60-second renewed session window.
+   - High-speed onboard cameras (ESP32-CAM + HC-SR04 ultrasonic sensor) capture images of inserted items.
+   - An integrated **ML.NET (`ResNet-v2 50` CNN)** engine classifies waste types (`PAPER`, `METAL`, `ORGANIC`, `PLASTIC`, `TRASH`) in real time, stores snapshots on **Cloudflare R2**, and calculates reward points within an active 60-second renewed session window.
 
 2. **Single Unified Mobile Application (Shared App with Role-Based Routing):**
    - **Architectural Rule (`FR-RULE-001`):** Recyclers (Citizens) and Collectors operate within the **exact same mobile application build** with a single unified login screen (`AUTH-003`). Dynamic routing and screen rendering are governed strictly by the user's authenticated JWT role claim (`AUTH-005`):
@@ -59,18 +59,38 @@ The system addresses solid waste accumulation and lack of source-segregation acr
     └───────────────────────────┬────────────────────────────┘
                                 │ (HTTPS / JWT Auth)
                                 ▼
-    ┌────────────────────────────────────────────────────────┐
-    │              RESTful APIs / Backend Cloud              │
-    │     (Collaborative Team Backend: ASP.NET Core API)     │
-    │         (Auth, Wallet Ledger, Fleet Management)        │
-    └───────────────────────────┬────────────────────────────┘
-              ▲                 │                 ▲
-              │                 ▼                 │
-    ┌─────────┴─────────┐ ┌────────┴─────────┐ ┌──┴─────────────┐
-    │  Smart IoT Bin    │ │   ML Classification  │ │ Web Admin Hub  │
-    │  (Cam & Sensors)  │ │   (Image Detection)  │ │ (Analytics UI) │
-    └───────────────────┘ └──────────────────────┘ └────────────────┘
+    ┌─────────────────────────────────────────────────────────────────────────┐
+    │                      RESTful APIs / Backend Cloud                       │
+    │              (Collaborative Team Backend: ASP.NET Core API)             │
+    │                  (Auth, Wallet Ledger, Fleet Management)                │
+    └───────┬───────────────────────┬─────────────────────┬─────────────┬─────┘
+            ▲                       ▼                     ▼             ▲
+    ┌───────┴───────────┐   ┌───────┴────────────┐ ┌──────┴─────────┐ ┌─┴──────────────┐
+    │  Smart IoT Bin    │   │ ML.NET Inference   │ │ Cloudflare R2  │ │ Web Admin Hub  │
+    │ (ESP32-CAM/Motor) │   │ (ResNet-v2 50 CNN) │ │ Object Storage │ │ (Analytics UI) │
+    └───────────────────┘   └────────────────────┘ └────────────────┘ └────────────────┘
 ```
+
+### 🧠 AI Waste Classification & Cloud Storage
+
+#### Waste Classification Model (`MLModel.mlnet`)
+- **Engine & Integration:** Runs in-process inside the ASP.NET Core backend via **ML.NET (`Microsoft.ML` / `Microsoft.ML.Vision` 4.0.0)** (`MlNetClassificationAdapter`).
+- **Model Name & Architecture:** **ResNet-v2 50** (`ResnetV250`) — a 50-layer **Convolutional Neural Network (CNN)** with residual bottleneck blocks trained using transfer learning (`ImageClassificationMulti` trainer over a frozen TensorFlow graph).
+- **Measured Accuracy:** **`93.78%` Macro Accuracy** (`0.9378` on an 80% / 20% train-validation split in ML.NET Model Builder; `200` epochs, batch size `10`).
+
+| Model Label | System Waste Type | Bin Stepper Angle | Base Reward Points |
+|-------------|-------------------|-------------------|--------------------|
+| `paper` | `PAPER` | `0°` | `10 PTS` |
+| `metal` | `METAL` | `72°` | `20 PTS` |
+| `biological` | `ORGANIC` | `144°` | `5 PTS` |
+| `plastic` | `PLASTIC` | `216°` | `15 PTS` |
+| `trash` | `TRASH` | `288°` | `1 PT` |
+
+#### Cloud Storage (`Cloudflare R2`)
+The backend uses **Cloudflare R2** (S3-compatible object storage via `CloudflareR2StorageService` and `AWSSDK.S3`, with automatic local disk fallback for offline development) to store and serve:
+- **Disposed item photos (`recycled-items/`):** Captured by the ESP32-CAM during active bin sessions and displayed in citizen verification surveys and admin inspection queues.
+- **Citizen profile avatars:** Uploaded photos are EXIF-stripped, JPEG re-encoded, and stored in R2.
+- **Marketplace reward catalog images:** Partner and voucher imagery managed by administrators.
 
 ---
 
@@ -165,7 +185,7 @@ gantt
 
 | Metric Category | Key Performance Indicator (KPI) | Target Metric | Verification Method |
 |-----------------|---------------------------------|---------------|---------------------|
-| **AI Performance** | Waste Classification Accuracy | $\ge 95\%$ | Ratio of user-confirmed vs. disputed AI classifications |
+| **AI Performance** | Waste Classification Accuracy | $\ge 95\%$ target (`93.78%` baseline `ResNet-v2 50` validation) | ML.NET 80/20 split (`MacroAccuracy`) + live user survey feedback |
 | **System Latency** | Average API Response Time | $< 200 \text{ ms}$ | APM monitoring under standard and peak concurrency |
 | **Session Operations** | Active Disposal Window | $60 \text{ sec}$ | Automatically renewed upon each consecutive item inserted |
 | **Financial Integrity** | Financial Ledger Consistency | $100\%$ Match | Zero ledger discrepancies across credits, debits, and adjustments |
