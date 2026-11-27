@@ -7,7 +7,8 @@ import {
   CollectorListItem,
   CollectorQuery,
 } from '@models/collector/collector.view-model';
-import { Page } from '@models/common/page.model';
+import { Id } from '@models/common/id.model';
+import { Page, PageQuery } from '@models/common/page.model';
 import {
   CreateCollectorRequest,
   CreateCollectorResponse,
@@ -38,21 +39,24 @@ export class CollectorsService {
   /**
    * Updates an existing field collector account details (PROPOSED, gap_api.md 1.5).
    */
-  updateCollector(collectorId: string, req: UpdateCollectorRequest): Observable<CollectorListItem> {
+  updateCollector(collectorId: Id, req: UpdateCollectorRequest): Observable<CollectorListItem> {
     return this.apiClient.put<CollectorListItem>(API_ENDPOINTS.collector.update(collectorId), req);
   }
 
   /**
-   * Fetches smart bins currently assigned to a collector (PROPOSED, gap_api.md 1.5).
+   * Fetches smart bins currently assigned to a collector with pagination (E58).
    */
-  getAssignedBins(collectorId: string): Observable<CollectorAssignedBin[]> {
-    return this.apiClient.get<CollectorAssignedBin[]>(API_ENDPOINTS.collector.assignedBins(collectorId));
+  getAssignedBins(collectorId: Id, query?: PageQuery): Observable<Page<CollectorAssignedBin>> {
+    return this.apiClient.getPaged<CollectorAssignedBin>(
+      API_ENDPOINTS.collector.assignedBins(collectorId),
+      query
+    );
   }
 
   /**
    * Deactivates a collector account (PROPOSED, gap_api.md 1.5).
    */
-  deactivateCollector(collectorId: string): Observable<DeactivateCollectorResponse> {
+  deactivateCollector(collectorId: Id): Observable<DeactivateCollectorResponse> {
     return this.apiClient.post<DeactivateCollectorResponse>(
       API_ENDPOINTS.collector.deactivate(collectorId),
       {}

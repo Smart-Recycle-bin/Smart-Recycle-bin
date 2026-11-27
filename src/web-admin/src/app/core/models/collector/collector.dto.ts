@@ -19,11 +19,15 @@ export interface CreateCollectorRequest {
  * Response data for POST /api/v1/admin/collectors (APIs.md 2.7).
  */
 export interface CreateCollectorResponse {
+  collectorId?: Id;
   userId: Id;
   email: string;
   displayName: string;
   role: UserRole;
+  district?: string | null;
   status?: AccountStatus;
+  credentialsMode?: CollectorCredentialsMode;
+  inviteEmailSent?: boolean;
   mustChangePassword?: boolean;
   createdAt: string; // ISO 8601 string
 }

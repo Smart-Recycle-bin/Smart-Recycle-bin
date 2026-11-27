@@ -115,6 +115,11 @@
   gap: 0.75rem;
 }
 
+.drawer-pagination-bar {
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border);
+}
+
 .assigned-bin-card {
   display: flex;
   flex-direction: column;

@@ -4,7 +4,7 @@ import { CollectorListItem } from '@models/collector/collector.view-model';
 
 export const MOCK_COLLECTORS: CollectorListItem[] = [
   {
-    collectorId: 'C-001',
+    collectorId: 1,
     name: 'Mahmoud Fathy',
     initials: 'MF',
     district: 'Cairo',
@@ -15,7 +15,7 @@ export const MOCK_COLLECTORS: CollectorListItem[] = [
     lastActiveAt: cairoLocalToIso('2025-06-14 10:12'),
   },
   {
-    collectorId: 'C-002',
+    collectorId: 2,
     name: 'Hossam El-Din',
     initials: 'HE',
     district: 'Cairo',
@@ -26,7 +26,7 @@ export const MOCK_COLLECTORS: CollectorListItem[] = [
     lastActiveAt: cairoLocalToIso('2025-06-14 09:48'),
   },
   {
-    collectorId: 'C-003',
+    collectorId: 3,
     name: 'Karim Abdelrahman',
     initials: 'KA',
     district: 'Giza',
@@ -37,7 +37,7 @@ export const MOCK_COLLECTORS: CollectorListItem[] = [
     lastActiveAt: cairoLocalToIso('2025-06-14 08:30'),
   },
   {
-    collectorId: 'C-004',
+    collectorId: 4,
     name: 'Youssef Salama',
     initials: 'YS',
     district: 'Qalyubia',
@@ -48,7 +48,7 @@ export const MOCK_COLLECTORS: CollectorListItem[] = [
     lastActiveAt: cairoLocalToIso('2025-06-13 17:55'),
   },
   {
-    collectorId: 'C-005',
+    collectorId: 5,
     name: 'Tarek Mansour',
     initials: 'TM',
     district: 'Alexandria',
@@ -59,7 +59,7 @@ export const MOCK_COLLECTORS: CollectorListItem[] = [
     lastActiveAt: cairoLocalToIso('2025-06-14 07:21'),
   },
   {
-    collectorId: 'C-006',
+    collectorId: 6,
     name: 'Waleed Nagy',
     initials: 'WN',
     district: 'Alexandria',

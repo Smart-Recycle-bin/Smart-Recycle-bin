@@ -18,6 +18,7 @@ import { EmptyState } from '@shared/components/empty-state/empty-state';
 import { ErrorState } from '@shared/components/error-state/error-state';
 import { Skeleton } from '@shared/components/skeleton/skeleton';
 import { Icon } from '@shared/components/icon/icon';
+import { Pagination } from '@shared/components/table/pagination/pagination';
 import { formatDateTime } from '@shared/utils/datetime';
 
 export interface BinsSummary {
@@ -41,6 +42,7 @@ export interface BinsSummary {
     ErrorState,
     Skeleton,
     Icon,
+    Pagination,
   ],
   templateUrl: './assigned-bins-drawer.html',
   styleUrl: './assigned-bins-drawer.css',
@@ -52,10 +54,16 @@ export class AssignedBinsDrawer {
   readonly bins = input<CollectorAssignedBin[]>([]);
   readonly loading = input<boolean>(false);
   readonly error = input<string | null>(null);
+  readonly page = input<number>(1);
+  readonly pageSize = input<number>(10);
+  readonly total = input<number | null>(null);
 
   readonly closed = output<void>();
   readonly retry = output<void>();
   readonly assignBin = output<void>();
+  readonly pageChange = output<number>();
+
+  readonly effectiveTotal = computed<number>(() => this.total() ?? this.bins().length);
 
   /**
    * Sorts bins worst-first: highest fill level first, then alphabetical by name.
@@ -75,9 +83,9 @@ export class AssignedBinsDrawer {
    */
   readonly summary = computed<BinsSummary>(() => {
     const list = this.bins();
-    const total = list.length;
-    if (total === 0) {
-      return { total: 0, needAttention: 0, offline: 0, avgFill: 0 };
+    const total = this.effectiveTotal();
+    if (list.length === 0) {
+      return { total, needAttention: 0, offline: 0, avgFill: 0 };
     }
 
     let needAttention = 0;
@@ -102,7 +110,7 @@ export class AssignedBinsDrawer {
       total,
       needAttention,
       offline,
-      avgFill: Math.round(totalFill / total),
+      avgFill: Math.round(totalFill / list.length),
     };
   });
 

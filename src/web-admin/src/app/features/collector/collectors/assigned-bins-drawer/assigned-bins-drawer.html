@@ -1,7 +1,7 @@
 <app-drawer
   [open]="open()"
   title="Assigned Smart Bins"
-  [description]="collector() ? (collector()!.name + ' · ' + collector()!.district) : ''"
+  [description]="collector() ? (collector()!.district ? (collector()!.name + ' · ' + collector()!.district) : collector()!.name) : ''"
   size="lg"
   (closed)="closed.emit()"
 >
@@ -21,8 +21,10 @@
           </div>
           <div class="profile-meta-row">
             <span class="collector-id-chip">{{ c.collectorId }}</span>
-            <span class="meta-dot">·</span>
-            <span class="profile-district">{{ c.district }}</span>
+            @if (c.district) {
+              <span class="meta-dot">·</span>
+              <span class="profile-district">{{ c.district }}</span>
+            }
             @if (c.phone) {
               <span class="meta-dot">·</span>
               <span class="profile-phone">{{ c.phone }}</span>
@@ -131,7 +133,7 @@
 
             <div class="bin-card-subline">
               <app-icon name="map-pin" size="xs" />
-              <span>{{ bin.area }} · {{ bin.district }}</span>
+              <span>{{ bin.area && bin.district ? (bin.area + ' · ' + bin.district) : (bin.area || bin.district || 'Unassigned district') }}</span>
             </div>
 
             <div class="bin-card-metrics">
@@ -154,6 +156,18 @@
           </div>
         }
       </div>
+
+      @if (effectiveTotal() > pageSize()) {
+        <div class="drawer-pagination-bar">
+          <app-pagination
+            [page]="page()"
+            [pageSize]="pageSize()"
+            [total]="effectiveTotal()"
+            [currentCount]="bins().length"
+            (pageChange)="pageChange.emit($event)"
+          />
+        </div>
+      }
     }
   </div>
 

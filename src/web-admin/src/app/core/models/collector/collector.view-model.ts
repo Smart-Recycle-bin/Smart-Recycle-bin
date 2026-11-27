@@ -19,7 +19,7 @@ export interface CollectorQuery extends PageQuery {
 export interface CollectorListItem {
   collectorId: Id;
   name: string;
-  initials: string;
+  initials?: string;
   district: string;
   email: string;
   phone: string;
@@ -38,5 +38,5 @@ export interface CollectorAssignedBin {
   district: string;
   fillLevel: number;
   status: BinStatus;
-  lastServicedAt: string; // ISO 8601 string
+  lastServicedAt: string | null; // ISO 8601 string or null if never serviced
 }

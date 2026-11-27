@@ -66,7 +66,7 @@
         <ng-template appCell="name" let-row>
           <app-user-cell
             [name]="row.name"
-            [subtitle]="row.collectorId + ' · ' + row.district"
+            [subtitle]="row.district ? (row.collectorId + ' · ' + row.district) : ('' + row.collectorId)"
           />
         </ng-template>
 
@@ -217,6 +217,7 @@
             label="Email address"
             type="email"
             [required]="true"
+            [error]="editEmailError()"
           />
 
           <app-input
@@ -266,9 +267,13 @@
     [bins]="assignedBins()"
     [loading]="isLoadingAssignedBins()"
     [error]="assignedBinsError()"
+    [page]="assignedBinsPage()"
+    [pageSize]="assignedBinsPageSize"
+    [total]="assignedBinsTotal()"
     (closed)="closeAssignedBinsDrawer()"
     (retry)="retryLoadAssignedBins()"
     (assignBin)="onDrawerAssignBin()"
+    (pageChange)="handleAssignedBinsPageChange($event)"
   />
 
   <!-- Assign Smart Bin Modal -->

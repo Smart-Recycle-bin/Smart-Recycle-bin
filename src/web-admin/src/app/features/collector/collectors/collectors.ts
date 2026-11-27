@@ -8,7 +8,10 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { map } from 'rxjs/operators';
+import { BehaviorSubject, of } from 'rxjs';
+import { catchError, map, switchMap } from 'rxjs/operators';
+import { Id } from '@models/common/id.model';
+import { Page } from '@models/common/page.model';
 import { CollectorListItem, CollectorQuery, CollectorAssignedBin } from '@models/collector/collector.view-model';
 import { CollectorCredentialsMode } from '@models/collector/collector-credentials-mode.enum';
 import { CreateCollectorRequest, UpdateCollectorRequest } from '@models/collector/collector.dto';
@@ -122,6 +125,9 @@ export class Collectors {
    */
   readonly selectedCollector = signal<CollectorListItem | null>(null);
   readonly assignedBins = signal<CollectorAssignedBin[]>([]);
+  readonly assignedBinsPage = signal<number>(1);
+  readonly assignedBinsPageSize = 10;
+  readonly assignedBinsTotal = signal<number>(0);
   readonly isLoadingAssignedBins = signal<boolean>(false);
   readonly assignedBinsError = signal<string | null>(null);
 
@@ -135,8 +141,11 @@ export class Collectors {
   /**
    * District options from LookupsService
    */
+  private readonly districtsRefresh$ = new BehaviorSubject<void>(undefined);
+
   readonly districtOptions = toSignal(
-    this.lookupsService.getDistricts().pipe(
+    this.districtsRefresh$.pipe(
+      switchMap(() => this.lookupsService.getDistricts().pipe(catchError(() => of([])))),
       map((districts) => districts.map((d) => ({ label: d.name, value: d.name as string | number })))
     ),
     { initialValue: [] as SelectOption[] }
@@ -152,7 +161,7 @@ export class Collectors {
         page.items
           .filter(
             (b) =>
-              b.collectorId !== collector?.collectorId &&
+              (b.collectorId ?? null) !== (collector?.collectorId ?? null) &&
               b.collectorName !== collector?.name
           )
           .map((b) => ({
@@ -187,16 +196,28 @@ export class Collectors {
   /**
    * Reactive form for assigning a smart bin to a collector
    */
-  readonly assignBinForm = this.fb.nonNullable.group({
-    binId: ['', [Validators.required]],
+  readonly assignBinForm = this.fb.group({
+    binId: this.fb.control<Id | null>(null, [Validators.required]),
   });
 
   readonly emailServerError = signal<string>('');
+  readonly editEmailServerError = signal<string>('');
 
   readonly createEmailError = computed(() => {
     const serverErr = this.emailServerError();
     if (serverErr) return serverErr;
     const control = this.createForm.controls.email;
+    if (!control.touched && !control.dirty) return '';
+    if (control.hasError('emailAlreadyExists')) return 'This email address is already registered';
+    if (control.hasError('required')) return 'Email is required';
+    if (control.hasError('email')) return 'Please enter a valid email address';
+    return '';
+  });
+
+  readonly editEmailError = computed(() => {
+    const serverErr = this.editEmailServerError();
+    if (serverErr) return serverErr;
+    const control = this.editForm.controls.email;
     if (!control.touched && !control.dirty) return '';
     if (control.hasError('emailAlreadyExists')) return 'This email address is already registered';
     if (control.hasError('required')) return 'Email is required';
@@ -282,12 +303,20 @@ export class Collectors {
 
     this.isSubmitting.set(true);
     this.collectorsService.createCollector(req).subscribe({
-      next: () => {
-        this.toastService.success(`Collector account for ${val.displayName.trim()} provisioned successfully`);
+      next: (res) => {
+        const displayName = val.displayName.trim();
+        const message =
+          res?.credentialsMode === CollectorCredentialsMode.InviteLink &&
+          res?.inviteEmailSent === false
+            ? `Collector account for ${displayName} created. Onboarding email was not sent because SMTP is not configured.`
+            : `Collector account for ${displayName} provisioned successfully`;
+        this.toastService.success(message);
         this.isSubmitting.set(false);
         this.closeCreateDrawer();
         this.pagedList.reload();
         this.lookupsService.invalidate('collectors');
+        this.lookupsService.invalidate('districts');
+        this.districtsRefresh$.next();
       },
       error: (err) => {
         this.isSubmitting.set(false);
@@ -316,6 +345,7 @@ export class Collectors {
    * Edit Collector Drawer Methods
    */
   openEditDrawer(collector: CollectorListItem): void {
+    this.editEmailServerError.set('');
     this.selectedCollector.set(collector);
     this.editForm.reset({
       displayName: collector.name,
@@ -333,6 +363,7 @@ export class Collectors {
   }
 
   submitEdit(): void {
+    this.editEmailServerError.set('');
     if (this.editForm.invalid || this.isSubmitting()) {
       this.editForm.markAllAsTouched();
       return;
@@ -356,6 +387,9 @@ export class Collectors {
         this.isSubmitting.set(false);
         this.closeEditDrawer();
         this.pagedList.reload();
+        this.lookupsService.invalidate('collectors');
+        this.lookupsService.invalidate('districts');
+        this.districtsRefresh$.next();
       },
       error: (err) => {
         this.isSubmitting.set(false);
@@ -368,7 +402,12 @@ export class Collectors {
               ctrl.markAsTouched();
             }
           });
-        } else {
+        }
+        if (isApiErrorCode(err, ApiErrorCode.EmailAlreadyExists) || (err as { status?: number })?.status === 409) {
+          this.editForm.controls.email.setErrors({ emailAlreadyExists: true });
+          this.editForm.controls.email.markAsTouched();
+          this.editEmailServerError.set('This email address is already registered');
+        } else if (!fieldErrors) {
           this.toastService.error(getErrorMessage(err));
         }
       },
@@ -380,39 +419,54 @@ export class Collectors {
    */
   openAssignedBinsDrawer(collector: CollectorListItem): void {
     this.selectedCollector.set(collector);
+    this.assignedBinsPage.set(1);
+    this.assignedBinsTotal.set(0);
     this.isAssignedBinsDrawerOpen.set(true);
-    this.loadAssignedBins(collector.collectorId);
+    this.loadAssignedBins(collector.collectorId, 1);
   }
 
-  loadAssignedBins(collectorId: string): void {
+  loadAssignedBins(collectorId: Id, page = this.assignedBinsPage()): void {
     this.isLoadingAssignedBins.set(true);
     this.assignedBinsError.set(null);
 
-    this.collectorsService.getAssignedBins(collectorId).subscribe({
-      next: (bins: CollectorAssignedBin[]) => {
-        this.assignedBins.set(bins);
-        this.isLoadingAssignedBins.set(false);
-      },
-      error: (err: unknown) => {
-        this.isLoadingAssignedBins.set(false);
-        const msg = getErrorMessage(err);
-        this.assignedBinsError.set(msg);
-        this.toastService.error(msg);
-      },
-    });
+    this.collectorsService
+      .getAssignedBins(collectorId, { page, pageSize: this.assignedBinsPageSize })
+      .subscribe({
+        next: (result: Page<CollectorAssignedBin>) => {
+          this.assignedBins.set(result.items);
+          this.assignedBinsPage.set(result.page);
+          this.assignedBinsTotal.set(result.totalItems);
+          this.isLoadingAssignedBins.set(false);
+        },
+        error: (err: unknown) => {
+          this.isLoadingAssignedBins.set(false);
+          const msg = getErrorMessage(err);
+          this.assignedBinsError.set(msg);
+          this.toastService.error(msg);
+        },
+      });
+  }
+
+  handleAssignedBinsPageChange(page: number): void {
+    const col = this.selectedCollector();
+    if (!col) return;
+    this.assignedBinsPage.set(page);
+    this.loadAssignedBins(col.collectorId, page);
   }
 
   closeAssignedBinsDrawer(): void {
     this.isAssignedBinsDrawerOpen.set(false);
     this.selectedCollector.set(null);
     this.assignedBins.set([]);
+    this.assignedBinsPage.set(1);
+    this.assignedBinsTotal.set(0);
     this.assignedBinsError.set(null);
   }
 
   retryLoadAssignedBins(): void {
     const col = this.selectedCollector();
     if (col) {
-      this.loadAssignedBins(col.collectorId);
+      this.loadAssignedBins(col.collectorId, this.assignedBinsPage());
     }
   }
 
@@ -428,7 +482,7 @@ export class Collectors {
    */
   openAssignModal(collector: CollectorListItem): void {
     this.selectedCollector.set(collector);
-    this.assignBinForm.reset({ binId: '' });
+    this.assignBinForm.reset({ binId: null });
     this.isAssignModalOpen.set(true);
   }
 
@@ -447,7 +501,9 @@ export class Collectors {
     const collector = this.selectedCollector();
     if (!collector) return;
 
-    const binId = this.assignBinForm.getRawValue().binId;
+    const rawBinId = this.assignBinForm.getRawValue().binId;
+    const binId = rawBinId === null ? Number.NaN : Number(rawBinId);
+    if (!Number.isInteger(binId) || binId <= 0) return;
     this.isSubmitting.set(true);
 
     this.binsService.assignCollector(binId, { collectorId: collector.collectorId }).subscribe({
@@ -489,6 +545,7 @@ export class Collectors {
         this.isSubmitting.set(false);
         this.closeDeactivateDialog();
         this.pagedList.reload();
+        this.lookupsService.invalidate('collectors');
       },
       error: (err) => {
         this.isSubmitting.set(false);

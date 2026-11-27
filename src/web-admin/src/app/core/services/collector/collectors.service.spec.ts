@@ -3,8 +3,10 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { CollectorsService } from './collectors.service';
 import { ApiClientService } from '../api/api-client.service';
-import { environment } from '@env/environment';
+import { resolveApiBaseUrl } from '@core/interceptors/shared/api-url';
 import { CollectorCredentialsMode } from '@models/collector/collector-credentials-mode.enum';
+
+const apiBaseUrl = resolveApiBaseUrl();
 
 describe('CollectorsService', () => {
   let service: CollectorsService;
@@ -28,7 +30,7 @@ describe('CollectorsService', () => {
       expect(page.totalItems).toBe(0);
     });
 
-    const req = httpMock.expectOne(`${environment.apiBaseUrl}/admin/collectors?district=Cairo`);
+    const req = httpMock.expectOne(`${apiBaseUrl}/admin/collectors?district=Cairo`);
     expect(req.request.method).toBe('GET');
     req.flush({ success: true, data: [] });
   });
@@ -43,7 +45,7 @@ describe('CollectorsService', () => {
     };
     service.createCollector(payload).subscribe();
 
-    const req = httpMock.expectOne(`${environment.apiBaseUrl}/admin/collectors`);
+    const req = httpMock.expectOne(`${apiBaseUrl}/admin/collectors`);
     expect(req.request.method).toBe('POST');
     expect(req.request.body).toEqual(payload);
     req.flush({ success: true, data: { collectorId: 'C-007', email: payload.email, district: 'Cairo' } });
@@ -52,17 +54,17 @@ describe('CollectorsService', () => {
   it('should update, view bins, and deactivate collector', () => {
     service.updateCollector('C-001', { phoneNumber: '+201111111111' }).subscribe();
     httpMock
-      .expectOne(`${environment.apiBaseUrl}/admin/collectors/C-001`)
+      .expectOne(`${apiBaseUrl}/admin/collectors/C-001`)
       .flush({ success: true, data: {} });
 
     service.getAssignedBins('C-001').subscribe();
     httpMock
-      .expectOne(`${environment.apiBaseUrl}/admin/collectors/C-001/bins`)
+      .expectOne(`${apiBaseUrl}/admin/collectors/C-001/bins`)
       .flush({ success: true, data: [] });
 
     service.deactivateCollector('C-001').subscribe();
     httpMock
-      .expectOne(`${environment.apiBaseUrl}/admin/collectors/C-001/deactivate`)
+      .expectOne(`${apiBaseUrl}/admin/collectors/C-001/deactivate`)
       .flush({ success: true, data: { collectorId: 'C-001', status: 'inactive' } });
   });
 });
