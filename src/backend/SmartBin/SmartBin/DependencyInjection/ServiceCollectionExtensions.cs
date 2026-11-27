@@ -10,6 +10,7 @@ using SmartBin.Context;
 using SmartBin.Models;
 using SmartBin.Repositories;
 using SmartBin.Repositories.Abstractions;
+using SmartBin.Repositories.Analytics;
 using SmartBin.Repositories.Audit;
 using SmartBin.Repositories.Auth;
 using SmartBin.Repositories.Bins;
@@ -23,6 +24,7 @@ using SmartBin.Repositories.Surveys;
 using SmartBin.Repositories.Users;
 using SmartBin.Repositories.Wallet;
 using SmartBin.Services;
+using SmartBin.Services.Analytics;
 using SmartBin.Services.Audit;
 using SmartBin.Services.Auth;
 using SmartBin.Services.Bins;
@@ -199,6 +201,7 @@ namespace SmartBin.DependencyInjection
             services.AddScoped<IAdminCollectorRepository, AdminCollectorRepository>();
             services.AddScoped<IAdminLookupRepository, AdminLookupRepository>();
             services.AddScoped<IAdminInspectionRepository, AdminInspectionRepository>();
+            services.AddScoped<IAdminAnalyticsRepository, AdminAnalyticsRepository>();
             services.AddScoped<IGamificationRepository, GamificationRepository>();
             services.AddScoped<IAuditLogRepository, AuditLogRepository>();
             services.AddScoped<IAdminNotificationRepository, AdminNotificationRepository>();
@@ -231,6 +234,7 @@ namespace SmartBin.DependencyInjection
             services.AddScoped<IBinService, BinService>();
             services.AddScoped<IIngestionService, IngestionService>();
             services.AddScoped<ISessionCoordinationService, SessionCoordinationService>();
+            services.AddSingleton<IMember5AnalyticsService, Member5AnalyticsService>();
             services.AddSingleton<IClassificationAdapter, ClassificationAdapter>();
             services.AddHostedService<BinHeartbeatSimulatorService>();
 
@@ -244,6 +248,7 @@ namespace SmartBin.DependencyInjection
             services.AddScoped<IAdminLedgerService, AdminLedgerService>();
             services.AddScoped<IMember5InspectionService, LocalInspectionService>();
             services.AddScoped<IAdminInspectionService, AdminInspectionService>();
+            services.AddScoped<IAdminAnalyticsService, AdminAnalyticsService>();
             services.AddScoped<IGamificationService, GamificationService>();
             services.AddScoped<IAuditLogService, AuditLogService>();
             services.AddScoped<IAdminNotificationService, AdminNotificationService>();
