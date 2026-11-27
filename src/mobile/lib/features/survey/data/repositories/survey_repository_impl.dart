@@ -33,6 +33,7 @@ class SurveyRepositoryImpl implements SurveyRepository {
   @override
   Future<Result<int>> submitSurvey({
     required String surveyId,
+    String? sessionId,
     required List<SurveyItemEntity> items,
     int? aiRating,
   }) async {
@@ -48,7 +49,12 @@ class SurveyRepositoryImpl implements SurveyRepository {
         );
       }).toList();
 
-      final points = await remoteDataSource.submitSurvey(surveyId, models, aiRating);
+      final points = await remoteDataSource.submitSurvey(
+        surveyId,
+        models,
+        aiRating,
+        sessionId: sessionId,
+      );
       return Result.success(points);
     } catch (e) {
       return Result.failure(e.toString());

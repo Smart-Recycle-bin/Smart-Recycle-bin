@@ -1,5 +1,6 @@
 import '../../../../core/utils/result.dart';
 import '../entities/catalog_item_entity.dart';
+import '../entities/redeemed_voucher_entity.dart';
 
 abstract class MarketplaceRepository {
   Future<Result<List<CatalogItemEntity>>> getCatalog();
@@ -13,4 +14,6 @@ abstract class MarketplaceRepository {
     required int denominationEgp,
     required int pointsCost,
   });
+
+  Future<Result<List<RedeemedVoucherEntity>>> getMyVouchers({String? status});
 }

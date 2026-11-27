@@ -1,6 +1,9 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using SmartBin.Common.Swagger;
+using SmartBin.DTOs.Common;
+using SmartBin.DTOs.Wallet;
 using SmartBin.Services;
 using SmartBin.Services.Wallets;
 
@@ -19,6 +22,10 @@ namespace SmartBin.Controllers
         }
 
         [HttpGet("balance")]
+        [ProducesResponseType(typeof(ApiResponse<WalletBalanceResponseDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status403Forbidden)]
+        [SwaggerResponseExample(StatusCodes.Status200OK, SwaggerExamples.WalletBalanceSuccess)]
         public async Task<IActionResult> GetBalance(CancellationToken cancellationToken)
         {
             if (!TryGetCurrentUserId(out int userId))
@@ -42,6 +49,12 @@ namespace SmartBin.Controllers
         }
 
         [HttpGet("ledger")]
+        [ProducesResponseType(typeof(PagedApiResponse<List<LedgerEntryDto>>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status403Forbidden)]
+        [SwaggerResponseExample(StatusCodes.Status200OK, SwaggerExamples.WalletLedgerSuccess)]
+        [SwaggerResponseExample(StatusCodes.Status400BadRequest, SwaggerExamples.ValidationError)]
         public async Task<IActionResult> GetLedger(
             [FromQuery] int page = 1,
             [FromQuery] int pageSize = 10,

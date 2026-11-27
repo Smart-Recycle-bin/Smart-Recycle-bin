@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SmartBin.Common;
+using SmartBin.Common.Swagger;
 using SmartBin.DTOs;
 using SmartBin.DTOs.Common;
 using SmartBin.Models.Constants;
@@ -27,6 +28,8 @@ namespace SmartBin.Controllers
         [Authorize(Roles = RoleNames.Citizen)]
         [ProducesResponseType(typeof(PagedApiResponse<List<CatalogCardDto>>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+        [SwaggerResponseExample(StatusCodes.Status200OK, SwaggerExamples.CatalogListSuccess)]
+        [SwaggerResponseExample(StatusCodes.Status400BadRequest, SwaggerExamples.ValidationError)]
         public async Task<IActionResult> Browse(
             [FromQuery] int? categoryId,
             [FromQuery] bool affordableOnly = false,
@@ -61,6 +64,8 @@ namespace SmartBin.Controllers
 
         [HttpGet("featured")]
         [AllowAnonymous]
+        [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status200OK)]
+        [SwaggerResponseExample(StatusCodes.Status200OK, SwaggerExamples.CatalogFeaturedSuccess)]
         public IActionResult GetSpotlightBanners()
         {
             var banners = new[]
@@ -94,6 +99,8 @@ namespace SmartBin.Controllers
         [Authorize(Roles = RoleNames.Citizen)]
         [ProducesResponseType(typeof(ApiResponse<CatalogDetailDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+        [SwaggerResponseExample(StatusCodes.Status200OK, SwaggerExamples.CatalogItemDetailsSuccess)]
+        [SwaggerResponseExample(StatusCodes.Status404NotFound, SwaggerExamples.NotFound)]
         public async Task<IActionResult> Detail(
             [FromRoute] int itemId,
             CancellationToken cancellationToken = default)
@@ -112,6 +119,10 @@ namespace SmartBin.Controllers
         [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status403Forbidden)]
         [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
         [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status409Conflict)]
+        [SwaggerResponseExample(StatusCodes.Status201Created, SwaggerExamples.CatalogRedeemSuccess)]
+        [SwaggerResponseExample(StatusCodes.Status403Forbidden, SwaggerExamples.Forbidden)]
+        [SwaggerResponseExample(StatusCodes.Status404NotFound, SwaggerExamples.NotFound)]
+        [SwaggerResponseExample(StatusCodes.Status409Conflict, SwaggerExamples.CatalogRedeemConflict)]
         public async Task<IActionResult> Redeem(
             [FromRoute] int itemId,
             CancellationToken cancellationToken = default)

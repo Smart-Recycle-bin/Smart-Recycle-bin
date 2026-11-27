@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using SmartBin.Common.Swagger;
 using SmartBin.Dtos.Bins;
 using SmartBin.DTOs.Common;
 using SmartBin.Services;
@@ -19,31 +20,28 @@ namespace SmartBin.Controllers
         }
 
         /// <summary>
-        /// E21 — Submit detected item (device ingestion)
+        /// E21 — Submit detected item (device ingestion by sessionId)
         /// </summary>
         [HttpPost("{sessionId:int}/items")]
         [Consumes("multipart/form-data")]
         [ProducesResponseType(typeof(ApiResponse<IngestItemResponseDto>), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status409Conflict)]
+        [SwaggerResponseExample(StatusCodes.Status201Created, SwaggerExamples.IngestItemSuccess)]
+        [SwaggerResponseExample(StatusCodes.Status400BadRequest, SwaggerExamples.ValidationError)]
+        [SwaggerResponseExample(StatusCodes.Status401Unauthorized, SwaggerExamples.Unauthorized)]
+        [SwaggerResponseExample(StatusCodes.Status404NotFound, SwaggerExamples.NotFound)]
+        [SwaggerResponseExample(StatusCodes.Status409Conflict, SwaggerExamples.SessionNotActiveConflict)]
         public async Task<IActionResult> IngestItem(
             [FromRoute] int sessionId,
             [FromForm] IngestItemRequestDto request,
             [FromHeader(Name = "X-Device-Key")] string? deviceKey)
         {
-            // Security verification: Device is a separate actor and must NEVER authenticate with a Recycler JWT
-            var userRole = User.FindFirst("role")?.Value;
-            if (string.Equals(userRole, "USER_CITIZEN", StringComparison.OrdinalIgnoreCase))
+            if (IsCitizenJwt())
             {
-                return StatusCode(401, new
-                {
-                    success = false,
-                    error = new
-                    {
-                        code = "UNAUTHORIZED",
-                        message = "Recycler JWT is not permitted for bin device item ingestion."
-                    }
-                });
+                return RejectCitizenJwt();
             }
 
             try
@@ -57,17 +55,75 @@ namespace SmartBin.Controllers
             }
             catch (ApiException ex)
             {
-                return StatusCode(ex.StatusCode, new
-                {
-                    success = false,
-                    error = new
-                    {
-                        code = ex.ErrorCode,
-                        message = ex.Message,
-                        details = ex.Details
-                    }
-                });
+                return ErrorResult(ex);
             }
         }
+
+        /// <summary>
+        /// IoT Bin Ingestion — Submit captured image by bin ID/QR without sessionId
+        /// </summary>
+        [HttpPost("/api/v1/bins/{binId}/items")]
+        [Consumes("multipart/form-data")]
+        [ProducesResponseType(typeof(ApiResponse<IngestItemResponseDto>), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status409Conflict)]
+        [SwaggerResponseExample(StatusCodes.Status201Created, SwaggerExamples.IngestItemSuccess)]
+        [SwaggerResponseExample(StatusCodes.Status400BadRequest, SwaggerExamples.ValidationError)]
+        [SwaggerResponseExample(StatusCodes.Status401Unauthorized, SwaggerExamples.Unauthorized)]
+        [SwaggerResponseExample(StatusCodes.Status404NotFound, SwaggerExamples.NotFound)]
+        [SwaggerResponseExample(StatusCodes.Status409Conflict, SwaggerExamples.SessionNotActiveConflict)]
+        public async Task<IActionResult> IngestItemByBin(
+            [FromRoute] string binId,
+            [FromForm] IngestBinItemRequestDto request,
+            [FromHeader(Name = "X-Device-Key")] string? deviceKey)
+        {
+            if (IsCitizenJwt())
+            {
+                return RejectCitizenJwt();
+            }
+
+            try
+            {
+                var result = await _ingestionService.IngestItemByBinAsync(binId, request, deviceKey);
+                return StatusCode(201, new
+                {
+                    success = true,
+                    data = result
+                });
+            }
+            catch (ApiException ex)
+            {
+                return ErrorResult(ex);
+            }
+        }
+
+        private bool IsCitizenJwt()
+        {
+            var userRole = User.FindFirst("role")?.Value;
+            return string.Equals(userRole, "USER_CITIZEN", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private IActionResult RejectCitizenJwt() => StatusCode(401, new
+        {
+            success = false,
+            error = new
+            {
+                code = "UNAUTHORIZED",
+                message = "Recycler JWT is not permitted for bin device item ingestion."
+            }
+        });
+
+        private IActionResult ErrorResult(ApiException ex) => StatusCode(ex.StatusCode, new
+        {
+            success = false,
+            error = new
+            {
+                code = ex.ErrorCode,
+                message = ex.Message,
+                details = ex.Details
+            }
+        });
     }
 }

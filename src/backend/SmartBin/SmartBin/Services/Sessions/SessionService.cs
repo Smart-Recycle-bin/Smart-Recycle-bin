@@ -50,6 +50,51 @@ namespace SmartBin.Services.Sessions
                     new[] { new { field = "binId", message = "binId must be a positive integer." } });
             }
 
+            var bin = await _binRepository.GetByIdAsync(binId, cancellationToken);
+            if (bin == null)
+            {
+                throw new ApiException(
+                    StatusCodes.Status404NotFound,
+                    "BIN_NOT_FOUND",
+                    "Bin not found.");
+            }
+
+            return await StartSessionCoreAsync(userId, bin, request, cancellationToken);
+        }
+
+        public async Task<StartSessionResponseDto> StartSessionByIdentifierAsync(
+            int userId,
+            string binIdentifier,
+            StartSessionRequestDto request,
+            CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrWhiteSpace(binIdentifier))
+            {
+                throw new ApiException(
+                    StatusCodes.Status400BadRequest,
+                    "VALIDATION_ERROR",
+                    "Invalid binId.",
+                    new[] { new { field = "binId", message = "binId is required." } });
+            }
+
+            var bin = await _binRepository.GetByIdentifierAsync(binIdentifier, cancellationToken);
+            if (bin == null)
+            {
+                throw new ApiException(
+                    StatusCodes.Status404NotFound,
+                    "BIN_NOT_FOUND",
+                    "Bin not found.");
+            }
+
+            return await StartSessionCoreAsync(userId, bin, request, cancellationToken);
+        }
+
+        private async Task<StartSessionResponseDto> StartSessionCoreAsync(
+            int userId,
+            Models.SmartBin bin,
+            StartSessionRequestDto request,
+            CancellationToken cancellationToken)
+        {
             if (request == null || string.IsNullOrWhiteSpace(request.QrPayload))
             {
                 throw new ApiException(
@@ -85,17 +130,7 @@ namespace SmartBin.Services.Sessions
                     "Your account is inactive.");
             }
 
-            var bin = await _binRepository.GetByIdAsync(binId, cancellationToken);
-
-            if (bin == null)
-            {
-                throw new ApiException(
-                    StatusCodes.Status404NotFound,
-                    "BIN_NOT_FOUND",
-                    "Bin not found.");
-            }
-
-            if (!string.Equals(bin.QRCode, request.QrPayload.Trim(), StringComparison.Ordinal))
+            if (!MatchesBinQrPayload(bin, request.QrPayload))
             {
                 throw new ApiException(
                     StatusCodes.Status400BadRequest,
@@ -114,6 +149,43 @@ namespace SmartBin.Services.Sessions
             }
 
             var now = DateTime.UtcNow;
+
+            // Expire any stale active sessions on this bin first so a timed-out lock releases immediately.
+            var existingActive = await _sessionRepository.GetActiveSessionsByBinIdAsync(bin.BinId, cancellationToken);
+            foreach (var stale in existingActive.Where(s => !s.WindowExpiresAt.HasValue || s.WindowExpiresAt.Value <= now))
+            {
+                var terminated = await _sessionRepository.TerminateSessionIfActiveAsync(stale.SessionId, now, cancellationToken);
+                if (terminated)
+                {
+                    var survey = await _surveyRepository.EnsureSurveyCreatedAsync(stale.SessionId, now, cancellationToken);
+                    await _unitOfWork.SaveChangesAsync(cancellationToken);
+                    await _realtimeNotifier.NotifySessionEndedAsync(
+                        stale.SessionId,
+                        SessionStatus.Terminated,
+                        SessionTerminationReason.Timeout,
+                        survey.SurveyId,
+                        cancellationToken);
+                }
+            }
+
+            var currentLock = existingActive.FirstOrDefault(s => s.WindowExpiresAt.HasValue && s.WindowExpiresAt.Value > now);
+            if (currentLock != null)
+            {
+                if (currentLock.UserId == userId)
+                {
+                    throw new ApiException(
+                        StatusCodes.Status409Conflict,
+                        "SESSION_ALREADY_ACTIVE",
+                        "You already have an active session on this bin.",
+                        new { sessionId = currentLock.SessionId });
+                }
+
+                throw new ApiException(
+                    StatusCodes.Status409Conflict,
+                    "BIN_IN_USE",
+                    "This bin is currently locked by another active session. Please wait until it finishes.");
+            }
+
             var windowExpiresAt = now.AddSeconds(RollingWindowSeconds);
 
             var session = new DisposalSession
@@ -141,6 +213,21 @@ namespace SmartBin.Services.Sessions
                 TotalPoints = 0,
                 Items = new List<SessionItemDto>()
             };
+        }
+
+        private static bool MatchesBinQrPayload(Models.SmartBin bin, string rawPayload)
+        {
+            var payload = rawPayload.Trim();
+            if (string.Equals(bin.QRCode, payload, StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(bin.SerialNumber, payload, StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(payload, $"bin-{bin.BinId}", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(payload, bin.BinId.ToString(), StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+
+            return payload.StartsWith($"bin-{bin.BinId}:", StringComparison.OrdinalIgnoreCase) ||
+                   payload.StartsWith($"{bin.QRCode}:", StringComparison.OrdinalIgnoreCase);
         }
 
         public async Task<SessionStatusResponseDto> GetSessionStatusAsync(
@@ -272,6 +359,7 @@ namespace SmartBin.Services.Sessions
                 BinName = $"Bin#{session.BinId:D3}",
                 Status = SessionStatus.Terminated,
                 TerminationReason = SessionTerminationReason.Manual,
+                SurveyId = survey.SurveyId,
                 CountdownSeconds = 0,
                 TotalPoints = sessionItems.Sum(i => i.EstimatedPoints),
                 Items = sessionItems

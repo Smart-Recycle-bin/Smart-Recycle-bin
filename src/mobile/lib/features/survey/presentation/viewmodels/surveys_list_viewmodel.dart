@@ -11,7 +11,7 @@ class SurveysListViewModel extends ChangeNotifier {
   String _activeFilter = 'All'; // 'All', 'Waiting', 'Done'
   bool _isLoading = false;
   String? _errorMessage;
-  int _pendingPoints = 71;
+  int _pendingPoints = 0;
 
   List<SurveyEntity> get surveys => _surveys;
   String get activeFilter => _activeFilter;
@@ -42,10 +42,9 @@ class SurveysListViewModel extends ChangeNotifier {
         _pendingPoints = _surveys
             .where((s) => s.isWaiting)
             .fold(0, (sum, s) => sum + s.points);
-        if (_pendingPoints == 0) _pendingPoints = 71;
       },
       onFailure: (error) {
-        _errorMessage = error;
+        _errorMessage = error.replaceFirst('Exception: ', '');
       },
     );
     notifyListeners();

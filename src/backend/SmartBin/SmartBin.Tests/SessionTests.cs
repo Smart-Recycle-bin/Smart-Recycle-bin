@@ -135,31 +135,39 @@ namespace SmartBin.Tests
         }
 
         [Fact]
-        public async Task StartSession_ConcurrentQrScansOnSameBin_DoNotTerminateEachOther()
+        public async Task StartSession_WhenBinAlreadyLockedByActiveSession_Returns409AndUnlocksAfterEnd()
         {
             using var client1 = _factory.CreateAuthorizedClient(_factory.Citizen1Id);
             using var client2 = _factory.CreateAuthorizedClient(_factory.Citizen2Id);
 
+            // Citizen 1 scans by QRCode string and locks the bin exclusively.
             var resp1 = await client1.PostAsJsonAsync(
-                $"/api/v1/bins/{_factory.AvailableBinId}/sessions",
+                $"/api/v1/bins/{_factory.AvailableBinQr}/sessions",
                 new { qrPayload = _factory.AvailableBinQr });
-            var resp2 = await client2.PostAsJsonAsync(
-                $"/api/v1/bins/{_factory.AvailableBinId}/sessions",
-                new { qrPayload = _factory.AvailableBinQr });
-
             Assert.Equal(HttpStatusCode.Created, resp1.StatusCode);
-            Assert.Equal(HttpStatusCode.Created, resp2.StatusCode);
 
             using var doc1 = JsonDocument.Parse(await resp1.Content.ReadAsStringAsync());
-            using var doc2 = JsonDocument.Parse(await resp2.Content.ReadAsStringAsync());
             int s1 = doc1.RootElement.GetProperty("data").GetProperty("sessionId").GetInt32();
-            int s2 = doc2.RootElement.GetProperty("data").GetProperty("sessionId").GetInt32();
 
-            var activeCount = await _factory.ExecuteDbAsync(db =>
-                db.DisposalSessions.CountAsync(s =>
-                    (s.SessionId == s1 || s.SessionId == s2) && s.Status == SessionStatus.Active));
+            // Citizen 2 tries to scan the same locked bin -> rejected with 409 BIN_IN_USE.
+            var resp2Locked = await client2.PostAsJsonAsync(
+                $"/api/v1/bins/{_factory.AvailableBinId}/sessions",
+                new { qrPayload = _factory.AvailableBinQr });
+            Assert.Equal(HttpStatusCode.Conflict, resp2Locked.StatusCode);
+            using var docLocked = JsonDocument.Parse(await resp2Locked.Content.ReadAsStringAsync());
+            Assert.Equal("BIN_IN_USE", docLocked.RootElement.GetProperty("error").GetProperty("code").GetString());
 
-            Assert.Equal(2, activeCount);
+            // Citizen 1 finishes session -> lock is released and SurveyId is returned.
+            var endResp = await client1.PostAsync($"/api/v1/sessions/{s1}/end", null);
+            Assert.Equal(HttpStatusCode.OK, endResp.StatusCode);
+            using var endDoc = JsonDocument.Parse(await endResp.Content.ReadAsStringAsync());
+            Assert.True(endDoc.RootElement.GetProperty("data").GetProperty("surveyId").GetInt32() > 0);
+
+            // Citizen 2 can now scan and lock the bin cleanly.
+            var resp2Unlocked = await client2.PostAsJsonAsync(
+                $"/api/v1/bins/{_factory.AvailableBinId}/sessions",
+                new { qrPayload = _factory.AvailableBinQr });
+            Assert.Equal(HttpStatusCode.Created, resp2Unlocked.StatusCode);
         }
 
         [Fact]

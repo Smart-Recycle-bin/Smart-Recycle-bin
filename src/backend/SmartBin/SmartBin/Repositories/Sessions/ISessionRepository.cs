@@ -7,6 +7,7 @@ namespace SmartBin.Repositories.Sessions
     {
         Task<DisposalSession?> GetByIdAsync(int sessionId, CancellationToken cancellationToken = default);
         Task<DisposalSession?> GetByIdWithItemsAsync(int sessionId, CancellationToken cancellationToken = default);
+        Task<List<DisposalSession>> GetActiveSessionsByBinIdAsync(int binId, CancellationToken cancellationToken = default);
         Task<ApplicationUser?> GetUserAsync(int userId, CancellationToken cancellationToken = default);
         Task<SessionStatusResponseDto?> GetSessionStatusDtoAsync(int sessionId, CancellationToken cancellationToken = default);
         Task<bool> AddAsync(DisposalSession session, CancellationToken cancellationToken = default);

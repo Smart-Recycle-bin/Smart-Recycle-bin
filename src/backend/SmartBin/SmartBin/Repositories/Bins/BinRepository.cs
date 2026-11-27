@@ -20,6 +20,38 @@ namespace SmartBin.Repositories.Bins
                 .FirstOrDefaultAsync(b => b.BinId == binId, cancellationToken);
         }
 
+        public async Task<Models.SmartBin?> GetByIdentifierAsync(string identifier, CancellationToken cancellationToken = default)
+        {
+            if (string.IsNullOrWhiteSpace(identifier))
+            {
+                return null;
+            }
+
+            var trimmed = identifier.Trim();
+            var upper = trimmed.ToUpperInvariant();
+
+            var byCode = await _context.SmartBins
+                .FirstOrDefaultAsync(
+                    b => b.QRCode.ToUpper() == upper || b.SerialNumber.ToUpper() == upper,
+                    cancellationToken);
+
+            if (byCode != null)
+            {
+                return byCode;
+            }
+
+            var clean = trimmed
+                .Replace("bin-", "", StringComparison.OrdinalIgnoreCase)
+                .Replace("bin_", "", StringComparison.OrdinalIgnoreCase);
+
+            if (int.TryParse(clean, out int numericId) && numericId > 0)
+            {
+                return await GetByIdAsync(numericId, cancellationToken);
+            }
+
+            return null;
+        }
+
         public async Task<Models.SmartBin?> GetByIdWithCollectorAsync(int binId, CancellationToken cancellationToken = default)
         {
             return await _context.SmartBins

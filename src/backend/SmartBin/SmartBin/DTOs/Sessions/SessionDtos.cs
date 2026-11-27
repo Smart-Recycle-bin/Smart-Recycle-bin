@@ -35,6 +35,7 @@ namespace SmartBin.DTOs.Sessions
         public int BinId { get; set; }
         public string BinName { get; set; } = string.Empty;
         public string Status { get; set; } = string.Empty;
+        public int? SurveyId { get; set; }
         public DateTime? WindowExpiresAt { get; set; }
         public int CountdownSeconds { get; set; } = 0;
         public int TotalPoints { get; set; } = 0;
@@ -48,6 +49,7 @@ namespace SmartBin.DTOs.Sessions
         public string BinName { get; set; } = string.Empty;
         public string Status { get; set; } = string.Empty;
         public string TerminationReason { get; set; } = string.Empty;
+        public int SurveyId { get; set; }
         public int CountdownSeconds { get; set; } = 0;
         public int TotalPoints { get; set; } = 0;
         public List<SessionItemDto> Items { get; set; } = new();

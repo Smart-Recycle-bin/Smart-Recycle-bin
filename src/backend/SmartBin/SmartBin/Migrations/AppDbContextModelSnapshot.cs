@@ -416,7 +416,7 @@ namespace SmartBin.Migrations
 
                     b.HasKey("SessionId");
 
-                    b.HasIndex("BinId");
+                    b.HasIndex("BinId", "Status");
 
                     b.HasIndex("Status", "WindowExpiresAt");
 

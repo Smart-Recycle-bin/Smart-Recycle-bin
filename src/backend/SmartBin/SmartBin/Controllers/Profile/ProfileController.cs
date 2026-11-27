@@ -3,6 +3,8 @@ using System.Security.Claims;
 using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using SmartBin.Common.Swagger;
+using SmartBin.DTOs.Common;
 using SmartBin.DTOs.Profile;
 using SmartBin.Services;
 using SmartBin.Services.Profile;
@@ -24,6 +26,11 @@ namespace SmartBin.Controllers
         // ── GET /api/v1/profile ───────────────────────────────────────────────
 
         [HttpGet]
+        [ProducesResponseType(typeof(ApiResponse<ProfileResponseDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+        [SwaggerResponseExample(StatusCodes.Status200OK, SwaggerExamples.ProfileGetSuccess)]
+        [SwaggerResponseExample(StatusCodes.Status404NotFound, SwaggerExamples.ProfileNotFound)]
         public async Task<IActionResult> GetProfile()
         {
             try
@@ -51,6 +58,15 @@ namespace SmartBin.Controllers
         [HttpPut]
         [Consumes("multipart/form-data", "application/json")]
         [RequestSizeLimit(5 * 1024 * 1024)] // 5 MB overall request guard
+        [ProducesResponseType(typeof(ApiResponse<UpdateProfileResponseDto>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status413PayloadTooLarge)]
+        [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status415UnsupportedMediaType)]
+        [SwaggerResponseExample(StatusCodes.Status200OK, SwaggerExamples.ProfileUpdateSuccess)]
+        [SwaggerResponseExample(StatusCodes.Status400BadRequest, SwaggerExamples.ValidationError)]
+        [SwaggerResponseExample(StatusCodes.Status413PayloadTooLarge, SwaggerExamples.PayloadTooLarge)]
+        [SwaggerResponseExample(StatusCodes.Status415UnsupportedMediaType, SwaggerExamples.UnsupportedMediaType)]
         public async Task<IActionResult> UpdateProfile(
             [FromForm] UpdateProfileRequestDto request)
         {

@@ -35,6 +35,7 @@ namespace SmartBin.Repositories.Sessions
                     s.UserId,
                     s.BinId,
                     s.Status,
+                    SurveyId = s.Survey != null ? s.Survey.SurveyId : (int?)null,
                     s.WindowExpiresAt,
                     Items = s.Items
                         .OrderBy(i => i.ItemId)
@@ -65,6 +66,7 @@ namespace SmartBin.Repositories.Sessions
                 BinId = session.BinId,
                 BinName = $"Bin#{session.BinId:D3}",
                 Status = session.Status,
+                SurveyId = session.SurveyId,
                 WindowExpiresAt = session.WindowExpiresAt,
                 CountdownSeconds = countdown,
                 TotalPoints = totalPoints,
@@ -138,6 +140,14 @@ namespace SmartBin.Repositories.Sessions
                 .Include(s => s.Items)
                     .ThenInclude(i => i.WasteType)
                 .FirstOrDefaultAsync(s => s.SessionId == sessionId, cancellationToken);
+        }
+
+        public async Task<List<DisposalSession>> GetActiveSessionsByBinIdAsync(int binId, CancellationToken cancellationToken = default)
+        {
+            return await _context.DisposalSessions
+                .Where(s => s.BinId == binId && s.Status == SessionStatus.Active)
+                .OrderByDescending(s => s.SessionId)
+                .ToListAsync(cancellationToken);
         }
 
         public async Task<ApplicationUser?> GetUserAsync(int userId, CancellationToken cancellationToken = default)

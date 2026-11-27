@@ -35,6 +35,7 @@ class DisposalSessionEntity {
   final String binId;
   final String binName;
   final String status; // active, ended, terminated
+  final String? surveyId;
   final int totalPoints;
   final int countdownSeconds;
   final List<DetectedItemEntity> items;
@@ -44,6 +45,7 @@ class DisposalSessionEntity {
     required this.binId,
     required this.binName,
     required this.status,
+    this.surveyId,
     required this.totalPoints,
     required this.countdownSeconds,
     required this.items,

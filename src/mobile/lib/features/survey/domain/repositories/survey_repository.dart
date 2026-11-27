@@ -9,6 +9,7 @@ abstract class SurveyRepository {
 
   Future<Result<int>> submitSurvey({
     required String surveyId,
+    String? sessionId,
     required List<SurveyItemEntity> items,
     int? aiRating,
   });

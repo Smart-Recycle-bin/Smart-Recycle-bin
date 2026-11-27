@@ -6,12 +6,14 @@ import 'package:ecobin/core/network/api_client.dart';
 import 'package:ecobin/core/network/dio_error_helper.dart';
 import '../../domain/entities/catalog_item_entity.dart';
 import '../models/catalog_item_model.dart';
+import '../models/redeemed_voucher_model.dart';
 
 abstract class MarketplaceRemoteDataSource {
   Future<List<CatalogItemModel>> getCatalog();
   Future<List<SpotlightBannerEntity>> getSpotlightBanners();
   Future<CatalogItemModel> getItemDetails(String itemId);
   Future<String> redeemReward(String itemId, int denominationEgp, int pointsCost);
+  Future<List<RedeemedVoucherModel>> getMyVouchers({String? status});
 }
 
 class MarketplaceRemoteDataSourceImpl implements MarketplaceRemoteDataSource {
@@ -118,6 +120,47 @@ class MarketplaceRemoteDataSourceImpl implements MarketplaceRemoteDataSource {
       );
     } on DioException catch (e) {
       throw Exception(extractDioErrorMessage(e, 'Failed to redeem reward.'));
+    }
+  }
+
+  @override
+  Future<List<RedeemedVoucherModel>> getMyVouchers({String? status}) async {
+    if (AppConfig.useMockData) {
+      await Future.delayed(const Duration(milliseconds: AppConfig.mockLatencyMs));
+      return [
+        RedeemedVoucherModel(
+          voucherId: 1,
+          redemptionId: 1,
+          itemTitle: 'Vodafone Internet E£ 5 Pounds',
+          pointsSpent: 500,
+          valueEgpAtRedemption: 5.0,
+          voucherCode: 'TEL-9F2C-1090',
+          redeemedAt: DateTime.now().toUtc().subtract(const Duration(days: 1)),
+          status: 'unused',
+        ),
+      ];
+    }
+
+    try {
+      final response = await apiClient.dio.get(
+        ApiEndpoints.myVouchers,
+        queryParameters: {
+          'page': 1,
+          'pageSize': 50,
+          if (status != null && status.isNotEmpty && status != 'all') 'status': status,
+        },
+      );
+      if (response.data['success'] == true && response.data['data'] is List) {
+        final list = response.data['data'] as List;
+        return list
+            .map((e) => RedeemedVoucherModel.fromJson(Map<String, dynamic>.from(e as Map)))
+            .toList();
+      }
+      throw Exception(
+        response.data['error']?['message'] ?? 'Failed to load redeemed vouchers.',
+      );
+    } on DioException catch (e) {
+      throw Exception(extractDioErrorMessage(e, 'Failed to load redeemed vouchers.'));
     }
   }
 }

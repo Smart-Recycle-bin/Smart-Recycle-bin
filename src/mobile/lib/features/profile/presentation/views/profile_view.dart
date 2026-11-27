@@ -12,6 +12,7 @@ import 'package:ecobin/features/auth/presentation/viewmodels/auth_viewmodel.dart
 import 'package:ecobin/features/auth/presentation/views/login_view.dart';
 import 'package:ecobin/features/wallet/presentation/viewmodels/wallet_viewmodel.dart';
 import '../widgets/editable_profile_avatar.dart';
+import '../../../marketplace/presentation/views/my_vouchers_view.dart';
 import 'edit_profile_view.dart';
 import 'support_view.dart';
 
@@ -203,32 +204,61 @@ class _ProfileViewState extends State<ProfileView> {
               child: Material(
                 color: Colors.transparent,
                 borderRadius: BorderRadius.circular(20),
-                child: ListTile(
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
-                  title: Text(
-                    'Edit info',
-                    style: AppTypography.titlePlex.copyWith(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.darkSlate,
+                child: Column(
+                  children: [
+                    ListTile(
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+                      title: Text(
+                        'Edit info',
+                        style: AppTypography.titlePlex.copyWith(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.darkSlate,
+                        ),
+                      ),
+                      subtitle: Text(
+                        'Update your personal details',
+                        style: AppTypography.bodyMedium.copyWith(
+                          fontSize: 13,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                      trailing: const Icon(Icons.chevron_right, color: AppColors.textSecondary),
+                      onTap: () async {
+                        await Navigator.of(context).push(
+                          MaterialPageRoute(builder: (_) => const EditProfileView()),
+                        );
+                        if (context.mounted) {
+                          await _refreshProfile(context);
+                        }
+                      },
                     ),
-                  ),
-                  subtitle: Text(
-                    'Update your personal details',
-                    style: AppTypography.bodyMedium.copyWith(
-                      fontSize: 13,
-                      color: AppColors.textSecondary,
+                    const Divider(height: 1, indent: 20, endIndent: 20),
+                    ListTile(
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+                      title: Text(
+                        'My Vouchers',
+                        style: AppTypography.titlePlex.copyWith(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.darkSlate,
+                        ),
+                      ),
+                      subtitle: Text(
+                        'View your redeemed voucher codes',
+                        style: AppTypography.bodyMedium.copyWith(
+                          fontSize: 13,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                      trailing: const Icon(Icons.chevron_right, color: AppColors.textSecondary),
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(builder: (_) => const MyVouchersView()),
+                        );
+                      },
                     ),
-                  ),
-                  trailing: const Icon(Icons.chevron_right, color: AppColors.textSecondary),
-                  onTap: () async {
-                    await Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const EditProfileView()),
-                    );
-                    if (context.mounted) {
-                      await _refreshProfile(context);
-                    }
-                  },
+                  ],
                 ),
               ),
             ),

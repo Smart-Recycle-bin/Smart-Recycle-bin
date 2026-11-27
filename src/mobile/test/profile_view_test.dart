@@ -13,6 +13,10 @@ import 'package:ecobin/features/profile/domain/repositories/profile_repository.d
 import 'package:ecobin/features/auth/domain/entities/user_entity.dart';
 import 'package:ecobin/features/auth/presentation/viewmodels/auth_viewmodel.dart';
 import 'package:ecobin/features/auth/domain/repositories/auth_repository.dart';
+import 'package:ecobin/features/marketplace/domain/entities/catalog_item_entity.dart';
+import 'package:ecobin/features/marketplace/domain/entities/redeemed_voucher_entity.dart';
+import 'package:ecobin/features/marketplace/domain/repositories/marketplace_repository.dart';
+import 'package:ecobin/features/marketplace/presentation/viewmodels/marketplace_viewmodel.dart';
 import 'package:ecobin/core/utils/result.dart';
 
 class MockProfileRepo implements ProfileRepository {
@@ -97,6 +101,37 @@ class MockAuthRepo implements AuthRepository {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
+class MockVouchersMarketRepo implements MarketplaceRepository {
+  @override
+  Future<Result<List<CatalogItemEntity>>> getCatalog() async => Result.success([]);
+
+  @override
+  Future<Result<CatalogItemEntity>> getItemDetails(String itemId) => throw UnimplementedError();
+
+  @override
+  Future<Result<List<SpotlightBannerEntity>>> getSpotlightBanners() async => Result.success([]);
+
+  @override
+  Future<Result<String>> redeemReward({required String itemId, required int denominationEgp, required int pointsCost}) =>
+      throw UnimplementedError();
+
+  @override
+  Future<Result<List<RedeemedVoucherEntity>>> getMyVouchers({String? status}) async {
+    return Result.success([
+      RedeemedVoucherEntity(
+        voucherId: 1,
+        redemptionId: 1,
+        itemTitle: 'Carrefour Voucher',
+        pointsSpent: 1000,
+        valueEgpAtRedemption: 10.0,
+        voucherCode: 'SUP-4A12-9001',
+        redeemedAt: DateTime.utc(2026, 11, 27, 10, 0),
+        status: 'unused',
+      ),
+    ]);
+  }
+}
+
 void main() {
   testWidgets('ProfileView renders bottom navigation bar and profile details', (tester) async {
     tester.view.physicalSize = const Size(1080, 2400);
@@ -125,12 +160,44 @@ void main() {
     expect(find.text('Youssef Mohamed'), findsOneWidget);
     expect(find.byIcon(Icons.person), findsOneWidget);
 
-    // Verify Bottom Navigation Bar is present
+    // Verify Account section buttons and Bottom Navigation Bar
+    expect(find.text('Edit info'), findsOneWidget);
+    expect(find.text('My Vouchers'), findsOneWidget);
     expect(find.text('Map'), findsOneWidget);
     expect(find.text('Survey'), findsOneWidget);
     expect(find.text('Scan'), findsOneWidget);
     expect(find.text('Market'), findsOneWidget);
     expect(find.text('Wallet'), findsOneWidget);
+  });
+
+  testWidgets('ProfileView My Vouchers button opens redeemed vouchers screen', (tester) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 2.75;
+    addTearDown(() => tester.view.resetPhysicalSize());
+
+    final pVm = ProfileViewModel(profileRepository: MockProfileRepo());
+    final aVm = AuthViewModel(authRepository: MockAuthRepo());
+    final mVm = MarketplaceViewModel(marketplaceRepository: MockVouchersMarketRepo());
+
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider<ProfileViewModel>.value(value: pVm),
+          ChangeNotifierProvider<AuthViewModel>.value(value: aVm),
+          ChangeNotifierProvider<MarketplaceViewModel>.value(value: mVm),
+        ],
+        child: const MaterialApp(
+          home: ProfileView(),
+        ),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('My Vouchers'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Carrefour Voucher'), findsOneWidget);
+    expect(find.text('SUP-4A12-9001'), findsOneWidget);
   });
 
   testWidgets('SupportView submits ticket and displays created ticket card', (tester) async {
