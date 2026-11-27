@@ -28,8 +28,8 @@ import { Skeleton } from '@shared/components/skeleton/skeleton';
 import { Icon } from '@shared/components/icon/icon';
 import { createPagedList } from '@shared/utils/paged-list';
 import {
+  getLeaderboardColumns,
   getRankBadgeClass,
-  LEADERBOARD_TABLE_COLUMNS,
   LEADERBOARD_TABS,
 } from './leaderboards.config';
 
@@ -58,7 +58,6 @@ export class Leaderboards implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
 
   readonly tabs = LEADERBOARD_TABS;
-  readonly columns = LEADERBOARD_TABLE_COLUMNS;
   readonly getRankClass = getRankBadgeClass;
 
   // Paged list infrastructure
@@ -71,6 +70,17 @@ export class Leaderboards implements OnInit {
 
   // Active Scope ('weekly' | 'monthly' | 'all-time')
   readonly activeScope = computed(() => this.pagedList.filters().scope ?? LeaderboardScope.Weekly);
+  readonly columns = computed(() => getLeaderboardColumns(this.activeScope()));
+  readonly scopeDescription = computed(() => {
+    switch (this.activeScope()) {
+      case LeaderboardScope.Weekly:
+        return 'Ranked by points earned in the rolling last 7 days from ledger credits.';
+      case LeaderboardScope.Monthly:
+        return 'Ranked by points earned in the rolling last 30 days from ledger credits.';
+      case LeaderboardScope.AllTime:
+        return 'Ranked by cumulative lifetime earned points.';
+    }
+  });
 
   // Leaderboard Rankings State (delegates to pagedList)
   readonly leaderboardRows = this.pagedList.items;
@@ -118,5 +128,5 @@ export class Leaderboards implements OnInit {
     this.pagedList.patchFilters({ scope });
   }
 
-  readonly getRowId = (row: LeaderboardRow): string => row.userId;
+  readonly getRowId = (row: LeaderboardRow): string => String(row.userId);
 }

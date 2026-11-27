@@ -4,7 +4,7 @@ export const MOCK_LEADERBOARD_WEEKLY: LeaderboardRow[] = [
   // 10 visible rows from PDF p15 (Showing 1-10 of 12)
   {
     rank: 1,
-    userId: 'U-10021',
+    userId: 10021,
     displayName: 'Nour El-Sayed',
     initials: 'NE',
     lifetimePoints: 738,
@@ -12,7 +12,7 @@ export const MOCK_LEADERBOARD_WEEKLY: LeaderboardRow[] = [
   },
   {
     rank: 2,
-    userId: 'U-10034',
+    userId: 10034,
     displayName: 'Omar Hassan',
     initials: 'OH',
     lifetimePoints: 608,
@@ -20,7 +20,7 @@ export const MOCK_LEADERBOARD_WEEKLY: LeaderboardRow[] = [
   },
   {
     rank: 3,
-    userId: 'U-10057',
+    userId: 10057,
     displayName: 'Salma Ibrahim',
     initials: 'SI',
     lifetimePoints: 517,
@@ -28,7 +28,7 @@ export const MOCK_LEADERBOARD_WEEKLY: LeaderboardRow[] = [
   },
   {
     rank: 4,
-    userId: 'U-10078',
+    userId: 10078,
     displayName: 'Mariam Adel',
     initials: 'MA',
     lifetimePoints: 395,
@@ -36,7 +36,7 @@ export const MOCK_LEADERBOARD_WEEKLY: LeaderboardRow[] = [
   },
   {
     rank: 5,
-    userId: 'U-10082',
+    userId: 10082,
     displayName: 'Hana Farouk',
     initials: 'HF',
     lifetimePoints: 337,
@@ -44,7 +44,7 @@ export const MOCK_LEADERBOARD_WEEKLY: LeaderboardRow[] = [
   },
   {
     rank: 6,
-    userId: 'U-10102',
+    userId: 10102,
     displayName: 'Yasmin Gamal',
     initials: 'YG',
     lifetimePoints: 294,
@@ -52,7 +52,7 @@ export const MOCK_LEADERBOARD_WEEKLY: LeaderboardRow[] = [
   },
   {
     rank: 7,
-    userId: 'U-10063',
+    userId: 10063,
     displayName: 'Ahmed Mostafa',
     initials: 'AM',
     lifetimePoints: 245,
@@ -60,7 +60,7 @@ export const MOCK_LEADERBOARD_WEEKLY: LeaderboardRow[] = [
   },
   {
     rank: 8,
-    userId: 'U-10118',
+    userId: 10118,
     displayName: 'Ali Reda',
     initials: 'AR',
     lifetimePoints: 210,
@@ -68,7 +68,7 @@ export const MOCK_LEADERBOARD_WEEKLY: LeaderboardRow[] = [
   },
   {
     rank: 9,
-    userId: 'U-10139',
+    userId: 10139,
     displayName: 'Dina Samir',
     initials: 'DS',
     lifetimePoints: 195,
@@ -76,7 +76,7 @@ export const MOCK_LEADERBOARD_WEEKLY: LeaderboardRow[] = [
   },
   {
     rank: 10,
-    userId: 'U-10147',
+    userId: 10147,
     displayName: 'Khaled Wahba',
     initials: 'KW',
     lifetimePoints: 126,
@@ -85,7 +85,7 @@ export const MOCK_LEADERBOARD_WEEKLY: LeaderboardRow[] = [
   // Additional rows to complete the 12 total indicated on p15 ("1-10 of 12")
   {
     rank: 11,
-    userId: 'U-10155',
+    userId: 10155,
     displayName: 'Tarek Salem',
     initials: 'TS',
     lifetimePoints: 95,
@@ -93,7 +93,7 @@ export const MOCK_LEADERBOARD_WEEKLY: LeaderboardRow[] = [
   },
   {
     rank: 12,
-    userId: 'U-10168',
+    userId: 10168,
     displayName: 'Reem Al-Badry',
     initials: 'RB',
     lifetimePoints: 70,
@@ -104,7 +104,7 @@ export const MOCK_LEADERBOARD_WEEKLY: LeaderboardRow[] = [
 export const MOCK_LEADERBOARD_MONTHLY: LeaderboardRow[] = [
   {
     rank: 1,
-    userId: 'U-10021',
+    userId: 10021,
     displayName: 'Nour El-Sayed',
     initials: 'NE',
     lifetimePoints: 2950,
@@ -112,7 +112,7 @@ export const MOCK_LEADERBOARD_MONTHLY: LeaderboardRow[] = [
   },
   {
     rank: 2,
-    userId: 'U-10034',
+    userId: 10034,
     displayName: 'Omar Hassan',
     initials: 'OH',
     lifetimePoints: 2430,
@@ -120,7 +120,7 @@ export const MOCK_LEADERBOARD_MONTHLY: LeaderboardRow[] = [
   },
   {
     rank: 3,
-    userId: 'U-10057',
+    userId: 10057,
     displayName: 'Salma Ibrahim',
     initials: 'SI',
     lifetimePoints: 2060,
@@ -128,7 +128,7 @@ export const MOCK_LEADERBOARD_MONTHLY: LeaderboardRow[] = [
   },
   {
     rank: 4,
-    userId: 'U-10078',
+    userId: 10078,
     displayName: 'Mariam Adel',
     initials: 'MA',
     lifetimePoints: 1580,
@@ -136,7 +136,7 @@ export const MOCK_LEADERBOARD_MONTHLY: LeaderboardRow[] = [
   },
   {
     rank: 5,
-    userId: 'U-10082',
+    userId: 10082,
     displayName: 'Hana Farouk',
     initials: 'HF',
     lifetimePoints: 1350,
@@ -144,7 +144,7 @@ export const MOCK_LEADERBOARD_MONTHLY: LeaderboardRow[] = [
   },
   {
     rank: 6,
-    userId: 'U-10102',
+    userId: 10102,
     displayName: 'Yasmin Gamal',
     initials: 'YG',
     lifetimePoints: 1180,
@@ -152,7 +152,7 @@ export const MOCK_LEADERBOARD_MONTHLY: LeaderboardRow[] = [
   },
   {
     rank: 7,
-    userId: 'U-10063',
+    userId: 10063,
     displayName: 'Ahmed Mostafa',
     initials: 'AM',
     lifetimePoints: 980,
@@ -160,7 +160,7 @@ export const MOCK_LEADERBOARD_MONTHLY: LeaderboardRow[] = [
   },
   {
     rank: 8,
-    userId: 'U-10118',
+    userId: 10118,
     displayName: 'Ali Reda',
     initials: 'AR',
     lifetimePoints: 840,
@@ -168,7 +168,7 @@ export const MOCK_LEADERBOARD_MONTHLY: LeaderboardRow[] = [
   },
   {
     rank: 9,
-    userId: 'U-10139',
+    userId: 10139,
     displayName: 'Dina Samir',
     initials: 'DS',
     lifetimePoints: 780,
@@ -176,7 +176,7 @@ export const MOCK_LEADERBOARD_MONTHLY: LeaderboardRow[] = [
   },
   {
     rank: 10,
-    userId: 'U-10147',
+    userId: 10147,
     displayName: 'Khaled Wahba',
     initials: 'KW',
     lifetimePoints: 510,
@@ -184,7 +184,7 @@ export const MOCK_LEADERBOARD_MONTHLY: LeaderboardRow[] = [
   },
   {
     rank: 11,
-    userId: 'U-10155',
+    userId: 10155,
     displayName: 'Tarek Salem',
     initials: 'TS',
     lifetimePoints: 380,
@@ -192,7 +192,7 @@ export const MOCK_LEADERBOARD_MONTHLY: LeaderboardRow[] = [
   },
   {
     rank: 12,
-    userId: 'U-10168',
+    userId: 10168,
     displayName: 'Reem Al-Badry',
     initials: 'RB',
     lifetimePoints: 280,
@@ -204,7 +204,7 @@ export const MOCK_LEADERBOARD_ALL_TIME: LeaderboardRow[] = [
   // Lifetime points matching MOCK_RECYCLERS exactly
   {
     rank: 1,
-    userId: 'U-10021',
+    userId: 10021,
     displayName: 'Nour El-Sayed',
     initials: 'NE',
     lifetimePoints: 18440,
@@ -212,7 +212,7 @@ export const MOCK_LEADERBOARD_ALL_TIME: LeaderboardRow[] = [
   },
   {
     rank: 2,
-    userId: 'U-10034',
+    userId: 10034,
     displayName: 'Omar Hassan',
     initials: 'OH',
     lifetimePoints: 15210,
@@ -220,7 +220,7 @@ export const MOCK_LEADERBOARD_ALL_TIME: LeaderboardRow[] = [
   },
   {
     rank: 3,
-    userId: 'U-10057',
+    userId: 10057,
     displayName: 'Salma Ibrahim',
     initials: 'SI',
     lifetimePoints: 12930,
@@ -228,7 +228,7 @@ export const MOCK_LEADERBOARD_ALL_TIME: LeaderboardRow[] = [
   },
   {
     rank: 4,
-    userId: 'U-10078',
+    userId: 10078,
     displayName: 'Mariam Adel',
     initials: 'MA',
     lifetimePoints: 9870,
@@ -236,7 +236,7 @@ export const MOCK_LEADERBOARD_ALL_TIME: LeaderboardRow[] = [
   },
   {
     rank: 5,
-    userId: 'U-10082',
+    userId: 10082,
     displayName: 'Hana Farouk',
     initials: 'HF',
     lifetimePoints: 8420,
@@ -244,7 +244,7 @@ export const MOCK_LEADERBOARD_ALL_TIME: LeaderboardRow[] = [
   },
   {
     rank: 6,
-    userId: 'U-10102',
+    userId: 10102,
     displayName: 'Yasmin Gamal',
     initials: 'YG',
     lifetimePoints: 7340,
@@ -252,7 +252,7 @@ export const MOCK_LEADERBOARD_ALL_TIME: LeaderboardRow[] = [
   },
   {
     rank: 7,
-    userId: 'U-10063',
+    userId: 10063,
     displayName: 'Ahmed Mostafa',
     initials: 'AM',
     lifetimePoints: 6120,
@@ -260,7 +260,7 @@ export const MOCK_LEADERBOARD_ALL_TIME: LeaderboardRow[] = [
   },
   {
     rank: 8,
-    userId: 'U-10139',
+    userId: 10139,
     displayName: 'Dina Samir',
     initials: 'DS',
     lifetimePoints: 5420,
@@ -268,7 +268,7 @@ export const MOCK_LEADERBOARD_ALL_TIME: LeaderboardRow[] = [
   },
   {
     rank: 9,
-    userId: 'U-10118',
+    userId: 10118,
     displayName: 'Ali Reda',
     initials: 'AR',
     lifetimePoints: 4890,
@@ -276,7 +276,7 @@ export const MOCK_LEADERBOARD_ALL_TIME: LeaderboardRow[] = [
   },
   {
     rank: 10,
-    userId: 'U-10095',
+    userId: 10095,
     displayName: 'Mostafa Kamel',
     initials: 'MK',
     lifetimePoints: 3980,
@@ -284,7 +284,7 @@ export const MOCK_LEADERBOARD_ALL_TIME: LeaderboardRow[] = [
   },
   {
     rank: 11,
-    userId: 'U-10147',
+    userId: 10147,
     displayName: 'Khaled Wahba',
     initials: 'KW',
     lifetimePoints: 3250,
@@ -292,7 +292,7 @@ export const MOCK_LEADERBOARD_ALL_TIME: LeaderboardRow[] = [
   },
   {
     rank: 12,
-    userId: 'U-10155',
+    userId: 10155,
     displayName: 'Tarek Salem',
     initials: 'TS',
     lifetimePoints: 2900,
@@ -300,7 +300,7 @@ export const MOCK_LEADERBOARD_ALL_TIME: LeaderboardRow[] = [
   },
   {
     rank: 13,
-    userId: 'U-10168',
+    userId: 10168,
     displayName: 'Reem Al-Badry',
     initials: 'RB',
     lifetimePoints: 2150,
@@ -308,7 +308,7 @@ export const MOCK_LEADERBOARD_ALL_TIME: LeaderboardRow[] = [
   },
   {
     rank: 14,
-    userId: 'U-10180',
+    userId: 10180,
     displayName: 'Kareem Fayed',
     initials: 'KF',
     lifetimePoints: 1600,
@@ -319,7 +319,7 @@ export const MOCK_LEADERBOARD_ALL_TIME: LeaderboardRow[] = [
 export const MOCK_MILESTONE_BADGES: MilestoneBadge[] = [
   // 5 badges from PDF p15 with exact earned counts
   {
-    badgeId: 'bdg-01',
+    badgeId: 1,
     name: 'Seedling',
     requiredPoints: 500,
     description: '500 pts · First 500 lifetime points',
@@ -327,7 +327,7 @@ export const MOCK_MILESTONE_BADGES: MilestoneBadge[] = [
     icon: 'sprout',
   },
   {
-    badgeId: 'bdg-02',
+    badgeId: 2,
     name: 'Green Starter',
     requiredPoints: 2000,
     description: '2,000 pts · Reach 2,000 lifetime points',
@@ -335,7 +335,7 @@ export const MOCK_MILESTONE_BADGES: MilestoneBadge[] = [
     icon: 'leaf',
   },
   {
-    badgeId: 'bdg-03',
+    badgeId: 3,
     name: 'Eco Warrior',
     requiredPoints: 5000,
     description: '5,000 pts · Reach 5,000 lifetime points',
@@ -343,7 +343,7 @@ export const MOCK_MILESTONE_BADGES: MilestoneBadge[] = [
     icon: 'shield-check',
   },
   {
-    badgeId: 'bdg-04',
+    badgeId: 4,
     name: 'Nile Guardian',
     requiredPoints: 10000,
     description: '10,000 pts · Reach 10,000 lifetime points',
@@ -351,7 +351,7 @@ export const MOCK_MILESTONE_BADGES: MilestoneBadge[] = [
     icon: 'waves',
   },
   {
-    badgeId: 'bdg-05',
+    badgeId: 5,
     name: 'Planet Hero',
     requiredPoints: 25000,
     description: '25,000 pts · Reach 25,000 lifetime points',

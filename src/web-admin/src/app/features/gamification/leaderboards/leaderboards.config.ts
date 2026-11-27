@@ -12,34 +12,47 @@ export const LEADERBOARD_TABS: TabItem[] = [
   { id: LeaderboardScope.AllTime, label: LEADERBOARD_SCOPE_LABELS[LeaderboardScope.AllTime] },
 ];
 
-export const LEADERBOARD_TABLE_COLUMNS: TableColumn<LeaderboardRow>[] = [
-  {
-    key: 'rank',
-    label: 'Rank',
-    sortable: true,
-    width: '80px',
-    align: 'center',
-  },
-  {
-    key: 'displayName',
-    label: 'User',
-    sortable: true,
-  },
-  {
-    key: 'lifetimePoints',
-    label: 'Lifetime points',
-    align: 'right',
-    sortable: true,
-    width: '150px',
-  },
-  {
-    key: 'recyclingVolumeKg',
-    label: 'Recycling volume',
-    align: 'right',
-    sortable: true,
-    width: '150px',
-  },
-];
+export function getLeaderboardColumns(scope: LeaderboardScope): TableColumn<LeaderboardRow>[] {
+  const pointsLabel =
+    scope === LeaderboardScope.Weekly
+      ? 'Weekly points'
+      : scope === LeaderboardScope.Monthly
+        ? 'Monthly points'
+        : 'Lifetime points';
+
+  return [
+    {
+      key: 'rank',
+      label: 'Rank',
+      sortable: true,
+      width: '80px',
+      align: 'center',
+    },
+    {
+      key: 'displayName',
+      label: 'User',
+      sortable: true,
+    },
+    {
+      key: 'lifetimePoints',
+      label: pointsLabel,
+      align: 'right',
+      sortable: true,
+      width: '150px',
+    },
+    {
+      key: 'recyclingVolumeKg',
+      label: 'Recycling volume',
+      align: 'right',
+      sortable: false,
+      width: '150px',
+    },
+  ];
+}
+
+export const LEADERBOARD_TABLE_COLUMNS: TableColumn<LeaderboardRow>[] = getLeaderboardColumns(
+  LeaderboardScope.AllTime,
+);
 
 export function getRankBadgeClass(rank: number): string {
   switch (rank) {

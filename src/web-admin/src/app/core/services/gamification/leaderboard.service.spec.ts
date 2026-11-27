@@ -3,8 +3,10 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { LeaderboardService } from './leaderboard.service';
 import { ApiClientService } from '../api/api-client.service';
-import { environment } from '@env/environment';
+import { resolveApiBaseUrl } from '@core/interceptors/shared/api-url';
 import { LeaderboardScope } from '@models/gamification/leaderboard-scope.enum';
+
+const apiBaseUrl = resolveApiBaseUrl();
 
 describe('LeaderboardService', () => {
   let service: LeaderboardService;
@@ -33,12 +35,12 @@ describe('LeaderboardService', () => {
       expect(page.totalItems).toBe(0);
     });
     httpMock
-      .expectOne(`${environment.apiBaseUrl}/leaderboard?scope=weekly`)
+      .expectOne(`${apiBaseUrl}/leaderboard?scope=weekly`)
       .flush({ success: true, data: [] });
 
     service.getMilestoneBadges().subscribe();
     httpMock
-      .expectOne(`${environment.apiBaseUrl}/admin/badges`)
+      .expectOne(`${apiBaseUrl}/admin/badges`)
       .flush({ success: true, data: [] });
   });
 });

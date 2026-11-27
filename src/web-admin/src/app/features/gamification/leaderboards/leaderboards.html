@@ -23,6 +23,7 @@
           ariaLabel="Leaderboard timeframe"
           (activeChange)="handleTabChange($event)"
         />
+        <p class="scope-hint">{{ scopeDescription() }}</p>
       </div>
 
       <!-- Leaderboard Card Container -->
@@ -52,7 +53,7 @@
         } @else {
           <div class="table-wrapper">
             <app-data-table
-              [columns]="columns"
+              [columns]="columns()"
               [data]="pagedList.items()"
               [loading]="pagedList.refreshing() || pagedList.loading()"
               mode="server"
@@ -90,15 +91,19 @@
               <!-- Lifetime Points Cell Template -->
               <ng-template appCell="lifetimePoints" let-row>
                 <span class="font-semibold text-text-primary text-sm">
-                  {{ row.lifetimePoints | number }} pts
+                  {{ (row.points ?? row.lifetimePoints) | number }} pts
                 </span>
               </ng-template>
 
               <!-- Recycling Volume Cell Template -->
               <ng-template appCell="recyclingVolumeKg" let-row>
-                <span class="font-medium text-text-secondary text-sm">
-                  {{ row.recyclingVolumeKg }} kg
-                </span>
+                @if (row.recyclingVolumeKg === null || row.recyclingVolumeKg === undefined) {
+                  <span class="font-medium text-text-secondary text-sm">Not Tracked</span>
+                } @else {
+                  <span class="font-medium text-text-secondary text-sm">
+                    {{ row.recyclingVolumeKg }} kg
+                  </span>
+                }
               </ng-template>
             </app-data-table>
           </div>
@@ -136,7 +141,7 @@
             @for (badge of milestoneBadges(); track badge.badgeId) {
               <div class="badge-item" [attr.data-testid]="'milestone-badge-' + badge.badgeId">
                 <div class="badge-icon-box">
-                  <app-icon name="trophy" size="md" />
+                  <app-icon [name]="badge.icon || 'trophy'" size="md" />
                 </div>
                 <div class="badge-info">
                   <div class="badge-header-row">
@@ -148,6 +153,8 @@
                   <p class="badge-description">{{ badge.description }}</p>
                 </div>
               </div>
+            } @empty {
+              <p class="text-sm text-text-secondary">No milestone badges configured.</p>
             }
           </div>
         }

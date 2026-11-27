@@ -17,9 +17,12 @@ export interface LeaderboardRow {
   rank: number;
   userId: Id;
   displayName: string;
+  userName?: string;
   initials: string;
   lifetimePoints: number;
-  recyclingVolumeKg: number;
+  points?: number;
+  scope?: LeaderboardScope;
+  recyclingVolumeKg: number | null;
 }
 
 /**
@@ -30,6 +33,7 @@ export interface MilestoneBadge {
   name: string;
   requiredPoints: number;
   description: string;
+  thresholdText?: string;
   earnedCount: number;
   icon: string;
 }
