@@ -1,3 +1,4 @@
+using Microsoft.Extensions.FileProviders;
 using SmartBin.Context;
 using SmartBin.DependencyInjection;
 using SmartBin.Hubs;
@@ -22,7 +23,7 @@ namespace SmartBin
 
             // Configure Services via Modular Extensions
             builder.Services.AddApiControllers();
-            builder.Services.AddCorsPolicy();
+            builder.Services.AddCorsPolicy(builder.Configuration);
             builder.Services.AddPersistence(builder.Configuration);
             builder.Services.AddApplicationServices();
             builder.Services.AddJwtAuthentication(builder.Configuration);
@@ -40,6 +41,18 @@ namespace SmartBin
             }
 
             app.UseCors();
+
+            if (app.Environment.IsDevelopment())
+            {
+                var uploadsRootPath = Path.Combine(app.Environment.ContentRootPath, "wwwroot", "uploads");
+                Directory.CreateDirectory(uploadsRootPath);
+
+                app.UseStaticFiles(new StaticFileOptions
+                {
+                    FileProvider = new PhysicalFileProvider(uploadsRootPath),
+                    RequestPath = "/uploads"
+                });
+            }
 
             app.UseAuthentication();
             app.UseAuthorization();

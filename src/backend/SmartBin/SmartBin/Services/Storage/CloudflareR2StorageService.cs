@@ -11,6 +11,7 @@ namespace SmartBin.Services
     {
         private readonly IConfiguration _configuration;
         private readonly IWebHostEnvironment _environment;
+        private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly ILogger<CloudflareR2StorageService> _logger;
 
         // Allowed MIME signatures (magic bytes)
@@ -28,109 +29,193 @@ namespace SmartBin.Services
         public CloudflareR2StorageService(
             IConfiguration configuration,
             IWebHostEnvironment environment,
+            IHttpContextAccessor httpContextAccessor,
             ILogger<CloudflareR2StorageService> logger)
         {
-            _configuration = configuration;
-            _environment   = environment;
-            _logger        = logger;
+            _configuration       = configuration;
+            _environment         = environment;
+            _httpContextAccessor = httpContextAccessor;
+            _logger              = logger;
+        }
+
+        // ── Configuration helpers ─────────────────────────────────────────────
+
+        private sealed record R2StorageOptions(
+            string AccountId,
+            string AccessKeyId,
+            string SecretAccessKey,
+            string BucketName,
+            string PublicBaseUrl);
+
+        private bool TryReadStorageOptions(out R2StorageOptions? options)
+        {
+            var accountId       = _configuration["CloudflareR2:AccountId"]?.Trim();
+            var accessKeyId     = _configuration["CloudflareR2:AccessKeyId"]?.Trim();
+            var secretAccessKey = _configuration["CloudflareR2:SecretAccessKey"]?.Trim();
+            var bucketName      = _configuration["CloudflareR2:BucketName"]?.Trim();
+            var publicBaseUrl   = _configuration["CloudflareR2:PublicBaseUrl"]?.Trim();
+
+            if (string.IsNullOrWhiteSpace(accountId) ||
+                string.IsNullOrWhiteSpace(accessKeyId) ||
+                accessKeyId.Length != 32 ||
+                string.IsNullOrWhiteSpace(secretAccessKey) ||
+                string.IsNullOrWhiteSpace(bucketName) ||
+                string.IsNullOrWhiteSpace(publicBaseUrl) ||
+                !Uri.TryCreate(publicBaseUrl, UriKind.Absolute, out var baseUri) ||
+                baseUri.Scheme != Uri.UriSchemeHttps)
+            {
+                options = null;
+                return false;
+            }
+
+            options = new R2StorageOptions(
+                accountId,
+                accessKeyId,
+                secretAccessKey,
+                bucketName,
+                publicBaseUrl.TrimEnd('/'));
+            return true;
+        }
+
+        private R2StorageOptions GetRequiredStorageOptions()
+        {
+            if (TryReadStorageOptions(out var options) && options is not null)
+            {
+                return options;
+            }
+
+            _logger.LogError(
+                "Cloudflare R2 storage configuration is missing or incomplete. Required keys: CloudflareR2:AccountId, CloudflareR2:AccessKeyId, CloudflareR2:SecretAccessKey, CloudflareR2:BucketName, CloudflareR2:PublicBaseUrl.");
+
+            throw new ApiException(
+                StatusCodes.Status503ServiceUnavailable,
+                "STORAGE_NOT_CONFIGURED",
+                "Object storage is not configured. Configure CloudflareR2 settings.");
+        }
+
+        private static AmazonS3Client CreateS3Client(R2StorageOptions options)
+        {
+            var serviceUrl  = $"https://{options.AccountId}.r2.cloudflarestorage.com";
+            var credentials = new BasicAWSCredentials(options.AccessKeyId, options.SecretAccessKey);
+            var config      = new AmazonS3Config { ServiceURL = serviceUrl, ForcePathStyle = true };
+            return new AmazonS3Client(credentials, config);
         }
 
         // ── Upload with explicit key (overwrites) ─────────────────────────────
 
         public async Task<string> UploadFileWithKeyAsync(Stream fileStream, string key, string contentType)
         {
-            var accountId       = _configuration["CloudflareR2:AccountId"];
-            var accessKeyId     = _configuration["CloudflareR2:AccessKeyId"];
-            var secretAccessKey = _configuration["CloudflareR2:SecretAccessKey"];
-            var bucketName      = _configuration["CloudflareR2:BucketName"]    ?? "ecobin";
-            var publicBaseUrl   = _configuration["CloudflareR2:PublicBaseUrl"] ?? "https://pub-7763b4f2d2cb4f75b4075c2a0c428ef2.r2.dev";
+            var options = GetRequiredStorageOptions();
 
-            if (!string.IsNullOrWhiteSpace(accountId) &&
-                !string.IsNullOrWhiteSpace(accessKeyId) &&
-                !string.IsNullOrWhiteSpace(secretAccessKey) &&
-                accessKeyId.Length == 32)
+            using var s3Client = CreateS3Client(options);
+
+            var putRequest = new PutObjectRequest
             {
-                var serviceUrl  = $"https://{accountId}.r2.cloudflarestorage.com";
-                var credentials = new BasicAWSCredentials(accessKeyId, secretAccessKey);
-                var config      = new AmazonS3Config { ServiceURL = serviceUrl, ForcePathStyle = true };
+                BucketName            = options.BucketName,
+                Key                   = key,
+                InputStream           = fileStream,
+                ContentType           = contentType,
+                DisablePayloadSigning = true
+            };
 
-                using var s3Client = new AmazonS3Client(credentials, config);
-
-                var putRequest = new PutObjectRequest
-                {
-                    BucketName            = bucketName,
-                    Key                   = key,
-                    InputStream           = fileStream,
-                    ContentType           = contentType,
-                    DisablePayloadSigning = true
-                };
-
-                await s3Client.PutObjectAsync(putRequest);
-                return $"{publicBaseUrl.TrimEnd('/')}/{key}";
-            }
-
-            // Local fallback
-            _logger.LogWarning("Cloudflare R2 credentials are missing or invalid. Falling back to local disk storage.");
-            var rootPath  = _environment.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
-            var localPath = Path.Combine(rootPath, "uploads", key.Replace('/', Path.DirectorySeparatorChar));
-            Directory.CreateDirectory(Path.GetDirectoryName(localPath)!);
-
-            fileStream.Seek(0, SeekOrigin.Begin);
-            using var localStream = new FileStream(localPath, FileMode.Create);
-            await fileStream.CopyToAsync(localStream);
-
-            return $"{publicBaseUrl.TrimEnd('/')}/{key}";
+            await s3Client.PutObjectAsync(putRequest);
+            return $"{options.PublicBaseUrl}/{key}";
         }
 
         // ── Upload ────────────────────────────────────────────────────────────
 
         public async Task<string> UploadFileAsync(IFormFile file, string folder = "rewards")
         {
-            var uniqueFileName = $"{folder}/{Guid.NewGuid():N}.jpg";
+            var normalizedFolder = string.IsNullOrWhiteSpace(folder)
+                ? "rewards"
+                : folder.Trim('/').ToLowerInvariant();
 
-            var accountId       = _configuration["CloudflareR2:AccountId"];
-            var accessKeyId     = _configuration["CloudflareR2:AccessKeyId"];
-            var secretAccessKey = _configuration["CloudflareR2:SecretAccessKey"];
-            var bucketName      = _configuration["CloudflareR2:BucketName"]    ?? "ecobin";
-            var publicBaseUrl   = _configuration["CloudflareR2:PublicBaseUrl"] ?? "https://pub-7763b4f2d2cb4f75b4075c2a0c428ef2.r2.dev";
-
-            if (!string.IsNullOrWhiteSpace(accountId) &&
-                !string.IsNullOrWhiteSpace(accessKeyId) &&
-                !string.IsNullOrWhiteSpace(secretAccessKey) &&
-                accessKeyId.Length == 32)
+            if (normalizedFolder.Contains("..", StringComparison.Ordinal) ||
+                normalizedFolder.Contains('/') ||
+                normalizedFolder.Contains('\\'))
             {
-                var serviceUrl  = $"https://{accountId}.r2.cloudflarestorage.com";
-                var credentials = new BasicAWSCredentials(accessKeyId, secretAccessKey);
-                var config      = new AmazonS3Config { ServiceURL = serviceUrl, ForcePathStyle = true };
+                throw new ApiException(
+                    StatusCodes.Status400BadRequest,
+                    "VALIDATION_ERROR",
+                    "Invalid upload folder.");
+            }
 
-                using var s3Client   = new AmazonS3Client(credentials, config);
-                using var imageBytes = await StripExifAndReencodeAsync(file);
+            using var imageBytes = await StripExifAndReencodeAsync(file);
+
+            var fileName = $"{Guid.NewGuid():N}.jpg";
+            var uniqueFileName = $"{normalizedFolder}/{fileName}";
+
+            if (TryReadStorageOptions(out var options) && options is not null)
+            {
+                using var s3Client = CreateS3Client(options);
 
                 var putRequest = new PutObjectRequest
                 {
-                    BucketName            = bucketName,
+                    BucketName            = options.BucketName,
                     Key                   = uniqueFileName,
                     InputStream           = imageBytes,
                     ContentType           = "image/jpeg",
                     DisablePayloadSigning = true
                 };
 
-                await s3Client.PutObjectAsync(putRequest);
-                return $"{publicBaseUrl.TrimEnd('/')}/{uniqueFileName}";
+                try
+                {
+                    await s3Client.PutObjectAsync(putRequest);
+                    return $"{options.PublicBaseUrl}/{uniqueFileName}";
+                }
+                catch (AmazonS3Exception ex)
+                {
+                    _logger.LogError(
+                        "Cloudflare R2 upload failed with status {StatusCode} and error code {ErrorCode} for bucket '{BucketName}'.",
+                        (int)ex.StatusCode,
+                        ex.ErrorCode,
+                        options.BucketName);
+
+                    throw new ApiException(
+                        StatusCodes.Status502BadGateway,
+                        "STORAGE_UPLOAD_FAILED",
+                        "Failed to upload image to object storage.");
+                }
+                catch (HttpRequestException)
+                {
+                    _logger.LogError(
+                        "Cloudflare R2 upload failed due to a network error for bucket '{BucketName}'.",
+                        options.BucketName);
+
+                    throw new ApiException(
+                        StatusCodes.Status502BadGateway,
+                        "STORAGE_UPLOAD_FAILED",
+                        "Failed to upload image to object storage.");
+                }
             }
 
-            // Fallback: local disk
-            _logger.LogWarning("Cloudflare R2 credentials are missing or invalid. Falling back to local disk storage.");
-            var rootPath      = _environment.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
-            var uploadsFolder = Path.Combine(rootPath, "uploads", folder);
-            Directory.CreateDirectory(uploadsFolder);
-            var localFile = Path.Combine(uploadsFolder, $"{Guid.NewGuid():N}.jpg");
+            if (_environment.IsDevelopment())
+            {
+                _logger.LogWarning(
+                    "Cloudflare R2 storage is not configured. Using Development-only local storage under wwwroot/uploads/{Folder}.",
+                    normalizedFolder);
 
-            using var localStream = new FileStream(localFile, FileMode.Create);
-            using var encoded     = await StripExifAndReencodeAsync(file);
-            await encoded.CopyToAsync(localStream);
+                var uploadsRoot = GetLocalUploadsRoot();
+                var targetFolder = Path.Combine(uploadsRoot, normalizedFolder);
+                Directory.CreateDirectory(targetFolder);
 
-            return $"{publicBaseUrl.TrimEnd('/')}/{uniqueFileName}";
+                var localFilePath = Path.Combine(targetFolder, fileName);
+                await using var localStream = new FileStream(localFilePath, FileMode.Create, FileAccess.Write, FileShare.None);
+                await imageBytes.CopyToAsync(localStream);
+
+                var request = _httpContextAccessor.HttpContext?.Request;
+                if (request is not null && request.Host.HasValue)
+                {
+                    var originBase = $"{request.Scheme}://{request.Host}{request.PathBase}".TrimEnd('/');
+                    return $"{originBase}/uploads/{uniqueFileName}";
+                }
+
+                return $"/uploads/{uniqueFileName}";
+            }
+
+            // Non-Development environments fail closed when Cloudflare R2 is not configured.
+            _ = GetRequiredStorageOptions();
+            throw new InvalidOperationException("Unreachable.");
         }
 
         // ── Delete ────────────────────────────────────────────────────────────
@@ -139,47 +224,71 @@ namespace SmartBin.Services
         {
             try
             {
-                var accountId       = _configuration["CloudflareR2:AccountId"];
-                var accessKeyId     = _configuration["CloudflareR2:AccessKeyId"];
-                var secretAccessKey = _configuration["CloudflareR2:SecretAccessKey"];
-                var bucketName      = _configuration["CloudflareR2:BucketName"]  ?? "ecobin";
-                var publicBaseUrl   = _configuration["CloudflareR2:PublicBaseUrl"] ?? "https://pub-7763b4f2d2cb4f75b4075c2a0c428ef2.r2.dev";
-
                 if (string.IsNullOrWhiteSpace(publicUrl)) return;
 
-                // Strip any query string before deriving the S3 key
+                // Strip any query string before deriving the S3 key or local path
                 var cleanUrl = publicUrl.Split('?', 2)[0];
 
-                // Derive the S3 key from the public URL
-                var baseUrl = publicBaseUrl.TrimEnd('/') + "/";
-                if (!cleanUrl.StartsWith(baseUrl, StringComparison.OrdinalIgnoreCase)) return;
-
-                var key = cleanUrl[baseUrl.Length..];
-
-                if (!string.IsNullOrWhiteSpace(accountId) &&
-                    !string.IsNullOrWhiteSpace(accessKeyId) &&
-                    !string.IsNullOrWhiteSpace(secretAccessKey) &&
-                    accessKeyId.Length == 32)
+                if (TryReadStorageOptions(out var options) && options is not null)
                 {
-                    var serviceUrl  = $"https://{accountId}.r2.cloudflarestorage.com";
-                    var credentials = new BasicAWSCredentials(accessKeyId, secretAccessKey);
-                    var config      = new AmazonS3Config { ServiceURL = serviceUrl, ForcePathStyle = true };
-
-                    using var s3Client = new AmazonS3Client(credentials, config);
-                    await s3Client.DeleteObjectAsync(bucketName, key);
+                    var baseUrl = options.PublicBaseUrl + "/";
+                    if (cleanUrl.StartsWith(baseUrl, StringComparison.OrdinalIgnoreCase))
+                    {
+                        var key = cleanUrl[baseUrl.Length..];
+                        using var s3Client = CreateS3Client(options);
+                        await s3Client.DeleteObjectAsync(options.BucketName, key);
+                        return;
+                    }
                 }
-                else
+
+                if (_environment.IsDevelopment())
                 {
-                    // Local fallback: delete the physical file
-                    var rootPath  = _environment.WebRootPath ?? Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
-                    var localPath = Path.Combine(rootPath, "uploads", key.Replace('/', Path.DirectorySeparatorChar));
-                    if (File.Exists(localPath)) File.Delete(localPath);
+                    string? relativeUploadPath = null;
+                    if (Uri.TryCreate(cleanUrl, UriKind.Absolute, out var absoluteUri) &&
+                        absoluteUri.AbsolutePath.StartsWith("/uploads/", StringComparison.OrdinalIgnoreCase))
+                    {
+                        relativeUploadPath = absoluteUri.AbsolutePath["/uploads/".Length..];
+                    }
+                    else if (cleanUrl.StartsWith("/uploads/", StringComparison.OrdinalIgnoreCase))
+                    {
+                        relativeUploadPath = cleanUrl["/uploads/".Length..];
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(relativeUploadPath))
+                    {
+                        var uploadsRoot = Path.GetFullPath(GetLocalUploadsRoot());
+                        var candidatePath = Path.GetFullPath(
+                            Path.Combine(uploadsRoot, relativeUploadPath.Replace('/', Path.DirectorySeparatorChar)));
+
+                        if (candidatePath.StartsWith(uploadsRoot + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) &&
+                            File.Exists(candidatePath))
+                        {
+                            File.Delete(candidatePath);
+                        }
+                        return;
+                    }
+                }
+
+                if (!TryReadStorageOptions(out _))
+                {
+                    _logger.LogWarning(
+                        "Cloudflare R2 storage configuration is missing or incomplete; skipping deletion for '{Url}'.",
+                        publicUrl);
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "Failed to delete storage file '{Url}' (best-effort).", publicUrl);
             }
+        }
+
+        private string GetLocalUploadsRoot()
+        {
+            var webRoot = string.IsNullOrWhiteSpace(_environment.WebRootPath)
+                ? Path.Combine(_environment.ContentRootPath, "wwwroot")
+                : _environment.WebRootPath;
+
+            return Path.Combine(webRoot, "uploads");
         }
 
         // ── Validation helpers ────────────────────────────────────────────────

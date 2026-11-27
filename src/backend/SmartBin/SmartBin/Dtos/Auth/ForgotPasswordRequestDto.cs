@@ -1,9 +1,12 @@
-﻿
+using System.ComponentModel.DataAnnotations;
+
 namespace SmartBin.DTOs.Auth
 {
     public class ForgotPasswordRequestDto
     {
-        public string Email { get; set; } 
+        [Required]
+        [EmailAddress]
+        public string Email { get; set; } = string.Empty;
     }
-} 
+}
 

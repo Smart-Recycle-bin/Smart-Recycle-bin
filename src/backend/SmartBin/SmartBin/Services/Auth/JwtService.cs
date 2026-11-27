@@ -25,9 +25,7 @@ namespace SmartBin.Services.Auth
                 var issuer = jwtSettings["Issuer"];
                 var audience = jwtSettings["Audience"];
 
-                var expiresInMinutes = int.Parse(
-                    jwtSettings["ExpiresInMinutes"]!
-                );
+                var expiresInMinutes = GetAccessTokenExpiresInMinutes();
 
                 var claims = new List<Claim>
             {
@@ -67,18 +65,29 @@ namespace SmartBin.Services.Auth
 
             public int GetAccessTokenExpiresInSeconds()
             {
-                var minutes = int.Parse(
-                    _configuration["Jwt:ExpiresInMinutes"]!
-                );
-
-                return minutes * 60;
+                return GetAccessTokenExpiresInMinutes() * 60;
             }
 
             public int GetRefreshTokenExpiresInDays()
             {
-                return int.Parse(
-                    _configuration["Jwt:RefreshTokenExpiresInDays"]!
-                );
+                if (!int.TryParse(_configuration["Jwt:RefreshTokenExpiresInDays"], out var days) || days <= 0)
+                {
+                    throw new InvalidOperationException(
+                        "Configuration key 'Jwt:RefreshTokenExpiresInDays' must be a positive integer.");
+                }
+
+                return days;
+            }
+
+            private int GetAccessTokenExpiresInMinutes()
+            {
+                if (!int.TryParse(_configuration["Jwt:ExpiresInMinutes"], out var minutes) || minutes <= 0)
+                {
+                    throw new InvalidOperationException(
+                        "Configuration key 'Jwt:ExpiresInMinutes' must be a positive integer.");
+                }
+
+                return minutes;
             }
         }
     }

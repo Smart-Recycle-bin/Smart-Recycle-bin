@@ -1,11 +1,11 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
- using SmartBin.Dtos.Auth;
+using SmartBin.Common;
+using SmartBin.Dtos.Auth;
 using SmartBin.DTOs.Auth;
 using SmartBin.Services;
 using SmartBin.Services.Auth;
-using System.Security.Claims;
 
 namespace SmartBin.Controllers
 {
@@ -38,15 +38,7 @@ namespace SmartBin.Controllers
             }
             catch (ApiException ex)
             {
-                return StatusCode(ex.StatusCode, new
-                {
-                    success = false,
-                    error = new
-                    {
-                        code = ex.ErrorCode,
-                        message = ex.Message
-                    }
-                });
+                return ApiErrorResult(ex);
             }
         }
 
@@ -66,15 +58,7 @@ namespace SmartBin.Controllers
             }
             catch (ApiException ex)
             {
-                return StatusCode(ex.StatusCode, new
-                {
-                    success = false,
-                    error = new
-                    {
-                        code = ex.ErrorCode,
-                        message = ex.Message
-                    }
-                });
+                return ApiErrorResult(ex);
             }
         }
 
@@ -95,15 +79,7 @@ namespace SmartBin.Controllers
             }
             catch (ApiException ex)
             {
-                return StatusCode(ex.StatusCode, new
-                {
-                    success = false,
-                    error = new
-                    {
-                        code = ex.ErrorCode,
-                        message = ex.Message
-                    }
-                });
+                return ApiErrorResult(ex);
             }
         }
 
@@ -124,15 +100,7 @@ namespace SmartBin.Controllers
             }
             catch (ApiException ex)
             {
-                return StatusCode(ex.StatusCode, new
-                {
-                    success = false,
-                    error = new
-                    {
-                        code = ex.ErrorCode,
-                        message = ex.Message
-                    }
-                });
+                return ApiErrorResult(ex);
             }
         }
 
@@ -144,9 +112,7 @@ namespace SmartBin.Controllers
         {
             try
             {
-                 var userIdValue = User.FindFirstValue("id");
-
-                if (!int.TryParse(userIdValue, out int userId))
+                if (!User.TryGetUserId(out int userId))
                 {
                     return Unauthorized(new
                     {
@@ -175,15 +141,7 @@ namespace SmartBin.Controllers
             }
             catch (ApiException ex)
             {
-                return StatusCode(ex.StatusCode, new
-                {
-                    success = false,
-                    error = new
-                    {
-                        code = ex.ErrorCode,
-                        message = ex.Message
-                    }
-                });
+                return ApiErrorResult(ex);
             }
         }
 
@@ -205,15 +163,7 @@ namespace SmartBin.Controllers
             }
             catch (ApiException ex)
             {
-                return StatusCode(ex.StatusCode, new
-                {
-                    success = false,
-                    error = new
-                    {
-                        code = ex.ErrorCode,
-                        message = ex.Message
-                    }
-                });
+                return ApiErrorResult(ex);
             }
         }
 
@@ -236,15 +186,7 @@ namespace SmartBin.Controllers
             }
             catch (ApiException ex)
             {
-                return StatusCode(ex.StatusCode, new
-                {
-                    success = false,
-                    error = new
-                    {
-                        code = ex.ErrorCode,
-                        message = ex.Message
-                    }
-                });
+                return ApiErrorResult(ex);
             }
         } 
 
@@ -269,15 +211,7 @@ namespace SmartBin.Controllers
             }
             catch (ApiException ex)
             {
-                return StatusCode(ex.StatusCode, new
-                {
-                    success = false,
-                    error = new
-                    {
-                        code = ex.ErrorCode,
-                        message = ex.Message
-                    }
-                });
+                return ApiErrorResult(ex);
             }
         }
 
@@ -298,18 +232,31 @@ namespace SmartBin.Controllers
             }
             catch (ApiException ex)
             {
-                return StatusCode(ex.StatusCode, new
-                {
-                    success = false,
-                    error = new
-                    {
-                        code = ex.ErrorCode,
-                        message = ex.Message
-                    }
-                });
+                return ApiErrorResult(ex);
             }
         }
 
+        private ObjectResult ApiErrorResult(ApiException ex)
+        {
+            var errorPayload = ex.Details != null
+                ? new
+                {
+                    code = ex.ErrorCode,
+                    message = ex.Message,
+                    details = ex.Details
+                }
+                : (object)new
+                {
+                    code = ex.ErrorCode,
+                    message = ex.Message
+                };
+
+            return StatusCode(ex.StatusCode, new
+            {
+                success = false,
+                error = errorPayload
+            });
+        }
     }
 }
 

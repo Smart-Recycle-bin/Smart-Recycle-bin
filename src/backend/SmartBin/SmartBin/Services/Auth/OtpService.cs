@@ -1,15 +1,26 @@
-﻿using System.Security.Cryptography;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace SmartBin.Services.Auth
 {
     public class OtpService
     {
-        private readonly byte[] _secretKey;
+        private readonly IConfiguration _configuration;
 
         public OtpService(IConfiguration configuration)
         {
-            var secret = configuration["Otp:HashKey"];
+            _configuration = configuration;
+        }
+
+        public bool IsConfigured()
+        {
+            var secret = _configuration["Otp:HashKey"];
+            return !string.IsNullOrWhiteSpace(secret) && secret.Length >= 32;
+        }
+
+        private byte[] GetSecretKey()
+        {
+            var secret = _configuration["Otp:HashKey"];
 
             if (string.IsNullOrWhiteSpace(secret) || secret.Length < 32)
             {
@@ -18,7 +29,7 @@ namespace SmartBin.Services.Auth
                 );
             }
 
-            _secretKey = Encoding.UTF8.GetBytes(secret);
+            return Encoding.UTF8.GetBytes(secret);
         }
 
         public string GenerateOtp()
@@ -34,7 +45,7 @@ namespace SmartBin.Services.Auth
 
             byte[] data = Encoding.UTF8.GetBytes(value);
 
-            byte[] hash = HMACSHA256.HashData(_secretKey, data);
+            byte[] hash = HMACSHA256.HashData(GetSecretKey(), data);
 
             return Convert.ToHexString(hash);
         }

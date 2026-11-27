@@ -20,5 +20,16 @@ namespace SmartBin.Common
         {
             return TryGetUserId(principal, out int userId) ? userId : null;
         }
+
+        public static string? GetDisplayName(this ClaimsPrincipal? principal)
+        {
+            if (principal == null)
+            {
+                return null;
+            }
+
+            var raw = principal.FindFirstValue("name") ?? principal.FindFirstValue(ClaimTypes.Name);
+            return string.IsNullOrWhiteSpace(raw) ? null : raw.Trim();
+        }
     }
 }

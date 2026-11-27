@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using SmartBin.Services;
@@ -47,6 +48,21 @@ namespace SmartBin.Common
             }
 
             _logger.LogError(context.Exception, "Unhandled server error occurred.");
+
+            context.Result = new ObjectResult(new
+            {
+                success = false,
+                error = new
+                {
+                    code = "INTERNAL_ERROR",
+                    message = "An unexpected server error occurred."
+                }
+            })
+            {
+                StatusCode = StatusCodes.Status500InternalServerError
+            };
+
+            context.ExceptionHandled = true;
         }
     }
 }

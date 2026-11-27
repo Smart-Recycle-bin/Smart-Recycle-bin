@@ -65,6 +65,46 @@ namespace SmartBin.Services.Auth
             return Convert.ToHexString(hash);
         }
 
+        private static void EnsureAccountActiveForAuth(ApplicationUser user)
+        {
+            if (string.Equals(user.AccountStatus, "suspended", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(user.AccountStatus, "banned", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new ApiException(
+                    "ACCOUNT_SUSPENDED",
+                    "Your account is suspended.",
+                    403
+                );
+            }
+
+            if (string.Equals(user.AccountStatus, "inactive", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new ApiException(
+                    "ACCOUNT_INACTIVE",
+                    "Your account is inactive.",
+                    403
+                );
+            }
+        }
+
+        private async Task<string> ResolvePrimaryRoleAsync(ApplicationUser user)
+        {
+            var roles = await _userManager.GetRolesAsync(user);
+            var role = roles.FirstOrDefault(r => string.Equals(r, "SYS_ADMIN", StringComparison.OrdinalIgnoreCase))
+                ?? roles.FirstOrDefault();
+
+            if (role == null)
+            {
+                throw new ApiException(
+                    "USER_ROLE_NOT_FOUND",
+                    "User role is not assigned.",
+                    403
+                );
+            }
+
+            return role;
+        }
+
 
         public async Task<LoginResponseDto> LoginAsync(
             LoginRequestDto request)
@@ -97,23 +137,7 @@ namespace SmartBin.Services.Auth
             }
 
             // 3. Check account status
-            if (user.AccountStatus == "suspended")
-            {
-                throw new ApiException(
-                    "ACCOUNT_SUSPENDED",
-                    "Your account is suspended.",
-                    403
-                );
-            }
-
-            if (user.AccountStatus == "inactive")
-            {
-                throw new ApiException(
-                    "ACCOUNT_INACTIVE",
-                    "Your account is inactive.",
-                    403
-                );
-            }
+            EnsureAccountActiveForAuth(user);
 
             // 4. Check email verification
             if (!user.EmailConfirmed)
@@ -126,18 +150,7 @@ namespace SmartBin.Services.Auth
             }
 
             // 5. Get user role
-            var roles = await _userManager.GetRolesAsync(user);
-
-            var role = roles.FirstOrDefault();
-
-            if (role == null)
-            {
-                throw new ApiException(
-                    "USER_ROLE_NOT_FOUND",
-                    "User role is not assigned.",
-                    403
-                );
-            }
+            var role = await ResolvePrimaryRoleAsync(user);
 
             // 6. Generate tokens
             var accessToken = _jwtService.GenerateAccessToken(user, role);
@@ -201,6 +214,7 @@ namespace SmartBin.Services.Auth
                 User = new LoginUserDto
                 {
                     UserId = user.Id,
+                    Email = user.Email ?? string.Empty,
                     DisplayName = user.DisplayName,
                     Role = role
                 }
@@ -669,35 +683,18 @@ namespace SmartBin.Services.Auth
                 );
             }
 
-            if (user.AccountStatus == "suspended")
+            EnsureAccountActiveForAuth(user);
+
+            if (!user.EmailConfirmed)
             {
                 throw new ApiException(
-                    "ACCOUNT_SUSPENDED",
-                    "Your account is suspended.",
+                    "EMAIL_NOT_VERIFIED",
+                    "Please verify your email first.",
                     403
                 );
             }
 
-            if (user.AccountStatus == "inactive")
-            {
-                throw new ApiException(
-                    "ACCOUNT_INACTIVE",
-                    "Your account is inactive.",
-                    403
-                );
-            }
-
-            var roles = await _userManager.GetRolesAsync(user);
-            var role = roles.FirstOrDefault();
-
-            if (role == null)
-            {
-                throw new ApiException(
-                    "USER_ROLE_NOT_FOUND",
-                    "User role is not assigned.",
-                    403
-                );
-            }
+            var role = await ResolvePrimaryRoleAsync(user);
 
             var now = DateTime.UtcNow;
 
@@ -780,8 +777,7 @@ namespace SmartBin.Services.Auth
             // 2. Don't reveal whether the email exists
             if (user == null ||
                 !user.EmailConfirmed ||
-                user.AccountStatus == "suspended" ||
-                user.AccountStatus == "inactive")
+                !string.Equals(user.AccountStatus, "active", StringComparison.OrdinalIgnoreCase))
             {
                 return new ForgotPasswordResponseDto
                 {
