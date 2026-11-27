@@ -4,42 +4,42 @@ import { RecentSurveyRow, SurveyQaSummary } from '@models/survey/survey.view-mod
 export const MOCK_RECENT_SURVEYS: RecentSurveyRow[] = [
   // 6 visible rows from PDF p11 (Showing 1-6 of 9)
   {
-    sessionId: 'S-88213',
+    sessionId: 88213,
     userName: 'Omar Hassan',
     itemsSummary: '3× PET bottle',
     points: 36,
     result: SurveyOutcome.Rejected,
   },
   {
-    sessionId: 'S-88205',
+    sessionId: 88205,
     userName: 'Nour El-Sayed',
     itemsSummary: '2× Cardboard',
     points: 18,
     result: SurveyOutcome.Confirmed,
   },
   {
-    sessionId: 'S-88190',
+    sessionId: 88190,
     userName: 'Mariam Adel',
     itemsSummary: '1× Aluminium tray',
     points: 14,
     result: SurveyOutcome.Rejected,
   },
   {
-    sessionId: 'S-88177',
+    sessionId: 88177,
     userName: 'Hana Farouk',
     itemsSummary: '6× PET bottle',
     points: 54,
     result: SurveyOutcome.Confirmed,
   },
   {
-    sessionId: 'S-88160',
+    sessionId: 88160,
     userName: 'Yasmin Gamal',
     itemsSummary: '4× Paper cup',
     points: 24,
     result: SurveyOutcome.Confirmed,
   },
   {
-    sessionId: 'S-88142',
+    sessionId: 88142,
     userName: 'Dina Samir',
     itemsSummary: '4× Glass bottle',
     points: 48,
@@ -47,21 +47,21 @@ export const MOCK_RECENT_SURVEYS: RecentSurveyRow[] = [
   },
   // Additional rows to complete the 9 total indicated on p11 ("1-6 of 9")
   {
-    sessionId: 'S-88125',
+    sessionId: 88125,
     userName: 'Ali Reda',
     itemsSummary: '5× Steel can',
     points: 45,
     result: SurveyOutcome.Confirmed, // synthetic
   },
   {
-    sessionId: 'S-88099',
+    sessionId: 88099,
     userName: 'Khaled Wahba',
     itemsSummary: '2× Glass jar',
     points: 20,
     result: SurveyOutcome.Confirmed, // synthetic
   },
   {
-    sessionId: 'S-88082',
+    sessionId: 88082,
     userName: 'Salma Ibrahim',
     itemsSummary: '1× Cardboard, 3× Can',
     points: 32,
@@ -77,6 +77,7 @@ export const MOCK_SURVEY_QA_SUMMARY: SurveyQaSummary = {
     rejectRate: 7.4,
     rejectRateDeltaPp: -0.8,
     flaggedToAiQueue: 1362,
+    averageAiRating: null,
   },
   confirmCount: 17040,
   rejectCount: 1362,
@@ -96,12 +97,12 @@ export const MOCK_SURVEY_QA_SUMMARY: SurveyQaSummary = {
     { date: '2025-06-13', rejectionRate: 7.4 },
   ],
   highestRejectionBins: [
-    { binId: 'BIN-0084', rejectionRate: 14.2 },
-    { binId: 'BIN-0007', rejectionRate: 12.8 },
-    { binId: 'BIN-0061', rejectionRate: 11.1 },
-    { binId: 'BIN-0042', rejectionRate: 9.6 },
-    { binId: 'BIN-0029', rejectionRate: 8.3 },
-    { binId: 'BIN-0018', rejectionRate: 7.7 },
+    { binId: 84, rejectionRate: 14.2 },
+    { binId: 7, rejectionRate: 12.8 },
+    { binId: 61, rejectionRate: 11.1 },
+    { binId: 42, rejectionRate: 9.6 },
+    { binId: 29, rejectionRate: 8.3 },
+    { binId: 18, rejectionRate: 7.7 },
   ],
   rejectionByCategory: [
     { category: 'Mixed packaging', rejectionRate: 19.4 },

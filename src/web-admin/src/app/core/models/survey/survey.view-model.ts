@@ -10,6 +10,7 @@ export interface SurveyQaQuery extends PageQuery {
   period?: string;
   from?: string; // ISO date string
   to?: string;   // ISO date string
+  outcome?: SurveyOutcome;
 }
 
 
@@ -18,11 +19,14 @@ export interface SurveyQaQuery extends PageQuery {
  */
 export interface SurveyQaKpiSummary {
   totalSurveys: number;
+  confirmedCount?: number;
+  rejectedCount?: number;
   confirmRate: number;
-  confirmRateDeltaPp: number;
+  confirmRateDeltaPp: number | null;
   rejectRate: number;
-  rejectRateDeltaPp: number;
+  rejectRateDeltaPp: number | null;
   flaggedToAiQueue: number;
+  averageAiRating: number | null;
 }
 
 /**
@@ -31,6 +35,8 @@ export interface SurveyQaKpiSummary {
 export interface RejectionRateTrendPoint {
   date: string;
   rejectionRate: number;
+  totalCount?: number;
+  rejectedCount?: number;
 }
 
 /**
@@ -38,7 +44,10 @@ export interface RejectionRateTrendPoint {
  */
 export interface BinRejectionRate {
   binId: Id;
+  binName?: string | null;
   rejectionRate: number;
+  rejectedCount?: number;
+  totalCount?: number;
 }
 
 /**
@@ -47,17 +56,24 @@ export interface BinRejectionRate {
 export interface WasteCategoryRejectionRate {
   category: string;
   rejectionRate: number;
+  rejectedCount?: number;
+  totalCount?: number;
 }
 
 /**
  * Recent post-disposal survey outcome item (UI p11).
  */
 export interface RecentSurveyRow {
+  surveyId?: Id;
   sessionId: Id;
+  userId?: Id;
   userName: string;
   itemsSummary: string;
   points: number;
+  pointsAwarded?: number;
   result: SurveyOutcome;
+  outcome?: SurveyOutcome;
+  timestamp?: string;
 }
 
 /**
@@ -67,8 +83,12 @@ export interface SurveyQaSummary {
   kpis: SurveyQaKpiSummary;
   confirmCount: number;
   rejectCount: number;
+  split?: {
+    confirmed: number;
+    rejected: number;
+  };
   rejectionTrend: RejectionRateTrendPoint[];
   highestRejectionBins: BinRejectionRate[];
   rejectionByCategory: WasteCategoryRejectionRate[];
-  recentSurveys: RecentSurveyRow[];
+  recentSurveys?: RecentSurveyRow[];
 }

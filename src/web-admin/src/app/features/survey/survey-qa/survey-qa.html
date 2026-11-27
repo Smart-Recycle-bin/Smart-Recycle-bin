@@ -1,9 +1,29 @@
 <div class="survey-qa-page">
-  <!-- Page Header (p11: No period selector) -->
+  <!-- Page Header -->
   <app-page-header
     title="Survey QA"
     subtitle="Post-disposal survey outcomes as a quality signal for the AI classifier."
   />
+
+  <!-- Date Filter Bar -->
+  <div class="filters-card">
+    <div class="filters-row">
+      <div class="date-filter-field">
+        <app-date-range-input
+          label="Date range"
+          [value]="dateRange()"
+          (valueChange)="handleDateRangeChange($event)"
+        />
+      </div>
+      @if (hasDateFilter()) {
+        <div class="filter-actions">
+          <app-button variant="ghost" size="sm" (clicked)="clearDateFilter()">
+            Clear dates
+          </app-button>
+        </div>
+      }
+    </div>
+  </div>
 
   @if (error()) {
     <div class="error-container">
@@ -15,7 +35,7 @@
   } @else if (isLoading()) {
     <!-- Skeletons Loading View -->
     <div class="stats-grid">
-      @for (i of [1, 2, 3, 4]; track i) {
+      @for (i of [1, 2, 3, 4, 5]; track i) {
         <app-card>
           <div class="skeleton-stat-card">
             <app-skeleton width="45%" height="16px" />
@@ -60,11 +80,11 @@
       </app-card>
     </div>
   } @else {
-    <!-- 1. Stats Row (p11: 4 KPI Cards) -->
+    <!-- 1. Stats Row (KPI Cards) -->
     @if (kpis(); as k) {
       <div class="stats-grid" data-testid="survey-qa-stats">
         <app-stat
-          title="Surveys (14d)"
+          [title]="surveysCardTitle()"
           [value]="(k.totalSurveys | number) ?? ''"
           icon="clipboard-check"
           iconTone="blue"
@@ -93,6 +113,14 @@
           icon="sparkles"
           iconTone="purple"
         />
+        <app-stat
+          title="Avg. AI rating"
+          [value]="averageAiRatingDisplay()"
+          [unit]="averageAiRatingUnit()"
+          [description]="averageAiRatingDescription()"
+          icon="activity"
+          iconTone="amber"
+        />
       </div>
     }
 
@@ -100,7 +128,7 @@
     <div class="charts-grid">
       <app-card
         title="Confirm vs. reject"
-        subtitle="14-day outcome split across post-disposal surveys"
+        [subtitle]="splitSubtitle()"
         data-testid="donut-card"
       >
         <app-donut-chart

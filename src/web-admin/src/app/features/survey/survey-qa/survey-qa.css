@@ -12,6 +12,31 @@
   padding: 3rem 1rem;
 }
 
+.filters-card {
+  background-color: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  padding: 1rem 1.25rem;
+}
+
+.filters-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 1rem;
+}
+
+.date-filter-field {
+  flex: 1 1 20rem;
+  max-width: 30rem;
+}
+
+.filter-actions {
+  display: flex;
+  align-items: center;
+  padding-bottom: 0.125rem;
+}
+
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(1, minmax(0, 1fr));
@@ -26,7 +51,13 @@
 
 @media (min-width: 1024px) {
   .stats-grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1200px) {
+  .stats-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
   }
 }
 

@@ -3,7 +3,9 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { SurveyQaService } from './survey-qa.service';
 import { ApiClientService } from '../api/api-client.service';
-import { environment } from '@env/environment';
+import { resolveApiBaseUrl } from '@core/interceptors/shared/api-url';
+
+const apiBaseUrl = resolveApiBaseUrl();
 
 describe('SurveyQaService', () => {
   let service: SurveyQaService;
@@ -24,7 +26,7 @@ describe('SurveyQaService', () => {
   it('should fetch QA summary and recent surveys', () => {
     service.getQaSummary().subscribe();
     httpMock
-      .expectOne(`${environment.apiBaseUrl}/admin/survey-qa`)
+      .expectOne(`${apiBaseUrl}/admin/survey-qa`)
       .flush({ success: true, data: { confirmCount: 17040 } });
 
     service.getRecentSurveys().subscribe((page) => {
@@ -32,7 +34,7 @@ describe('SurveyQaService', () => {
       expect(page.totalItems).toBe(0);
     });
     httpMock
-      .expectOne(`${environment.apiBaseUrl}/admin/survey-qa/recent`)
+      .expectOne(`${apiBaseUrl}/admin/survey-qa/recent`)
       .flush({ success: true, data: [] });
   });
 });

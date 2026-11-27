@@ -9,6 +9,8 @@ import {
 } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { of, Subject } from 'rxjs';
+import { catchError, map, switchMap, tap } from 'rxjs/operators';
 import { SurveyQaService } from '@services/survey/survey-qa.service';
 import {
   RecentSurveyRow,
@@ -20,6 +22,11 @@ import {
   SURVEY_OUTCOME_LABELS,
 } from '@models/survey/survey-outcome.enum';
 import { PageHeader } from '@shared/components/page-header/page-header';
+import { Button } from '@shared/components/button/button';
+import {
+  DateRangeInput,
+  DateRangeValue,
+} from '@shared/components/form/date-range-input/date-range-input';
 import { Stat } from '@shared/components/stat/stat';
 import {
   DonutChart,
@@ -57,6 +64,8 @@ import {
   imports: [
     DecimalPipe,
     PageHeader,
+    Button,
+    DateRangeInput,
     Stat,
     DonutChart,
     AreaChart,
@@ -85,6 +94,32 @@ export class SurveyQa implements OnInit {
   readonly summary = signal<SurveyQaSummary | null>(null);
   readonly isLoading = signal<boolean>(true);
   readonly error = signal<unknown>(null);
+  readonly dateRange = signal<DateRangeValue>({ from: null, to: null });
+
+  private readonly summaryTrigger$ = new Subject<void>();
+
+  readonly hasDateFilter = computed(() => {
+    const r = this.dateRange();
+    return Boolean(r.from || r.to);
+  });
+
+  readonly activeDateQuery = computed<SurveyQaQuery | undefined>(() => {
+    const r = this.dateRange();
+    const from = r.from || undefined;
+    const to = r.to || undefined;
+    if (!from && !to) return undefined;
+    return { from, to };
+  });
+
+  readonly surveysCardTitle = computed(() => {
+    return this.hasDateFilter() ? 'Surveys (filtered)' : 'Total surveys';
+  });
+
+  readonly splitSubtitle = computed(() => {
+    return this.hasDateFilter()
+      ? 'Outcome split within selected date range'
+      : 'Outcome split across post-disposal surveys';
+  });
 
   readonly pagedList = createPagedList<RecentSurveyRow, SurveyQaQuery>({
     fetch: (query) => this.surveyQaService.getRecentSurveys(query),
@@ -95,22 +130,51 @@ export class SurveyQa implements OnInit {
 
   readonly confirmTrend = computed(() => {
     const k = this.kpis();
-    return k ? getConfirmRateTrend(k.confirmRateDeltaPp) : null;
+    if (!k || k.confirmRateDeltaPp === null || k.confirmRateDeltaPp === undefined) {
+      return null;
+    }
+    return getConfirmRateTrend(k.confirmRateDeltaPp);
   });
 
   readonly rejectTrend = computed(() => {
     const k = this.kpis();
-    return k ? getRejectRateTrend(k.rejectRateDeltaPp) : null;
+    if (!k || k.rejectRateDeltaPp === null || k.rejectRateDeltaPp === undefined) {
+      return null;
+    }
+    return getRejectRateTrend(k.rejectRateDeltaPp);
   });
 
   readonly confirmDeltaText = computed(() => {
     const k = this.kpis();
-    return k ? formatSignedPp(k.confirmRateDeltaPp) : '';
+    if (!k || k.confirmRateDeltaPp === null || k.confirmRateDeltaPp === undefined) {
+      return '';
+    }
+    return formatSignedPp(k.confirmRateDeltaPp);
   });
 
   readonly rejectDeltaText = computed(() => {
     const k = this.kpis();
-    return k ? formatSignedPp(k.rejectRateDeltaPp) : '';
+    if (!k || k.rejectRateDeltaPp === null || k.rejectRateDeltaPp === undefined) {
+      return '';
+    }
+    return formatSignedPp(k.rejectRateDeltaPp);
+  });
+
+  readonly averageAiRatingDisplay = computed(() => {
+    const rating = this.kpis()?.averageAiRating;
+    return rating !== null && rating !== undefined ? rating.toFixed(1) : 'Not Tracked';
+  });
+
+  readonly averageAiRatingUnit = computed(() => {
+    const rating = this.kpis()?.averageAiRating;
+    return rating !== null && rating !== undefined ? '/ 5' : '';
+  });
+
+  readonly averageAiRatingDescription = computed(() => {
+    const rating = this.kpis()?.averageAiRating;
+    return rating !== null && rating !== undefined
+      ? ''
+      : 'Not captured on confirmed surveys';
   });
 
   readonly donutData = computed<DonutSegment[]>(() => {
@@ -146,7 +210,7 @@ export class SurveyQa implements OnInit {
   readonly highestRejectionBins = computed<BarListItem[]>(() => {
     const list = this.summary()?.highestRejectionBins ?? [];
     return list.slice(0, 6).map((item) => ({
-      label: item.binId,
+      label: item.binName ? `${item.binName} (#${item.binId})` : `Bin #${item.binId}`,
       value: item.rejectionRate,
       formattedValue: `${item.rejectionRate}%`,
     }));
@@ -163,26 +227,50 @@ export class SurveyQa implements OnInit {
   });
 
   ngOnInit(): void {
+    this.summaryTrigger$
+      .pipe(
+        tap(() => {
+          this.isLoading.set(true);
+          this.error.set(null);
+        }),
+        switchMap(() =>
+          this.surveyQaService.getQaSummary(this.activeDateQuery()).pipe(
+            map((summary) => ({ ok: true as const, summary })),
+            catchError((err) => of({ ok: false as const, error: err }))
+          )
+        ),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe((result) => {
+        this.isLoading.set(false);
+        if (result.ok) {
+          this.summary.set(result.summary);
+        } else {
+          this.error.set(result.error);
+        }
+      });
+
     this.loadData();
   }
 
   loadData(): void {
-    this.isLoading.set(true);
-    this.error.set(null);
+    this.summaryTrigger$.next();
+  }
 
-    this.surveyQaService
-      .getQaSummary()
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (summary) => {
-          this.summary.set(summary);
-          this.isLoading.set(false);
-        },
-        error: (err) => {
-          this.error.set(err);
-          this.isLoading.set(false);
-        },
-      });
+  handleDateRangeChange(range: DateRangeValue): void {
+    this.dateRange.set(range);
+    if (range.from && range.to && range.from > range.to) {
+      return;
+    }
+    this.loadData();
+    this.pagedList.patchFilters({
+      from: range.from || undefined,
+      to: range.to || undefined,
+    });
+  }
+
+  clearDateFilter(): void {
+    this.handleDateRangeChange({ from: null, to: null });
   }
 
   reload(): void {
@@ -190,7 +278,7 @@ export class SurveyQa implements OnInit {
     this.pagedList.reload();
   }
 
-  readonly getRowId = (row: RecentSurveyRow): string => row.sessionId;
+  readonly getRowId = (row: RecentSurveyRow): string => String(row.sessionId);
 
   getResultBadgeVariant(outcome: SurveyOutcome): BadgeVariant {
     return SURVEY_BADGE_VARIANTS[outcome] ?? 'neutral';
