@@ -1,8 +1,10 @@
+import '../config/app_config.dart';
+
 class ApiEndpoints {
   ApiEndpoints._();
 
-  // Configurable base URL (e.g. localhost for development emulator / web or staging)
-  static const String baseUrl = 'https://api.ecobin.app/api/v1';
+  // Configurable base URL shared with AppConfig (defaults to the ngrok tunnel)
+  static const String baseUrl = AppConfig.apiBaseUrl;
 
   // 1. Authentication & IAM
   static const String login = '/auth/login';
