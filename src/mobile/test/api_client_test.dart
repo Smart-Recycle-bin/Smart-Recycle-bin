@@ -4,6 +4,8 @@ import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:ecobin/core/config/app_config.dart';
+import 'package:ecobin/core/constants/api_endpoints.dart';
 import 'package:ecobin/core/network/api_client.dart';
 import 'package:ecobin/core/storage/token_storage.dart';
 
@@ -205,6 +207,28 @@ void main() {
 
       expect(refreshCalls, 0);
       expect(sessionExpiredCalls, 0);
+    },
+  );
+
+  test(
+    'default ApiClient uses ngrok tunnel baseUrl and skips ngrok browser warning',
+    () async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+      final tokenStorage = TokenStorage(prefs);
+
+      final apiClient = ApiClient(tokenStorage: tokenStorage);
+
+      expect(
+        AppConfig.apiBaseUrl,
+        'https://lacewing-exotic-elf.ngrok-free.app/api/v1',
+      );
+      expect(ApiEndpoints.baseUrl, AppConfig.apiBaseUrl);
+      expect(apiClient.dio.options.baseUrl, AppConfig.apiBaseUrl);
+      expect(
+        apiClient.dio.options.headers['ngrok-skip-browser-warning'],
+        'true',
+      );
     },
   );
 }
